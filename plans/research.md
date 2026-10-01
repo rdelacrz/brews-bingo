@@ -1,18 +1,20 @@
 # Brews Bingo — Hosting Research
 
 - **Research date:** September 30, 2026
-- **Status:** Research and recommendations only — no provider or architecture approved.
+- **Status:** Research and recommendations only — no hosting provider or architecture selected.
 - **Related documents:** [Business requirements](requirements.md) · [High-level design](hld.md)
 - **Purpose:** Compare free and free-tier hosting for the web frontend and required backend, with particular attention to Vercel and AWS. Findings are intended to inform the HLD; implementation detail belongs in the subsequent `lld.md`.
 
-Prices below are in USD, before applicable taxes. Quotas and eligibility can change; verify them again when creating the production account. Quoted allowances are selected decision-relevant limits, not complete service specifications. Provider facts have numbered sources; recommendations and design implications are assessments, not provider guarantees.
+Prices below are in USD, before applicable taxes. Prices and quotas can change; verify them again when creating the production account. Quoted allowances are selected decision-relevant limits, not complete service specifications. Provider facts have numbered sources; project-specific confirmations identify their source, and recommendations and design implications are assessments, not provider guarantees.
 
 ## 1. Overview and preliminary recommendation
 
 **Start by evaluating Cloudflare for a zero-subscription-cost design**, provided a serverless backend is acceptable. Its static-asset delivery is free and unlimited, while Workers and SQLite-backed Durable Objects offer recurring free compute/storage allowances.[35][5][8]
 Durable Objects support live connections, but free dynamic-service limits still constrain usage and can interrupt operation when exhausted.[36][8]
 
-**Do not select Vercel Hobby for the Rockville Brews deployment.** Hobby is restricted to non-commercial personal use; commercial usage requires Pro or Enterprise. Since this app supports a company's bingo operation, this research treats it as commercial even if attendees are not charged for the app. Obtain written clarification if pursuing an exception rather than assuming one.[2]
+**Include Vercel Hobby as an eligible free-hosting candidate.** Eligibility for the stated entertainment-only use is confirmed for project planning per the user's instruction. Brews Bingo will not advertise Brews products or sell anything. Compare Hobby on technical fit, usage limits, and full-stack cost rather than retaining an open eligibility question.
+
+**Vercel has usable free persistent-database options.** Neon and Supabase both offer $0 plans through Vercel Marketplace.[63][67] The fair comparison is Cloudflare's free storage versus **Vercel Hobby plus a selected free Postgres plan**, not Cloudflare storage versus no Vercel database. Database quotas are provider-specific and remain separate from Vercel Function allowances.[65][68]
 
 **AWS is a credible low-cost option, not a verified forever-free full stack.** There are recurring Lambda and DynamoDB allowances and a distinct CloudFront Free delivery plan, but a new AWS Free account itself expires.[47][50][53]
 Real-time transport, storage requests, and other components can still be chargeable.[54][58]
@@ -34,7 +36,7 @@ If a conventional process is mandatory, serverless-only candidates need to be ex
 
 The project-specific priorities are:
 
-1. **Commercial suitability:** Rockville Brews is a business, not merely a personal experiment.
+1. **Permitted-use suitability:** Use the confirmed project context: entertainment within Brews, with no advertising of Brews products or sales. Vercel Hobby eligibility is a resolved planning input supplied by the user; other providers' eligibility findings remain as documented.
 2. **Durable game state:** Draws, cards, and completed-game history must survive refreshes, restarts, and deployments (BR-013, BR-021, BR-026).
 3. **Correct live updates:** Host, audience, and players need consistent draw order and valid claims (BR-002, BR-007, BR-018, BR-027).
 4. **Outage continuity:** Temporary internet loss must not silently invalidate BR-016 or D-005.
@@ -50,7 +52,7 @@ No attendance, concurrency, traffic, or retention forecast has been approved. Th
 | Provider / offering | Web frontend | Backend model | Meaning of “free” and main caveat | Preliminary fit |
 | --- | --- | --- | --- | --- |
 | **Cloudflare Workers / Pages** | Static assets or Pages | Workers; Durable Objects; optional D1 | Recurring free quotas; static requests free; dynamic operations can fail at limits.[35][5][8] | Leading free-tier candidate if serverless is acceptable. |
-| **Vercel** | Static and framework-based frontend | Functions; WebSockets currently Beta | Hobby is non-commercial only; Pro advertised at $20/month.[2][25][40] | Exclude Hobby for business deployment; retain as a paid alternative. |
+| **Vercel** | Static and framework-based frontend | Functions; WebSockets currently Beta; Marketplace Postgres | Hobby plus Neon Free or Supabase Free can provide persistent SQL storage without a paid database subscription; provider quotas apply separately.[1][63][67] | Eligible free candidate per the user's confirmation; compare complete storage and realtime options, not an assumed lack of free persistence. |
 | **AWS** | CloudFront/S3 or Amplify | Lambda/API Gateway/DynamoDB, or EC2 | Mix of ongoing allowances, paid meters, and temporary credits; AWS Free account expires.[47][50][53] | Strong low-cost alternative, greater billing/configuration complexity. |
 | **Netlify** | CDN frontend and deployment workflow | Functions and managed data offerings; assess live-update service separately | 300 recurring credits/month, hard cap; sites pause on exhaustion.[9][11] | Viable frontend candidate; shared credit budget needs attention. |
 | **Render** | Free static sites | Conventional web service | 750 instance-hours/workspace/month; idle sleep; free Postgres expires after 30 days.[13] | Prototype rather than live-event production backend. |
@@ -91,28 +93,78 @@ D1 is another storage option to evaluate, not an additional required database.[5
 
 **Brews Bingo fit:** First candidate to evaluate if serverless satisfies the backend requirement. Verify card generation and winner-validation CPU usage, draw concurrency, message fan-out, recovery, and offline behavior before selecting it.
 
-### 4.2 Vercel — attractive tooling, wrong free license for this use
+### 4.2 Vercel — eligible free candidate for entertainment-only use
 
 **Overview.** Vercel supplies frontend deployment/CDN capabilities and server-side Functions. The current documentation now lists **WebSocket support in Beta on all plans**; older advice that Vercel Functions cannot serve WebSockets is no longer consistent with the retrieved docs.[40][25]
 
+Vercel also provisions databases through its Marketplace, including Postgres from Neon and Supabase, with integrated management and billing.[62]
+The former **Vercel Postgres** product is no longer available: existing databases moved to Neon in December 2024, and new projects use Marketplace integrations.[61]
+This is a product/ownership distinction, **not a lack of free durable storage**: both integrations list plans starting at $0.[63][67]
+
+**Confirmed project context**
+
+- **Intended purpose:** Entertainment within Brews.
+- **Excluded activity:** Advertising Brews products or selling anything through the app.
+- **Eligibility status:** Confirmed for project planning, per the user's instruction. This records the user's confirmation, not independent verification or a direct approval from Vercel.
+- **Research treatment:** Hobby is included in the free-hosting shortlist. Eligibility is resolved and is no longer a decision gate or an open research action.
+
+**General policy reference:** Vercel restricts Hobby to non-commercial personal use.[2] This policy remains documented for context; it is not an unresolved item for the confirmed project use.
+
 **Selected pricing and limits**
 
-- Hobby is free but restricted to **non-commercial personal use**. Its listed included usage includes **100 GB fast data transfer** and **1 million Function invocations**, but those allowances do not override the commercial restriction.[1][2]
+- Hobby is free for **non-commercial personal use**, with listed included usage of **100 GB fast data transfer** and **1 million Function invocations**. Evaluate these allowances against the planned workload.[1][2]
 - Pro is advertised at **$20/month**, with $20 included usage credit; confirm the full account configuration and usage charges before purchase.[40]
 - WebSocket connections close when a Function reaches its maximum duration. Reconnection and state restoration are required, and new connections need not reach the same instance.[25]
+
+#### Free persistent Postgres options — verified September 30, 2026
+
+These are alternative database selections, not allowances that automatically stack together or come from Vercel Function quotas. Neon's native integration provides access to Neon plans with billing through Vercel; Supabase describes Marketplace-created projects as functioning like directly created projects, with billing through Vercel and a separate billing cycle.[63][68] Select the **Free** database plan explicitly when provisioning; no account or resource has been created for this research.
+
+| Limit / behavior | Neon Free via Vercel | Supabase Free via Vercel |
+| --- | --- | --- |
+| **Persistent SQL storage** | **0.5 GB per project**; data remains stored while compute is suspended.[70] | **500 MB database per project**, separate from its **1 GB file-storage** allowance.[17] |
+| **Database compute / queries** | **100 CU-hours per project/month**; scales up to **2 CU (approximately 8 GB RAM)**. All branch computes share the project's compute allowance.[70][65] | Shared CPU and **500 MB RAM**; **unlimited API requests** is the published request allowance, not unlimited throughput.[17] |
+| **Data transfer** | **5 GB public network transfer per project/month**.[70] | **5 GB egress plus 5 GB cached egress** in the Free plan; cached delivery is not an extra general SQL-transfer allowance.[17] |
+| **Idle behavior** | Compute scales to zero after **5 minutes of inactivity**; this cannot be disabled on Free. Stored data persists.[65][70] | Free projects pause after **one week of inactivity**; **two active projects** allowed.[17] |
+| **Exhaustion behavior** | Used-up compute or transfer suspends the project's compute until the next billing period or an upgrade. Storage-growing writes fail above the storage cap. No Free-plan overage billing.[70] | Exceeding **500 MB database size** puts the database into read-only mode; organization-level fair-use restrictions are also documented.[72] |
+| **Recovery** | Free instant-restore window: **6 hours**, capped at **1 GB of change history**; not a substitute for the project's backup/export plan.[65] | Automatic backups and point-in-time recovery are **not included** in Free.[17] |
+| **Connections / live updates** | Pooling supports up to **10,000 client connections**, not 10,000 active queries or TPS. Database compute determines practical throughput.[69] | Realtime includes **200 peak connections**, **2 million messages/month**, and **100 messages/sec**. These are Realtime limits, not SQL TPS.[17][20] |
+
+**Neon compute illustration, not a forecast:** `100 CU-hours ÷ compute size` permits **400 active hours at 0.25 CU**, **100 hours at 1 CU**, or **50 hours at 2 CU**, before other branch compute usage. These values were calculated programmatically; the allowance measures compute size multiplied by runtime, not a number of queries.[65] No fixed SQL queries/day or guaranteed TPS entitlement was established by the reviewed Neon/Supabase plan documentation. Benchmark the chosen queries, indexes, transactions, and connection pool rather than treating a connection count or “unlimited API requests” as a throughput guarantee.[69][17]
+
+**Rust suitability and authorization:** Neon documents Rust connections using `postgres` and `tokio-postgres` with TLS; a TypeScript database client is not required.[71] Engineering recommendation: keep privileged connection strings in the Rust backend, never in a Dioxus browser/mobile build. Validate the selected runtime's driver/TLS compatibility and use bounded connection pools; this research has not exercised a deployment.
+
+**Persistence and realtime are separate decisions.** A free Postgres database can persist cards, draws, claims, and history, but it does not by itself implement reliable cross-instance broadcasts. Vercel's WebSocket documentation requires shared state/coordination outside a Function instance.[25]
+Neon's transaction-mode pooler restricts session-dependent features such as `LISTEN`/`NOTIFY`, so do not assume it is a drop-in message bus.[69]
+Supabase Realtime is a separate managed option available alongside Postgres, with the explicit limits above.[67][20]
+If clients connect directly to Supabase Realtime, Vercel's Function connection-duration limit is not the lifecycle of those connections; Supabase's own limits apply. The app must still authorize subscriptions and winning claims.
+
+#### Corrected storage comparison for the three shortlisted platforms
+
+| Stack | Ongoing free persistent storage | Relevant quota distinction |
+| --- | --- | --- |
+| **Cloudflare Workers + SQLite-backed Durable Objects** | **5 GB total**; **5 million rows read/day**, **100,000 rows written/day**.[8] | Storage and compute/duration are separate allowances; this is SQLite within Durable Objects, not Postgres. |
+| **Vercel Hobby + Neon Free** | **0.5 GB Postgres/project**, **100 CU-hours/project/month**, **5 GB public transfer/project/month**.[70] | Real free SQL persistence; compute/transfer exhaustion and idle suspension must be planned for. |
+| **Vercel Hobby + Supabase Free** | **500 MB Postgres/project**, with optional managed Realtime and separate file storage.[17] | Database size, egress, project pauses, and Realtime limits are separate constraints. |
+| **AWS Lambda + provisioned DynamoDB** | **25 GB**, **25 provisioned RCUs**, **25 provisioned WCUs**.[52][53] | NoSQL capacity model, not Postgres; recurring database allowance does not remove AWS account-plan expiry or paid-overage exposure.[47] |
+
+**Assessment:** Free persistence is **not** a reason to downgrade Vercel. Vercel Hobby + Neon Free is a concrete SQL-backed candidate; Vercel Hobby + Supabase Free adds a separately limited realtime option. Cloudflare remains worth evaluating for integrated per-game coordination and hibernating WebSockets, not because Vercel lacks a free database. No provider or architecture is selected by this correction.
 
 **Pros**
 
 - Integrated deployment workflow, preview/development tooling, CDN, and Functions are useful if the eventual frontend framework fits the platform.[40][1]
 - Native WebSockets are now a technical option, subject to Beta status and lifecycle constraints.[25]
+- Free hosting and Functions make Hobby a candidate without a Pro subscription.[1]
+- Free Postgres integrations make persistent cards, game history, and transactional data feasible without a paid database subscription, within the selected plan's limits.[63][67]
 
 **Cons**
 
-- **Commercial usage requires a paid plan**, making Hobby unsuitable for the proposed business deployment.[2]
+- Free-tier usage limits still apply; in most cases, exceeding a Hobby allowance requires waiting until 30 days have passed before using the affected feature again.[1]
 - WebSocket Beta and bounded connection lifetime add risk and recovery requirements for a live event.[25]
 - Persistent game state must not rely on one Function instance's memory; the docs explicitly warn that new connections can reach different instances.[25]
+- Database compute/storage/transfer limits and suspension behavior must be monitored separately from Hobby Function quotas. Marketplace billing integration does not merge those allowances.[70][68]
 
-**Brews Bingo fit:** Keep as a **paid** alternative, not a free production recommendation. A personally owned GitHub repository does not establish that the deployed business app is non-commercial.
+**Brews Bingo fit:** Include **Hobby + Neon Free** and **Hobby + Supabase Free** as concrete free-persistence candidates for the confirmed entertainment-only use. Evaluate the Rust backend, chosen database, realtime transport, and offline design together. A paid Vercel upgrade and a paid database upgrade are separate decisions; neither is assumed necessary just to obtain persistent storage. Eligibility confirmation does not select Vercel or approve an architecture.
 
 ### 4.3 AWS — detailed account and service distinctions
 
@@ -209,12 +261,14 @@ For new accounts under the post–July 15, 2025 model, AWS provides **$100 signu
 ### 4.6 Supabase — managed backend and database, not the web frontend
 
 **Overview.** Supabase supplies managed Postgres, APIs, Edge Functions, and Realtime. Evaluate it with a separate frontend host; do not assume a static web-app deployment service is part of this backend selection.[17]
+Vercel is one such frontend/backend host: the Supabase Marketplace integration offers plans starting at $0, integrated project creation, and unified billing. See Section 4.2 for the corrected Vercel storage comparison.[67][68]
 
 **Selected Free allowances**
 
 - **500 MB database**, **1 GB file storage**, **5 GB egress plus 5 GB cached egress**, and **two active projects**.[17]
 - Realtime: **200 concurrent connections**, **2 million messages/month**, and **100 messages/second** on Free.[17][20]
 - Edge Functions: **500,000 invocations included**. Free projects pause after **one week of inactivity**.[17]
+- Free database size above **500 MB** triggers read-only mode; automatic backups and point-in-time recovery are not included in Free. Plan exports/restores and monitor organization-level fair-use limits as well as per-project database size.[72][17]
 
 **Pros**
 
@@ -331,16 +385,18 @@ Operational checks should include a pre-event restore/health test, enough remain
 | **2** | Cloudflare or Netlify frontend + Supabase backend | Managed SQL, server-side functions, and Realtime; separates frontend from backend selection.[17][20] | Accept managed-backend model; validate message bursts, connections, pauses, and backups. |
 | **3** | AWS CloudFront/S3 + Lambda + provisioned DynamoDB + chosen realtime transport | Recurring allowances for core components.[50][51][52] Separately metered transport.[54] | Accept Paid account/billing exposure; confirm account-specific offers and full-stack cost. |
 | **4** | Static frontend + Google Cloud Run + selected durable datastore | Conventional container backend and WebSockets.[38][45] | Accept billing-enabled account and websocket runtime costs; design external durable state. |
+| **Shortlisted — eligibility confirmed by user** | Vercel Hobby frontend + Rust backend Functions + Neon Free or Supabase Free | Free hosting/Functions plus concrete Marketplace Postgres options.[1][63][67] | Validate Rust runtime/driver integration, database quotas, sleep/pauses, backups, realtime transport, and offline behavior; do not treat persistence as a missing or necessarily paid component. |
 | **Conditional** | Oracle Always Free VM | Ongoing conventional-server resources.[29] | Confirm capacity and tolerance for reclamation and self-management. |
-| **Prototype / paid alternatives** | Render Free; Vercel Pro; Railway; Fly.io | Useful tools, but production warning, commercial pricing, small credits, or expiring trial weaken the free-production fit.[13][2][32] | Do not promote prototype hosting to production without a fresh review. |
+| **Prototype / paid alternatives** | Render Free; Railway; Fly.io; Vercel Pro if needed | Prototype restrictions and limited credits remain relevant.[13][32][37] Pro is a paid upgrade option.[40] | Do not promote prototype hosting to production without a fresh review; consider Pro if Hobby's usage allowances or features do not fit. |
 
-**Recommendation:** Take Cloudflare and one alternative into the HLD comparison before committing. If “backend server” specifically means a conventional always-running process, shift that comparison to Cloud Run versus Oracle, with Render paid hosting as a possible later low-cost option. Do not silently reinterpret the requirement to make a free tier fit.
+**Recommendation:** Compare Cloudflare's integrated stateful backend against **Vercel Hobby + Neon Free** and **Vercel Hobby + Supabase Free** on technical suitability, full-stack quotas, and operational reliability. Hobby eligibility is resolved, and free persistent Postgres is available; remaining decisions concern capacity, database/realtime integration, and recovery, not whether free storage exists. Also consider the managed-backend alternatives above. If “backend server” specifically means a conventional always-running process, shift that comparison to Cloud Run versus Oracle, with Render paid hosting as a possible later low-cost option. Do not silently reinterpret the requirement to make a free tier fit.
 
 ## 8. Open choices before selecting a host
 
 - Does “free” mean no recurring subscription, or **no possibility of charges**? Is a billing-enabled account acceptable?
 - Does a serverless/managed backend satisfy the server requirement?
 - What are expected and maximum players, tabs/devices, simultaneous games, event frequency, and retention?
+- For a Vercel design, should persistence use Neon Free or Supabase Free, and should live updates use Vercel WebSockets with explicit cross-instance coordination or Supabase Realtime? Check pool sizing, remaining database compute/egress, and backup/restore requirements.
 - Which backend capabilities must keep working during internet loss, and is venue-local infrastructure acceptable?
 - Is a static frontend sufficient, or will server-side rendering be needed?
 - Which region best serves the venue and any data-location requirements?
@@ -354,7 +410,7 @@ Operational checks should include a pre-event restore/health test, enough remain
 - No accounts were created, no card information was supplied, no deployments were performed, and no performance/SLA claims were tested.
 - Source retrieval rate limits were handled with later retrieval or direct browser checks; no blocked-page contents were invented.
 - The principal unresolved pricing ambiguity is AWS's newer credit-based model alongside older-looking Amplify/API Gateway allowance tables.[50][53][54]
-- Commercial restrictions are material, but this is not a legal review of hosting terms or of any bingo/prize rules. Where explicit commercial eligibility was not established, it remains a pre-deployment check.
+- This is not a legal review of hosting terms or bingo/prize rules. Vercel Hobby eligibility is recorded as a user-confirmed project input in Section 4.2, not an open research question. Unresolved eligibility findings for other providers are unchanged.
 - Domain registration, native app distribution, paid add-ons, and other non-hosting expenses are outside the $0 hosting comparison.
 - This research does not modify approved business requirements, choose the HLD architecture, or create the LLD.
 
@@ -399,3 +455,13 @@ Operational checks should include a pre-event restore/health test, enough remain
 [58] https://aws.amazon.com/s3/pricing — S3 pricing
 [59] https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-execution-service-websocket-limits-table.html — API Gateway WebSocket limits
 [60] https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html — AWS account plans
+[61] https://vercel.com/docs/postgres — Postgres on Vercel
+[62] https://vercel.com/docs/marketplace-storage — Storage on Vercel Marketplace
+[63] https://vercel.com/marketplace/neon — Neon for Vercel
+[65] https://neon.com/docs/introduction/plans — Neon plans - Neon Docs
+[67] https://vercel.com/marketplace/supabase — Supabase for Vercel
+[68] https://supabase.com/docs/guides/integrations/vercel-marketplace — Vercel Marketplace | Supabase Docs
+[69] https://neon.com/docs/connect/connection-pooling — Connection pooling - Neon Docs
+[70] https://neon.com/faqs/free-plan-limits-and-quotas — What are the limits and quotas for Neon's Free plan? - Neon FAQs
+[71] https://neon.com/docs/guides/rust — Connect a Rust application to Lakebase Postgres - Neon Docs
+[72] https://supabase.com/docs/guides/platform/database-size — Understanding Database and Disk Size | Supabase Docs
