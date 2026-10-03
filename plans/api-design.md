@@ -1,0 +1,2411 @@
+# Brews Bingo — API Design
+
+## 1. Document status and navigation
+
+- **Status:** API design companion to [the LLD](lld.md). Moved from the LLD at the user's request (LLD-022), preserving the proposed API-01–API-32 coverage index and A1–H12 operation catalog, including Request/Response subsections. Request/Response body fields now use **Field / Type / Required / Description** tables; other request/response information appears in preceding paragraphs. Moving or reformatting the content does not approve unfinished contracts or authorize implementation.
+- **Ownership:** This document is the single home for Worker/API organization, methods/paths, auth-scope notation, DTO/request/response proposals, contract worksheets and WSS protocol design. The [Durable Object design](durable-object-design.md) retains storage ownership, records/fields/types and schema worksheets. The LLD retains cross-cutting domain rules, implementation conventions, verification/deployment planning and the decision register.
+- **Source precedence:** Follow [LLD source precedence](lld.md#12-source-precedence-and-reconciliation), [HLD](hld.md) and later explicit decisions recorded in the [LLD register](lld.md#121-detailed-decisions-for-the-user-to-fill). Requirements/research remain in [requirements.md](requirements.md) and [research.md](research.md); stale source wording is not silently rewritten.
+- **Confirmed conventions:** Application-generated system IDs use UUID v7 by default ([LLD Section 3.3](lld.md#identifier-policy), LLD-020). Component-local Rust errors use `thiserror` in adjacent `error.rs` files ([LLD Section 3.4](lld.md#error-conventions), LLD-021). Account passwords must be at least 10 characters using any combination of ASCII characters, with no required character-class mix ([LLD Section 9.1](lld.md#password-policy), LLD-023). Salted Argon2 via RustCrypto `argon2` is confirmed by [LLD Section 9.2](lld.md#password-hashing), LLD-024; final profile and runtime details remain **TBD**. These confirmed constraints do not approve every proposed wire field.
+- **TBD:** Final contract approval, requiredness/defaults, encodings, response/error/status schemas, signatures, routing, compatibility, security mechanisms and executed contract tests. Scope/role/lifecycle rules already confirmed by the HLD are not reopened by these placeholders.
+
+Navigation:
+- [Worker organization and boundaries](#worker-boundaries)
+- [Shared contract worksheet](#shared-contracts)
+- [Logical operation inventory](#operation-index)
+- [Per-operation worksheet](#operation-worksheet)
+- [Operation catalog and Request/Response proposals](#operation-catalog)
+- [WSS messages and synchronization](#wss-design)
+
+Section numbers below are local to this document. References prefixed **LLD** refer to `lld.md`; `LLD-*`, `HLD-*`, `BR-*`, `API-*` and A1–H12 IDs retain their existing meanings. Logical internal operations remain internal; this move introduces no public routes.
+
+<a id="worker-boundaries"></a>
+
+## 2. Worker organization and state-owner boundaries
+
+### 2.1 One API Worker, multiple endpoints
+
+**Confirmed user direction (LLD-016):** Start with **one API Worker**, not one Worker per API endpoint. Incoming HTTP requests enter the Worker's fetch entrypoint and are dispatched by method/path to appropriate handlers. Organize handlers by responsibility in Rust modules; one deployment does not require one large function or one source file. Router choice, module names and signatures remain **TBD**.
+
+The same API Worker covers the approved authentication, Users/account management, game operations, participant admission/recovery, History and WebSocket-upgrade responsibilities. These are responsibility groups, not a finalized endpoint list. Section 6 records the proposed operation/function/path/scope catalog and potential Request/Response fields; final schemas and detailed API contracts remain **TBD** for user review.
+
+The single-Worker decision does not settle account-store placement or require every backend concern to live in a Game Object. [Durable Object design Section 6](durable-object-design.md#schema-proposal) separately captures a proposed Accounts Object; acceptance remains **TBD**.
+
+### 2.2 Worker, endpoint and Durable Object boundaries
+
+| Concept | Responsibility in this design |
+| --- | --- |
+| API Worker | Deployable backend entry service that receives requests, enforces access checks and dispatches to the appropriate handler/owner. |
+| API endpoint | An externally exposed operation identified by its eventual method/path; many endpoints share the API Worker. Exact endpoint definitions remain TBD. |
+| Durable Object class / namespace | Stateful behavior and its collection of instances, accessed through configured backend namespace bindings. Proposed class names appear in [Durable Object design Section 6.1](durable-object-design.md#object-boundaries); final classes, binding names and interfaces remain **TBD**. |
+| Durable Object instance | A stable state owner selected within a namespace. The existing HLD calls for one Game Object per game, not one per endpoint or browser. Proposed logical structures appear in [Durable Object design Section 6](durable-object-design.md#schema-proposal); final structures and physical schemas remain **TBD**. |
+
+Conceptual game-request flow, not a selected API or internal protocol:
+
+```text
+Browser HTTPS request / WSS upgrade
+    -> Single Brews Bingo API Worker
+    -> Request validation, session/role checks and handler dispatch
+    -> Directory lookup when needed: issued code -> stable game identity
+    -> Configured namespace binding / handle for the owning Game Object
+    -> Authoritative game checks, durable changes and authorized result/update
+```
+
+Namespace bindings provide backend resource access; object names/IDs select instances within that scope. They do not authenticate end users or prove a request came from the Dioxus frontend. The public Worker must enforce the session/role/action checks even when called outside the UI; a game code or Object ID is not an authorization credential. No browser receives Cloudflare credentials or direct SQLite access. Exact Worker-to-Object calls and trusted-context propagation remain **TBD**.
+
+An Object's in-memory state is temporary; accepted game data must remain in its durable storage so activation after sleep/restart restores the same logical game. This does not introduce another store or change the existing persist-before-acknowledgement/broadcast rule.
+
+<a id="shared-contracts"></a>
+
+## 3. Shared contract worksheet
+
+| API concern | Confirmed input | Implementation specification |
+| --- | --- | --- |
+| Transport and routing | One API Worker serves multiple HTTPS endpoints and WSS upgrades, dispatching to handlers and authoritative backend owners (LLD-016). | Proposed methods/paths in Section 6; final contracts, base URL/versioning, Rust router/handler signatures and internal calls remain TBD. |
+| Authentication | Backend-issued Secure/HttpOnly/SameSite cookies; fixed one-day expiry and restricted versus normal scopes. Account links/sessions must match the current account `credential_epoch` (DO-022), in addition to scope/purpose, expiry, revocation, lifecycle and timestamp-derived disablement checks. | TBD — cookie names/attributes, authoritative account/session lookup and transaction/race behavior, CSRF/origin rules and error mapping. |
+| Authorization | Server-owned role plus game assignment; admin overrides ownership only. Users/account-list data is admin-only. | TBD — middleware, checks and commit-time reauthorization. |
+| Request validation | Preserve string values, alias/code normalization, lifecycle and capacity rules. | Potential operation inputs in Section 6; final media types, encodings, requiredness, validation/unknown-field policy and limits **TBD**. |
+| Response contract | Return authorized state/results only; secret fields absent from normal views and logs; privileged link issuance uses a separate protected handoff. | Potential safe projections/outputs in Section 6; final envelopes, fields/encodings, status codes, headers and caching **TBD**. |
+| Retry safety | Actor/game-scoped command identity and durable outcome lookup; repeat accepted command without repeating effects. | TBD — idempotency transport, conflict behavior, result retention and retry policy. |
+| Errors | Component-owned errors use `thiserror` in local `error.rs` files per [LLD Section 3.4](lld.md#error-conventions). Deliberately map them to safe transport errors; never expose raw source chains. | **TBD** — public codes/statuses, response schemas, messages, WSS close behavior, retry classification and mapping tests. |
+| Compatibility / observability | No selected wire schema or API version; redact sensitive inputs and links. | TBD — version policy, correlation/audit fields, logs and traces. |
+| System identifier contract | Application-generated `*Id` types listed in [Durable Object design Section 6.2](durable-object-design.md#shared-types) use UUID v7 under LLD-020. IDs are not bearer credentials; validate their version without changing identity or granting authority. | **TBD** — canonical wire spelling/encoding, parse-error mapping and exact generator/issuer ownership for retry IDs. Reuse an original command ID on retries. |
+
+<a id="operation-index"></a>
+
+## 4. Logical operation inventory
+
+These stable API-01–API-33 rows remain a high-level coverage checklist, not finalized endpoints or separate Worker deployments. The catalog-reference column maps them to the expanded A1–H12 entries in Section 6, including associated internal work. That section records proposed functions, methods/paths, auth scopes and per-operation Request/Response subsections with potential fields/types and cookie effects. Each eventual API still needs finalization through Section 5: **requiredness/defaults, exact encoding, complete success/error schemas, status codes and protocol details remain TBD**. Internal entries do not acquire public routes through this mapping. Final endpoint grouping remains subject to user review within the single-API-Worker boundary (LLD-016).
+
+| ID | Logical operation | Confirmed actor / guard / outcome | Proposed catalog entries (Section 6) | Request / responses |
+| --- | --- | --- | --- | --- |
+| API-01 | Account password login | Host/admin credentials after completed setup; issue fixed-life account session. | A1 | Proposed Request/Response: A1 in Section 6; final contract **TBD**. |
+| API-02 | Enrollment-link redemption / password setup | Valid unused link → restricted session → personal password; no early privileges or deadline extension. | A3, A4 | Proposed Request/Response: A3, A4 in Section 6; final contract **TBD**. |
+| API-03 | Reset-link redemption / new password | Valid single-use reset proof; restricted reset authority, same account. | A5, A6 | Proposed Request/Response: A5, A6 in Section 6; final contract **TBD**. |
+| API-04 | Session validation / logout | Resolve server-owned authority or revoke current access; game Exit is a separate concept. | A2, A7, H6 | Proposed Request/Response: A2, A7, H6 in Section 6; final contract **TBD**. |
+| API-05 | Users account listing | Enrolled admin only; list host/admin accounts without secrets. | B1, B2 | Proposed Request/Response: B1, B2 in Section 6; final contract **TBD**. |
+| API-06 | Provision host/admin account | Developer CLI or existing admin; first admin via CLI. Persist pending account/link before returning private URL. | B3, B4 | Proposed Request/Response: B3, B4 in Section 6; final contract **TBD**. |
+| API-07 | Reissue enrollment link | Privileged caller, same pending account; invalidate prior links/restricted sessions. | B5 | Proposed Request/Response: B5 in Section 6; final contract **TBD**. |
+| API-08 | Initiate account password reset | Privileged caller; issue one-day single-use link, revoke target sessions/sockets immediately and block old-password login while pending. | B6 | Proposed Request/Response: B6 in Section 6; final contract **TBD**. |
+| API-09 | Disable / delete account | Privileged caller; acquire Directory gate before host-game check; reject if target hosts a nonterminal game, otherwise remove access without deleting unrelated History. | B7, B8, H3 | Proposed Request/Response: B7, B8, H3 in Section 6; final contract **TBD**. |
+| API-10 | List / inspect games | Host/admin authorized cross-game view; read permission never grants host-role mutation. C2 is the single current nonterminal-game lookup. | C1, C2, C5 | Proposed Request/Response: C1, C2, C5 in Section 6; final contract **TBD**. |
+| API-11 | Create New game | Host/admin creator becomes designated host; reject while any other nonterminal game holds the single global slot (HLD-077). | C6, H2 | Proposed Request/Response: C6, H2 in Section 6; final contract **TBD**. |
+| API-12 | Read / update configuration | Reads authorized; changes require designated host/admin and New. | C5, C7 | Proposed Request/Response: C5, C7 in Section 6; final contract **TBD**. |
+| API-13 | Publish Awaiting Players | Authorized operator; validate/fix configuration and durably issue code. | C8, H1 | Proposed Request/Response: C8, H1 in Section 6; final contract **TBD**. |
+| API-14 | Open / resume selected game | Restore existing identity/configuration/code/state; role/lifecycle/exit restrictions apply. | C9 | Proposed Request/Response: C9 in Section 6; final contract **TBD**. |
+| API-15 | Start game | Designated host/admin, Awaiting Players, connected minimum, this game still owns the same global reservation, feasibility checks; persist start-time boards. | E6 | Proposed Request/Response: E6 in Section 6; final contract **TBD**. |
+| API-16 | Random / manual value call | Designated host/admin, playable In Progress; valid undrawn value → atomic calls/matches/qualification result. | E7, E8 | Proposed Request/Response: E7, E8 in Section 6; final contract **TBD**. |
+| API-17 | Submit one qualified winner | Designated host/admin validates same-game qualification; commit Resolved once. | E9, H9 | Proposed Request/Response: E9, H9 in Section 6; final contract **TBD**. |
+| API-18 | Cancel / manually end game | Designated host/admin with required confirmation; commit Cancelled, apply pre-start versus started retention. | E10, E11, H7, H8 | Proposed Request/Response: E10, E11, H7, H8 in Section 6; final contract **TBD**. |
+| API-19 | Transfer designated host | Authorized operator confirms target; immediate committed transfer, no recipient acceptance or data reset. | C10, H12 | Proposed Request/Response: C10, H12 in Section 6; final contract **TBD**. |
+| API-20 | Query command outcome | Authorized original command context; resolve lost acknowledgement without another effect. | G4, G5, H11 | Proposed Request/Response: G4, G5, H11 in Section 6; final contract **TBD**. |
+| API-21 | Resolve game code / entry eligibility | Known published code only; discovery is not identity or admission. | C4, D3 | Proposed Request/Response: C4, D3 in Section 6; final contract **TBD**. |
+| API-22 | Join as player | Awaiting Players, valid available alias/free slot, optional answer; no board before start. | D4, D5 | Proposed Request/Response: D4, D5 in Section 6; final contract **TBD**. |
+| API-23 | Join as spectator | Awaiting Players/In Progress and spectator capacity; no player privileges. | D6, H5 | Proposed Request/Response: D6, H5 in Section 6; final contract **TBD**. |
+| API-24 | Rename own alias | Valid player session, Awaiting Players; available normalized name, stable membership and unchanged session expiry. | D7 | Proposed Request/Response: D7 in Section 6; final contract **TBD**. |
+| API-25 | Switch participant role | Awaiting Players and target eligibility; consistent seat/session/alias/verifier transition, no second admission. | D8, D9 | Proposed Request/Response: D8, D9 in Section 6; final contract **TBD**. |
+| API-26 | Participant Leave | Valid owner; pre-start player versus In Progress player versus spectator policies differ. | D10, D11, D12 | Proposed Request/Response: D10, D11, D12 in Section 6; final contract **TBD**. |
+| API-27 | Recover player session | Code + current alias + enrolled answer; nonterminal restoration of same membership, replace old sessions/sockets. | D13 | Proposed Request/Response: D13 in Section 6; final contract **TBD**. |
+| API-28 | Set / replace / delete own recovery answer | Valid player session, Awaiting Players/In Progress; no alternate ownership proof. | D14 | Proposed Request/Response: D14 in Section 6; final contract **TBD**. |
+| API-29 | Final-view Exit / access cleanup | Independent exit, no outcome mutation or renewed game access; spectator local-only exit and pre-start deletion must not require a surviving server session. | F1, F2 | Proposed Request/Response: F1, F2 in Section 6; final contract **TBD**. |
+| API-30 | History listing / detail | Host/admin, unexpired immutable final data only; no export or membership restoration. | F3, F4, H10 | Proposed Request/Response: F3, F4, H10 in Section 6; final contract **TBD**. |
+| API-31 | Authorized revision check / resynchronization | Repair freshness without treating heartbeat as state agreement; respect role/exit/expiry. | D1, D2, E1, E2, E3, E4, E5, G3 | Proposed Request/Response: D1, D2, E1, E2, E3, E4, E5, G3 in Section 6; final contract **TBD**. |
+| API-32 | WSS connection / upgrade | Valid authorized game context; first application state is full role-filtered snapshot; Section 7 details TBD. | G1, G2, H4 | Proposed Request/Response: G1, G2, H4 in Section 6; final contract **TBD**. |
+| API-33 | Enable disabled account | Another enrolled admin account or developer CLI only; no self-enable or role escalation. Clear `disabled_at`, preserving lifecycle status and prior credential revocations; DO-022 epoch policy approved, while transaction/concurrency/delivery mechanisms remain TBD (HLD-078). | B9 | Proposed Request/Response: B9 in Section 6; final contract **TBD**. |
+
+No endpoints for manual board marking, public privileged registration, self-elevation, post-terminal gameplay, History export or alternate player recovery are implied. CLI-to-backend transport remains TBD; the catalog does not require the CLI to use public app routes.
+
+<a id="operation-worksheet"></a>
+
+## 5. Per-operation request/response worksheet
+
+- **Operation ID / purpose / source decisions / consuming views:** TBD — link the relevant Section 4 API ID and Section 6 catalog ID(s).
+- **Public Worker handler versus internal Object/CLI interface:** TBD — preserve each Section 6 entry’s boundary; internal Request/Response proposals do not create public routes.
+- **Method / path / API version:** TBD — review the Section 6 proposal; internal helpers do not require an HTTP endpoint.
+- **Authentication / allowed roles / lifecycle / ownership or admin override:** TBD.
+- **Preconditions / validation / CSRF and origin checks:** TBD.
+
+### Request
+
+Describe path/query parameters, authentication cookies/headers, origin checks, preconditions, validation and retry metadata here, **before** the body table. Include only request-body fields in the table. State “No request body” when applicable; do not invent fields to fill an empty table. Field definitions and sanitized examples remain **TBD**. Recovery answers belong only in protected HTTPS bodies, never query strings or WSS; never include real passwords, tokens or credential-bearing URLs in examples.
+
+Use `Y` or `N` for each proposed field's requiredness, following the Section 6 conventions. The empty table is a worksheet to populate, not a selected empty payload.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+### Response
+
+Describe success status, headers/cookie effects, visibility/cache policy, durable-result/revision semantics and any body/no-body alternatives here, **before** the body table. Specify restricted versus normal session effects; never expose HttpOnly session bearer values in the body. Refine the Section 6 safe projections; schema, sanitized examples and exact status remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+### Error responses and side effects
+
+Failure conditions, status/error-code mapping, durable effects and retry safety remain **TBD**. The body fields below are shared proposals, not finalized error contracts; optional nonsecret correlation data has no selected field name yet. Describe operation-specific errors and cookie/header effects in paragraphs before its response table rather than mixing transport details into body-field rows. Never return raw internal errors or credential material.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `String` | Y | Proposed safe public error code; vocabulary and envelope TBD. |
+| `message` | `String` | Y | Proposed safe client-facing message; disclosure and mapping TBD. |
+
+- **Backend owner / record reads / writes / transaction:** TBD.
+- **Idempotency, concurrent requests and unknown-outcome recovery:** TBD.
+- **Committed-result acknowledgement and WSS interaction:** TBD.
+- **Revocation/expiry during execution, logging/redaction and audit:** TBD.
+- **Contract, permission, validation and failure tests:** TBD.
+
+<a id="operation-catalog"></a>
+
+## 6. Proposed operation and data-access catalog
+
+**Status:** Captured at the user's request. IDs A1–H12, Rust function names, methods/paths and auth scopes remain **proposals for review** (LLD-017), not implemented handlers. Every operation now includes proposed **Request** and **Response** inputs/outputs (LLD-019), including internal and socket-specific semantics. Section 4 remains the stable coverage index. Final requiredness, wire schemas, status/error codes, Rust signatures and routing remain **TBD**; Object structures are separately proposed in [Durable Object design Section 6](durable-object-design.md#schema-proposal) and are not finalized here.
+
+**Scope and access conventions:**
+- **Mutating** includes changes to credentials, membership, connections or lifecycle, not just game data.
+- **Non-mutating** means read-only, excluding ordinary request logging.
+- **Admin:** authenticated, fully enrolled admin.
+- **Host:** authenticated, fully enrolled host **or admin**. Game mutations additionally require designated-host ownership unless the caller is an admin.
+- **Player:** authenticated player acting on their own membership. Host/admin privileges do not grant anonymous-player impersonation or recovery override.
+- **Anyone:** no privileged account role required; token, admission, session and ownership checks still apply where stated. This includes spectators and unauthenticated entry/recovery flows; it never means unrestricted access to another user's data.
+- **System:** backend-only operation, not independently callable by users. The user explicitly selected this label for internal operations; it is not a provisioned account role.
+- Comma-separated scopes mean either role is permitted. Every operation still enforces the description's lifecycle, ownership, credential and privacy conditions.
+
+**Mapping conventions:** Function names describe proposed handlers/helpers, not signatures. Paths include a suggested HTTP method; **— Internal** means no public URL. Repeated Leave/Cancel paths are server-selected role/state branches, not duplicate routes. Server push and retry helpers are not extra public endpoints. Reads may be combined into role-specific snapshots; dependent internal writes remain part of the command that owns them. Credentials and recovery answers are supplied through protected request bodies/cookies as appropriate, never interpolated into these paths. The developer CLI's transport remains separate/TBD.
+
+**Request/Response proposal conventions (LLD-019):** Every catalog entry below now has **Request** and **Response** subheadings. These are potential inputs/outputs, not approved wire contracts. Public HTTP operations place body fields in **Field / Type / Required / Description** tables and path/query/cookie/header inputs, authorization, failures and side effects in paragraphs before those tables. For System entries, “Request” means trusted internal inputs and “Response” means an internal result or outbound socket message; it does **not** introduce a public endpoint. G1 describes an upgrade plus frames, G2 server push, and G5 a wrapper around the original command.
+
+- **Table notation:** `Field` is the body field name, `Type` is its proposed data type, and `Required` contains only `Y` or `N`. `Y` means required in the described proposed payload; `N` means optional or conditional, with the condition stated in `Description` or the preceding paragraphs. Conditional requirements still apply when their branch is selected; `N` does not permit ignoring a selected branch's required data. These are proposed requiredness flags, not final contract approval. A header-only table has no specified fields: preceding prose distinguishes no body from a schema still TBD. `$` denotes the entire body/result when no wrapping property was proposed; it is not a literal JSON key. Dotted paths denote nested fields rather than new top-level properties. Tables for internal operations describe trusted argument/result payloads; WSS tables explicitly distinguish application messages from the bodyless HTTP upgrade.
+- Field names/DTO shapes below remain proposals; application-generated system ID types now follow the confirmed UUID v7 convention (LLD-020). Shared ID, timestamp, enum and configuration notation follows [Durable Object design Section 6](durable-object-design.md#schema-proposal); it does not select Rust serialization or JSON encodings. `object` means a described, not-yet-finalized projection. `Option<T>` indicates conditional/nullable data, not whether a JSON key must be omitted or present as null; that distinction is **TBD**.
+- **TBD for every entry:** final input requiredness/defaults, validation limits, field encodings, media/API versions, request/response envelopes, success/error statuses, cookie/header names, exact error variants, caching policy, rate limits and contract tests. Local notes highlight additional operation-specific TBDs. Existing confirmed guards still apply; a tentative field must not change a product rule.
+- The cookie is browser-supplied credential transport, not a body field or proof that the frontend is trusted. Derive actor, role, stable membership, assignment and expiry server-side; do not accept client-provided authority claims. Apply the eventual origin/CSRF policy to state changes and the appropriate Origin policy to WebSocket upgrades (**TBD** mechanics).
+- Proposed `command_id: CommandId` metadata supports retry-sensitive mutations. Its placement/requiredness, actor binding, receipt lifetime and rejection of inadmissibly old commands remain **TBD**. A possible `expected_revision` or confirmation field does not replace commit-time lifecycle/authorization checks. Client-visible revisions must belong to the authorized projection, not expose private internal mutation counts.
+- Passwords, bearer-link redemption tokens and recovery answers appear only as conceptual input fields, never sample values; send them in protected HTTPS bodies, never query strings or WSS frames. Do not expose session bearer values, stored verifiers or private recovery material in response bodies. Session issuance/rotation occurs through protected HttpOnly cookies.
+- **Sensitive-output exception:** authorized account/link creation, reissue and reset may deliver the newly issued enrollment/reset URL to the authorized administrator/developer. Those URLs are bearer secrets, not ordinary account metadata, list/detail fields, logs or secret-free receipt payloads. No real URL/token appears here. Private handoff, cache prevention and lost-response/reissue behavior remain **TBD**.
+- Failure candidates are design prompts, not promises to disclose every cause. Use safe authentication/recovery errors and do not reveal another actor's identity, answer-enrollment status or private records. Potential shared error fields are `code: String`, safe `message: String` and optional nonsecret correlation reference; final envelope/status/retry hints are **TBD**. An interrupted response is not proof the command failed or is safe to resubmit with a new ID.
+- Response proposals describe committed success unless explicitly labeled pending. Do not report deletion, reservation release or immediate revocation complete merely because cross-Object work was queued. Exact pending/unknown-outcome contracts remain **TBD**. Neither success bodies nor cached receipts may outlive the caller's access or the data-retention boundary.
+
+**Derived state is not stored twice:** Boolean response properties that correspond to authoritative timestamps are computed projections, not extra database columns. In particular, account `disabled` is derived only from `disabled_at` population; enable/disable writes that timestamp, not a client-provided flag. Derive expiry/blocking from deadline comparisons rather than timestamp presence where appropriate. See [the cross-record storage rule](durable-object-design.md#timestamp-state). This does not add response fields or finalize their visibility.
+
+**Reusable proposed safe response shapes:** These are DTO/projection descriptions, **not direct serialization of the storage records in [Durable Object design Section 6](durable-object-design.md#schema-proposal)**. Final nested schemas, field visibility and optionality remain **TBD**.
+
+| Shape | Potential fields / visibility |
+| --- | --- |
+| `SafeAccount` | `account_id: AccountId`, `username: String`, `role: AccountRole`, `status: AccountStatus`, `disabled: bool` (computed from `disabled_at.is_some()`, not stored), `created_at: Timestamp`; optional safe lifecycle timestamps only where authorized. Self/setup flows receive only their required subset; admin Users flows may receive the management subset. No verifiers, epochs, tokens, links or participant records. |
+| `SessionView` | `kind: String`, `scope: String`, `expires_at: Timestamp`; identity variant containing only the authenticated account's safe ID/role or the caller's game/member binding, with player alias where applicable. Exact discriminators **TBD**. No bearer, verifier or arbitrary other identity. |
+| `GameSummary` | `game_id: GameId`, `game_code: Option<GameCode>`, `state: GameState`, permitted designated-host ID, relevant timestamps and server-derived caller capabilities. No private roster/board/credential data. Public code entry uses a narrower projection rather than this account summary. |
+| `MembershipView` | `game_id: GameId`, participant role, own `player_id: PlayerId` or `spectator_id: SpectatorId`, player alias when applicable, permitted access state, `session_expires_at: Timestamp`, player-only `recovery_enabled: bool`. No recovery answer/verifier; a spectator does not acquire player fields. |
+| `CallView` | `sequence_no: u32`, `value: String`; optionally a public-safe `called_at: Timestamp` (**TBD**). Do not implicitly expose raw call actor IDs, command IDs or storage metadata. |
+| `BoardView` | Own or otherwise authorized `player_id: PlayerId`/alias, `side_length: u8`, `cells: Vec<BoardCell>` (position, Free/Value, automatic matched state), `qualified: bool`, `qualifying_lines: Vec<CompletedLine>`. No client mark input or pre-start assigned board. |
+| `GameView` | Authorized `GameSummary` subset, permitted `configuration: GameConfiguration` fields, `calls: Vec<CallView>`, latest call/exhaustion, `view_revision: Revision`; own `MembershipView`/board for a player, permitted roster/boards for hosts/admins, audience-only state for spectators. Fields absent by role/state remain absent, not blank private copies. Exact projection **TBD**. |
+| `FinalResultView` | `game_id: GameId`, terminal outcome, `winner: Option<WinnerSnapshot>`, `ended_at: Timestamp`, final call/board content only as authorized, original expiry metadata where relevant, and applicable view revision. Player gets only own board; account final-view grants follow their permissions; a delivered spectator result has no private boards or renewed retrieval authority. Pre-start deletion may permit only a transient cancellation notice, not a fetchable History snapshot. |
+| `HistoryView` | Safe retained `GameHistorySnapshot` fields: game/code/minimal host identity, started/ended/expiry timestamps, outcome/winner, ordered string calls, final player aliases and `HistoryPlayerSnapshot` boards. Host/admin-only; never live credentials, recovery data, spectators or intermediate replay. |
+
+### A. Authentication and sessions
+
+#### A1: `login_account` (Mutating)
+
+Path: `POST /api/auth/login`
+
+Auth scope: Anyone
+
+Validate submitted account credentials and enrollment/reset/disabled state; create a fixed-one-day account session. Existing account sessions may remain valid.
+
+##### Request
+
+No existing account session is required; request-origin/CSRF and abuse controls still apply. The password is sensitive input and must be sent in the HTTPS body only.
+
+Username rules follow [DO-020/021](durable-object-design.md#account-records): trim leading/trailing ASCII whitespace (`0x09`–`0x0D` and `0x20`) before validating 10–50 decoded ASCII characters with no internal whitespace. Preserve trimmed original casing in storage/display; compute temporary ASCII-lowercase values for case-insensitive uniqueness/login, with no stored normalized key. Other permitted ASCII controls, including NUL and DEL, remain unchanged. Apply consistently to CLI/admin account creation and login. SQL/constraint enforcement, control-character transport/UI handling and validation/error mechanics remain **TBD**. Password upper bounds remain separately **TBD**. Password hashing is selected as salted Argon2 via RustCrypto `argon2` ([LLD-024](lld.md#password-hashing)); variant, work factors, version, features and runtime details remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | `String` | Y | Submitted account username. |
+| `password` | `String` | Y | Submitted account password: at least 10 characters, ASCII-only, any combination with no character-class quotas ([LLD Section 9.1](lld.md#password-policy)). Preserve the exact decoded input for verification. |
+
+##### Response
+
+The returned session has normal scope and a fixed expiry. Issue an HttpOnly account-session cookie; never return its bearer value in JSON. Other account logins remain valid. Do not return account salt, hash or verifier to clients.
+
+Failure candidates are invalid credentials, enrollment/reset required, a disabled account or throttling; public distinctions and status/error mapping remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `SafeAccount` | Y | Safe account metadata. |
+| `session` | `SessionView` | Y | Normal-scope session view with fixed `expires_at: Timestamp`. |
+
+#### A2: `get_current_session` (Non-mutating)
+
+Path: `GET /api/session`
+
+Auth scope: Anyone
+
+Resolve the presented session and return its safe identity, scope, expiry and current permissions. Missing or invalid credentials do not disclose another identity or grant access. Never return credential verifiers.
+
+##### Request
+
+Cookie input is the current account, restricted or participant session, if present. There is no body or arbitrary target identifier.
+
+How the request selects a session context when the browser holds multiple account/game cookies remains **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Return only the presented valid session’s permitted identity, scope and original expiry. Restricted sessions expose setup/reset authority only.
+
+Absent/invalid-session handling—an anonymous result versus an authentication error—remains **TBD**. Never renew expiry or expose credential material. The vocabulary for current permitted actions remains **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `authenticated` | `bool` | Y | Whether the presented session is authenticated in the proposed result; the absent/invalid-session result-versus-error choice remains TBD. |
+| `session` | `Option<SessionView>` | N | The presented valid session’s permitted identity, scope and original expiry, when available; nullable versus absent remains TBD. |
+| `capabilities` | `Vec<String>` | N | Possible representation of current permitted actions; vocabulary TBD. Restricted sessions expose setup/reset authority only. |
+
+#### A3: `redeem_enrollment_link` (Mutating)
+
+Path: `POST /api/auth/enrollment/redeem`
+
+Auth scope: Anyone
+
+A valid enrollment token is required. Validate account binding, purpose, expiry and unused status; atomically consume the token and create a restricted password-setup session.
+
+##### Request
+
+The enrollment token is sensitive bearer proof and must be sent in the HTTPS body only. Do not accept a client-selected account, role or expiry.
+
+No existing normal session is required; token binding, expiry and single-use state are server-validated.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `enrollment_token` | `String` | Y | Enrollment token providing the required bearer proof. |
+
+##### Response
+
+The session is restricted to enrollment completion. Atomically consume the link and issue a fixed-life restricted HttpOnly session; never echo the token.
+
+Failure candidates are an expired, consumed, revoked or invalid-purpose token, or an ineligible account; safe error distinctions and lost-response recovery remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `setup_required` | `bool` | Y | Whether password setup is required. |
+| `session` | `SessionView` | Y | Session view restricted to enrollment completion. |
+
+#### A4: `complete_password_setup` (Mutating)
+
+Path: `POST /api/auth/enrollment/complete`
+
+Auth scope: Anyone
+
+A valid restricted enrollment session is required. Persist the chosen password verifier and setup completion; rotate into normal account authority without extending the restricted session’s original deadline.
+
+##### Request
+
+Cookie input is a valid enrollment-only session. The new password is required sensitive input. Account identity and intended role come from the restricted session, never the body.
+
+Enforce the password policy before storing a verifier. Password hashing is selected as salted Argon2 via RustCrypto `argon2` ([LLD-024](lld.md#password-hashing)); variant, work factors, version, features and runtime details remain **TBD**. Maximum length, transport/UI details and any confirmation field remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `new_password` | `String` | Y | Chosen password: at least 10 characters, any combination of ASCII characters, with no required character-class mix, per [LLD Section 9.1](lld.md#password-policy). Preserve the exact decoded input. |
+
+##### Response
+
+Successful setup provides normal authority. Retire/rotate the restricted credential, preserving its original absolute expiry; do not echo the password or return account salt, hash or verifier.
+
+Failure candidates are an invalid, expired or replaced restricted session, already-completed setup or password-policy rejection; the exact contract remains **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `SafeAccount` | Y | Safe account metadata after successful setup. |
+| `session` | `SessionView` | Y | Session view with normal authority after successful setup, preserving the restricted session’s original absolute expiry. |
+
+#### A5: `redeem_password_reset_link` (Mutating)
+
+Path: `POST /api/auth/password-reset/redeem`
+
+Auth scope: Anyone
+
+A valid reset token is required. Validate and consume the single-use token; establish restricted password-reset authority for the bound account.
+
+##### Request
+
+The reset token is required sensitive bearer proof and must be sent in the HTTPS body only. Account and purpose are resolved server-side.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `reset_token` | `String` | Y | Password-reset token providing the required bearer proof. |
+
+##### Response
+
+Consume the link once and establish restricted HttpOnly reset authority; no normal privileges are granted yet.
+
+Failure candidates are an invalid, expired, consumed or superseded token; public mapping and interrupted redemption behavior remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `reset_required` | `bool` | Y | Whether password reset is required. |
+| `session` | `SessionView` | Y | Session view restricted to password reset. |
+
+#### A6: `complete_password_reset` (Mutating)
+
+Path: `POST /api/auth/password-reset/complete`
+
+Auth scope: Anyone
+
+A valid restricted reset session is required. Replace the password verifier, complete reset state and retire restricted reset authority. Exact post-reset navigation/session behavior remains TBD.
+
+##### Request
+
+Cookie input is a valid reset-only session. The new password is required sensitive input. Do not accept a caller-supplied target account, role or session-expiry override.
+
+Apply the same password validation and exact-input preservation rule as setup, enforcing the policy before storing a verifier. Password hashing is selected as salted Argon2 via RustCrypto `argon2` ([LLD-024](lld.md#password-hashing)); variant, work factors, version, features and runtime details remain **TBD**. Remaining maximum-length/transport/UI details remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `new_password` | `String` | Y | Chosen replacement password: at least 10 characters, any combination of ASCII characters, with no required character-class mix, per [LLD Section 9.1](lld.md#password-policy). Preserve the exact decoded input. |
+
+##### Response
+
+Retire reset-only authority. Whether a normal session is issued, its deadline rules and navigation remain **TBD**; do not promise automatic login. A possible next action may indicate sign-in versus a normal-session transition, with the choice **TBD**.
+
+Failure candidates are replaced or expired reset authority, invalid account state or password rejection. Do not return the password or account salt, hash or verifier.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `reset_completed` | `bool` | Y | Whether password reset completed. |
+| `next_action` | `String` | N | Possible indication of sign-in versus a normal-session transition; the choice remains TBD. |
+
+#### A7: `logout_session` (Mutating)
+
+Path: `POST /api/auth/logout`
+
+Auth scope: Anyone
+
+Revoke the caller’s current session, clear its cookie and stop associated authorized socket delivery. This cannot revoke another user’s session and is separate from leaving a game.
+
+##### Request
+
+Cookie input is the caller’s current session. There is no target user/session field and no business body.
+
+Context selection and repeat-logout behavior when the cookie is already absent or invalid remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The response may contain the proposed acknowledgment or be an empty success response; the choice remains **TBD**. Clear the matching cookie and stop its authorized socket delivery.
+
+No other account session is revoked; no game Leave, global account logout or game outcome change is implied.
+
+Partial revocation/failure reporting and exact response status remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `logged_out` | `bool` | N | Proposed logout acknowledgment if a response body is selected; an empty success response is also under consideration (TBD). |
+
+### B. Users and privileged account management
+
+The scopes below describe the app-facing endpoints. The developer CLI retains its separately authorized management and bootstrap capabilities.
+
+#### B1: `list_users` (Non-mutating)
+
+Path: `GET /api/users`
+
+Auth scope: Admin
+
+List safe metadata for provisioned host/admin accounts. Exclude anonymous memberships and secrets. Columns, filtering, sorting and pagination remain TBD.
+
+##### Request
+
+Cookie input is an enrolled admin session. There is no body.
+
+Possible query inputs are `role: Option<AccountRole>`, `status: Option<AccountStatus>`, `cursor: Option<String>` and `limit: Option<u32>`; filters/sort/paging support, defaults and limits remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Do not include anonymous memberships, passwords, verifiers, access-link URLs or session tokens. Selected columns and total-count support remain **TBD**.
+
+Failure candidates are an unauthenticated or non-admin caller, or an invalid query; status/error schemas remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `users` | `Vec<SafeAccount>` | Y | Safe metadata for provisioned host/admin accounts. |
+| `next_cursor` | `Option<String>` | N | Possible continuation cursor if pagination is selected; nullable versus absent remains TBD. |
+
+#### B2: `get_user` (Non-mutating)
+
+Path: `GET /api/users/{account_id}`
+
+Auth scope: Admin
+
+Read a target account’s safe metadata and lifecycle state for management. This does not expose password, token or recovery verifiers.
+
+##### Request
+
+Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. There is no body.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Potential management availability is derived server-side; its exact fields remain **TBD**.
+
+Failure candidates are a missing/deleted target or denied admin access. Do not disclose credentials, links or verifiers.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `SafeAccount` | Y | Target account’s safe metadata and lifecycle state for management. |
+
+#### B3: `create_host_account` (Mutating)
+
+Path: `POST /api/users/hosts`
+
+Auth scope: Admin
+
+Validate the proposed username; create a pending host account and one-day enrollment link. Return the link only after durable creation. The developer CLI may also perform this through its privileged path.
+
+##### Request
+
+Cookie input is an enrolled admin session. The target role is fixed to Host by this operation and is not user-editable.
+
+Command metadata `command_id: CommandId` is proposed for retry-safe creation; transport and requiredness remain **TBD**. CLI input transport is separate.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | `String` | Y | Username for the new host account. |
+
+##### Response
+
+Return these outputs only after durable creation. The enrollment link is a sensitive one-time delivery to the authorized creator, not ordinary account metadata; secure response/cache/redaction and lost-response/reissue handling remain **TBD**.
+
+Failure candidates are a username conflict, invalid username format or denied creation. Do not return raw token verifiers or an initial password.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `SafeAccount` | Y | Safe account metadata in pending enrollment. |
+| `enrollment_url` | `String` | Y | Enrollment link for the newly created account. |
+| `link_expires_at` | `Timestamp` | Y | Enrollment-link expiry. |
+
+#### B4: `create_admin_account` (Mutating)
+
+Path: `POST /api/users/admins`
+
+Auth scope: Admin
+
+Create a pending admin account and enrollment link. Only an existing admin or the developer CLI may perform this; first-admin bootstrap uses CLI.
+
+##### Request
+
+Cookie input is an existing enrolled admin session. The target role is fixed to Admin.
+
+Command metadata `command_id: CommandId` is proposed; transport and requiredness remain **TBD**. First-admin bootstrap has no anonymous HTTP bypass and uses the developer CLI.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `username` | `String` | Y | Username for the new admin account. |
+
+##### Response
+
+The enrollment URL is sensitive. Return outputs only after durable authorized creation; secure link handoff and secret-bearing retry behavior remain **TBD**.
+
+Failure candidates are an unauthorized caller, username conflict or invalid username; no self-elevation or public registration is allowed.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account` | `SafeAccount` | Y | Safe account metadata in pending enrollment. |
+| `enrollment_url` | `String` | Y | Enrollment link for the newly created admin account. |
+| `link_expires_at` | `Timestamp` | Y | Enrollment-link expiry. |
+
+#### B5: `reissue_enrollment_link` (Mutating)
+
+Path: `POST /api/users/{account_id}/enrollment-links`
+
+Auth scope: Admin
+
+For the same pending account, invalidate previous enrollment links/restricted sessions and issue a replacement one-day single-use link.
+
+##### Request
+
+Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. There is no replacement username/role in the body; no business-body fields are proposed here.
+
+Command metadata `command_id: CommandId` is proposed; exact confirmation and retry transport remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The enrollment URL is sensitive. Predecessors are invalidated as part of the accepted reissue.
+
+Failure candidates are an absent account, an already-enrolled account or an account not eligible for enrollment reissue. Enrolled accounts use reset instead.
+
+Cookie effects on predecessor restricted sessions, link delivery and lost-response policy remain **TBD**; never replay a raw link from a secret-free receipt.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `AccountId` | Y | Account whose enrollment link was reissued. |
+| `enrollment_url` | `String` | Y | Replacement enrollment link. |
+| `link_expires_at` | `Timestamp` | Y | Replacement enrollment-link expiry. |
+
+#### B6: `initiate_password_reset` (Mutating)
+
+Path: `POST /api/users/{account_id}/password-reset-links`
+
+Auth scope: Admin
+
+For an enabled enrolled account, enter ResetRequired, immediately revoke target-account sessions/sockets, block old-password login and issue a one-day reset link. Reject reset operations while `disabled_at` is populated. Reset-link expiry does not restore old-password access (DO-022 lifecycle subdecision).
+
+##### Request
+
+Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. No new password is supplied by the admin; no business-body fields are proposed here.
+
+Command metadata `command_id: CommandId` is proposed; confirmation and administrative edge-case policy remain **TBD**. No body placement is assigned to this metadata.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The reset URL is sensitive. Success implies the specified reset gate/predecessor invalidation is effective; do not report immediate socket revocation complete based only on a queued message.
+
+Failure/partial-progress, self-reset and secure link re-delivery contracts remain **TBD**; old-password login must remain blocked while reset is pending.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `AccountId` | Y | Account placed into password-reset-pending state. |
+| `status` | `AccountStatus` | Y | Account status `ResetRequired`. |
+| `reset_url` | `String` | Y | Password-reset link for the account. |
+| `link_expires_at` | `Timestamp` | Y | Reset-link expiry. |
+
+#### B7: `disable_account` (Mutating)
+
+Path: `POST /api/users/{account_id}/disable`
+
+Auth scope: Admin
+
+Acquire the Directory gate before checking hosted games; while it is held, reject new-game/host-transfer assignments to this account. If a nonterminal hosted game exists, clear the gate and reject disable. Otherwise disable the account and revoke credentials/connections, then clear the gate. If interrupted, retain the gate and retry safely.
+
+##### Request
+
+Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. No business-body fields are proposed here.
+
+Command metadata `command_id: CommandId` is proposed; removal confirmation, self-removal and last-admin behavior remain **TBD**. No body placement is assigned to this metadata.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The response may contain the proposed account/status body or be an empty success response; the choice remains **TBD**. Success requires access revocation, not merely a requested status change.
+
+A failure candidate is a target hosting a nonterminal game. The optional error-detail field below is restricted to the authorized admin; its error envelope and exact disclosure remain **TBD**.
+
+There is no automatic cancellation/transfer; preserve unrelated games and History. An already-disabled account is an authorized no-op without timestamp changes; revoked credentials stay revoked. Missing-target handling, operation-retry races and partial revocation outcomes remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `AccountId` | N | Account disabled, if the proposed account/status response body is selected; an empty success response is also under consideration (TBD). |
+| `status` | `AccountStatus` | N | Preserved lifecycle state (PendingEnrollment, Active or ResetRequired), if the proposed body is selected; an empty success response is also under consideration (TBD). |
+| `disabled` | `bool` | N | Computed as `disabled_at.is_some()`; `true` after successful disable if the proposed body is selected. Not a database column or client-writeable flag; lifecycle status remains independent. |
+| `blocking_game_ids` | `Vec<GameId>` | N | Optional safe detail in the nonterminal-hosting failure response, not a success-body field. Only for the authorized admin; exact error detail/envelope TBD. |
+
+#### B8: `delete_account` (Mutating)
+
+Path: `DELETE /api/users/{account_id}`
+
+Auth scope: Admin
+
+Acquire the Directory gate before checking hosted games; while it is held, reject new-game/host-transfer assignments to this account. If a nonterminal hosted game exists, clear the gate and reject deletion. Otherwise delete account/credential data without deleting unrelated or unexpired History, then clear the gate. If interrupted, retain the gate and retry safely.
+
+##### Request
+
+Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. Do not assume a DELETE body.
+
+Command metadata `command_id: CommandId` is proposed. Confirmation/header placement and repeat-delete policy remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The response may contain the proposed account/deletion acknowledgment or be an empty success response; the choice remains **TBD**. No deleted credential record is returned.
+
+Failure candidates are a hosted nonterminal game, denied removal or an unknown target; safe blocker details remain **TBD**.
+
+Preserve unexpired History/minimal references; do not label deletion complete while required account/credential cleanup is still pending.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `AccountId` | N | Account deleted, if the proposed acknowledgment body is selected; an empty success response is also under consideration (TBD). |
+| `deleted` | `bool` | N | Proposed deletion acknowledgment if a response body is selected; an empty success response is also under consideration (TBD). |
+
+#### B9: `enable_account` (Mutating)
+
+Path: `POST /api/users/{account_id}/enable` (proposed)
+
+Auth scope: Admin
+
+**Confirmed capability and actor restriction (HLD-078; DO-022):** Enable an existing disabled host/admin account only when the caller is a different fully enrolled admin account with valid authority, or the developer using the separately privileged CLI path. Enforce caller-account ID != target-account ID for app-admin calls; ordinary hosts, participants, unauthenticated callers and the disabled target itself cannot enable it. This is not role editing, deleted-account restoration or automatic revival of revoked/expired credentials. **Approved outcome:** clear the authoritative `disabled_at` timestamp while preserving the existing lifecycle `status`. No disabled boolean is stored. Previously Active accounts may log in afresh with their existing password; PendingEnrollment still needs setup, and ResetRequired still needs reset. Do not revive old sessions/links. Pending setup/reset requires a newly issued link through the existing flow. Clear `disabled_at` on the accepted enable transition; an authorized already-enabled retry is a no-op without timestamp changes. DO-022 approves the credential-epoch increments and match checks; exact transaction, concurrency and cross-Object delivery remain TBD.
+
+##### Request
+
+Path input is `account_id: AccountId`. The app route uses an enrolled admin session cookie; the CLI uses its privileged server-validated interface, not browser cloud credentials. No request body is proposed. Confirmation, CSRF/origin checks, command metadata, retry behavior and exact route are **TBD**. Authorization and target-state checks must hold at commit.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The following safe acknowledgment body is proposed; final success/error encoding and status codes remain **TBD**. Do not issue an account-session cookie for the target or return its verifier, token, or other credentials in this acknowledgment. A future reviewed link-delivery flow is separate. Denied authority/self-enable, missing/deleted target, non-disabled target and conflicting account operations require explicit error/retry handling; an already-enabled target is a no-op after authorization checks. Exact concurrent-operation/idempotency mechanics remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `AccountId` | Y | Target account after successful enable. |
+| `status` | `AccountStatus` | Y | Preserved lifecycle state (Active, PendingEnrollment or ResetRequired). |
+| `disabled` | `bool` | Y | Computed as `disabled_at.is_some()`; `false` after successful enable clears the timestamp. Not a database column or client-writeable flag; lifecycle status remains independent. |
+
+### C. Game discovery, configuration and ownership
+
+#### C1: `list_games` (Non-mutating)
+
+Path: `GET /api/games`
+
+Auth scope: Host
+
+List current-game summaries with lifecycle, designated host and appropriate access information. Detailed filtering remains TBD.
+
+##### Request
+
+**Potential inputs (proposal):** An enrolled host/admin session is supplied by cookie. No request body.
+
+Possible query parameters: `state: Option<GameState>`, `cursor: Option<String>`, `limit: Option<u32>`; supported filters, ordering and paging remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+**Potential outputs (proposal):** Each summary distinguishes the designated host and caller permissions; discovery does not grant mutation rights.
+
+Failure candidates: invalid/expired account session or unsupported query; exact fields/statuses remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `games` | `Vec<GameSummary>` | Y | Summaries for permitted current games. |
+| `next_cursor` | `Option<String>` | N | Possible continuation cursor if paging is chosen; paging remains TBD. |
+
+#### C2: `get_current_nonterminal_game` (Non-mutating)
+
+Path: `GET /api/games/current`
+
+Auth scope: Host
+
+Find the sole application-wide nonterminal game in New, Awaiting Players or In Progress. Supports resume/access decisions and creation-blocked feedback; authorization still governs what the caller may see/do (HLD-077).
+
+##### Request
+
+**Potential inputs (proposal):** An enrolled host/admin session is supplied by cookie. No request body or target-host filter; this lookup concerns the one global nonterminal-game slot.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+**Potential outputs (proposal):** An empty slot is not an error by itself. Only return a safe summary the caller is authorized to view; do not expose another host’s private game data.
+
+Prepared/unpublished reservation visibility and absent-result encoding remain **TBD**. Do not expose uncommitted or credential-bearing coordination records.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game` | `Option<GameSummary>` | N | The sole nonterminal game occupying the global slot (New, Awaiting Players or In Progress), if any and caller-authorized; absent-result encoding remains TBD. |
+
+#### C3: Retired duplicate lookup
+
+The former `get_active_game` proposal is removed: C2 is the single proposed lookup for the one application-wide nonterminal game across New/Awaiting Players/In Progress. C3 is not an endpoint or handler. Its identifier is retained only to avoid silently reusing a prior catalog ID.
+
+#### C4: `resolve_game_code` (Non-mutating)
+
+Path: `GET /api/game-codes/{code}`
+
+Auth scope: Anyone
+
+Normalize and resolve an issued code to an existing game and limited entry information. Unknown codes never create games; discovery grants no membership, private data or gameplay permissions.
+
+##### Request
+
+**Potential inputs (proposal):** Path parameter: `code: String`, normalized/validated to `GameCode` by the backend. No request body or privileged session required.
+
+Apply entry lookup abuse controls; a code is a discovery key, not identity proof.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+**Potential outputs (proposal):** The body is a limited eligible-game entry projection. No roster, private boards, account metadata or credentials. A terminal reserved code must not expose a joinable game.
+
+Unknown, terminal, unavailable and malformed-code error distinctions, plus any admission-context handoff, remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Resolved game identifier in the limited eligible-game entry projection. |
+| `game_code` | `GameCode` | Y | Resolved issued game code. |
+| `state` | `GameState` | Y | Resolved game's lifecycle state. |
+| `can_join_player` | `bool` | Y | Whether player entry is available in this limited projection. |
+| `can_join_spectator` | `bool` | Y | Whether spectator entry is available in this limited projection. |
+
+#### C5: `get_game` (Non-mutating)
+
+Path: `GET /api/games/{game_id}`
+
+Auth scope: Anyone
+
+Read only the caller-authorized game/configuration projection. Host/admin accounts and admitted player/spectator sessions receive their permitted fields. A game ID alone does not authorize private data or unrestricted game inspection.
+
+##### Request
+
+**Potential inputs (proposal):** Path parameter: `game_id: GameId`. A valid authorized account or participant session is supplied by cookie. No request body.
+
+The server derives the allowed view; no client-selected role or arbitrary player identity grants access.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+**Potential outputs (proposal):** No pre-start board, spectator private boards or recovery material. Terminal readers must obey final-view/History rules, not bypass them through this route.
+
+Unknown/forbidden/expired game handling and exact role projections remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game` | `GameView` | Y | Caller-authorized view containing only caller-visible configuration, lifecycle, calls, permitted membership/board information and `view_revision: Revision`. |
+
+#### C6: `create_game` (Mutating)
+
+Path: `POST /api/games`
+
+Auth scope: Host
+
+Create a distinct New game, assign its creator as designated host and establish the host-idle deadline. Reject if the creator account has an active AccountAssignmentGate or any other nonterminal game occupies the single global reservation. Claim the slot before GameObject creation; on failure, retries use the same game ID/code association (HLD-077, DO-015, DO-017/018).
+
+##### Request
+
+**Potential inputs (proposal):** An enrolled host/admin session is supplied by cookie. Creation-time configuration overrides versus defaults-only creation remain **TBD**.
+
+Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned here to the body. The authenticated creator determines the designated host; do not accept an arbitrary host assignment.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `configuration` | `Option<GameConfiguration>` | N | Possible creation-time configuration; overrides versus defaults-only creation remain TBD. |
+
+##### Response
+
+**Potential outputs (proposal):** Returned for the operating caller. No published code or board yet.
+
+Failure candidates: occupied global nonterminal-game reservation, invalid configuration or unavailable coordination.
+
+Creation response grouping and retry metadata remain **TBD**. If Directory has already claimed a `game_id` but GameObject creation failed, a later attempt must check that existing ID and recreate the same GameObject; preserve any game code already associated with it, and never allocate a second game ID or replacement code as recovery.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game` | `GameSummary` | Y | Created game's summary in New. |
+| `configuration` | `GameConfiguration` | Y | Created game's configuration. |
+| `idle_cancel_due_at` | `Timestamp` | Y | Host-idle cancellation deadline. |
+
+#### C7: `update_game_configuration` (Mutating)
+
+Path: `PATCH /api/games/{game_id}/configuration`
+
+Auth scope: Host
+
+The designated host or an authorized admin updates pool, board, free cells or capacities only in New. Validate the resulting configuration without partially applying invalid changes.
+
+##### Request
+
+**Potential inputs (proposal):** Path parameter: `game_id: GameId`. A designated host/admin session is supplied by cookie.
+
+The body is a configuration patch with proposed optional fields. Omitted-field versus null/replace semantics remain **TBD**.
+
+Command metadata: `command_id: CommandId`; possible `expected_revision: Revision` conflict guard. Transport/requiredness remain **TBD**; these metadata fields are not assigned here to the body.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `numeric_upper_bound` | `u32` | N | Proposed optional numeric upper-bound patch field; omitted-field versus null/replace semantics remain TBD. |
+| `board_side_length` | `u8` | N | Proposed optional board side-length patch field; omitted-field versus null/replace semantics remain TBD. |
+| `free_cells_enabled` | `bool` | N | Proposed optional free-cell enablement patch field; omitted-field versus null/replace semantics remain TBD. |
+| `free_cell_positions` | `Vec<CellPosition>` | N | Proposed optional free-cell positions patch field; omitted-field versus null/replace semantics remain TBD. |
+| `player_capacity` | `u8` | N | Proposed optional player-capacity patch field; omitted-field versus null/replace semantics remain TBD. |
+| `spectator_capacity` | `u8` | N | Proposed optional spectator-capacity patch field; omitted-field versus null/replace semantics remain TBD. |
+| `winning_pattern` | `WinningPattern` | N | Proposed optional winning-pattern patch field; omitted-field versus null/replace semantics remain TBD. |
+
+##### Response
+
+**Potential outputs (proposal):** All accepted fields apply together.
+
+Failure candidates: non-New game, non-owner host, invalid bounds/free positions/capacities or revision conflict. No partial patch on rejection.
+
+Validation/error fields and concurrency protocol remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `configuration` | `GameConfiguration` | Y | Resulting configuration. |
+| `view_revision` | `Revision` | Y | Resulting view revision. |
+
+#### C8: `open_game_lobby` (Mutating)
+
+Path: `POST /api/games/{game_id}/lobby`
+
+Auth scope: Host
+
+The designated host or an authorized admin freezes validated configuration, transitions to Awaiting Players and publishes its issued code consistently with game state.
+
+##### Request
+
+**Potential inputs (proposal):** Path parameter: `game_id: GameId`. A designated host/admin session is supplied by cookie.
+
+The table shows candidate body fields; body versus other command-metadata transport remains **TBD**, so their placement is not finalized. No client-supplied code or replacement configuration.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `command_id` | `CommandId` | N | Proposed; requiredness/placement TBD. Command identifier described as body/metadata, with transport unresolved. |
+| `expected_revision` | `Revision` | N | Possible expected revision. Proposed; requiredness/placement TBD. Body/metadata transport remains unresolved. |
+
+##### Response
+
+**Potential outputs (proposal):** Only return successful publication when Directory/Game state is consistent; no boards assigned yet.
+
+Failure candidates: invalid state/configuration, authorization or publication conflict; in-progress/retry status representation remains **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Game identifier. |
+| `state` | `GameState` | Y | Awaiting Players. |
+| `game_code` | `GameCode` | Y | Published issued game code. |
+| `configuration` | `GameConfiguration` | Y | Frozen configuration. |
+| `view_revision` | `Revision` | Y | Resulting view revision. |
+
+#### C9: `resume_game` (Mutating)
+
+Path: `POST /api/games/{game_id}/resume`
+
+Auth scope: Host
+
+Restore existing state without recreating codes/boards, subject to game permissions. A qualifying designated-host open/resume also updates the unstarted host-activity deadline. Passive reads must not silently refresh that deadline; the effect of non-designated admin activity remains TBD.
+
+##### Request
+
+**Potential inputs (proposal):** Path parameter: `game_id: GameId`. An authorized host/admin session is supplied by cookie. No input-body fields are specified in this proposal.
+
+Potential command metadata: `command_id: CommandId`; identify an intentional open/resume, not a background heartbeat. Format remains **TBD**; metadata is not assigned here to the body.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+**Potential outputs (proposal):** Return existing code/boards; do not recreate them. Passive/other-host views do not renew the host-idle timer. Non-designated admin renewal behavior remains **TBD**.
+
+Terminal/exited-view routing and denied/expired outcomes remain **TBD**; do not reopen terminal access.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game` | `GameView` | Y | Restored existing game view. |
+| `idle_cancel_due_at` | `Option<Timestamp>` | N | The designated operator may also receive the host-idle cancellation deadline where applicable. |
+
+#### C10: `transfer_game_host` (Mutating)
+
+Path: `POST /api/games/{game_id}/host-transfer`
+
+Auth scope: Host
+
+Validate designated-host or admin authority, target eligibility, absence of a target AccountAssignmentGate and confirmation; immediately replace designated-host assignment while preserving game data and the same global reservation. No recipient acceptance is required (DO-017/018).
+
+##### Request
+
+**Potential inputs (proposal):** Path parameter: `game_id: GameId`. A designated host/admin session is supplied by cookie.
+
+Command metadata: `command_id: CommandId`, possible `expected_host_assignment_revision: Revision`; metadata is not assigned here to the body.
+
+Confirmation binding, eligible-target discovery for ordinary hosts and version transport remain **TBD**; no incoming acceptance token.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `target_account_id` | `AccountId` | Y | Selected target account for the host transfer. |
+| `confirmed` | `bool` | Y | Proposed confirmation field, required to be true for the selected target; confirmation binding remains TBD. |
+
+##### Response
+
+**Potential outputs (proposal):** Preserve game contents and reservations. Failure candidates: terminal game, invalid/disabled/pending target, assignment gate, stale confirmation or denied authority.
+
+Exact eligibility/error/confirmation contract remains **TBD**; transfer success is a committed assignment, not a pending invitation.
+
+The response also includes the caller's refreshed capabilities/view revision. The field names, types and shape of these additional details remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Game whose designated-host assignment was transferred. |
+| `designated_host_id` | `AccountId` | Y | Committed designated-host account identifier. |
+| `host_assignment_revision` | `Revision` | Y | Committed host-assignment revision. |
+
+### D. Membership, admission, aliases and recovery
+
+#### D1: `get_my_membership` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/membership`
+
+Auth scope: Anyone
+
+A valid participant session is required. Read its own membership’s role, current alias, access state and recovery-enabled status where applicable. Never return the answer/verifier or another participant’s membership.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: valid participant session. There is no target player/spectator parameter and no request body.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Return only the caller's membership; never return an answer/verifier or expose another participant's membership.
+
+No-membership, invalid-session and terminal-only-session handling **TBD**. This route cannot recreate deleted membership or renew access.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `membership` | `MembershipView` | Y | The caller's membership, including role/own identity, player alias where applicable, access state and original session expiry. |
+| `recovery_enabled` | `bool` | N | Player-only recovery-enabled status; not applicable to other participant roles. |
+
+#### D2: `list_game_players` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/players`
+
+Auth scope: Host
+
+Read player aliases and permitted membership/presence information. Distinguish retained disconnected players from currently connected players.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: enrolled host/admin session. No request body.
+
+Possible pagination/selection parameters **TBD**; no anonymous roster query.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Distinguish retained disconnected players from currently connected players, and retained start-roster membership from connected valid-session start eligibility. Do not expose recovery-enabled status, credentials or private answer metadata to hosts.
+
+Exact roster revision/projection, expired-game behavior and error schemas **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `players` | `Vec<object>` | Y | Player roster with proposed nested fields `player_id: PlayerId`, `alias: String`, `connected: bool`, `retained: bool` and `left_during_play: bool`. Field names and precise presence semantics **TBD**. |
+
+#### D3: `get_game_availability` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/availability`
+
+Auth scope: Anyone
+
+Read admission/start availability through a caller-appropriate projection. Unauthenticated entry flows receive only permitted entry information, not private roster data. Detailed occupancy and start eligibility depend on caller authority; spectators never satisfy the connected-player minimum.
+
+##### Request
+
+Path: `game_id: GameId`; code-based entry context where required, format **TBD**. An optional authorized account/participant cookie determines extra permitted detail.
+
+No request body and no client-authoritative desired role/occupancy counts.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Admission/start availability uses a caller-appropriate projection. Entry availability is advisory until atomic admission. Unauthenticated entry flows receive only permitted entry information, not private roster/start details; detailed occupancy and start eligibility depend on caller authority. Spectators never satisfy the connected-player minimum.
+
+Exact audience matrix, code-context enforcement, reason codes and current/global-slot freshness **TBD**.
+
+The authorized host/admin projection may also include capacities; their field names/types and the exact projection shape remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `state` | `GameState` | Y | Lifecycle state in the caller-appropriate entry projection. |
+| `can_join_player` | `bool` | Y | Whether player entry is available; advisory until atomic admission. |
+| `can_join_spectator` | `bool` | Y | Whether spectator entry is available; advisory until atomic admission. |
+| `player_count` | `u32` | N | Conditional authorized host/admin detail only; exact audience matrix and requiredness within that projection TBD. |
+| `spectator_count` | `u32` | N | Conditional authorized host/admin detail only; not automatically public entry information. |
+| `connected_player_count` | `u32` | N | Conditional authorized host/admin count used for connected-player start eligibility; spectators do not count. |
+| `can_start` | `bool` | N | Conditional authorized host/admin start eligibility; no start authority is granted by this field. |
+
+#### D4: `is_alias_claimed` (Non-mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Check a normalized alias claim within a game during admission, rename or role switching. No public alias-availability endpoint is implied.
+
+##### Request
+
+These are trusted internal arguments, not an HTTP request body or a public alias-availability endpoint.
+
+The transaction context must belong to admission, rename or role switching. The exact Rust signature is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Owning game supplied to the internal operation. |
+| `alias_key` | `String` | Y | Normalized alias claim to check within the owning game. |
+| `exclude_player_id` | `PlayerId` | N | Optional exclusion for a same-membership rename, supplied by the trusted caller. |
+
+##### Response
+
+This is a trusted internal result; no public identity/availability endpoint is implied.
+
+An advisory check alone does not claim the alias; the enclosing transaction enforces uniqueness. Error/result type and self-rename semantics **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `claimed` | `bool` | Y | Whether the normalized alias claim is already claimed in the game, subject to the unresolved self-rename semantics. |
+
+#### D5: `join_game_as_player` (Mutating)
+
+Path: `POST /api/games/{game_id}/players`
+
+Auth scope: Anyone
+
+In Awaiting Players, validate the code-based admission context, alias and capacity; claim alias/seat, create membership and optional answer verifier, and issue a player session. No board is generated yet.
+
+##### Request
+
+Path: `game_id: GameId`. Code-based admission requires `game_code` or equivalent verified code-entry context; the alternative context is **TBD**. No prior player session is required. Admission must not silently replace another member or bypass existing-session rules.
+
+Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here.
+
+A recovery answer is sensitive and may be submitted in the HTTPS body only. A blank or omitted answer means no enrolled proof, not an empty credential. Exact input handling and initial-admission retry identity **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_code` | `GameCode` | N | Required code-based admission proof when this body-field alternative is used; an equivalent verified code-entry context may be used instead (**TBD**). Conditional, not permission to omit admission proof. |
+| `alias` | `String` | Y | Requested player alias. |
+| `recovery_answer` | `String` | N | Optional sensitive recovery answer, submitted in the HTTPS body only. Blank/omitted means no enrolled proof, not an empty credential; exact input handling **TBD**. |
+
+##### Response
+
+Cookie effect: issue a fixed-one-day HttpOnly player session bound to the stable game/member and current alias. No token or answer in JSON. No board is generated yet.
+
+Failure candidates: wrong lifecycle/code context, alias conflict/invalid alias, capacity, throttling or repeat-admission conflict. No partial seat/alias/verifier on failure; lost-cookie response handling **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `membership` | `MembershipView` | Y | Membership for the admitted player. |
+| `game` | `GameView` | Y | Game view in the lobby. |
+| `board` | `null` | N | Null or omitted (**TBD**); no board is generated before start. |
+
+#### D6: `join_game_as_spectator` (Mutating)
+
+Path: `POST /api/games/{game_id}/spectators`
+
+Auth scope: Anyone
+
+Validate the code-based admission context and Awaiting Players/In Progress capacity; allocate spectator identity/seat and issue its session. No player or account privileges are granted.
+
+##### Request
+
+Path: `game_id: GameId`. Code-based admission requires `game_code` or verified code-entry context (**TBD**). No player alias or recovery answer is submitted. No privileged account is required.
+
+Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. Duplicate admission/retry identity **TBD**.
+
+The exact no-body/admission-context alternative is **TBD**; a missing body does not remove the code-context requirement.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_code` | `GameCode` | N | Required when code-based admission uses this body-field alternative; verified code-entry context may be used instead (**TBD**). Conditional, not permission to omit admission proof. |
+
+##### Response
+
+Cookie effect: issue an HttpOnly spectator session. No board, private qualifiers or account privileges are granted.
+
+Failure candidates: disabled/full spectators, invalid code context or terminal game. Exact no-body/admission-context alternative and lost-response behavior **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `membership` | `MembershipView` | Y | Spectator membership. |
+| `game` | `GameView` | Y | Audience-only game view. |
+| `session_expires_at` | `Timestamp` | Y | Fixed session expiry. |
+
+#### D7: `rename_my_alias` (Mutating)
+
+Path: `PATCH /api/games/{game_id}/membership/alias`
+
+Auth scope: Player
+
+Before start, claim the new alias and release the old one. Preserve membership, seat, answer verifier and original session expiry.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: caller's valid player session. No target player ID.
+
+Command metadata: `command_id: CommandId`; optional `expected_revision: Revision`. Exact transport/requiredness **TBD**; neither is newly assigned to the request body.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `alias` | `String` | Y | New display alias requested before start. |
+
+##### Response
+
+The old alias is released; stable membership, recovery verifier and seat remain. Any credential rebinding must not extend the original session expiry.
+
+Failure candidates: started/terminal game, invalid/claimed alias or stale/invalid session. Atomic rebinding/response contract **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `player_id` | `PlayerId` | Y | Stable player identity. |
+| `alias` | `String` | Y | Accepted alias. |
+| `session_expires_at` | `Timestamp` | Y | Unchanged original session expiry. |
+| `view_revision` | `Revision` | Y | View revision. |
+
+#### D8: `switch_to_spectator` (Mutating)
+
+Path: `POST /api/games/{game_id}/membership/switch-to-spectator`
+
+Auth scope: Player
+
+Before start, acquire spectator admission, release player seat/alias and delete the player recovery verifier. Failure preserves the original role.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: valid existing player session. No target identity or recovery answer.
+
+Command metadata: `command_id: CommandId`; transport/placement is **TBD**, not assigned to the body here. No body fields are specified; the role-switch session/confirmation representation is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The player alias/seat are released and the recovery verifier is deleted.
+
+Cookie effect: replace/deauthorize player authority for the new spectator binding. Rotation/deadline mechanics **TBD**; no implicit session-lifetime renewal.
+
+Failure candidates: non-lobby state or no spectator capacity. Rejection preserves the original player membership/session and verifier.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `membership` | `MembershipView` | Y | New spectator membership. |
+| `game` | `GameView` | Y | Audience-only game view. |
+
+#### D9: `switch_to_player` (Mutating)
+
+Path: `POST /api/games/{game_id}/membership/switch-to-player`
+
+Auth scope: Anyone
+
+A valid existing spectator session is required. Before start, claim an eligible player seat/alias, release spectator occupancy and optionally enroll a fresh answer. Do not restore deleted credentials or permit an unauthenticated membership takeover.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: valid existing spectator session. The switch is before start; it does not permit unauthenticated membership takeover.
+
+Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. No old/deleted player session or answer is restored. Input/rotation/deadline semantics **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `alias` | `String` | Y | Requested player alias. |
+| `recovery_answer` | `String` | N | Optional fresh sensitive recovery answer in the HTTPS body; this enrolls fresh proof rather than restoring a deleted answer. |
+
+##### Response
+
+No board before start.
+
+Cookie effect: bind authority to the admitted player and retire spectator authority/occupancy without implicit lifetime renewal.
+
+Failure candidates: no player slot, invalid/claimed alias or non-lobby state. Preserve spectator role/seat on rejection; exact session transition **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `membership` | `MembershipView` | Y | New player membership. |
+| `game` | `GameView` | Y | Lobby game view. |
+
+#### D10: `leave_player_lobby` (Mutating)
+
+Path: `POST /api/games/{game_id}/membership/leave`
+
+Auth scope: Player
+
+Player Leave before start releases seat/alias and removes that membership from the start roster. Returning requires fresh eligible admission. Dispatch this branch using server-verified role and lifecycle.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: caller's valid player session. Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. No arbitrary member ID; no body fields are specified.
+
+The server verifies the pre-start branch using role and lifecycle. Optional lifecycle/version binding to prevent a delayed lobby Leave changing meaning after Start: **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The proposed acknowledgment body below or an empty success may be returned; the choice is **TBD**.
+
+Cookie effect: clear/deauthorize removed membership credentials; release seat/alias, delete recovery material and remove the membership from the start roster. Returning requires fresh eligible admission.
+
+Repeat/lost-response handling and Start/Leave conflict contract **TBD**; no board or new session is returned.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `left` | `bool` | N | Proposed Leave acknowledgment; conditional on the acknowledgment-body alternative rather than empty success (**TBD**). |
+| `membership_retained` | `bool` | N | False for lobby Leave; conditional on the acknowledgment-body alternative rather than empty success (**TBD**). |
+| `fresh_admission_required` | `bool` | N | True; conditional on the acknowledgment-body alternative rather than empty success (**TBD**). |
+
+#### D11: `leave_player_game` (Mutating)
+
+Path: `POST /api/games/{game_id}/membership/leave`
+
+Auth scope: Player
+
+Player Leave during play retains seat, board, automatic matching and award eligibility. Preserve approved valid-session/answer-based return. Dispatch this branch using server-verified role and lifecycle.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: caller's valid player session. Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. No target participant field; no body fields are specified.
+
+The server selects the In Progress branch using verified role and lifecycle; the client cannot request pre-start deletion of a running-game member.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The fields below describe a potential response body; exact body/status **TBD**.
+
+Retain board, alias/seat, automatic matching and award eligibility. Preserve valid-session or enrolled-answer return; this is not logout or terminal Exit.
+
+Socket detachment, repeat Leave and terminal races **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `left` | `bool` | N | Proposed Leave acknowledgment in the potential body; exact body/status and field inclusion **TBD**. |
+| `membership_retained` | `bool` | N | True for Leave during play; proposed potential-body field, exact body/status and field inclusion **TBD**. |
+| `player_id` | `PlayerId` | N | Retained player identity; proposed potential-body field, exact body/status and field inclusion **TBD**. |
+| `session_expires_at` | `Timestamp` | N | Unchanged session expiry; proposed potential-body field, exact body/status and field inclusion **TBD**. |
+
+#### D12: `leave_spectator_game` (Mutating)
+
+Path: `POST /api/games/{game_id}/membership/leave`
+
+Auth scope: Anyone
+
+A valid spectator session is required. Immediately release that spectator’s occupancy and delete its identity/session data. Explicit Leave does not receive accidental-disconnect grace. Dispatch using server-verified role and lifecycle.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: valid spectator session. Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. No caller-selected spectator ID; no body fields are specified.
+
+The server selects the spectator branch using verified role and lifecycle. No explicit-Leave grace request: explicit Leave does not receive accidental-disconnect grace.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+The proposed acknowledgment body below or an empty success may be returned; the choice is **TBD**.
+
+Cookie effect: clear/deauthorize spectator credentials; delete spectator identity/session data and immediately release occupancy. No retained History identity.
+
+Idempotent repeat handling after credential deletion and lost-response policy **TBD**; do not require a surviving session to perform local UI exit.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `left` | `bool` | N | Proposed Leave acknowledgment; conditional on the acknowledgment-body alternative rather than empty success (**TBD**). |
+| `membership_retained` | `bool` | N | False for spectator Leave; conditional on the acknowledgment-body alternative rather than empty success (**TBD**). |
+
+#### D13: `recover_player_session` (Mutating)
+
+Path: `POST /api/player-recovery`
+
+Auth scope: Anyone
+
+Verify submitted code, current alias and enrolled answer; replace old sessions/sockets and restore the same nonterminal membership/board without another seat. No existing player session is required, but the approved recovery proof is mandatory.
+
+##### Request
+
+No existing session is required, but approved recovery proof is mandatory. Normalize code/alias by confirmed rules; answer normalization, throttling and interrupted-recovery replay handling **TBD**.
+
+No arbitrary player/account/board replacement input.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_code` | `String` | Y | Game code submitted for recovery; normalize by confirmed rules. |
+| `alias` | `String` | Y | Current player alias; normalize by confirmed rules. |
+| `recovery_answer` | `String` | Y | Required sensitive proof: the enrolled recovery answer. Answer normalization **TBD**. |
+
+##### Response
+
+Return the body only after successful proof, restoring the same nonterminal membership and any existing board.
+
+Cookie effect: issue a fresh one-day HttpOnly player session; revoke predecessor tokens/sockets atomically with recovery. No new membership/seat/board.
+
+Invalid code/alias/answer, absent enrollment and terminal game produce safe failure without answer/account enumeration; exact errors and lost-response behavior **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `membership` | `MembershipView` | Y | Existing player membership restored after successful proof. |
+| `game` | `GameView` | Y | Role-filtered game view. |
+| `board` | `Option<BoardView>` | N | The same board, only if already assigned; no new board is created. Nullable versus absent representation **TBD**. |
+
+#### D14: `manage_my_recovery_answer` (Mutating)
+
+Path: `PUT /api/games/{game_id}/membership/recovery-answer` or `DELETE /api/games/{game_id}/membership/recovery-answer`
+
+Auth scope: Player
+
+Set/replace the caller’s answer using PUT or delete it using DELETE in Awaiting Players/In Progress. Deletion disables answer recovery. A lost-session caller cannot use this operation to establish ownership.
+
+##### Request
+
+Path: `game_id: GameId`. Cookie: valid owner-player session. PUT sets/replaces the answer; DELETE has no answer body. This operation applies in Awaiting Players/In Progress.
+
+Proposed command metadata: `command_id: CommandId`; method-specific validation/transport **TBD**, not assigned to the body here. The existing valid session establishes ownership, not a submitted old answer; a lost-session caller cannot use this operation to establish ownership.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `recovery_answer` | `String` | N | Sensitive new/replacement answer required for PUT; not supplied for DELETE. Conditional across methods, not optional when setting/replacing the answer. |
+
+##### Response
+
+The proposed body below has an empty-success alternative (**TBD**).
+
+Never return the plaintext answer, normalized answer or verifier. Replacement invalidates the previous proof; deletion disables answer recovery without deleting membership.
+
+Failure candidates: invalid session, unsupported answer or terminal game. Do not disclose this private setting in host/spectator updates.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `recovery_enabled` | `bool` | N | True after accepted PUT, false after DELETE; conditional on returning the proposed body rather than empty success (**TBD**). |
+| `view_revision` | `Revision` | N | Possibly included in the proposed response body; inclusion and the empty-success alternative are **TBD**. |
+
+### E. Live-game reads and commands
+
+#### E1: `get_game_calls` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/calls`
+
+Auth scope: Anyone
+
+Return the most recent value and committed call sequence to authorized game viewers, including admitted spectators. A valid account or participant access context is required; knowing the game ID alone is insufficient.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a valid authorized account or participant session. No request body. Knowing the game ID alone is insufficient.
+
+Call-range/pagination filters, if needed, are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed response for authorized game viewers, including admitted spectators. No raw `CallRecord` with internal actor/command metadata is implied. Terminal readers still obey the final-view/History boundary.
+
+Exact query limits, authorized projection and errors are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `calls` | `Vec<CallView>` | Y | Committed calls in sequence order; empty before the first call. |
+| `latest` | `Option<CallView>` | N | Most recent committed call, if any; empty before the first call. Nullability versus absence remains TBD. |
+| `view_revision` | `Revision` | Y | Revision of the returned call view. |
+
+#### E2: `get_remaining_values` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/remaining-values`
+
+Auth scope: Host
+
+Derive/read the remaining pool and exhaustion state from configuration and accepted calls for the host/admin operating or inspection view. Audience-facing exhaustion status can be included in the permitted game snapshot without exposing this full query.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying an enrolled host/admin session. No request body.
+
+Optional page/cursor controls for large pools are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed host/admin operating or inspection response derived/read from configuration and accepted calls. Values remain strings; enumeration versus paged results and practical limits are **TBD**. Exhaustion does not terminate the game.
+
+Participants cannot access this full operating query; audience-facing exhaustion status can appear in the permitted game snapshot without exposing the full query. Failures include invalid authority or unavailable game.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `remaining_values` | `Vec<String>` | Y | Remaining pool values as strings; enumeration versus paging and practical limits TBD. |
+| `remaining_count` | `u32` | Y | Count of remaining pool values. |
+| `exhausted` | `bool` | Y | Whether the remaining pool is exhausted; exhaustion does not terminate the game. |
+| `view_revision` | `Revision` | Y | Revision of the returned remaining-pool view. |
+
+#### E3: `get_my_board` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/membership/board`
+
+Auth scope: Player
+
+Read the caller’s assigned layout, free cells, automatic matches and qualification. No board exists before start.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a valid owner-player session. No player ID selector or request body.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed response is restricted to the caller’s layout, free cells, automatic matches and qualification. No assigned board exists before accepted Start, and this read does not generate a fresh replacement.
+
+Pre-start null/absent response versus explicit unassigned status is **TBD**. Final-view-only sessions use their retained access rules; invalid/exited/expired-session failures are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `board` | `Option<BoardView>` | N | Caller’s assigned layout, free cells, automatic matches and qualification, when assigned. No assigned board before Start; not a freshly generated replacement. Pre-start null/absence versus explicit unassigned status TBD. |
+| `view_revision` | `Revision` | Y | Revision of the returned board view. |
+
+#### E4: `get_game_boards` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/boards`
+
+Auth scope: Host
+
+Inspect all or selected player boards read-only. Selection/filter details remain TBD; designated-host ownership is not required for inspection.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying an enrolled host/admin session. No request body.
+
+Possible query `player_ids: Vec<PlayerId>` for selection, plus optional paging; all-versus-selected/default and encoding are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed read-only inspection response. No board creation for pre-start members. Unknown selection and pagination/unassigned result format are **TBD**.
+
+Read-only access does not require designated-host ownership, but grants no mutation or anonymous-player recovery privileges.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `boards` | `Vec<BoardView>` | Y | All or selected player boards; permitted player identity/alias accompanies each board. Selection/default, pagination and unassigned result format TBD. |
+| `view_revision` | `Revision` | Y | Revision of the returned board inspection view. |
+
+#### E5: `get_game_qualification` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/qualification`
+
+Auth scope: Host, Player
+
+Hosts/admins receive qualifying players; players receive only their own qualification. Spectators receive no private qualifier details.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying an authorized host/admin or owner-player session. No request body.
+
+The server derives the projection from authority; no client role flag or other-player selector for a player.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed authority-dependent bodies: hosts/admins receive qualifying players; players receive only their own qualification. Branch-only fields below are conditional, not freely omittable within their applicable proposed branch. Both projections may include `view_revision: Revision`; the final envelope/discriminator is **TBD**.
+
+No spectator private qualifier details, no automatic award and no exclusion merely because a qualifying player is disconnected/departed.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `qualifying_players` | `Vec<object>` | N | Required in the proposed host/admin branch only. Entries contain `player_id: PlayerId`, `alias: String` and `qualifying_lines: Vec<CompletedLine>`. Disconnected/departed qualifying players are not excluded merely for absence. |
+| `qualified` | `bool` | N | Required in the proposed player branch only; whether the caller qualifies. |
+| `qualifying_lines` | `Vec<CompletedLine>` | N | Required in the proposed player branch only; the caller’s own qualifying lines, not another player’s details. |
+| `view_revision` | `Revision` | N | Optional revision of the returned view; either authority-dependent projection may include it. |
+
+#### E6: `start_game` (Mutating)
+
+Path: `POST /api/games/{game_id}/start`
+
+Auth scope: Host
+
+The designated host or an authorized admin validates the connected-player minimum, that this game still owns the single global nonterminal-game reservation, and board feasibility; transitions this same game to In Progress and persists boards/initial qualification for the retained start roster.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here. No named request-body fields are specified.
+
+No caller-supplied roster, boards, random seed or claimed connection count. The backend chooses the retained start roster and checks currently connected eligible players, this game’s ownership of the same global reservation and board feasibility.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed accepted-Start response. Failure candidates: insufficient connected players, another live game, infeasible distinct boards, wrong lifecycle or authority. Exact body/error variants are **TBD**.
+
+Committed retries return the original start/assignments. No boards before accepted Start, and no automatic winner for free-cell qualification.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Identifier of the started game. |
+| `state` | `GameState` | Y | In Progress after accepted Start. |
+| `started_at` | `Timestamp` | Y | Accepted game-start timestamp. |
+| `view_revision` | `Revision` | Y | Revision of the committed started-game view. |
+| `game` | `GameView` | N | Optional host game view with assigned boards/initial qualification for the retained start roster. |
+
+#### E7: `call_random_value` (Mutating)
+
+Path: `POST /api/games/{game_id}/calls/random`
+
+Auth scope: Host
+
+The designated host or an authorized admin requests a random undrawn value. Persist the call, matching board changes, qualification, revision and command outcome consistently before delivery.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here. No named request-body fields are specified.
+
+No selected value, board changes or qualification supplied by the client.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed response may additionally contain optional host-visible qualification/board changes; grouping is **TBD**, with no field names specified.
+
+Return only after the call, matching board changes, qualification, revision and command outcome/receipt commit consistently. Retry uses the same committed value, never another random draw.
+
+Failure candidates: exhausted pool, non-In-Progress state, stale/conflicting command or denied authority. Exhaustion does not automatically end the game.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `call` | `CallView` | Y | Committed random call of an undrawn value; retries return the same committed value. |
+| `remaining_count` | `u32` | Y | Remaining pool count after the committed call. |
+| `exhausted` | `bool` | Y | Whether the pool is exhausted after the committed call; does not imply automatic game termination. |
+| `view_revision` | `Revision` | Y | Revision of the committed progression view. |
+
+#### E8: `call_manual_value` (Mutating)
+
+Path: `POST /api/games/{game_id}/calls/manual`
+
+Auth scope: Host
+
+The designated host or an authorized admin submits a string value. Validate pool membership/nonduplication and perform the same durable progression as a random call.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here.
+
+No client-authored board matches or qualification. The backend validates pool membership/nonduplication and performs the same durable progression as a random call.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `value` | `String` | Y | Required manual string value; must belong to the pool and not already have been drawn. Exact string validation TBD. |
+
+##### Response
+
+Proposed response may additionally contain optional authorized progression changes as for E7; grouping/field names are **TBD**.
+
+Failure candidates: value outside the pool/already drawn, wrong lifecycle, stale command or denied authority. No partial matching on rejected calls.
+
+Exact string validation/error fields and durable-result envelope are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `call` | `CallView` | Y | Committed manual call; uses the same durable progression as a random call. |
+| `remaining_count` | `u32` | Y | Remaining pool count after the committed call. |
+| `exhausted` | `bool` | Y | Whether the pool is exhausted after the committed call. |
+| `view_revision` | `Revision` | Y | Revision of the committed progression view. |
+
+#### E9: `award_game_winner` (Mutating)
+
+Path: `POST /api/games/{game_id}/winner`
+
+Auth scope: Host
+
+For the designated host or an authorized admin, revalidate the selected member’s qualification and commit one winner with Resolved. Retained disconnected/departed players remain eligible.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here.
+
+The backend revalidates qualification; no client-asserted winner proof, board or timing priority. Retained disconnected/departed players remain eligible.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `player_id` | `PlayerId` | Y | Selected winner’s member identifier; backend revalidates qualification before committing one winner with Resolved. |
+
+##### Response
+
+Proposed winner-award response. Failure candidates: unknown/nonqualifying member, already terminal state, command conflict or denied authority. A retained departed member is not rejected merely for absence.
+
+Terminal receipt/release coordination and exact error/body schema are **TBD**; retries cannot award another winner. Terminal and History-expiry timestamps accompany the final result; their exact nesting remains **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `result` | `FinalResultView` | Y | Final result with Resolved and one `winner`, fixed `ended_at: Timestamp` and `history_expires_at: Timestamp`; exact body schema/nesting TBD. |
+| `view_revision` | `Revision` | Y | Revision of the committed final-result view. |
+
+#### E10: `cancel_unstarted_game` (Mutating)
+
+Path: `POST /api/games/{game_id}/cancel`
+
+Auth scope: Host
+
+With designated-host/admin confirmation, commit Cancelled from New/Awaiting Players, then apply notice and no-History deletion rules. Generate no boards.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed `command_id: CommandId`, `expected_state: GameState` (New/Awaiting Players) or equivalent revision/confirmation binding; precise contract is **TBD**. Their body/header transport remains **TBD**, so they are not listed as body fields.
+
+Confirmation must bind to the displayed game and pre-start lifecycle. A delayed pre-start confirmation must not silently select the In Progress cancellation branch after Start.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `confirmed` | `bool` | N | Proposed body confirmation (`true`) bound to the displayed game and New/Awaiting Players lifecycle. Exact confirmation contract/field requiredness TBD; the confirmation obligation is not optional. |
+
+##### Response
+
+Proposed potential cancellation body. Commit Cancelled from New/Awaiting Players, then apply notice and no-History deletion rules. Generate no boards and provide no History or renewed participant access. Notice and cleanup do not wait for every viewer’s Exit.
+
+State/confirmation conflicts, deletion completion versus acceptance and post-delete retry response are **TBD**; do not fabricate a retained final snapshot.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Identifier of the cancelled game in the proposed cancellation body; exact acceptance/completion and retry response TBD. |
+| `state` | `GameState` | Y | Cancelled in the proposed cancellation body. |
+| `history_available` | `bool` | Y | False: pre-start cancellation creates no History. |
+| `deletion_pending` | `bool` | N | Conditional field if cleanup is asynchronous; indicates pending deletion. Deletion completion versus acceptance TBD. |
+
+#### E11: `end_game_without_winner` (Mutating)
+
+Path: `POST /api/games/{game_id}/cancel`
+
+Auth scope: Host
+
+With designated-host/admin confirmation, commit Cancelled from In Progress, retain final History and safely release the live reservation. The current game state determines this branch rather than the pre-start cancellation branch.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed `command_id: CommandId`, `expected_state: GameState` (InProgress) or equivalent version binding; encoding is **TBD**. Their body/header transport remains **TBD**, so they are not listed as body fields.
+
+No winner input. The current game state determines the In Progress cancellation branch rather than the pre-start cancellation branch; confirmation is bound to the In Progress game.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `confirmed` | `bool` | N | Proposed body confirmation bound to the In Progress game. Exact encoding/field requiredness TBD; the confirmation obligation is not optional. |
+
+##### Response
+
+Proposed response for ending a started game without a winner. Final started-game History is retained; release only this game’s live reservation. Existing viewer Exit does not control completion.
+
+Failure candidates: confirmation/state/authority conflict or terminal replay mismatch. Exact response/coordination details are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `result` | `FinalResultView` | Y | Final result with Cancelled and `winner: null`, with fixed terminal/History expiry timestamps. Exact response schema TBD. |
+| `view_revision` | `Revision` | Y | Revision of the committed final-result view. |
+
+### F. Final views and History
+
+#### F1: `get_game_result` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/result`
+
+Auth scope: Host, Player
+
+Return only a permitted final view. Players need existing unexpired, not-exited authorization; hosts/admins must satisfy their final-view access rules and use History after exit. Spectators cannot fetch/reconnect after terminal cleanup.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying eligible existing, unexpired and not-exited player/account final-view authority.
+
+No request body, new admission proof or spectator reconnect request. An account login alone must not recreate an exited live-game view. Hosts/admins must satisfy final-view access rules and use History after exit; spectators cannot fetch/reconnect after terminal cleanup.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed permitted final-view response. No new session, verifier or retention extension. Spectators retain only the result already delivered locally.
+
+Pre-start deletion, exited/expired access and History redirection for eligible accounts: exact response/status are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `result` | `FinalResultView` | Y | Permitted final view: a player receives only their own final board, not other private player boards; a host/admin receives only permitted final-view content. |
+
+#### F2: `exit_game_result` (Mutating)
+
+Path: `POST /api/games/{game_id}/exit`
+
+Auth scope: Anyone
+
+Requires the caller’s existing final-view authorization when a server-side exit record is needed. Clean up only that caller’s access without changing outcomes, logging accounts out or waiting for others. Spectator local-only Exit requires no request after server data deletion.
+
+##### Request
+
+Proposed request when server cleanup is needed: path `game_id: GameId`; cookie carrying existing final-view authority. Proposed `command_id: CommandId` metadata; transport/placement and requiredness are **TBD**, not assigned to the body here. No named request-body fields are specified.
+
+No target player/account ID. Spectator local-only Exit after deletion and pre-start-deleted views need no surviving server session/request.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed response may contain `exited: bool` or be an empty success; the choice is **TBD**. Remove only caller-specific final-view authority, with player cookie cleanup where applicable.
+
+Account authentication remains valid; game result/History and other viewers remain unchanged. Exit does not wait for other viewers, and the caller cannot recreate final-view authority through resume.
+
+Idempotent Exit after grant deletion, account multi-session scope and no-session local behavior are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `exited` | `bool` | N | Proposed Exit acknowledgment if a response body is chosen; empty success is an alternative and the exact response remains TBD. |
+
+#### F3: `list_game_history` (Non-mutating)
+
+Path: `GET /api/history`
+
+Auth scope: Host
+
+List unexpired started-game History across hosts. Exclude pre-start cancellations and expired records. Query options remain TBD.
+
+##### Request
+
+Proposed request: cookie carrying an enrolled host/admin session. No request body.
+
+Possible query `cursor: Option<String>`, `limit: Option<u32>`, `outcome: Option<HistoryOutcome>` and terminal-date range; filter/date encoding/order/defaults are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed list of unexpired started-game History across hosts. Exclude pre-start cancellations and expired History even before physical cleanup. Exact summary columns and whether to use paging are **TBD**.
+
+No exports, account credentials, spectator identities or renewed membership. Access/query errors are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `games` | `Vec<object>` | Y | History summaries with proposed `game_id: GameId`, `game_code: GameCode`, terminal outcome/time, `expires_at: Timestamp` and optional winning alias; exact summary columns TBD. Includes only unexpired started-game History across hosts. |
+| `next_cursor` | `Option<String>` | N | Possible continuation cursor if paging is chosen. Paging and nullability versus absence TBD. |
+
+#### F4: `get_game_history` (Non-mutating)
+
+Path: `GET /api/history/{game_id}`
+
+Auth scope: Host
+
+Read final ordered calls, aliases, winner if any and final board snapshots. No replay archive, credentials, membership restoration or mutation.
+
+##### Request
+
+Proposed request: path `game_id: GameId`; cookie carrying an enrolled host/admin session. No request body. A game code/anonymous participant proof is not History authority.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed read-only final History response. No intermediate replay/archive, sessions, account credentials, recovery verifiers, spectator identities, membership restoration, renewed game access or mutation.
+
+Absent/expired History and denied-access error distinctions are **TBD**; reads never extend the three-month deadline.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `history` | `HistoryView` | Y | Final History with immutable ordered called strings, final participating aliases/board snapshots, optional winner and original expiry. |
+
+### G. Live synchronization and retries
+
+#### G1: `connect_game_stream` (Mutating)
+
+Path: `GET /api/games/{game_id}/stream` — WebSocket upgrade
+
+Auth scope: Anyone
+
+A valid authorized account or participant session is required, including for spectators. Register/supersede the appropriate connection and send a full role-specific snapshot. This is mutating because connection/presence state changes; existing membership is not duplicated.
+
+##### Request
+
+Proposed WebSocket handshake inputs: path `game_id: GameId`; cookie containing a valid authorized account/participant session; WebSocket upgrade headers and browser Origin. There is no normal JSON request body.
+
+A possible reconnect revision hint may use query/subprotocol; transport is **TBD**. No bearer token or recovery answer may appear in the URL/subprotocol.
+
+Viewer/role and applicable session expiry are server-derived; existing credentials must satisfy lifecycle/Exit restrictions.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Proposed transport: successful WebSocket upgrade followed by a full authorized `GameView`/eligible `FinalResultView` snapshot. The table describes application-message payloads after the upgrade, not an ordinary HTTP JSON success body or handshake JSON. Frame/envelope names are **TBD**; no wrapping property is specified.
+
+Supersede the prior participant-session socket without allocating another seat.
+
+Handshake rejection, close codes, hibernation/expiry/revocation and snapshot ordering are **TBD**. No spectator terminal reconnect.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `$` | `GameView / FinalResultView` | Y | Full authorized root snapshot: `GameView` or an eligible `FinalResultView`; role-specific application-message payload, with exact frame/envelope shape **TBD**. |
+| `view_revision` | `Revision` | Y | Authorized-view revision accompanying the snapshot; frame/envelope placement remains **TBD**. |
+| `connection_id` | `ConnectionId` | N | Potential connection metadata. Proposed; requiredness/placement TBD. |
+| `session_expires_at` | `Timestamp` | N | Potential connection metadata for the server-derived session expiry. Proposed; requiredness/placement TBD. |
+
+#### G2: `send_game_update` (Non-mutating)
+
+Path: Existing `/api/games/{game_id}/stream` socket
+
+Auth scope: System
+
+Push already-committed, role-filtered changes to currently authorized recipients. This is server delivery, not a user-invoked HTTP request or gameplay mutation.
+
+##### Request
+
+These are proposed trusted internal delivery inputs, not a browser HTTP request or a new public endpoint. Current recipients must be authorized; the server derives projections and revalidates authority. Payload typing and fan-out signature are **TBD**.
+
+Trusted internal delivery inputs include the owning game, committed state/change reference and current authorized recipients with their view revisions. The exact typed signature and envelope remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Owning game for delivery of already-committed changes. |
+| `connection_ids` | `Vec<ConnectionId>` | N | Possible internal connection selection. Proposed; requiredness/placement TBD. |
+
+##### Response
+
+The table describes proposed outbound socket frames on the existing stream, not an HTTP response body or handshake JSON. This is server delivery of already-committed, role-filtered changes.
+
+There is no gameplay write and no client acknowledgement required to establish the committed result. A queued send is not proof that the recipient received it.
+
+Internal delivery/backpressure outcome and exact frame types are **TBD**. No credential/recovery fields, private-board leaks or new public endpoint.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `kind` | `String` | Y | Proposed outbound frame kind; exact frame types are **TBD**. |
+| `game_id` | `GameId` | Y | Game associated with the committed update. |
+| `view_revision` | `Revision` | Y | Revision of the recipient's authorized view. |
+| `payload` | `object` | Y | Role-filtered committed call/board/state/result changes, without credential/recovery material or private-board leaks. |
+
+#### G3: `synchronize_game_view` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/sync`
+
+Auth scope: Anyone
+
+Requires valid access to the requested game/view. Compare the client’s authorized-view revision and return fresh state when needed. Do not treat private updates as public gaps, renew credentials or bypass exit restrictions.
+
+##### Request
+
+Proposed inputs: path `game_id: GameId`; cookie providing valid caller-specific view authority; possible query `known_revision: Option<Revision>`. There is no request body.
+
+The view is derived from the session, not a caller-chosen role/player ID. Revision hint encoding is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Only role-specific revisions are compared; an unchanged result does not renew credentials or host activity. Delta versus full-snapshot behavior is **TBD**, with the snapshot-first baseline preserved.
+
+Expired/exited/forbidden view restrictions and no terminal spectator retrieval remain enforced.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `up_to_date` | `bool` | Y | Proposed indication of whether the client's authorized view is current. |
+| `view_revision` | `Revision` | Y | Revision of the authorized role-specific view. |
+| `snapshot` | `Option<GameView>` | N | Fresh authorized snapshot when fresh state is needed, or a permitted final view. The final-view alternative and delta versus full-snapshot behavior remain **TBD**; snapshot-first baseline is preserved. Nullability versus absence remains **TBD**. |
+
+#### G4: `get_command_result` (Non-mutating)
+
+Path: `GET /api/games/{game_id}/commands/{command_id}`
+
+Auth scope: Anyone
+
+Requires valid authority for the original actor/game-scoped command. Read its durable outcome after an interrupted response without exposing another actor’s results. Knowledge of a command ID is not authorization.
+
+##### Request
+
+Proposed inputs: path `game_id: GameId` and `command_id: CommandId`; cookie providing current valid authority for the original actor/game-scoped command. There is no request body.
+
+Command ID knowledge alone grants no lookup. Post-admission/lost-cookie and post-exit/deletion recovery are **TBD**, not an anonymous receipt bypass.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+Return only a bounded authorized original result. No raw bearer credentials, answer/verifier, another actor's outcome or expired private snapshot. Receipt lookup does not prolong data/access retention.
+
+Unknown, pending, expired/inadmissible and failed-command response variants/statuses are **TBD**. Absence of a receipt is not evidence that it is safe to repeat effects.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `outcome` | `object` | N | Bounded authorized outcome for an available original result; required in that result branch. Other response variants/statuses are **TBD**. |
+| `committed_revision` | `Revision` | N | Possible metadata for an available original result. Proposed; requiredness/placement TBD. |
+| `completed_at` | `Timestamp` | N | Possible completion metadata for an available original result. Proposed; requiredness/placement TBD. |
+
+#### G5: `execute_command_idempotently` (Mutating)
+
+Path: Original command’s method/path; no separate endpoint
+
+Auth scope: System
+
+Internal execution wrapper used after the original command’s own authentication and authorization checks. Return an existing committed result or safely complete the original command without duplicate calls, boards, awards or admissions. The initiating client retains the original endpoint’s scope.
+
+##### Request
+
+These are proposed trusted internal arguments to the original-command execution wrapper, after the original command's authentication and authorization checks. There is no separate endpoint or invented retry body/envelope; the initiating client retains the original endpoint's scope.
+
+Derive the request fingerprint server-side. The wrapper inherits the original operation's privilege and lifecycle checks; the exact typed signature is **TBD**.
+
+Trusted internal inputs include the authenticated/authorized actor, owning game/account context, command ID, operation kind and validated arguments. Expected revision/fence and retry-admissibility context are optional. Exact typed signature is **TBD**; no additional field names or envelope are specified.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor` | `ActorRef` | Y | Authenticated/authorized actor supplied within trusted internal execution, not caller-selected authority in a public request body. |
+| `command_id` | `CommandId` | Y | Original command's ID in the trusted internal signature; this does not select a client transport or introduce a separate retry request. |
+
+##### Response
+
+This is a proposed trusted internal result, not an independent HTTP response/route or an extra side effect. Exact result type is **TBD**.
+
+Secret-bearing issuance operations need a separate safe handoff/retry policy (**TBD**). Never store or expose a raw token/link through a secret-free receipt.
+
+Internal result: original committed safe outcome on a matching replay, newly committed outcome on first execution, or conflict/inadmissible/authorization failure; exact result type is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `replayed` | `bool` | N | Possible indication of replay. Proposed; requiredness/placement TBD. |
+| `committed_revision` | `Option<Revision>` | N | Possible committed revision. Proposed; requiredness/placement TBD. Nullability versus absence remains **TBD**. |
+
+### H. Backend-only coordination and maintenance
+
+#### H1: `claim_game_code` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Check a candidate against live mappings and unexpired History, then safely claim/publish it. Reused codes must not transfer old credentials.
+
+##### Request
+
+These are proposed trusted internal inputs, not a public request body. Authoritative issuance context accompanies the invocation.
+
+Candidate generation, collision retry policy and prepared-publication state are **TBD**. No client-chosen Object creation from an unknown code.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Owning game for the candidate code claim/publication. |
+| `game_code` | `GameCode` | Y | Candidate game code. |
+| `operation_id` | `OperationId` | Y | Operation coordinating the claim/publication. |
+
+##### Response
+
+This is a proposed trusted internal result. Public discoverability is allowed only after consistent publication; terminal History reservation and old-game credential isolation remain enforced.
+
+Exact result enum, expiry cleanup ordering and retained index data are **TBD**.
+
+Internal result: claimed code and owning game/operation, or collision/retry/conflict. The unnamed result components do not introduce new field names; exact result enum is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `publication_state` | `PublicationState` | N | Possible publication state. Proposed; requiredness/placement TBD. |
+
+#### H2: `coordinate_global_game_reservation` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Coordinate the one global nonterminal-game reservation. Claim it on New creation, retain it through Awaiting Players and In Progress, and release it only after committed Resolved/Cancelled. A stale operation must never release a newer game’s reservation.
+
+##### Request
+
+These are proposed trusted internal protocol arguments, not persisted reservation-record fields. DO-014 stores only nullable `game_id`; DO-015 approves claim only when NULL and release only when the stored ID matches. DO-016 approves idempotent terminal outcomes: matching ID clears, NULL is complete, and a different ID is stale/no-op. Command idempotency, exact action enum and delivery scheduling remain **TBD**. There is no public reservation API.
+
+Internal protocol inputs may include the fields below and a desired acquire/commit/release action. No operation/fencing metadata is stored in the DO-014 record; exact signature, command idempotency and action enum remain **TBD** under DO-016.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+| `game_id` | `GameId` | Y | Game whose reservation is being coordinated. |
+| `operation_id` | `OperationId` | N | Optional proposed protocol/idempotency input; not persisted in the DO-014 reservation row. Requiredness remains **TBD** under DO-016. |
+
+
+##### Response
+
+This is a proposed trusted internal result, not a public reservation API. DO-016 approves compare-and-clear only when the stored `game_id` equals the releasing game ID; already-NULL is complete and a different ID is stale/no-op. Delivery scheduling/backoff and command-receipt idempotency remain **TBD**.
+
+Transition/result variants and nullability are **TBD**.
+
+Internal result proposal: whether the single slot is free or occupied, and the owning game where authorized; conflict/retry/reconciliation outcomes, any protocol metadata and exact variants remain **TBD** under DO-015/016.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+
+#### H3: `find_hosted_nonterminal_games` (Non-mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+While the target account’s Directory gate is held, find nonterminal games by designated-host account ID for disable/delete. A stale empty index is not sufficient to remove the account; assignment freshness/serialization remain under review. This does not expose Users to ordinary hosts.
+
+##### Request
+
+These are proposed trusted internal inputs, accompanied by trusted removal/assignment-check context, not public request fields or a Users listing for ordinary hosts.
+
+Exact lookup signature, pending assignment inclusion and gate/consistency snapshot are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `account_id` | `AccountId` | Y | Designated-host account ID used to find hosted nonterminal games. |
+| `operation_id` | `OperationId` | N | Optional operation/receipt context; not stored in the presence-only AccountAssignmentGate. Exact role in retries remains **TBD**. |
+
+##### Response
+
+This is a proposed trusted internal result, with potential pending-assignment blockers; their inclusion and exact shape remain **TBD**.
+
+An empty stale index does not authorize removal: recheck under the assignment-gate protocol before commit.
+
+Freshness/proof/result types are **TBD**. Ordinary hosts gain no Users listing from this helper.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `games` | `Vec<object>` | Y | Nonterminal-game entries containing `game_id: GameId`, nonterminal state and assignment revision. State and assignment-revision fields remain unnamed with their types **TBD**; no new DTO or top-level copies are introduced. |
+
+#### H4: `update_participant_presence` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Maintain connected-player eligibility and spectator-disconnect state. Superseded socket closure must not release the replacement connection’s seat.
+
+##### Request
+
+These are proposed trusted internal presence-event arguments, not a public request body. Current epoch/connection generation and session validity must be rechecked; event enum/signature are **TBD**.
+
+Internal inputs include the IDs below, participant binding, connect/disconnect/supersede event and trusted observation time. The exact event enum/signature remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Game whose participant presence is updated. |
+| `session_id` | `SessionId` | Y | Participant session whose validity must be rechecked. |
+| `connection_id` | `ConnectionId` | Y | Connection associated with the presence event; current epoch/connection generation must be rechecked. |
+
+##### Response
+
+This is a proposed trusted internal presence result. Count distinct valid-session players, not sockets. A stale closure cannot clear replacement presence or release its seat.
+
+Projection revision, deadline/notification results and hibernation reconstruction are **TBD**.
+
+Internal result: updated connected eligibility/presence projection or stale-event no-op. Exact projection/result shape remains **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `grace_expires_at` | `Option<Timestamp>` | N | Spectator grace deadline in the applicable presence-update branch, not a player deadline or a required stale-event result. Nullability versus absence remains **TBD**. |
+
+#### H5: `expire_spectator_grace` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Recheck a due five-minute grace deadline and current presence; release expired occupancy and delete associated spectator identity/session data.
+
+##### Request
+
+These are proposed trusted internal scheduled inputs, not a public request body. Read current presence/deadline before deleting; alarm payload/signature are **TBD**.
+
+Internal scheduled inputs include the fields below, current trusted time and optional epoch/fence. Exact alarm payload/signature are **TBD**; unnamed arguments do not acquire invented field names.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Game containing the spectator occupancy. |
+| `spectator_id` | `SpectatorId` | Y | Spectator whose grace deadline and current presence must be checked. |
+| `grace_expires_at` | `Timestamp` | Y | Expected five-minute grace deadline; current deadline and presence must be read before deletion. |
+
+##### Response
+
+This is a proposed trusted internal result, with no board/History entry or public response. Cleanup completes only for the matching still-disconnected spectator.
+
+Exact outcome enum, credential/socket cleanup and scheduling errors are **TBD**.
+
+Internal result: expired seat/identity/session removed, not-yet-due reschedule, or stale/reconnected no-op; exact outcome enum is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `next_due_at` | `Option<Timestamp>` | N | Possible next scheduled deadline. Proposed; requiredness/placement TBD. Nullability versus absence remains **TBD**. |
+
+#### H6: `expire_or_revoke_credentials` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Enforce credential expiry/revocation, stop unauthorized socket delivery and clean up artifacts. Expiry alone does not delete retained player membership.
+
+##### Request
+
+These are proposed trusted internal arguments, not public request fields. Use typed references rather than raw passwords/tokens. Batch scope, epoch propagation and invocation form are **TBD**.
+
+Internal inputs: target account/session/link/member scope, expiry or revocation reason, trusted time and expected epoch/deadline where needed. Expected epoch/deadline is conditional; exact signature, field names and reference types are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+##### Response
+
+This is a proposed trusted internal result. Pending propagation must remain distinguishable from completed work; exact bounded status is **TBD**.
+
+No retained player-membership deletion solely from token expiry and no secret material in results/logs. Immediate revocation protocol remains **TBD**.
+
+The internal result reports credentials made unusable, affected subscriptions/sockets deauthorized and expired artifacts removed, while distinguishing pending propagation from completed work. Exact bounded status/result shape is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `completed` | `bool` | N | Potential completion status. Proposed; requiredness/placement TBD. |
+| `remaining_work` | `bool` | N | Potential indication of remaining work, including incomplete propagation. Proposed; requiredness/placement TBD. |
+| `next_due_at` | `Option<Timestamp>` | N | Potential next scheduled deadline. Proposed; requiredness/placement TBD. Nullability versus absence remains **TBD**. |
+
+#### H7: `cancel_idle_unstarted_game` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+After rechecking state/deadline, cancel an unstarted game following 24 hours of qualifying-host inactivity. Release the same global nonterminal-game reservation after terminal/deletion coordination and trigger cleanup.
+
+##### Request
+
+These are proposed trusted internal scheduled inputs, not a public request body. Re-read state and qualifying designated-host activity before applying the 24-hour inactivity cancellation; admin-override timer behavior is **TBD**.
+
+Internal scheduled inputs include the fields below, trusted time and activity/lifecycle revision. The latter arguments remain unnamed with types **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Unstarted game whose state and qualifying designated-host activity must be rechecked. |
+| `idle_cancel_due_at` | `Timestamp` | Y | Expected inactivity-cancellation deadline, subject to state/activity recheck. |
+
+##### Response
+
+This is a proposed trusted internal result. Release the matching global nonterminal-game reservation after pre-start Cancelled/deletion is durably coordinated; never cancel In Progress or create History.
+
+Outcome enum, race handling, scheduling and cleanup completion are **TBD**.
+
+Internal result: committed pre-start Cancelled with cleanup/release work, not due, already started/terminal, or superseded-deadline no-op. Exact outcome enum is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+#### H8: `purge_cancelled_unstarted_game` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Delete committed pre-start-cancelled game/participant data and mappings without History or waiting for viewer acknowledgement. Preserve only justified retry protection.
+
+##### Request
+
+These are proposed trusted internal purge arguments, not a public request body. Validate that no accepted Start occurred; source-of-proof and purge sequencing are **TBD**.
+
+Internal inputs include the IDs below, durable pre-start cancellation proof and reservation/publication fences. Proof and fence argument names/types remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Game whose committed pre-start cancellation must be proved before purge. |
+| `operation_id` | `OperationId` | Y | Operation coordinating the safe purge. |
+
+##### Response
+
+This is a proposed trusted internal result. No History/board snapshot, no waiting for viewer acknowledgement and no credential-bearing tombstone. Retain only justified bounded retry protection.
+
+Exact receipt, purge progress/errors and anti-resurrection mechanism are **TBD**.
+
+Internal result: game/participant data and applicable mappings removed, already-cleaned no-op, or pending safe reconciliation; exact receipt/result shape is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+#### H9: `finalize_game_retention` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Preserve started-game final History; delete recovery verifiers and spectator server data; retain only permitted minimal player final-view authorization.
+
+##### Request
+
+These are proposed trusted internal retention arguments, not a public request body. The original terminal timestamp determines retention; the caller cannot supply a fresh terminal date to extend expiry.
+
+Snapshot and notice inputs/signature are **TBD**.
+
+Internal inputs include the game ID below, committed terminal outcome/revision and started-game final state reference. Exact signature and unnamed argument types remain **TBD**; retention uses the original terminal timestamp.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Started game whose committed terminal outcome and final state are being retained. |
+
+##### Response
+
+This is a proposed trusted internal result, not a public History export. Delete recovery/spectator material and retain only eligible minimal existing access; connected spectator terminal notice/deletion sequencing still applies.
+
+Materialization/coordination completion, replay no-op and cleanup failure variants are **TBD**.
+
+Internal result: immutable `GameHistorySnapshot` reference and fixed History expiry, plus cleanup/final-view-grant progress. The reference and progress components remain unnamed, not an embedded public snapshot; exact result variants are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `history_expires_at` | `Timestamp` | Y | Fixed History expiry determined by the original terminal timestamp, not extended by replay or a caller-supplied date. Exact replay no-op/cleanup failure variants are **TBD**. |
+
+#### H10: `purge_expired_history` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Enforce the three-calendar-month deadline and delete final records plus related indexes/copies. Prevent expired data from reappearing through restore.
+
+##### Request
+
+These are proposed trusted internal scheduled inputs for the three-calendar-month retention deadline, not a public request body. Enumerate associated indexes/copies through trusted owners; no caller-selected retention extension.
+
+Batch selection/restore checks are **TBD**.
+
+Internal scheduled inputs include the fields below, trusted time and original History identity/version. Unnamed argument types and exact signature remain **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `game_id` | `GameId` | Y | Game whose expired History and related indexes/copies are subject to purge. |
+| `history_expires_at` | `Timestamp` | Y | Expected History expiry deadline; not a caller-selected retention extension. |
+
+##### Response
+
+This is a proposed trusted internal result. Never return deleted calls/aliases/boards in purge results. Deny expired reads even while physical cleanup is incomplete.
+
+Exact calendar calculation, cross-owner cleanup and restore-time verification are **TBD**.
+
+Internal result: expired History/indexes/copies purged, not-yet-due/stale no-op, or pending retry. Possible bounded deletion counts/progress remain **TBD**, with no new field names assigned.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+
+#### H11: `reconcile_pending_operation` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Reconcile interrupted directory/game/account operations without duplicate effects, invalid publication, incorrect reservation release or resurrected data.
+
+##### Request
+
+These are proposed trusted internal reconciliation arguments. Read trusted persisted work rather than accepting arbitrary caller payload/phase; the signature is **TBD**.
+
+Internal inputs include the operation ID below, owning store/context, persisted `PendingOperation` reference and current peer revisions/fences. The reference is trusted persisted work, not an arbitrary caller-supplied record; unnamed components retain their descriptions and signature is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `operation_id` | `OperationId` | Y | Interrupted operation whose trusted persisted work is reconciled. |
+
+##### Response
+
+This is a proposed trusted internal result. No duplicate domain effects, stale reservation release, invalid publication or resurrected records. Exact recovery action/result variants are **TBD**.
+
+Outcomes remain bounded and secret-free; no new user endpoint.
+
+Internal result: completed, safely resumed, conflicted or retry-needed operation; exact recovery action/result variants are **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `phase` | `CoordinationPhase` | N | Possible coordination phase. Proposed; requiredness/placement TBD. |
+| `next_attempt_at` | `Option<Timestamp>` | N | Possible next retry time. Proposed; requiredness/placement TBD. Nullability versus absence remains **TBD**. |
+
+#### H12: `record_admin_action` (Mutating)
+
+Path: — Internal
+
+Auth scope: System
+
+Record the actual admin actor, target, operation and result without secrets. Audit storage, retention and any administrative read interface remain TBD.
+
+##### Request
+
+These are proposed trusted internal audit arguments, not a public request body. Potential correlation/command reference and deduplication key are **TBD**.
+
+Never substitute the designated host for the acting admin or pass credentials/answers.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `actor_account_id` | `AccountId` | Y | Actual acting admin account, not the designated host substituted for that actor. |
+| `operation_name` | `String` | Y | Admin operation being recorded. |
+| `target` | `TargetRef` | Y | Target of the actual admin operation. |
+| `outcome` | `AuditOutcome` | Y | Verified outcome of the admin operation, without secrets. |
+| `occurred_at` | `Timestamp` | Y | Trusted occurrence time. |
+
+##### Response
+
+This is a proposed trusted internal result. Exact result/failure policy is **TBD**.
+
+Retention deadline is server-selected under a reviewed policy (**TBD**), not a client override. No new audit-read UI/API or hidden History archive.
+
+Owner/storage, allowed metadata, reliable rejected/failed-action capture and purge behavior are **TBD**.
+
+Internal result: audit ID and recorded/duplicate outcome, or recording failure. No field name is invented for the outcome; exact result/failure policy is **TBD**.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `audit_id` | `AuditId` | N | Audit identifier in the recorded/duplicate result branch, required in that branch; recording failure is an alternative with exact policy **TBD**. |
+
+<a id="wss-design"></a>
+
+## 7. WSS messages, synchronization and client state
+
+### 7.1 Message inventory
+
+Final message grouping/names are **TBD**; rows describe required purposes, not chosen event discriminators. Section 6 G1–G3 contains potential upgrade, outbound-update and synchronization inputs/outputs, not a finalized WSS protocol.
+
+| Purpose | Confirmed content / constraint | Envelope, fields and encoding |
+| --- | --- | --- |
+| Initial / recovery snapshot | Full authorized state and revision; no lobby board; player-own versus host/admin board access versus audience-only projection. | TBD |
+| Committed live change | Ordered revision-aware permitted updates for lifecycle, calls, boards and qualification; no secret recovery data. | TBD |
+| Final result / cancellation notice | Resolved winner or Cancelled no-winner; spectator delivery/deletion and player final-view rules differ. | TBD |
+| Synchronization repair | Detect stale/gapped/obsolete views and fetch fresh authorized state; private changes must not create false public gaps. | TBD |
+| Connection liveness | Hibernation-compatible heartbeat/auto-response; does not renew session TTL or prove state freshness. | TBD |
+| Expired / revoked / forbidden connection | Stop unauthorized delivery; closing/deauthorization and client feedback mechanics TBD. | TBD |
+
+### 7.2 Per-message and transport worksheet
+
+- **Purpose / trigger / originating owner / recipients:** TBD.
+- **Event identifier, version, payload schema and sanitized example:** TBD.
+- **Per-role field projection and authorized-view revision model:** TBD.
+- **Snapshot capture/subscription ordering and missing-update prevention:** TBD.
+- **Durable commit boundary versus emission and acknowledgement:** TBD.
+- **Duplicate/out-of-order/gap handling and obsolete-socket rejection:** TBD.
+- **Participant-session single-live-socket enforcement versus concurrent account logins:** TBD.
+- **Durable Object hibernation handlers, socket attachments and restoration:** TBD.
+- **Expiry/revocation/grace scheduling without in-memory-only timers:** TBD.
+- **Payload/buffer limits, backpressure, heartbeat/check intervals and reconnect jitter:** TBD — preserve the HLD's 30-second reconnect cap.
+- **Frontend state transitions, resync gating and private-cache clearing:** TBD.
+- **Protocol compatibility, close behavior and tests:** TBD.

@@ -35,7 +35,7 @@ Every row is part of the same approved business-requirements set. The previously
 | BR-008 | The bingo host shall control when each next value is drawn. | Previously approved suggested requirement. | Approved |
 | BR-009 | The application shall clearly indicate when no undrawn values remain. | Previously approved suggested requirement. | Approved |
 | BR-010 | The host shall be able to review drawn values in the order they were called. | Previously approved suggested requirement. | Approved |
-| BR-011 | The host shall be able to start a fresh game with no values drawn, allowing multiple games during an event. | Previously approved suggested requirement. | Approved |
+| BR-011 | The host shall be able to run multiple games during an event sequentially. At most one game may be nonterminal at a time (New, Awaiting Players or In Progress); another game may be created only after the current game becomes Resolved or Cancelled. Terminal games do not occupy the limit. | Previously approved suggested requirement; user decision HLD-077. | Approved — revised wording |
 | BR-012 | Clearing or replacing an active game's draw record shall require explicit confirmation to prevent accidental loss. | Previously approved suggested requirement. | Approved |
 | BR-013 | An active game's drawn-value record shall survive an accidental page refresh or application restart. | Previously approved suggested requirement. | Approved |
 | BR-014 | The current value and drawn-value record shall be readable by attendees on a shared venue display from typical seating positions. | Previously approved suggested requirement. | Approved |

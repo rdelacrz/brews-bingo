@@ -1,0 +1,208 @@
+{
+  "generated_at": "2026-10-03T16:56:28.417410+00:00",
+  "nodes": {
+    "plans_durable_object_design_accountsobject": {
+      "code_fingerprint": "2e8c2491bf9ad8e4136a3ae80bf9daa7229753fce798650b5ef7ef2e911e1488",
+      "label": "AccountsObject — DO-001 approved separate SQLite-backed singleton per environment",
+      "last": "2026-10-03T16:51:32.788753+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.788753+00:00",
+          "outcome": "useful",
+          "q": "Why does Durable Object Design connect so many communities?"
+        }
+      ],
+      "score": 0.999920947,
+      "source_file": "plans/durable-object-design.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_durable_object_design_document": {
+      "code_fingerprint": "2e8c2491bf9ad8e4136a3ae80bf9daa7229753fce798650b5ef7ef2e911e1488",
+      "label": "Durable Object Design — planning-only; DO-022 approved, DO-023 next",
+      "last": "2026-10-03T16:51:32.788753+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.788753+00:00",
+          "outcome": "useful",
+          "q": "Why does Durable Object Design connect so many communities?"
+        }
+      ],
+      "score": 0.999920947,
+      "source_file": "plans/durable-object-design.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_durable_object_design_gameconfiguration": {
+      "code_fingerprint": "2e8c2491bf9ad8e4136a3ae80bf9daa7229753fce798650b5ef7ef2e911e1488",
+      "label": "GameConfiguration — proposed logical struct; not implemented",
+      "last": "2026-10-03T16:51:32.326081+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.326081+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between BR-029 and GameConfiguration?"
+        }
+      ],
+      "score": 0.999920823,
+      "source_file": "plans/durable-object-design.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_lld_host_idle_cancellation": {
+      "code_fingerprint": "229c29c2a6f45591bc2bba3f2b5f3c0b609a3974046e7bdb159b7c132ed93c07",
+      "label": "Host-idle cancellation",
+      "last": "2026-10-03T16:51:31.850371+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:31.850371+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between Role and designated-host authorization and Host-idle cancellation?"
+        }
+      ],
+      "score": 0.999920696,
+      "source_file": "plans/lld.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_lld_role_and_designated_host_authorization": {
+      "code_fingerprint": "229c29c2a6f45591bc2bba3f2b5f3c0b609a3974046e7bdb159b7c132ed93c07",
+      "label": "Role and designated-host authorization",
+      "last": "2026-10-03T16:51:31.850371+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:31.850371+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between Role and designated-host authorization and Host-idle cancellation?"
+        }
+      ],
+      "score": 0.999920696,
+      "source_file": "plans/lld.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_requirements_br_029": {
+      "code_fingerprint": "7b92473fc34a2910cbf98236b0af482c700fb09fc60dcd25f5af49fce6230bb9",
+      "label": "BR-029 [Approved via decision clarification] — The host shall be able to configure bingo-board width and height, defaulting to 5 × 5; the application shall validate that the configured numeric value range contains enough values to fill the configured board.",
+      "last": "2026-10-03T16:51:32.326081+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.326081+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between BR-029 and GameConfiguration?"
+        }
+      ],
+      "score": 0.999920823,
+      "source_file": "plans/requirements.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_requirements_document": {
+      "code_fingerprint": "7b92473fc34a2910cbf98236b0af482c700fb09fc60dcd25f5af49fce6230bb9",
+      "label": "Business Requirements — approved scope, not implementation authorization",
+      "last": "2026-10-03T16:51:32.788753+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.788753+00:00",
+          "outcome": "useful",
+          "q": "Why does Durable Object Design connect so many communities?"
+        }
+      ],
+      "score": 0.999920947,
+      "source_file": "plans/requirements.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_requirements_tracking_interpretation_caveat": {
+      "code_fingerprint": "7b92473fc34a2910cbf98236b0af482c700fb09fc60dcd25f5af49fce6230bb9",
+      "label": "Unreconciled interpretation note: tracking does not yet imply past-game persistence or closed-app survival",
+      "last": "2026-10-03T16:51:32.164421+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.164421+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between BR-021 and the tracking interpretation note?"
+        },
+        {
+          "date": "2026-10-03T16:51:32.012499+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between BR-013 and the tracking interpretation note?"
+        }
+      ],
+      "score": 1.999841519,
+      "source_file": "plans/requirements.md",
+      "status": "preferred",
+      "uses": 2
+    },
+    "plans_research_amplify": {
+      "code_fingerprint": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "label": "AWS Amplify Hosting — documented 12-month allowance, applicability to new accounts unconfirmed",
+      "last": "2026-10-03T16:51:32.641149+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.641149+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between AWS Amplify Hosting and unconfirmed AWS new-account allowances?"
+        }
+      ],
+      "score": 0.999920907,
+      "source_file": "plans/research.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_research_api_gateway": {
+      "code_fingerprint": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "label": "API Gateway WebSockets — metered messages/connection-minutes; two-hour connection and ten-minute idle limits",
+      "last": "2026-10-03T16:51:32.483145+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.483145+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between API Gateway WebSockets and unconfirmed AWS new-account allowances?"
+        }
+      ],
+      "score": 0.999920865,
+      "source_file": "plans/research.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "plans_research_aws_allowance_ambiguity": {
+      "code_fingerprint": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "label": "Unconfirmed AWS new-account API Gateway/Amplify allowances: credit catalogs differ from older 12-month pricing language",
+      "last": "2026-10-03T16:51:32.641149+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.641149+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between AWS Amplify Hosting and unconfirmed AWS new-account allowances?"
+        },
+        {
+          "date": "2026-10-03T16:51:32.483145+00:00",
+          "outcome": "useful",
+          "q": "What is the exact relationship between API Gateway WebSockets and unconfirmed AWS new-account allowances?"
+        }
+      ],
+      "score": 1.999841772,
+      "source_file": "plans/research.md",
+      "status": "preferred",
+      "uses": 2
+    },
+    "plans_research_document": {
+      "code_fingerprint": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "label": "Hosting Research — September 30, 2026; recommendations only, no provider selected here",
+      "last": "2026-10-03T16:51:32.788753+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-03T16:51:32.788753+00:00",
+          "outcome": "useful",
+          "q": "Why does Durable Object Design connect so many communities?"
+        }
+      ],
+      "score": 0.999920947,
+      "source_file": "plans/research.md",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}

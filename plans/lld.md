@@ -2,21 +2,22 @@
 
 ## 1. Document status and use
 
-- **Status:** Template with confirmed single-API-Worker direction (LLD-016) and a proposed operation catalog captured at the user’s request (LLD-017; Section 6.4). Final API contracts, Durable Object structures and other implementation specifics remain `TBD`, to be filled in/reviewed by the user.
+- **Status:** Incremental LLD with confirmed single-API-Worker direction (LLD-016), UUID v7 application-generated IDs (LLD-020), component-local `thiserror` errors (LLD-021), the account-password length/ASCII policy (LLD-023), and salted Argon2 account-password hashing via RustCrypto `argon2` (LLD-024). Proposed Durable Object fields/types now live in [durable-object-design.md](durable-object-design.md) (LLD-018, LLD-025). All detailed API/Request/Response/WSS information now lives in [api-design.md](api-design.md) (LLD-017, LLD-019, LLD-022). Final acceptance of other proposals, physical schemas, wire contracts and unselected implementation details remains **TBD**.
 - **Business:** Rockville Brews.
 - **Primary source:** [High-level design](hld.md), including decisions HLD-001–HLD-076.
 - **Supporting sources:** [Business requirements](requirements.md) and [hosting research](research.md).
+- **Companion designs:** [API design](api-design.md) is the single home for API organization, operations, requests/responses and WSS contracts. [Durable Object design](durable-object-design.md) is the single home for storage ownership, schema proposals, records/fields/types and schema worksheets. This LLD links to both rather than duplicating those specifications.
 - **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Native Android/iOS implementation remains deferred.
 - **Approval boundary:** Creating this template does not approve the overall HLD, resolve open product questions, authorize implementation, or authorize infrastructure/account creation.
 - **Reviewer / approval / revision:** TBD.
 
 ### 1.1 How to complete this template
 
-**Confirmed input** means a constraint carried from the HLD or a subsequent explicit user direction recorded in the LLD decision register. **TBD** means the user must supply the detailed design. Inventory labels and document IDs below are planning references, not implemented resources. Section 6.4 separately records proposed Rust function names, HTTP methods/paths and auth scopes; recording them does not finalize signatures, wire contracts or storage structures.
+**Confirmed input** means a constraint carried from the HLD or a subsequent explicit user direction recorded in the LLD decision register. **Proposed** means a suggested design recorded for review, not final adoption. **TBD** explicitly identifies an undetermined choice or unfinished specification. Inventory labels and document IDs are planning references, not implemented resources. [API design](api-design.md#operation-catalog) records proposed Rust functions, methods/paths, scopes and Request/Response inputs/outputs; [Durable Object design Section 6](durable-object-design.md#schema-proposal) records proposed Object owners, fields, types and supporting enums. UUID v7 and the local `thiserror` convention are confirmed in Sections 3.3–3.4; account-password policy and salted Argon2/library selection are confirmed in Sections 9.1–9.2; other proposed details do not become finalized APIs, physical schemas or protocols.
 
 For each view, stored record, API operation and event, complete its specification using the relevant reusable worksheet. Preserve the confirmed constraints while choosing implementation details. Any intentional change to an HLD rule needs an explicit decision rather than being hidden in a schema or payload.
 
-Proposed function names and endpoint paths appear in Section 6.4 for review. No final API contract, concrete SQL DDL, HTTP status assignments, serialized enums, JSON schemas, Rust signatures, crate versions or Cloudflare binding names are selected here.
+Proposed function names/paths and input/output fields appear in [API design](api-design.md#operation-catalog), and Rust-style record/type sketches in [Durable Object design Section 6](durable-object-design.md#schema-proposal). They are non-executable design proposals. UUID version/generation library, error library/local placement and salted Argon2/password-hashing library are selected; exact dependency versions, final API contracts, SQL DDL, HTTP statuses, serialized encodings, function signatures and Cloudflare bindings remain **TBD**.
 
 ### 1.2 Source precedence and reconciliation
 
@@ -27,6 +28,7 @@ Use explicit later HLD decisions over older source wording:
 - HLD-038–HLD-058 settle configuration, attendance, capacity, alias and code rules that some older passages still describe as open.
 - HLD-062 permits all enrolled hosts to inspect live boards read-only; HLD-074 extends those capabilities to admins. Earlier transfer wording must not imply exclusive board-read access.
 - HLD-069 supersedes spectator terminal reconnect: only the already-delivered local result remains after spectator server data deletion. HLD-071 separately governs player final-view authorization.
+- HLD-063 deferred password policy to LLD; LLD-023 settles the minimum length and ASCII/composition rules. LLD-024 now selects salted Argon2 via RustCrypto `argon2`, superseding the hashing deferral. Older hashing-TBD wording in the HLD is superseded for that selection; [API design](api-design.md) follows the selected algorithm/library. Remaining profile/runtime details stay **TBD** in Section 9.2.
 - HLD-073–HLD-076 establish **host** and **admin**, admin cross-game controls, privileged provisioning and the admin-only **Users** view. Older host-only provisioning/account descriptions are not an additional restriction on admins.
 - BR-015's designated-host-only rule is qualified by HLD-074's admin override. Board, History and platform scope also have later HLD refinements.
 
@@ -41,10 +43,10 @@ Source-document wording reconciliation remains separate; this template does not 
 | Frontend | Rust/Dioxus, client-rendered web first; all approved app features on desktop/mobile browsers. Latest stable versions are rechecked and pinned later, not chosen here. | HLD Sections 4.1–4.3; HLD-003, HLD-019 |
 | Backend | One Rust Cloudflare API Worker initially, using `workers-rs`, serving multiple endpoints through organized handlers. Managed server-side authority, not one Worker per endpoint or a conventional native server process. | HLD Sections 3, 5; LLD-016 |
 | Delivery | Workers Static Assets; HTTPS commands/authentication and authenticated WSS snapshots/updates. SSR/fullstack server functions are not selected. | HLD Sections 4.2, 7.1 |
-| Durable ownership | Game Directory Durable Object for discovery/global coordination; one SQLite-backed Game Durable Object per game for gameplay/memberships/boards. Account-store placement remains TBD. | HLD Sections 3, 5, 6; HLD-005, HLD-020 |
-| Global limits | At most one saved **New/Awaiting Players** game combined, independently of at most one **In Progress** game application-wide. Separate Objects are not a shared transaction. | HLD-012, HLD-039 |
+| Durable ownership | Game Directory Durable Object for discovery/global coordination; one SQLite-backed Game Durable Object per game for gameplay/memberships/boards. Account-store placement remains **TBD**; [Durable Object design Section 6](durable-object-design.md#schema-proposal) proposes a separate singleton Accounts Object without adopting it as confirmed HLD input. | HLD Sections 3, 5, 6; HLD-005, HLD-020 |
+| Global limits | Exactly one nonterminal New/Awaiting Players/In Progress game application-wide. Claim the sole Directory reservation at New creation, keep it through start, and release after Resolved/Cancelled; terminal History is excluded. Separate Objects are not a shared transaction. | HLD-012, HLD-039 (superseded), HLD-077 |
 | Exact lifecycle | **New → Awaiting Players → In Progress → Resolved** for a winner. **New**, **Awaiting Players** or **In Progress → Cancelled** for a no-winner ending. Neither terminal state reopens. | HLD-027, HLD-036–HLD-038 |
-| Configuration and start | Configuration changes only in New; no Awaiting Players → New. Start needs at least two distinct currently connected players with valid sessions and no other In Progress game. Spectators never gate start. | HLD-038, HLD-040, HLD-048 |
+| Configuration and start | Configuration changes only in New; no Awaiting Players → New. Start needs at least two distinct currently connected players with valid sessions and the same global reservation still held by this game. Spectators never gate start. | HLD-038, HLD-040, HLD-048, HLD-077 |
 | Capacities | Integer player limit 2–20, default 20; spectator limit 0–50, default 50. Zero spectators disables spectator admission. | HLD-018, HLD-046–HLD-048 |
 | Values and boards | String values; initial pool `1` through configured upper bound, default `75`. Square side 2–10, default 5. Random boards have no repeated value within a board and no cell-for-cell duplicate boards within a game; placement is unrestricted. | HLD-025, HLD-033–HLD-035; BR-025, BR-028, BR-029 |
 | Free cells and assignment | Optional valueless satisfied cells, enabled by default with one cell at one-based `(ceil(height / 2), ceil(width / 2))`. Locations configurable up to the whole board. Reject Start if enough distinct boards are impossible. Assign/persist boards at accepted start, never on lobby entry/recovery. | HLD-034, HLD-035 |
@@ -70,7 +72,7 @@ An account's **type** is distinct from the **designated-host assignment** on a g
 
 Only the developer CLI or already-existing fully enrolled admins may create admin accounts. Users lists provisioned **admin/host accounts**, not anonymous game memberships, and excludes credential/verifier material (HLD-073–HLD-076).
 
-Authorization implementation, role representation, permission helpers and audit format: **TBD**.
+Authorization implementation, role representation, permission helpers and audit format: **TBD**. Transport/auth-scope contracts are maintained in [API design](api-design.md#shared-contracts); the rules above are cross-cutting domain constraints, not a duplicate API specification.
 
 ### 2.3 Attendance, exit and retention inputs
 
@@ -95,49 +97,74 @@ Sources: HLD-020–HLD-022, HLD-032, HLD-036–HLD-045, HLD-061, HLD-064–HLD-0
 
 | Logical component | Confirmed responsibility | Detailed design to fill |
 | --- | --- | --- |
-| Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | TBD — crates, types, traits, signatures, algorithms and errors. |
+| Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | UUID-v7 typed IDs and local `thiserror` errors follow Sections 3.3–3.4; other crates, types, traits, signatures, algorithms and concrete error variants **TBD**. |
 | Shared contracts | Shared safe app/backend contract types without provider/UI dependencies. | TBD — serialization, versioning and module boundaries. |
 | Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | TBD — routing, components, state management and adapters. |
-| Rust API Worker | One initial deployable API service with multiple endpoint handlers; HTTP/WSS entry, authentication/authorization, request validation and routing to authoritative owners. | TBD — specific APIs, Rust modules/router, middleware, internal interfaces and failure mapping. |
-| Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | TBD — class/binding names, operations, schema and concurrency protocol. |
-| Per-game Durable Object | Authoritative game/board/membership state, SQLite writes, role-filtered hibernating sockets. | TBD — class/binding names, schema, transactions, attachments and alarms. |
-| Account/session authority | Strongly consistent credential lifecycle and server-owned account permissions. | TBD — physical Cloudflare store, ownership, interfaces and atomicity. |
+| Rust API Worker | One initial deployable API service; see the authoritative [API design](api-design.md#worker-boundaries). | Contract/routing/interface/error mapping details are maintained in [api-design.md](api-design.md); finalization **TBD**. |
+| Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | Proposed `GameDirectoryObject` records in [Durable Object design Section 6.3](durable-object-design.md#directory-records); final class/binding, schema and concurrency protocol **TBD**. |
+| Per-game Durable Object | Authoritative game/board/membership state, SQLite writes, role-filtered hibernating sockets. | Proposed `GameObject` records/History/attachments in [Durable Object design Section 6.5](durable-object-design.md#game-records)–[Durable Object design Section 6.8](durable-object-design.md#socket-metadata); final schema, transactions, bindings and alarms **TBD**. |
+| Account/session authority | Strongly consistent credential lifecycle and server-owned account permissions. | Proposed singleton `AccountsObject` in [Durable Object design Section 6.1](durable-object-design.md#object-boundaries) / [Durable Object design Section 6.4](durable-object-design.md#account-records); placement acceptance, interfaces and atomicity **TBD**. |
 | Developer CLI | Developer-restricted account operations through an authorized persistence/backend path. | TBD — language, packaging, commands, auth and private output delivery. |
 | Later `platform/android` / `platform/ios` | Future Dioxus adapters/entrypoints without duplicating domain/contracts. | TBD — deferred; no native implementation in this release. |
 
-Dependencies, compatible pinned toolchain/SDK versions and build commands: **TBD**. This inventory does not create a repository scaffold.
+The `uuid` and `thiserror` libraries are selected in Sections 3.3–3.4. Compatible pinned dependency/toolchain/SDK versions, target configuration and build commands remain **TBD**. This inventory does not create a repository scaffold.
 
-### 3.1 One API Worker, multiple endpoints
+### 3.1 API Worker organization — moved
 
-**Confirmed user direction (LLD-016):** Start with **one API Worker**, not one Worker per API endpoint. Incoming HTTP requests enter the Worker's fetch entrypoint and are dispatched by method/path to appropriate handlers. Organize handlers by responsibility in Rust modules; one deployment does not require one large function or one source file. Router choice, module names and signatures remain **TBD**.
+The single-Worker design and endpoint organization now live in [API design Section 2.1](api-design.md#21-one-api-worker-multiple-endpoints). LLD-016 remains confirmed; this is a document move, not a deployment change.
 
-The same API Worker covers the approved authentication, Users/account management, game operations, participant admission/recovery, History and WebSocket-upgrade responsibilities. These are responsibility groups, not a finalized endpoint list. Section 6.4 now records the requested proposed operation/function/path/scope catalog; the user will refine it and fill in detailed API contracts later.
+### 3.2 API/state-owner boundary — moved
 
-This decision does not settle account-store placement or require every backend concern to live in a Game Object.
+Worker/endpoint/Object distinctions, the request-flow diagram and namespace-versus-user authorization boundary now live in [API design Section 2.2](api-design.md#22-worker-endpoint-and-durable-object-boundaries). Persisted Object records now live in [Durable Object design](durable-object-design.md#schema-proposal); LLD Section 5 is its navigation reference.
 
-### 3.2 Worker, endpoint and Durable Object boundaries
+<a id="identifier-policy"></a>
 
-| Concept | Responsibility in this design |
+### 3.3 Application-generated identifiers — UUID v7
+
+**Confirmed user direction (LLD-020):** Use **UUID v7** for system identifiers whose generation is controlled by Brews Bingo application/developer code, including the developer CLI. This is the default for `GameId`, `AccountId`, `PlayerId`, `SpectatorId`, `SessionId`, `LinkId`, `CommandId`, `OperationId`, `ConnectionId` and `AuditId`, and for future comparable application-generated entity/operation identifiers. No compelling reason to use another UUID version has been identified for these IDs. Any exception requires an explicit, documented compelling reason and review; do not silently substitute another scheme.
+
+Use the Rust **`uuid` crate** with its `v7` feature for generation; the crate documents UUID v7 support and a `Uuid` value representation.[1] `Uuid::now_v7()` is the standard current-time generation entry point where the chosen target supports it; it requires `std` and `v7`.[2] The crate also documents WebAssembly-specific configuration; exact compatible version/features and clock/randomness integration for Cloudflare Workers, Dioxus web and the developer CLI remain **TBD** until target builds/tests verify them.[1] No dependency is installed or pinned by this document.
+
+- Preserve distinct typed IDs rather than interchangeable strings: for example, the intended shape is `AccountId(uuid::Uuid)`, with analogous newtypes for the other ID names. Generation/parse constructors must enforce UUID v7; raw `Uuid` alone accepts other versions. Exact module, derives and constructor signatures remain **TBD**.
+- Generate a new identity once in the component authorized to create it. Account/game/member creation remains server/CLI controlled. A client-generated retry `CommandId`, if selected by the eventual protocol, is also UUID v7 and remains untrusted input. Reuse the same ID for the same retry; never regenerate it merely because a response was lost. Exact command-ID issuer/transport remains **TBD**.
+- UUID validity, uniqueness and ordering are not authentication, ownership, command-admissibility or lifecycle proof. Keep authorization checks, unique constraints, explicit timestamps, call sequences, revisions and fencing generations. Do not infer global commit order, expiry or freshness from ID ordering across clients/Objects.
+- UUID v7 contains a time component.[1][2] Treat IDs as nonsecret identifiers; they may reveal approximate generation time and must never substitute for bearer credentials or private recovery proof.
+- Validate version/format at input boundaries without coercing malformed or other-version values into a different identity. UUID storage representation (SQLite text versus binary), canonical external encoding, collision handling and any future legacy-data migration remain **TBD**. Wire representation belongs in [API design](api-design.md#shared-contracts).
+
+**Different value categories, not alternative defaults for system IDs:**
+
+| Value | Treatment / reason |
 | --- | --- |
-| API Worker | Deployable backend entry service that receives requests, enforces access checks and dispatches to the appropriate handler/owner. |
-| API endpoint | An externally exposed operation identified by its eventual method/path; many endpoints share the API Worker. Exact endpoint definitions remain TBD. |
-| Durable Object class / namespace | Stateful behavior and its collection of instances, accessed through configured backend namespace bindings. Concrete classes, binding names and interfaces remain TBD. |
-| Durable Object instance | A stable state owner selected within a namespace. The existing HLD calls for one Game Object per game, not one per endpoint or browser. Concrete structures and schemas remain TBD. |
+| `SessionId` and `LinkId` versus bearer secrets | Metadata IDs use UUID v7. Session-cookie secrets and enrollment/reset bearer tokens remain separately generated security credentials; they must not be the ID itself. Entropy/verifier/rotation details remain **TBD**. |
+| `GameCode` | Keep the confirmed eight-character A–Z/0–9 discovery code; it is a short human-facing lookup value, not the stable `GameId` or an authorization credential. |
+| Usernames and player aliases | Keep their domain-specific text/normalization rules; they are user-provided names, not system-generated record IDs. |
+| Cloudflare Object IDs and externally assigned identifiers | Preserve provider-defined representations; the app does not control their generator. UUID-v7 `GameId` remains separate from the namespace/object handle. Exact mapping remains **TBD**. |
+| Sequence numbers, revisions, epochs, fences and digests | Keep their counter/hash semantics; they are not newly generated entity identities and must not be replaced with UUIDs. |
 
-Conceptual game-request flow, not a selected API or internal protocol:
+<a id="error-conventions"></a>
 
-```text
-Browser HTTPS request / WSS upgrade
-    -> Single Brews Bingo API Worker
-    -> Request validation, session/role checks and handler dispatch
-    -> Directory lookup when needed: issued code -> stable game identity
-    -> Configured namespace binding / handle for the owning Game Object
-    -> Authoritative game checks, durable changes and authorized result/update
-```
+### 3.4 Component-local Rust errors — `thiserror`
 
-Namespace bindings provide backend resource access; object names/IDs select instances within that scope. They do not authenticate end users or prove a request came from the Dioxus frontend. The public Worker must enforce the session/role/action checks even when called outside the UI; a game code or Object ID is not an authorization credential. No browser receives Cloudflare credentials or direct SQLite access. Exact Worker-to-Object calls and trusted-context propagation remain **TBD**.
+**Confirmed user direction (LLD-021):** Define application-owned typed Rust errors using **`thiserror`**, in an **`error.rs` file adjacent to the subcomponent that owns and uses those errors**. An `auth` folder must define its auth errors in **`auth/error.rs`**, not in a central catch-all file or scattered handler files. Apply the same convention to other components/subcomponents as their module boundaries are selected.
 
-An Object's in-memory state is temporary; accepted game data must remain in its durable storage so activation after sleep/restart restores the same logical game. This does not introduce another store or change the existing persist-before-acknowledgement/broadcast rule.
+Use `#[derive(Debug, thiserror::Error)]` on the component-owned error enum/struct, with explicit `#[error(...)]` messages. `thiserror` derives the standard Rust error implementation and supports source-error chaining and conversions via `#[source]`/`#[from]`.[3] Concrete variants/messages, wrapping policy, visibility, crate version and feature configuration remain **TBD**; the choice of library and local file convention are **confirmed**, not TBD.
+
+Illustrative placement, **not a selected repository scaffold**:
+
+| Owning subcomponent | Required local placement if that folder exists | Example type name (name TBD) |
+| --- | --- | --- |
+| `auth/` | `auth/error.rs` — all auth-owned errors | `AuthError` |
+| `accounts/` | `accounts/error.rs` — account-management-owned errors | `AccountsError` |
+| `games/` | `games/error.rs` — game-owned errors | `GameError` |
+| Nested `games/boards/` | `games/boards/error.rs` — errors owned by that nested subcomponent | `BoardError` |
+
+- Keep definitions with their owning component. Sibling/parent consumers import or wrap that typed error rather than duplicating its variants. Genuine cross-component types belong to the component that owns the shared concern; no global all-purpose error enum is selected.
+- Component functions return typed `Result<T, ComponentError>` (or a local alias) at their boundaries. Local module declarations/re-exports and exact signatures remain **TBD**. Preserve meaningful domain errors rather than flattening them into strings.
+- Wrap lower-level/provider errors at the appropriate component boundary and preserve source chains where safe; apply `#[from]` only where automatic conversion has the intended meaning. The library choice does not decide retryability or recovery behavior.
+- Keep passwords, tokens, recovery answers, credential-bearing URLs and other sensitive inputs out of error fields, `Display`/`Debug` output and logs. A source chain can contain private implementation details; it is not automatically safe for external disclosure.
+- Internal Rust errors are not public response schemas. The transport boundary maps them deliberately to safe HTTP/WSS errors; that contract, public codes/statuses and close behavior are specified separately in [API design](api-design.md#shared-contracts) and remain **TBD**. Do not serialize raw component errors or expose provider diagnostics by default.
+
+**TBD —** final module tree, concrete error types/variants/messages, conversion boundaries, redaction tests, retry classification and runtime/toolchain compatibility. This records implementation conventions only; no `error.rs`, Cargo dependency or application code is created now.
 
 ## 4. Views and frontend contracts
 
@@ -150,7 +177,7 @@ These are logical experiences, not a committed page/component count. Screen grou
 | VIEW-01 | Account sign-in | Host/admin password login, session-expired/access-denied feedback; no public registration. | TBD |
 | VIEW-02 | Enrollment and password setup | One-day single-use link, restricted session, mandatory personal password setup; used/expired-link outcomes. | TBD |
 | VIEW-03 | Account password reset | Privileged-issued single-use reset link and restricted new-password flow; not anonymous self-service recovery. | TBD |
-| VIEW-04 | Game list / account home | Host/admin game discovery, create/resume and role-correct cross-game access; respect independent saved/live limits. | TBD |
+| VIEW-04 | Game list / account home | Host/admin game discovery, create/resume and role-correct cross-game access; respect the single global nonterminal-game limit. | TBD |
 | VIEW-05 | New game configuration | Pool, square board, free cells and capacities; only authorized operator in New may edit. | TBD |
 | VIEW-06 | Host/admin lobby | Fixed rules/code, player roster/presence/capacity, eligible Start, confirmed cancel/transfer; read-only for other hosts. | TBD |
 | VIEW-07 | Host/admin live game | Current/ordered calls, pool exhaustion, boards/qualifiers, random/manual calls, winner submission, confirmed end/transfer. Admin may act across games; other hosts inspect read-only. | TBD |
@@ -161,7 +188,7 @@ These are logical experiences, not a committed page/component count. Screen grou
 | VIEW-12 | Audience / venue display | Current/previous calls, objective and result; venue readability and optional speech details TBD; no private boards. | TBD |
 | VIEW-13 | Result / cancellation notice | Role-specific final view, independent Exit; local-only spectator final result versus bounded existing player authorization. Pre-start cancellation does not create History. | TBD |
 | VIEW-14 | History list / detail | Host/admin read-only final calls/aliases/boards until common expiry; no export, reopening or membership restoration. | TBD |
-| VIEW-15 | **Users** and account-management flow | Admin-only list of host/admin accounts; authorized creation/link/reissue/reset/disable/delete. Backend must also deny non-admin listing/operations; never list secrets. | TBD |
+| VIEW-15 | **Users** and account-management flow | Admin-only list of host/admin accounts; authorized creation/link/reissue/reset/disable/delete and enable. Enable requires another enrolled admin account (no self-enable), or the separate developer CLI path (HLD-078, API B9). Backend must also deny non-admin listing/operations; never list secrets. | TBD |
 | VIEW-16 | Shared connection / error states | Connecting, Synchronizing, Live, Reconnecting, expired/unavailable and denied states; stale view is read-only, no offline mutation queue. | TBD |
 
 ### 4.2 Per-view worksheet — copy for each view
@@ -182,809 +209,40 @@ These are logical experiences, not a committed page/component count. Screen grou
 | Optional speech ownership/settings/error behavior where applicable | TBD |
 | Test scenarios and acceptance evidence | TBD |
 
-## 5. Database structure and schema — Cloudflare
+## 5. Durable Object design — external reference
 
-### 5.1 Physical ownership worksheet
+**Confirmed document organization (LLD-025):** The existing Durable Object schema proposal now lives in [durable-object-design.md](durable-object-design.md) in this folder. That document is the single editing location for storage ownership, the DATA-01–DATA-13 inventory, schema worksheets, logical records/fields/types/enums, record invariants, coordination/retention prompts and remaining TBDs.
 
-**Confirmed input:** Directory/game data uses SQLite-backed Durable Objects. There is one Game Object per game, not per board. Cross-Object calls are not a database transaction. Account-store placement, History discovery/indexing and exact record layout are undecided. Do not silently add D1, KV, R2 or another datastore; any new store needs a recorded decision. Eventually consistent KV is not the authoritative game/admission/active-slot registry.
+- [Physical ownership](durable-object-design.md#ownership) and [Object boundaries/cardinality](durable-object-design.md#object-boundaries)
+- [Logical record inventory](durable-object-design.md#record-inventory) and [per-record schema worksheet](durable-object-design.md#schema-worksheet)
+- [Shared types](durable-object-design.md#shared-types)
+- [Directory records](durable-object-design.md#directory-records), [account records](durable-object-design.md#account-records) and [game-owned live records](durable-object-design.md#game-records)
+- [Final History](durable-object-design.md#history-records), [operational records](durable-object-design.md#operational-records) and [socket metadata](durable-object-design.md#socket-metadata)
+- [Consistency, expiry and migrations](durable-object-design.md#consistency-migrations) and [outstanding decisions](durable-object-design.md#outstanding-decisions)
 
-**Deferred to the user:** Specific Durable Object structures, class/binding names, internal methods, stored fields and schemas will be supplied later. The ownership and record inventories below retain HLD responsibilities only; they do not select those structures or imply one Object per record group.
+Existing field names/types and privacy/lifecycle constraints are preserved, including `username` without a separate normalized key and the selected `verifier` field name (DO-019). Final physical schemas, placement acceptance, bindings and protocols remain **TBD**. UUID/error conventions and password policy/hashing remain in LLD Sections 3.3–3.4 and 9.1–9.2; API bodies/projections remain in [api-design.md](api-design.md). This move creates no code, database, migration or infrastructure.
 
-| Owner / concern | Logical data responsibility | Physical details |
-| --- | --- | --- |
-| Game Directory Object | Issued code → stable game lookup; application-wide saved/live coordination. Retained-History code checks must participate in issuance safety. | TBD — object identity, binding, schema, concurrency and reconciliation. |
-| Game Object | Configuration, lifecycle, memberships/alias claims, boards/matches/qualifiers, calls, outcome, revisions and command results. | TBD — tables/records, indexes, transactions, deadlines and cleanup. |
-| Account/session authority | Host/admin accounts, password/setup/reset state, link/session verifiers and authorization. | TBD — physical store, partition/owner, bindings and cross-owner access. |
-| History and lookup/indexes | Self-contained final snapshots and minimal code/identity/expiry metadata; common three-month deadline. | TBD — physical placement, discovery, indexes and deletion coordination. |
-| Operational metadata | Exit/access state, expiry/grace deadlines, reliable coordination and required nonsecret auditing. | TBD — minimum records, placement, retention and cleanup; not a hidden archive. |
+**Confirmed cross-record storage rule (user revision during DO-022):** Do not persist a boolean when the corresponding timestamp already determines that same state. For accounts, `disabled_at IS NOT NULL` means disabled; NULL means enabled. Populate it on disable, clear it on enable, and leave it unchanged on authorized no-op retries. Lifecycle status and the verifier remain independent. API booleans may be derived projections, not stored duplicates. Deadline-derived state still requires comparison with trusted backend time. See [Durable Object timestamp-derived state](durable-object-design.md#timestamp-state).
 
-### 5.2 Logical record inventory
+**Approved credential-epoch policy (DO-022):** Each account's `credential_epoch` is a `Revision` starting at 0. Increment exactly once on replacement enrollment-link issuance, reset-link issuance/reissuance, successful password setup/reset completion, or an accepted enabled-to-disabled transition. Do not increment for reads, ordinary login, link redemption alone, single-session logout, enable, rejected operations or retries of already-committed operations; never roll back on enable. New links/sessions store the current epoch and validation requires equality with the account's current epoch plus purpose/scope, expiry, revocation, lifecycle and `disabled_at` checks. Commit epoch changes with the related account/credential changes in AccountsObject; credentials issued by the transition use its new epoch. Reject overflow, preserve fixed deadlines and permit concurrent ordinary logins. This policy does not settle automatic login after reset or immediate cross-Object socket revocation; transaction/race/retry mechanisms remain TBD. See [DO-022](durable-object-design.md#account-records).
 
-These are conceptual groups, **not selected table names or a normalized schema**. Storage consolidation/splitting, identifiers, columns/types/constraints and relationships are TBD.
+## 6. API design — external reference
 
-| ID | Record group | Required information / invariant from HLD | Schema |
-| --- | --- | --- | --- |
-| DATA-01 | Provisioned account | Stable identity, host/admin type, enrollment/password/reset/access state; Users-safe projection distinct from credentials. | TBD |
-| DATA-02 | Access/enrollment/reset credential | Account/purpose binding, verifier, issue/expiry/consumed/revoked state; one-day single use. | TBD |
-| DATA-03 | Account and restricted sessions | Account/scope binding, verifier, fixed expiry/revocation; restricted setup/reset is not normal account authority. | TBD |
-| DATA-04 | Game directory and reservations | Code/stable-game mapping; separate saved-unstarted/live allowances, game-specific retry-safe release. | TBD |
-| DATA-05 | Game and configuration | Designated host, exact lifecycle, fixed rules/pool/grid/free cells/capacities, relevant durable timestamps. | TBD |
-| DATA-06 | Membership / alias / occupancy | Stable game/member identity, role, normalized alias claim, admission/Leave/presence/grace state; sockets are not seats. | TBD |
-| DATA-07 | Participant sessions / exit authorization | Game/member or spectator binding, player current-alias association, fixed expiry/revocation and permitted final-view exit state. | TBD |
-| DATA-08 | Private player recovery verifier | Stable member binding and protected verifier; optional, replaceable/deletable by valid-session owner; never public/History data. | TBD |
-| DATA-09 | Assigned player board | Immutable assigned layout/string values/free cells plus automatic matched state; no pre-start or recovery-generated replacement. | TBD |
-| DATA-10 | Ordered calls / qualification / outcome | Accepted call order and unique values, authoritative eligibility, at most one winner and immutable terminal result. | TBD |
-| DATA-11 | Revisions / command outcomes | Durable consistency/retry identity and accepted result; bounded retention design without authorizing a replay archive. | TBD |
-| DATA-12 | Final History and indexes | Final calls/aliases/winner/boards plus minimal metadata, shared expiry and code-collision lookup; no session/answer credentials. | TBD |
-| DATA-13 | Deadlines / coordination / audit | Minimum durable state needed for cancellation/expiry/grace, cross-Object recovery and actual admin-action attribution. Exact content/retention remains open. | TBD |
+**Confirmed document organization (LLD-022):** All detailed API information has moved to [api-design.md](api-design.md) in this folder. That file is the single editing location for Worker/API organization, shared contracts, the API-01–API-32 coverage index, per-operation worksheets, A1–H12 operations with Request/Response proposals, safe DTOs, and WSS protocol design.
 
-### 5.3 Per-record/table schema worksheet — copy for each record
+- [Worker organization and boundaries](api-design.md#worker-boundaries)
+- [Shared contracts and transport error mapping](api-design.md#shared-contracts)
+- [Logical operation inventory](api-design.md#operation-index)
+- [Per-operation worksheet](api-design.md#operation-worksheet)
+- [Operation catalog and Request/Response proposals](api-design.md#operation-catalog)
 
-- **Record ID / purpose / HLD references:** TBD.
-- **Authoritative Object/store and binding:** TBD.
-- **Table/record name and schema version:** TBD.
-- **Lifecycle / readers / writers / privacy classification:** TBD.
+Operation IDs, proposed names/routes/scopes, descriptions and inputs/outputs are preserved. Final contracts remain **TBD** in the companion document; the extraction does not approve proposals or implement endpoints. Cross-cutting domain rules and UUID/error conventions stay in this LLD; storage records and schema details live in [Durable Object design](durable-object-design.md).
 
-| Column / property | SQL or record type | Nullable / default | Key / constraint / validation | Sensitive-data treatment | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TBD | TBD | TBD | TBD | TBD | TBD |
+## 7. WSS design — external reference
 
-| Schema design item | Value to fill |
-| --- | --- |
-| Primary identifier and generation | TBD |
-| Relationships and ownership boundaries | TBD |
-| Unique/check constraints, canonical alias/code representation | TBD |
-| Indexes and query/access patterns | TBD |
-| Foreign-key behavior or application-enforced cross-owner references | TBD |
-| Read/write statement shapes and parameterization | TBD |
-| Transaction boundary and invariants maintained | TBD |
-| Concurrency/conflict detection and retry outcome | TBD |
-| Retention trigger, persisted deadline, read denial and deletion | TBD |
-| Copies/indexes/logs/backups and restore-time expiry enforcement | TBD |
-| Size, read/write amplification and quota assumptions | TBD |
-| DDL / initialization / migration / rollback | TBD |
-| Schema and constraint tests | TBD |
+The message inventory and transport/synchronization worksheet moved with the API design to [api-design.md Section 7](api-design.md#wss-design). Define message grouping, payloads, view revisions, snapshot ordering, hibernation, expiry/revocation, close behavior and transport tests there; final protocol choices remain **TBD**.
 
-**DDL and query definitions:** TBD — intentionally no executable SQL in this template.
-
-### 5.4 Cross-owner consistency, expiry and migration
-
-| Design topic | Required constraint | Detailed mechanism |
-| --- | --- | --- |
-| Create / publish / start | No overwritten saved game, exposed unready code or two live games; admit/start/assign consistently. | TBD |
-| Terminal transition / release | Freeze durable result before game-specific slot release; no stale release clears a newer reservation. | TBD |
-| Call transaction | Calls, affected boards, qualification, revision and command result commit together before push. | TBD |
-| Credential redemption / reset | Atomic single-use consume + restricted session; reset/reissue invalidate predecessors under reviewed policy. | TBD |
-| Code reuse / History expiry | Check live and unexpired History without permanent-code-ledger assumptions; old credentials never move to a reused code. | TBD |
-| Retention scheduler | Enforce Section 2.3 deadlines without client visits or in-memory-only timers; preserve three **months**, not an assumed 90 days. | TBD |
-| Notice then deletion | Deliver permitted final notices without retaining deleted participant credentials indefinitely or waiting for Exit. | TBD |
-| Migration / restore | Preserve authority, committed boards, absolute deadlines and terminal immutability; never resurrect expired data. | TBD |
-
-Migration inventory: **TBD** — version, affected Object/store, compatibility window, forward/backout actions, verification and failure recovery.
-
-## 6. API requests and responses — Cloudflare Workers
-
-### 6.1 Shared contract worksheet
-
-| API concern | Confirmed input | Implementation specification |
-| --- | --- | --- |
-| Transport and routing | One API Worker serves multiple HTTPS endpoints and WSS upgrades, dispatching to handlers and authoritative backend owners (LLD-016). | Proposed methods/paths in Section 6.4; final contracts, base URL/versioning, Rust router/handler signatures and internal calls remain TBD. |
-| Authentication | Backend-issued Secure/HttpOnly/SameSite cookies; fixed one-day expiry and restricted versus normal scopes. | TBD — cookie names/attributes, session lookup, CSRF/origin rules and error mapping. |
-| Authorization | Server-owned role plus game assignment; admin overrides ownership only. Users/account-list data is admin-only. | TBD — middleware, checks and commit-time reauthorization. |
-| Request validation | Preserve string values, alias/code normalization, lifecycle and capacity rules. | TBD — media types, encodings, schemas, unknown-field policy and limits. |
-| Response contract | Return authorized state/results only; secret fields absent from normal views and logs. | TBD — payload envelopes, field names, status codes, headers and caching. |
-| Retry safety | Actor/game-scoped command identity and durable outcome lookup; repeat accepted command without repeating effects. | TBD — idempotency transport, conflict behavior, result retention and retry policy. |
-| Errors | Distinguish authentication, authorization, invalid input, state/capacity conflicts, expiry and unavailable/unknown outcome safely. | TBD — codes, response schemas, public messages and information-leak limits. |
-| Compatibility / observability | No selected wire schema or API version; redact sensitive inputs and links. | TBD — version policy, correlation/audit fields, logs and traces. |
-
-### 6.2 Logical operation inventory
-
-These stable API-01–API-32 rows remain a high-level coverage checklist, not finalized endpoints or separate Worker deployments. The catalog-reference column maps them to the expanded A1–H12 entries in Section 6.4, including associated internal work. That section records proposed functions, methods/paths and auth scopes. Each eventual API still needs the worksheet in Section 6.3: **parameter definitions, request bodies, success/error responses and status codes remain TBD**. Internal entries do not acquire public routes through this mapping. Final endpoint grouping remains subject to user review within the single-API-Worker boundary (LLD-016).
-
-| ID | Logical operation | Confirmed actor / guard / outcome | Proposed catalog entries (Section 6.4) | Request / responses |
-| --- | --- | --- | --- | --- |
-| API-01 | Account password login | Host/admin credentials after completed setup; issue fixed-life account session. | A1 | TBD |
-| API-02 | Enrollment-link redemption / password setup | Valid unused link → restricted session → personal password; no early privileges or deadline extension. | A3, A4 | TBD |
-| API-03 | Reset-link redemption / new password | Valid single-use reset proof; restricted reset authority, same account. | A5, A6 | TBD |
-| API-04 | Session validation / logout | Resolve server-owned authority or revoke current access; game Exit is a separate concept. | A2, A7, H6 | TBD |
-| API-05 | Users account listing | Enrolled admin only; list host/admin accounts without secrets. | B1, B2 | TBD |
-| API-06 | Provision host/admin account | Developer CLI or existing admin; first admin via CLI. Persist pending account/link before returning private URL. | B3, B4 | TBD |
-| API-07 | Reissue enrollment link | Privileged caller, same pending account; invalidate prior links/restricted sessions. | B5 | TBD |
-| API-08 | Initiate account password reset | Privileged caller; issue one-day single-use link, revoke target sessions/sockets immediately and block old-password login while pending. | B6 | TBD |
-| API-09 | Disable / delete account | Privileged caller; reject if target still hosts a nonterminal game, revoke access without deleting unrelated History. | B7, B8, H3 | TBD |
-| API-10 | List / inspect games | Host/admin authorized cross-game view; read permission alone never grants host-role mutation. | C1, C2, C3, C5 | TBD |
-| API-11 | Create New game | Host/admin creator becomes designated host; reject if saved-unstarted allowance occupied. | C6, H2 | TBD |
-| API-12 | Read / update configuration | Reads authorized; changes require designated host/admin and New. | C5, C7 | TBD |
-| API-13 | Publish Awaiting Players | Authorized operator; validate/fix configuration and durably issue code. | C8, H1 | TBD |
-| API-14 | Open / resume selected game | Restore existing identity/configuration/code/state; role/lifecycle/exit restrictions apply. | C9 | TBD |
-| API-15 | Start game | Designated host/admin, Awaiting Players, connected minimum/global slot/feasibility checks; persist start-time boards. | E6 | TBD |
-| API-16 | Random / manual value call | Designated host/admin, playable In Progress; valid undrawn value → atomic calls/matches/qualification result. | E7, E8 | TBD |
-| API-17 | Submit one qualified winner | Designated host/admin validates same-game qualification; commit Resolved once. | E9, H9 | TBD |
-| API-18 | Cancel / manually end game | Designated host/admin with required confirmation; commit Cancelled, apply pre-start versus started retention. | E10, E11, H7, H8 | TBD |
-| API-19 | Transfer designated host | Authorized operator confirms target; immediate committed transfer, no recipient acceptance or data reset. | C10, H12 | TBD |
-| API-20 | Query command outcome | Authorized original command context; resolve lost acknowledgement without another effect. | G4, G5, H11 | TBD |
-| API-21 | Resolve game code / entry eligibility | Known published code only; discovery is not identity or admission. | C4, D3 | TBD |
-| API-22 | Join as player | Awaiting Players, valid available alias/free slot, optional answer; no board before start. | D4, D5 | TBD |
-| API-23 | Join as spectator | Awaiting Players/In Progress and spectator capacity; no player privileges. | D6, H5 | TBD |
-| API-24 | Rename own alias | Valid player session, Awaiting Players; available normalized name, stable membership and unchanged session expiry. | D7 | TBD |
-| API-25 | Switch participant role | Awaiting Players and target eligibility; consistent seat/session/alias/verifier transition, no second admission. | D8, D9 | TBD |
-| API-26 | Participant Leave | Valid owner; pre-start player versus In Progress player versus spectator policies differ. | D10, D11, D12 | TBD |
-| API-27 | Recover player session | Code + current alias + enrolled answer; nonterminal restoration of same membership, replace old sessions/sockets. | D13 | TBD |
-| API-28 | Set / replace / delete own recovery answer | Valid player session, Awaiting Players/In Progress; no alternate ownership proof. | D14 | TBD |
-| API-29 | Final-view Exit / access cleanup | Independent exit, no outcome mutation or renewed game access; spectator local-only exit and pre-start deletion must not require a surviving server session. | F1, F2 | TBD |
-| API-30 | History listing / detail | Host/admin, unexpired immutable final data only; no export or membership restoration. | F3, F4, H10 | TBD |
-| API-31 | Authorized revision check / resynchronization | Repair freshness without treating heartbeat as state agreement; respect role/exit/expiry. | D1, D2, E1, E2, E3, E4, E5, G3 | TBD |
-| API-32 | WSS connection / upgrade | Valid authorized game context; first application state is full role-filtered snapshot; Section 7 details TBD. | G1, G2, H4 | TBD |
-
-No endpoints for manual board marking, public privileged registration, self-elevation, post-terminal gameplay, History export or alternate player recovery are implied. CLI-to-backend transport remains TBD; the catalog does not require the CLI to use public app routes.
-
-### 6.3 Per-operation request/response worksheet — copy for each API operation
-
-- **Operation ID / purpose / source decisions / consuming views:** TBD — link the relevant Section 6.2 API ID and Section 6.4 catalog ID(s).
-- **Public Worker handler versus internal Object/CLI interface:** TBD.
-- **Method / path / API version:** TBD — review the Section 6.4 proposal; internal helpers do not require an HTTP endpoint.
-- **Authentication / allowed roles / lifecycle / ownership or admin override:** TBD.
-- **Preconditions / validation / CSRF and origin checks:** TBD.
-
-#### Request
-
-| Location | Name | Type / format | Required / default | Validation / sensitivity |
-| --- | --- | --- | --- | --- |
-| Path / query / header / cookie / body: TBD | TBD | TBD | TBD | TBD |
-
-**Body schema and sanitized example:** TBD. Recovery answers belong only in protected HTTPS request bodies, never query strings or WSS. Do not put real tokens, passwords or credential-bearing URLs in this document.
-
-#### Success response
-
-| Status | Header / cookie effects | Body field | Type / meaning | Visibility / cache policy |
-| --- | --- | --- | --- | --- |
-| TBD | TBD | TBD | TBD | TBD |
-
-**Response schema and sanitized example:** TBD. Specify restricted-session versus normal-session effects and any durable-result/revision reference; do not expose HttpOnly session tokens in normal response bodies.
-
-#### Error responses and side effects
-
-| Failure condition | Status / error code | Public response schema | Durable effect / retry safety |
-| --- | --- | --- | --- |
-| TBD | TBD | TBD | TBD |
-
-- **Backend owner / record reads / writes / transaction:** TBD.
-- **Idempotency, concurrent requests and unknown-outcome recovery:** TBD.
-- **Committed-result acknowledgement and WSS interaction:** TBD.
-- **Revocation/expiry during execution, logging/redaction and audit:** TBD.
-- **Contract, permission, validation and failure tests:** TBD.
-
-### 6.4 Proposed operation and data-access catalog
-
-**Status:** Captured at the user's request from the operation walkthrough. IDs A1–H12, Rust function names, methods/paths and auth scopes below are **proposals for review**, not implemented handlers or finalized contracts. The category/operation sections retain the requested plain-text format. Section 6.2 remains the stable high-level coverage index; its references point to this expanded catalog. Request/response schemas, parameter definitions, status/error codes, Rust signatures, router configuration and Durable Object structures remain **TBD**.
-
-**Scope and access conventions:**
-- **Mutating** includes changes to credentials, membership, connections or lifecycle, not just game data.
-- **Non-mutating** means read-only, excluding ordinary request logging.
-- **Admin:** authenticated, fully enrolled admin.
-- **Host:** authenticated, fully enrolled host **or admin**. Game mutations additionally require designated-host ownership unless the caller is an admin.
-- **Player:** authenticated player acting on their own membership. Host/admin privileges do not grant anonymous-player impersonation or recovery override.
-- **Anyone:** no privileged account role required; token, admission, session and ownership checks still apply where stated. This includes spectators and unauthenticated entry/recovery flows; it never means unrestricted access to another user's data.
-- **System:** backend-only operation, not independently callable by users. The user explicitly selected this label for internal operations; it is not a provisioned account role.
-- Comma-separated scopes mean either role is permitted. Every operation still enforces the description's lifecycle, ownership, credential and privacy conditions.
-
-**Mapping conventions:** Function names describe proposed handlers/helpers, not signatures. Paths include a suggested HTTP method; **— Internal** means no public URL. Repeated Leave/Cancel paths are server-selected role/state branches, not duplicate routes. Server push and retry helpers are not extra public endpoints. Reads may be combined into role-specific snapshots; dependent internal writes remain part of the command that owns them. Credentials and recovery answers are supplied through protected request bodies/cookies as appropriate, never interpolated into these paths. The developer CLI's transport remains separate/TBD.
-
-#### A. Authentication and sessions
-
-##### A1: `login_account` (Mutating)
-
-Path: `POST /api/auth/login`
-
-Auth scope: Anyone
-
-Validate submitted account credentials and enrollment/reset/disabled state; create a fixed-one-day account session. Existing account sessions may remain valid.
-
-##### A2: `get_current_session` (Non-mutating)
-
-Path: `GET /api/session`
-
-Auth scope: Anyone
-
-Resolve the presented session and return its safe identity, scope, expiry and current permissions. Missing or invalid credentials do not disclose another identity or grant access. Never return credential verifiers.
-
-##### A3: `redeem_enrollment_link` (Mutating)
-
-Path: `POST /api/auth/enrollment/redeem`
-
-Auth scope: Anyone
-
-A valid enrollment token is required. Validate account binding, purpose, expiry and unused status; atomically consume the token and create a restricted password-setup session.
-
-##### A4: `complete_password_setup` (Mutating)
-
-Path: `POST /api/auth/enrollment/complete`
-
-Auth scope: Anyone
-
-A valid restricted enrollment session is required. Persist the chosen password verifier and setup completion; rotate into normal account authority without extending the restricted session’s original deadline.
-
-##### A5: `redeem_password_reset_link` (Mutating)
-
-Path: `POST /api/auth/password-reset/redeem`
-
-Auth scope: Anyone
-
-A valid reset token is required. Validate and consume the single-use token; establish restricted password-reset authority for the bound account.
-
-##### A6: `complete_password_reset` (Mutating)
-
-Path: `POST /api/auth/password-reset/complete`
-
-Auth scope: Anyone
-
-A valid restricted reset session is required. Replace the password verifier, complete reset state and retire restricted reset authority. Exact post-reset navigation/session behavior remains TBD.
-
-##### A7: `logout_session` (Mutating)
-
-Path: `POST /api/auth/logout`
-
-Auth scope: Anyone
-
-Revoke the caller’s current session, clear its cookie and stop associated authorized socket delivery. This cannot revoke another user’s session and is separate from leaving a game.
-
-#### B. Users and privileged account management
-
-The scopes below describe the app-facing endpoints. The developer CLI retains its separately authorized management and bootstrap capabilities.
-
-##### B1: `list_users` (Non-mutating)
-
-Path: `GET /api/users`
-
-Auth scope: Admin
-
-List safe metadata for provisioned host/admin accounts. Exclude anonymous memberships and secrets. Columns, filtering, sorting and pagination remain TBD.
-
-##### B2: `get_user` (Non-mutating)
-
-Path: `GET /api/users/{account_id}`
-
-Auth scope: Admin
-
-Read a target account’s safe metadata and lifecycle state for management. This does not expose password, token or recovery verifiers.
-
-##### B3: `create_host_account` (Mutating)
-
-Path: `POST /api/users/hosts`
-
-Auth scope: Admin
-
-Validate the proposed account identifier; create a pending host account and one-day enrollment link. Return the link only after durable creation. The developer CLI may also perform this through its privileged path.
-
-##### B4: `create_admin_account` (Mutating)
-
-Path: `POST /api/users/admins`
-
-Auth scope: Admin
-
-Create a pending admin account and enrollment link. Only an existing admin or the developer CLI may perform this; first-admin bootstrap uses CLI.
-
-##### B5: `reissue_enrollment_link` (Mutating)
-
-Path: `POST /api/users/{account_id}/enrollment-links`
-
-Auth scope: Admin
-
-For the same pending account, invalidate previous enrollment links/restricted sessions and issue a replacement one-day single-use link.
-
-##### B6: `initiate_password_reset` (Mutating)
-
-Path: `POST /api/users/{account_id}/password-reset-links`
-
-Auth scope: Admin
-
-Enter reset-pending state, immediately revoke target-account sessions/sockets, block old-password login and issue a one-day reset link.
-
-##### B7: `disable_account` (Mutating)
-
-Path: `POST /api/users/{account_id}/disable`
-
-Auth scope: Admin
-
-Reject if the account still hosts a nonterminal game. Otherwise disable access and revoke its credentials/connections as required.
-
-##### B8: `delete_account` (Mutating)
-
-Path: `DELETE /api/users/{account_id}`
-
-Auth scope: Admin
-
-Apply the hosted-game guard, then remove account/credential data without deleting unrelated or unexpired History. Preserve only permitted historical references.
-
-#### C. Game discovery, configuration and ownership
-
-##### C1: `list_games` (Non-mutating)
-
-Path: `GET /api/games`
-
-Auth scope: Host
-
-List current-game summaries with lifecycle, designated host and appropriate access information. Detailed filtering remains TBD.
-
-##### C2: `get_saved_game` (Non-mutating)
-
-Path: `GET /api/games/saved`
-
-Auth scope: Host
-
-Find the game occupying the application-wide New/Awaiting Players allowance, if any. Supports resumption and creation-blocked feedback.
-
-##### C3: `get_active_game` (Non-mutating)
-
-Path: `GET /api/games/active`
-
-Auth scope: Host
-
-Find the game occupying the application-wide In Progress designation, independently of the saved-unstarted allowance.
-
-##### C4: `resolve_game_code` (Non-mutating)
-
-Path: `GET /api/game-codes/{code}`
-
-Auth scope: Anyone
-
-Normalize and resolve an issued code to an existing game and limited entry information. Unknown codes never create games; discovery grants no membership, private data or gameplay permissions.
-
-##### C5: `get_game` (Non-mutating)
-
-Path: `GET /api/games/{game_id}`
-
-Auth scope: Anyone
-
-Read only the caller-authorized game/configuration projection. Host/admin accounts and admitted player/spectator sessions receive their permitted fields. A game ID alone does not authorize private data or unrestricted game inspection.
-
-##### C6: `create_game` (Mutating)
-
-Path: `POST /api/games`
-
-Auth scope: Host
-
-Create a distinct New game, assign its creator as designated host and establish the host-idle deadline. Reject if the saved allowance is occupied.
-
-##### C7: `update_game_configuration` (Mutating)
-
-Path: `PATCH /api/games/{game_id}/configuration`
-
-Auth scope: Host
-
-The designated host or an authorized admin updates pool, board, free cells or capacities only in New. Validate the resulting configuration without partially applying invalid changes.
-
-##### C8: `open_game_lobby` (Mutating)
-
-Path: `POST /api/games/{game_id}/lobby`
-
-Auth scope: Host
-
-The designated host or an authorized admin freezes validated configuration, transitions to Awaiting Players and publishes its issued code consistently with game state.
-
-##### C9: `resume_game` (Mutating)
-
-Path: `POST /api/games/{game_id}/resume`
-
-Auth scope: Host
-
-Restore existing state without recreating codes/boards, subject to game permissions. A qualifying designated-host open/resume also updates the unstarted host-activity deadline. Passive reads must not silently refresh that deadline; the effect of non-designated admin activity remains TBD.
-
-##### C10: `transfer_game_host` (Mutating)
-
-Path: `POST /api/games/{game_id}/host-transfer`
-
-Auth scope: Host
-
-Validate designated-host or admin authority, target eligibility and confirmation; immediately replace designated-host assignment while preserving game data and reservations. No recipient acceptance is required.
-
-#### D. Membership, admission, aliases and recovery
-
-##### D1: `get_my_membership` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/membership`
-
-Auth scope: Anyone
-
-A valid participant session is required. Read its own membership’s role, current alias, access state and recovery-enabled status where applicable. Never return the answer/verifier or another participant’s membership.
-
-##### D2: `list_game_players` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/players`
-
-Auth scope: Host
-
-Read player aliases and permitted membership/presence information. Distinguish retained disconnected players from currently connected players.
-
-##### D3: `get_game_availability` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/availability`
-
-Auth scope: Anyone
-
-Read admission/start availability through a caller-appropriate projection. Unauthenticated entry flows receive only permitted entry information, not private roster data. Detailed occupancy and start eligibility depend on caller authority; spectators never satisfy the connected-player minimum.
-
-##### D4: `is_alias_claimed` (Non-mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Check a normalized alias claim within a game during admission, rename or role switching. No public alias-availability endpoint is implied.
-
-##### D5: `join_game_as_player` (Mutating)
-
-Path: `POST /api/games/{game_id}/players`
-
-Auth scope: Anyone
-
-In Awaiting Players, validate the code-based admission context, alias and capacity; claim alias/seat, create membership and optional answer verifier, and issue a player session. No board is generated yet.
-
-##### D6: `join_game_as_spectator` (Mutating)
-
-Path: `POST /api/games/{game_id}/spectators`
-
-Auth scope: Anyone
-
-Validate the code-based admission context and Awaiting Players/In Progress capacity; allocate spectator identity/seat and issue its session. No player or account privileges are granted.
-
-##### D7: `rename_my_alias` (Mutating)
-
-Path: `PATCH /api/games/{game_id}/membership/alias`
-
-Auth scope: Player
-
-Before start, claim the new alias and release the old one. Preserve membership, seat, answer verifier and original session expiry.
-
-##### D8: `switch_to_spectator` (Mutating)
-
-Path: `POST /api/games/{game_id}/membership/switch-to-spectator`
-
-Auth scope: Player
-
-Before start, acquire spectator admission, release player seat/alias and delete the player recovery verifier. Failure preserves the original role.
-
-##### D9: `switch_to_player` (Mutating)
-
-Path: `POST /api/games/{game_id}/membership/switch-to-player`
-
-Auth scope: Anyone
-
-A valid existing spectator session is required. Before start, claim an eligible player seat/alias, release spectator occupancy and optionally enroll a fresh answer. Do not restore deleted credentials or permit an unauthenticated membership takeover.
-
-##### D10: `leave_player_lobby` (Mutating)
-
-Path: `POST /api/games/{game_id}/membership/leave`
-
-Auth scope: Player
-
-Player Leave before start releases seat/alias and removes that membership from the start roster. Returning requires fresh eligible admission. Dispatch this branch using server-verified role and lifecycle.
-
-##### D11: `leave_player_game` (Mutating)
-
-Path: `POST /api/games/{game_id}/membership/leave`
-
-Auth scope: Player
-
-Player Leave during play retains seat, board, automatic matching and award eligibility. Preserve approved valid-session/answer-based return. Dispatch this branch using server-verified role and lifecycle.
-
-##### D12: `leave_spectator_game` (Mutating)
-
-Path: `POST /api/games/{game_id}/membership/leave`
-
-Auth scope: Anyone
-
-A valid spectator session is required. Immediately release that spectator’s occupancy and delete its identity/session data. Explicit Leave does not receive accidental-disconnect grace. Dispatch using server-verified role and lifecycle.
-
-##### D13: `recover_player_session` (Mutating)
-
-Path: `POST /api/player-recovery`
-
-Auth scope: Anyone
-
-Verify submitted code, current alias and enrolled answer; replace old sessions/sockets and restore the same nonterminal membership/board without another seat. No existing player session is required, but the approved recovery proof is mandatory.
-
-##### D14: `manage_my_recovery_answer` (Mutating)
-
-Path: `PUT /api/games/{game_id}/membership/recovery-answer` or `DELETE /api/games/{game_id}/membership/recovery-answer`
-
-Auth scope: Player
-
-Set/replace the caller’s answer using PUT or delete it using DELETE in Awaiting Players/In Progress. Deletion disables answer recovery. A lost-session caller cannot use this operation to establish ownership.
-
-#### E. Live-game reads and commands
-
-##### E1: `get_game_calls` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/calls`
-
-Auth scope: Anyone
-
-Return the most recent value and committed call sequence to authorized game viewers, including admitted spectators. A valid account or participant access context is required; knowing the game ID alone is insufficient.
-
-##### E2: `get_remaining_values` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/remaining-values`
-
-Auth scope: Host
-
-Derive/read the remaining pool and exhaustion state from configuration and accepted calls for the host/admin operating or inspection view. Audience-facing exhaustion status can be included in the permitted game snapshot without exposing this full query.
-
-##### E3: `get_my_board` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/membership/board`
-
-Auth scope: Player
-
-Read the caller’s assigned layout, free cells, automatic matches and qualification. No board exists before start.
-
-##### E4: `get_game_boards` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/boards`
-
-Auth scope: Host
-
-Inspect all or selected player boards read-only. Selection/filter details remain TBD; designated-host ownership is not required for inspection.
-
-##### E5: `get_game_qualification` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/qualification`
-
-Auth scope: Host, Player
-
-Hosts/admins receive qualifying players; players receive only their own qualification. Spectators receive no private qualifier details.
-
-##### E6: `start_game` (Mutating)
-
-Path: `POST /api/games/{game_id}/start`
-
-Auth scope: Host
-
-The designated host or an authorized admin validates the connected-player minimum, reservation availability and board feasibility; starts the game and persists boards/initial qualification for the retained start roster.
-
-##### E7: `call_random_value` (Mutating)
-
-Path: `POST /api/games/{game_id}/calls/random`
-
-Auth scope: Host
-
-The designated host or an authorized admin requests a random undrawn value. Persist the call, matching board changes, qualification, revision and command outcome consistently before delivery.
-
-##### E8: `call_manual_value` (Mutating)
-
-Path: `POST /api/games/{game_id}/calls/manual`
-
-Auth scope: Host
-
-The designated host or an authorized admin submits a string value. Validate pool membership/nonduplication and perform the same durable progression as a random call.
-
-##### E9: `award_game_winner` (Mutating)
-
-Path: `POST /api/games/{game_id}/winner`
-
-Auth scope: Host
-
-For the designated host or an authorized admin, revalidate the selected member’s qualification and commit one winner with Resolved. Retained disconnected/departed players remain eligible.
-
-##### E10: `cancel_unstarted_game` (Mutating)
-
-Path: `POST /api/games/{game_id}/cancel`
-
-Auth scope: Host
-
-With designated-host/admin confirmation, commit Cancelled from New/Awaiting Players, then apply notice and no-History deletion rules. Generate no boards.
-
-##### E11: `end_game_without_winner` (Mutating)
-
-Path: `POST /api/games/{game_id}/cancel`
-
-Auth scope: Host
-
-With designated-host/admin confirmation, commit Cancelled from In Progress, retain final History and safely release the live reservation. The current game state determines this branch rather than the pre-start cancellation branch.
-
-#### F. Final views and History
-
-##### F1: `get_game_result` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/result`
-
-Auth scope: Host, Player
-
-Return only a permitted final view. Players need existing unexpired, not-exited authorization; hosts/admins must satisfy their final-view access rules and use History after exit. Spectators cannot fetch/reconnect after terminal cleanup.
-
-##### F2: `exit_game_result` (Mutating)
-
-Path: `POST /api/games/{game_id}/exit`
-
-Auth scope: Anyone
-
-Requires the caller’s existing final-view authorization when a server-side exit record is needed. Clean up only that caller’s access without changing outcomes, logging accounts out or waiting for others. Spectator local-only Exit requires no request after server data deletion.
-
-##### F3: `list_game_history` (Non-mutating)
-
-Path: `GET /api/history`
-
-Auth scope: Host
-
-List unexpired started-game History across hosts. Exclude pre-start cancellations and expired records. Query options remain TBD.
-
-##### F4: `get_game_history` (Non-mutating)
-
-Path: `GET /api/history/{game_id}`
-
-Auth scope: Host
-
-Read final ordered calls, aliases, winner if any and final board snapshots. No replay archive, credentials, membership restoration or mutation.
-
-#### G. Live synchronization and retries
-
-##### G1: `connect_game_stream` (Mutating)
-
-Path: `GET /api/games/{game_id}/stream` — WebSocket upgrade
-
-Auth scope: Anyone
-
-A valid authorized account or participant session is required, including for spectators. Register/supersede the appropriate connection and send a full role-specific snapshot. This is mutating because connection/presence state changes; existing membership is not duplicated.
-
-##### G2: `send_game_update` (Non-mutating)
-
-Path: Existing `/api/games/{game_id}/stream` socket
-
-Auth scope: System
-
-Push already-committed, role-filtered changes to currently authorized recipients. This is server delivery, not a user-invoked HTTP request or gameplay mutation.
-
-##### G3: `synchronize_game_view` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/sync`
-
-Auth scope: Anyone
-
-Requires valid access to the requested game/view. Compare the client’s authorized-view revision and return fresh state when needed. Do not treat private updates as public gaps, renew credentials or bypass exit restrictions.
-
-##### G4: `get_command_result` (Non-mutating)
-
-Path: `GET /api/games/{game_id}/commands/{command_id}`
-
-Auth scope: Anyone
-
-Requires valid authority for the original actor/game-scoped command. Read its durable outcome after an interrupted response without exposing another actor’s results. Knowledge of a command ID is not authorization.
-
-##### G5: `execute_command_idempotently` (Mutating)
-
-Path: Original command’s method/path; no separate endpoint
-
-Auth scope: System
-
-Internal execution wrapper used after the original command’s own authentication and authorization checks. Return an existing committed result or safely complete the original command without duplicate calls, boards, awards or admissions. The initiating client retains the original endpoint’s scope.
-
-#### H. Backend-only coordination and maintenance
-
-##### H1: `claim_game_code` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Check a candidate against live mappings and unexpired History, then safely claim/publish it. Reused codes must not transfer old credentials.
-
-##### H2: `coordinate_game_reservations` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Acquire/release the separate saved-unstarted and In Progress allowances. A stale operation must never release another game’s reservation.
-
-##### H3: `find_hosted_nonterminal_games` (Non-mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Find nonterminal games by designated-host account ID to enforce account disable/delete safeguards. This does not expose Users to ordinary hosts.
-
-##### H4: `update_participant_presence` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Maintain connected-player eligibility and spectator-disconnect state. Superseded socket closure must not release the replacement connection’s seat.
-
-##### H5: `expire_spectator_grace` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Recheck a due five-minute grace deadline and current presence; release expired occupancy and delete associated spectator identity/session data.
-
-##### H6: `expire_or_revoke_credentials` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Enforce credential expiry/revocation, stop unauthorized socket delivery and clean up artifacts. Expiry alone does not delete retained player membership.
-
-##### H7: `cancel_idle_unstarted_game` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-After rechecking state/deadline, cancel an unstarted game following 24 hours of qualifying-host inactivity. Release only its saved allowance and trigger cleanup.
-
-##### H8: `purge_cancelled_unstarted_game` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Delete committed pre-start-cancelled game/participant data and mappings without History or waiting for viewer acknowledgement. Preserve only justified retry protection.
-
-##### H9: `finalize_game_retention` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Preserve started-game final History; delete recovery verifiers and spectator server data; retain only permitted minimal player final-view authorization.
-
-##### H10: `purge_expired_history` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Enforce the three-calendar-month deadline and delete final records plus related indexes/copies. Prevent expired data from reappearing through restore.
-
-##### H11: `reconcile_pending_operation` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Reconcile interrupted directory/game/account operations without duplicate effects, invalid publication, incorrect reservation release or resurrected data.
-
-##### H12: `record_admin_action` (Mutating)
-
-Path: — Internal
-
-Auth scope: System
-
-Record the actual admin actor, target, operation and result without secrets. Audit storage, retention and any administrative read interface remain TBD.
-
-## 7. WSS messages, synchronization and client state
-
-### 7.1 Message inventory
-
-Message grouping/names are TBD; rows describe required purposes, not chosen event discriminators.
-
-| Purpose | Confirmed content / constraint | Envelope, fields and encoding |
-| --- | --- | --- |
-| Initial / recovery snapshot | Full authorized state and revision; no lobby board; player-own versus host/admin board access versus audience-only projection. | TBD |
-| Committed live change | Ordered revision-aware permitted updates for lifecycle, calls, boards and qualification; no secret recovery data. | TBD |
-| Final result / cancellation notice | Resolved winner or Cancelled no-winner; spectator delivery/deletion and player final-view rules differ. | TBD |
-| Synchronization repair | Detect stale/gapped/obsolete views and fetch fresh authorized state; private changes must not create false public gaps. | TBD |
-| Connection liveness | Hibernation-compatible heartbeat/auto-response; does not renew session TTL or prove state freshness. | TBD |
-| Expired / revoked / forbidden connection | Stop unauthorized delivery; closing/deauthorization and client feedback mechanics TBD. | TBD |
-
-### 7.2 Per-message and transport worksheet
-
-- **Purpose / trigger / originating owner / recipients:** TBD.
-- **Event identifier, version, payload schema and sanitized example:** TBD.
-- **Per-role field projection and authorized-view revision model:** TBD.
-- **Snapshot capture/subscription ordering and missing-update prevention:** TBD.
-- **Durable commit boundary versus emission and acknowledgement:** TBD.
-- **Duplicate/out-of-order/gap handling and obsolete-socket rejection:** TBD.
-- **Participant-session single-live-socket enforcement versus concurrent account logins:** TBD.
-- **Durable Object hibernation handlers, socket attachments and restoration:** TBD.
-- **Expiry/revocation/grace scheduling without in-memory-only timers:** TBD.
-- **Payload/buffer limits, backpressure, heartbeat/check intervals and reconnect jitter:** TBD — preserve the HLD's 30-second reconnect cap.
-- **Frontend state transitions, resync gating and private-cache clearing:** TBD.
-- **Protocol compatibility, close behavior and tests:** TBD.
+Persisted view/session/attachment proposals now live in [Durable Object design Section 6](durable-object-design.md#schema-proposal). This reference preserves existing section numbering without duplicating the WSS specification.
 
 ## 8. Detailed workflows and domain algorithms
 
@@ -993,7 +251,7 @@ For each row, fill in sequence, participants, records, preconditions, commit poi
 | Workflow / algorithm | Constraint to preserve | Detailed design |
 | --- | --- | --- |
 | Enrollment / reset / reissue | Restricted authority, one-day single-use links, fixed session expiry and predecessor invalidation. | TBD |
-| Game create / publication | Separate saved/live allowances, fixed config/code, crash-safe directory/game agreement. | TBD |
+| Game create / publication | Claim one global slot at New creation and retain it through Awaiting Players/In Progress; fixed config/code, crash-safe Directory/Game agreement. | TBD |
 | Admission / Leave / rename / switch | Capacity and alias ownership remain consistent; explicit Leave differs from loss; failed changes preserve prior membership. | TBD |
 | Start and board generation | Connected minimum separate from retained start roster; feasibility before acceptance, unique position-sensitive boards, no reroll on retries. | TBD |
 | Free-cell representation / evaluation | Valueless pre-satisfied cells and specified default coordinate; qualification may exist immediately, never automatic award. | TBD |
@@ -1009,7 +267,7 @@ For each row, fill in sequence, participants, records, preconditions, commit poi
 
 | Topic | Confirmed guardrail | Detailed policy / mechanism |
 | --- | --- | --- |
-| Passwords / secrets | Mandatory setup; password policy explicitly deferred by HLD-063. Store verifiers, never plaintext credentials. | TBD — length/characters, hashing, cost, storage and rotation. |
+| Passwords / secrets | Mandatory setup; **at least 10 characters, any combination of ASCII characters, no required character-class mix** (LLD-023; Section 9.1). Store verifiers, never plaintext credentials. | **Salted Argon2 via RustCrypto `argon2` confirmed** (LLD-024; Section 9.2). Combined PHC storage in `AccountRecord.verifier` is approved by DO-019; Argon2id and numeric profile recommendations remain proposed; final profile/costs, target integration and upgrade mechanics **TBD**. Maximum length and transport/UI details remain **TBD**. |
 | Tokens / cookies | Opaque backend-issued one-day credentials; atomic single use and absolute session deadlines, Secure/HttpOnly/SameSite. | TBD — entropy/format, verifier, names/attributes, namespaces and rotation. |
 | URL redemption | Enrollment/reset links are bearer credentials; no logging/analytics leakage or accidental consumption assumptions. | TBD — scanners/prefetch, referrer handling, handoff and lost-response recovery. |
 | Privileged access | Users and account operations admin-only; first admin via CLI, later admins via CLI/existing admin; no self-elevation. | TBD — server enforcement, confirmation, account-management edge cases and audit. |
@@ -1018,6 +276,69 @@ For each row, fill in sequence, participants, records, preconditions, commit poi
 | Transport / browser requests | HTTPS/WSS; client inputs and browser cookies alone do not prove safe intent. | TBD — origin/CSRF/CORS policy, validation, response headers and rate limits. |
 | Privacy and lifecycle | No secrets in Users/game snapshots/History; terminal access and deletion honor role-specific rules. | TBD — projection, cache/log redaction, expiry/cleanup and incident handling. |
 | Infrastructure / CLI | Cloud credentials only in controlled developer/server environments; environment delivery alone is not authorization. | TBD — secret names/scopes, bindings, operator controls and deployment access. |
+| IDs and error disclosure | UUID-v7 IDs are nonsecret and distinct from credential secrets (Section 3.3); typed component errors/source chains are not automatically public-safe (Section 3.4). | **TBD** — version/parse validation tests, redaction checks and safe transport mapping in [API design](api-design.md#shared-contracts). |
+
+<a id="password-policy"></a>
+
+### 9.1 Account password policy
+
+**Confirmed user direction (LLD-023):** Host/admin account passwords must contain **at least 10 characters** and may use **any combination of ASCII characters**. This settles the length/accepted-character/composition portion previously deferred by HLD-063.
+
+- Require ASCII-only input; no mandatory uppercase, lowercase, digit or symbol quota, and no requirement to combine character classes.
+- Apply the same rule to first-password setup and password reset, and preserve the entered password exactly for later verification. Do not trim whitespace, case-fold or silently truncate it. Count the decoded password characters, not transport escape notation.
+- Do not silently narrow “ASCII” to alphanumeric or printable-only characters. **TBD —** exact UI/input and transport handling for ASCII control characters; any proposed character exclusion requires an explicit policy revision rather than an implementation assumption.
+- **Password hashing: salted Argon2 via RustCrypto `argon2`, confirmed by subsequent LLD-024 (Section 9.2).** The earlier hashing deferral is superseded. DO-019 approves combined PHC storage in `AccountRecord.verifier`. Final profile/parameters, target integration, physical constraints and upgrade mechanics remain **TBD**; store protected verifiers, never plaintext.
+- **TBD —** maximum password length and request-size limits; “at least 10” selects a minimum, not an exact length or a chosen upper bound. UI confirmation fields and exact API validation/error representations remain **TBD** in [API design](api-design.md#shared-contracts).
+
+This policy is for provisioned account passwords, not anonymous-player recovery answers, game aliases, bearer tokens or UUID identifiers. It does not change enrollment/reset authorization or session deadlines.
+
+<a id="password-hashing"></a>
+
+### 9.2 Salted Argon2 account-password hashing
+
+**Confirmed user direction (LLD-024):** Use **Argon2 with a salt** for host/admin account-password hashing, using the RustCrypto **`argon2`** Rust crate. This replaces the earlier hashing deferral in LLD-023. Keep each password hash and its salt together in the **same account-owning Durable Object**; `AccountsObject` is the proposed owner in [Durable Object design Section 6.4](durable-object-design.md#account-records), whose final placement/cardinality remains separately TBD. It does not select a hashing scheme for player recovery answers, access-link/session tokens or other `Digest` uses. The crate implements Argon2d, Argon2i and Argon2id and exposes password-hashing/verification APIs that use PHC strings.[4]
+
+**Implementation profile — partially approved:** DO-019 approves AccountRecord fields/types/nullability and the complete PHC string in `verifier`. The variant, numeric settings and remaining physical-storage details below are recommendations, with final acceptance/tuning **TBD**. No dependency has been installed or runtime compatibility/performance demonstrated.
+
+| Item | Detail / decision status |
+| --- | --- |
+| Algorithm and library | **Confirmed:** salted Argon2 via RustCrypto `argon2`. Pin the compatible crate version/features during implementation planning; no Cargo version is selected here. |
+| Variant / algorithm version | **Recommended:** Argon2id, version 19 (`v=19` in PHC). This is the crate's documented default; OWASP recommends Argon2id for password storage.[4][5] Final profile acceptance **TBD**. |
+| Salt | Generate a fresh, independent salt from a cryptographically secure random source for each setup, reset or future rehash. **Recommended:** 16 random bytes, matching the crate's recommended salt length.[6] Exact target RNG integration and final salt-length acceptance **TBD**. |
+| Output | **Recommended:** 32 hash-output bytes, matching the documented default output length; this is not a password-length limit or the PHC string's length.[7] Final profile acceptance **TBD**. |
+| Work factors | Explicitly configure `m_cost` (1 KiB memory blocks), `t_cost` (iterations/passes), and `p_cost` (degree of parallelism).[7] **TBD:** production settings after target benchmarks; do not silently rely on mutable library defaults. |
+| Benchmark starting point | **Proposed, not a measured or approved production setting:** `m_cost=19456` (19 MiB), `t_cost=2`, `p_cost=1`, following OWASP's summary minimum configuration for Argon2id.[5] Benchmark stronger settings where feasible; do not silently reduce security settings to meet a quota. |
+| Stored representation | **Approved — DO-019:** the full library-generated PHC string in `AccountRecord.verifier: Option<EncodedVerifier>`, absent before password setup. Keep algorithm/version, work parameters, salt and derived hash together; no separate salt/hash fields. The password-hashing API produces a PHC string suitable for authentication.[4] Exact physical SQL mapping/constraints remain **TBD**. |
+
+#### 9.2.1 Salt and verifier handling
+
+- Use the salt parameter supplied/generated through the library's password-hashing API, not a homemade salt/password concatenation or fast-hash substitute. Never use a shared fixed salt or derive it from an account ID, UUID, username, timestamp or password.
+- The salt is not a secret. Persist it in the **same Durable Object as its corresponding password hash**: the approved PHC string in `AccountRecord.verifier` holds algorithm/version, costs, encoded salt and output together. Write/replace the complete value atomically under that owner so a reset or rehash cannot leave a mismatched salt/hash pair. No separate salt Object, KV entry or secret store is needed, and no redundant independently mutable salt field is proposed. If the physical encoding is later revised, preserve this co-location and atomic-replacement requirement. Exact transaction/schema implementation remains TBD.
+- Illustrative format only, **not a credential, generated verifier or fixed parameter configuration**:
+
+```text
+$argon2id$v=19$m=<m>,t=<t>,p=<p>$<salt-base64>$<hash-base64>
+```
+
+- Keep the complete verifier private to backend authentication/storage. Never include it in Users listings, game snapshots, History, API responses, audit/retry payloads or logs; do not persist plaintext or reversibly encrypted account passwords.
+- A pepper is different from the required per-password salt. No pepper, secret-management dependency or pepper-rotation scheme is selected by this decision.
+
+#### 9.2.2 Setup, reset and login integration
+
+1. **Setup/reset:** require the already-defined restricted-session authority and validate Section 9.1 before hashing. Hash the exact decoded password bytes without trimming, case conversion, Unicode normalization or truncation. Apply this on the trusted backend, not solely in browser validation or client-side hashing.
+2. Generate a fresh secure salt and use the crate's high-level password-hashing API with the explicit accepted profile. Store only the complete encoded verifier, retaining the existing `None`-before-setup semantics. Treat randomness/configuration/hashing failure as failure, never as permission to store an unsalted/weak fallback or complete password setup.
+3. Persist the verifier and authorized account/setup/reset transition consistently before acknowledging completion or granting normal account capability. Recheck account state, credential epoch and restricted-session validity at commit so a concurrent reset/revocation cannot be undone by a slow hash. **TBD:** transaction/CAS design, retry behavior, compute placement and exact post-reset session behavior; existing deadlines and revocation rules are unchanged.
+4. **Login:** load the private stored verifier, parse it through the library's PHC support, validate the supported algorithm/version/parameter bounds, and call its `PasswordVerifier` API against the exact supplied password. Verification uses parameters from the parsed stored hash rather than the current hasher's configured defaults.[4] Do not create a new random salt and compare encoded strings on login, or accept client-supplied verifier/cost parameters.
+5. Grant a session only after successful verification and the current account-state/credential-epoch checks. Password mismatch must not reveal account existence, verifier contents or internal errors. Map hashing/parsing/RNG failures into component-owned `thiserror` errors in `auth/error.rs`; distinguish operational failures internally, redact sources, and leave concrete variants and external response mappings **TBD** in the API design.
+
+Rust API guidance: use the crate's `Argon2`/`Params` types and high-level `PasswordHasher`/`PasswordVerifier` traits rather than implementing Argon2 or comparisons. The retrieved crate documentation's hashing example generates a random salt with the `getrandom` feature; concrete imports, feature flags and random-source wiring must match the pinned release and Cloudflare WASM target.[4][7] This is design guidance, not a tested code sample.
+
+#### 9.2.3 Runtime, upgrades and remaining TBDs
+
+- **TBD — Cloudflare validation:** confirm WASM build/features, cryptographically secure randomness, peak memory, CPU time, latency and concurrent authentication impact in the actual Worker/Durable Object deployment. Choose where trusted hashing runs without changing the one-API-Worker architecture or assuming native threads/OS RNG support. A successful local/native build would not establish deployed feasibility.
+- **TBD — abuse/resource bounds:** rate limits, admitted hashing concurrency, password/request/verifier size bounds, and allowed PHC algorithm/version/cost limits before expensive verification. Treat malformed/unsupported/oversized verifiers as failures, not reasons to fall back. These mechanisms do not impose an unapproved password maximum or alter the ASCII/minimum-length policy.
+- **Proposed upgrade path, acceptance/mechanics TBD:** after a successful login, rehash with a fresh salt when the stored profile is obsolete. Replace only the verifier that was actually verified, with current state/epoch checks, so an opportunistic upgrade cannot overwrite a concurrent reset; do not renew session lifetimes. Profile-version policy, compare-and-swap, failure handling and migration/retirement rules remain **TBD**. Never retain plaintext for later upgrades or treat one hash as the original password.
+- **TBD — final profile acceptance:** Argon2id/version, salt/output lengths, work factors, PHC persistence mapping, compatible pinned crate version/features, target integration and tests. **Salted Argon2 and the RustCrypto `argon2` crate are settled**, not deferred by these remaining details.
 
 ## 10. Verification plan
 
@@ -1026,9 +347,13 @@ No application tests have been implemented or run by this template. Exact test f
 | Test area | Scenarios to specify | Cases / expected result / evidence |
 | --- | --- | --- |
 | Domain and schema | Pool/string rules, every supported board size, free cells, distinct-board feasibility, Single Line, unique calls and data constraints. | TBD |
+| Identifier convention | UUID v7 generation/parse validation across selected targets, distinct newtypes, stable retry IDs and no ID-as-credential assumptions. | **TBD** — no target build/runtime evidence yet. |
+| Component errors | `thiserror` derives, local `error.rs` ownership, typed conversion/source chains, secret redaction and deliberate transport mappings. | **TBD** — concrete error/contract tests not implemented. |
 | Views and permissions | Host versus admin controls, Users frontend/backend denial, private-board projection, missing/expired sessions and restricted enrollment. | TBD |
 | Worker routing and Object isolation | Multiple API handlers in the single Worker reach the correct authoritative owner; unknown codes do not create games, and Object IDs/bindings never replace user authorization. | TBD |
 | Account lifecycle | Concurrent redemption, reissue/reset revocation, first-admin creation, non-owner overrides, removal blocked by hosted nonterminal game. | TBD |
+| Password policy | Reject fewer than 10 characters and non-ASCII input; accept policy-valid ASCII passwords without character-class quotas; preserve whitespace/case and decoded input through setup/reset/login. | **TBD** — UI/transport edge cases and tests; hashing scenarios are listed below. |
+| Password hashing | Correct/wrong password verification; independent salts for the same password; PHC round-trip and embedded-parameter use; malformed/unsupported/out-of-bounds verifier rejection; RNG failure; no secrets in projections/logs; setup/reset/login and proposed rehash races; WASM resource/concurrency measurements. | **TBD** — tests/benchmarks not implemented or executed; Section 9.2 profile not yet accepted/tuned. |
 | Lifecycle/concurrency | Competing create/start/call/winner/cancel/transfer/admission; separate global slots and immutable terminals. | TBD |
 | Participant identity | Alias case/space/rename/reuse, role switch, fresh rejoin versus recovery, answer deletion and no inherited credentials. | TBD |
 | Durable recovery | Restart/hibernation, commit with lost ACK/broadcast, snapshot race, revision gap, stale socket and original-command retry. | TBD |
@@ -1044,7 +369,9 @@ Latency, concurrency/load targets, measurable accessibility criteria and failure
 | Item | Detailed specification |
 | --- | --- |
 | Rust/Dioxus/Workers SDK/toolchain compatible pinned versions | TBD |
-| Single API Worker entrypoint/module routing, Object classes, bindings and deployment configuration | TBD — preserve LLD-016; exact names/configuration and Object structures remain user-supplied. |
+| UUID/error libraries | `uuid` with UUID v7 and `thiserror` selected; compatible versions, target features/clock/RNG configuration and validation **TBD** (Sections 3.3–3.4). |
+| Password-hashing library/runtime | Salted Argon2 via RustCrypto `argon2` selected (Section 9.2). **TBD** — pinned compatible version/features, secure WASM randomness, hashing placement, profile/costs, CPU/memory/concurrency benchmarks and failure handling. |
+| Single API Worker entrypoint/module routing, Object classes, bindings and deployment configuration | **TBD** — preserve LLD-016; proposed Object names/structures in [Durable Object design Section 6](durable-object-design.md#schema-proposal) do not finalize bindings, deployment configuration or SDK interfaces. |
 | Static asset build, routing, caching and private-route separation | TBD |
 | Local / test / production environments and isolated resources | TBD |
 | SQLite schema/Object migrations and version compatibility | TBD |
@@ -1062,40 +389,48 @@ No provider resources, credentials, accounts, databases or dependencies are crea
 
 ### 12.1 Detailed decisions for the user to fill
 
-Detailed specifications in LLD-001–LLD-015 remain pending; LLD-006 references the newly captured proposals. LLD-016 records the confirmed Worker organization, and LLD-017 records the requested catalog/format and System scope. Neither finalizes request/response schemas or Durable Object structures. Completing an entry records a design decision, not implementation evidence.
+Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; affected entries reference the captured proposals. LLD-016 records confirmed Worker organization; LLD-017/LLD-019 retain API catalog/input-output provenance now in [api-design.md](api-design.md); LLD-018 covers storage proposals, now in [durable-object-design.md](durable-object-design.md) under LLD-025. LLD-020 confirms UUID v7 IDs, LLD-021 confirms local `thiserror` errors, LLD-022 confirms the API document split, LLD-023 confirms the password minimum/ASCII rule, and LLD-024 supersedes its hashing deferral with salted Argon2 via RustCrypto `argon2`. Capturing a proposal does not finalize request/response schemas, physical storage or protocols. Completing an entry records design, not implementation evidence.
 
 | ID | Decision / specification | Status / selected detail |
 | --- | --- | --- |
 | LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | TBD |
 | LLD-002 | Users fields/actions/filters and protected account-management UX | TBD |
-| LLD-003 | Cloudflare account/session store placement and ownership | TBD |
-| LLD-004 | SQLite tables/types/keys/indexes, record mappings and migrations | TBD |
-| LLD-005 | Directory/game coordination and command idempotency/reconciliation | TBD |
-| LLD-006 | Worker API methods/routes, request/response/error schemas and compatibility | Proposed functions, methods/paths and scopes recorded in Section 6.4 under LLD-017; final endpoint contracts, parameter/payload/error schemas, signatures and compatibility remain TBD. |
-| LLD-007 | WSS payloads/revisions, privacy projections, hibernation and backpressure | TBD |
+| LLD-003 | Cloudflare account/session store placement and ownership | Proposed singleton `AccountsObject` in [Durable Object design Section 6.1](durable-object-design.md#object-boundaries) / [Durable Object design Section 6.4](durable-object-design.md#account-records); final placement/cardinality acceptance and ownership interfaces **TBD**. |
+| LLD-004 | SQLite tables/types/keys/indexes, record mappings and migrations | Proposed records/indexes in [Durable Object design Section 6](durable-object-design.md#schema-proposal); application-generated IDs now UUID v7 per LLD-020. Final physical schema, keys/constraints, mappings, SQL and migrations **TBD**. |
+| LLD-005 | Directory/game coordination and command idempotency/reconciliation | DO-014/015 approve one nullable `game_id` reservation row, claim-first creation, same-ID/same-code GameObject recreation after failure, and compare-by-ID acquire/release without a generation counter in [Durable Object design Section 6.3](durable-object-design.md#directory-records). DO-016 approves idempotent terminal compare-and-clear (matching ID clears; NULL is complete; different ID is stale/no-op). DO-017 approves a presence-only account-assignment gate keyed by account_id; DO-018 approves acquire-before-check, assignment blocking, clear-and-reject for hosted games, and retain-and-retry on interruption. In-flight-operation serialization, operation receipts/idempotency, retry scheduling/backoff and cross-Object recovery details remain **TBD** in Sections 6.3/6.7. |
+| LLD-006 | Worker API methods/routes, request/response/error schemas and compatibility | Proposed functions/methods/paths/scopes (LLD-017) and per-operation Request/Response fields/types/effects (LLD-019) in [API design Section 6](api-design.md#operation-catalog); final requiredness, encodings, complete schemas/statuses, signatures and compatibility **TBD**. |
+| LLD-007 | WSS payloads/revisions, privacy projections, hibernation and backpressure | Persisted revision/subscription/attachment proposals remain in [Durable Object design Section 6.4](durable-object-design.md#account-records) / [Durable Object design Section 6.5](durable-object-design.md#game-records) / [Durable Object design Section 6.8](durable-object-design.md#socket-metadata); WSS contracts live in [API design Section 7](api-design.md#wss-design). Final protocol mechanisms **TBD**. |
 | LLD-008 | Board generation/feasibility, matching and pattern-specific trait signatures | TBD |
-| LLD-009 | Password policy, token/cookie/verifier implementation and request security | TBD |
-| LLD-010 | Answer normalization/protection, abuse controls and recovery transactions | TBD |
-| LLD-011 | Presence/Leave/Exit mechanics, timer scheduling and terminal notice/deletion ordering | TBD |
-| LLD-012 | History placement/indexing, calendar-month expiry, cleanup and backup/restore | TBD |
+| LLD-009 | Password policy, token/cookie/verifier implementation and request security | Minimum 10 characters and any combination of ASCII characters confirmed by LLD-023 (Section 9.1); salted Argon2 via RustCrypto `argon2` confirmed by LLD-024 (Section 9.2). DO-019 approves AccountRecord fields/types/nullability and combined PHC storage in `verifier`; DO-022 approves lifecycle/disablement and credential-epoch rules in [Durable Object design Section 6.4](durable-object-design.md#account-records). Other records remain under review. Maximum length, final Argon2 profile/runtime/physical constraints, token/cookie design, transaction/race/retry mechanics, cross-Object revocation delivery and request security remain **TBD**. |
+| LLD-010 | Answer normalization/protection, abuse controls and recovery transactions | Proposed private recovery and rate-limit records in [Durable Object design Section 6.5](durable-object-design.md#game-records) / [Durable Object design Section 6.7](durable-object-design.md#operational-records); normalization, protection, thresholds and transactions **TBD**. |
+| LLD-011 | Presence/Leave/Exit mechanics, timer scheduling and terminal notice/deletion ordering | Proposed membership/grace/deadline/final-view fields in [Durable Object design Section 6.5](durable-object-design.md#game-records)–[Durable Object design Section 6.8](durable-object-design.md#socket-metadata); scheduling, Exit scope, presence and terminal ordering **TBD**. |
+| LLD-012 | History placement/indexing, calendar-month expiry, cleanup and backup/restore | Proposed final snapshot in the original Game Object with Directory index ([Durable Object design Section 6.3](durable-object-design.md#directory-records) / [Durable Object design Section 6.6](durable-object-design.md#history-records)); placement acceptance, month arithmetic, cleanup and restore mechanisms **TBD**. |
 | LLD-013 | CLI interfaces, binding/credential scopes, secure link handoff and bootstrap | TBD |
 | LLD-014 | Optional speech, browser matrix, quality/load targets and acceptance tests | TBD |
 | LLD-015 | Build/deployment/observability and quota verification | TBD |
-| LLD-016 | Initial API Worker organization and Durable Object boundary | Confirmed user direction — one API Worker serves multiple endpoints through organized Rust handlers and bindings to the existing directory/per-game state owners. No endpoint-per-Worker split. Specific APIs, Object structures, schemas, router/modules, bindings and internal protocols remain TBD for the user. See Sections 3.1–3.2, 5–6 and 11. |
-| LLD-017 | Proposed operation catalog and auth-scope notation | Captured at user request — Section 6.4 retains category headers and per-operation ID/function/access-type heading, Path, Auth scope and description. Scope labels are Admin, Host, Player, Anyone and the user-selected System for internal work. Proposed names/paths remain reviewable; Anyone never bypasses required session/proof/ownership, Host includes admin with applicable game guards, and System is not an account role or public endpoint. Request/response schemas, function signatures and Object structures remain TBD. |
+| LLD-016 | Initial API Worker organization and Durable Object boundary | Confirmed user direction — one API Worker serves multiple endpoints through organized Rust handlers and bindings to the existing directory/per-game state owners. No endpoint-per-Worker split. Final API contracts, Object schemas, router/modules, bindings and internal protocols remain **TBD**; subsequent proposals are captured under LLD-017/LLD-018. See [API design Section 2](api-design.md#worker-boundaries), and LLD Sections 5 and 11. |
+| LLD-017 | Proposed operation catalog and auth-scope notation | Captured at user request — [API design Section 6](api-design.md#operation-catalog) retains category headers and per-operation ID/function/access-type heading, Path, Auth scope and description. Scope labels are Admin, Host, Player, Anyone and the user-selected System for internal work. Proposed names/paths remain reviewable; Anyone never bypasses required session/proof/ownership, Host includes admin with applicable game guards, and System is not an account role or public endpoint. Potential Request/Response fields are recorded under LLD-019; final schemas and function signatures remain **TBD**. Object structures are separately proposed under LLD-018, not finalized by this catalog. |
+| LLD-018 | Proposed Durable Object owners, records, field names and types | Captured at user request — [Durable Object design Section 6](durable-object-design.md#schema-proposal) records Directory/Accounts/Game boundaries, Rust-style fields/types, History, operational records and connection metadata; [Durable Object design Section 3](durable-object-design.md#record-inventory) maps DATA IDs. New placements and other field shapes remain proposals; the system-ID convention is subsequently confirmed by LLD-020. **TBD** items are explicit beside each group and in [Durable Object design Section 6.9](durable-object-design.md#outstanding-decisions); remaining adoption, physical schemas, transactions/revocation, security, retention mechanisms, bindings and implementation remain pending. |
+| LLD-019 | Proposed per-operation Request and Response inputs/outputs | Captured at user request — every A1–H12 operation in [API design Section 6](api-design.md#operation-catalog) has Request/Response subheadings with potential typed fields, session/cookie effects and failure candidates. Shared safe DTO descriptions do not expose storage records. Internal helpers use internal inputs/results; WSS entries distinguish upgrade/frames/push. Final schemas, requiredness, encodings, status/error contracts, retry/security mechanisms and tests remain **TBD**; no new endpoint or implementation is approved. |
+| LLD-020 | Application-generated system ID convention | **Confirmed user direction** — UUID v7 by default for application/developer-controlled identifiers, including the listed `*Id` types; use the Rust `uuid` crate and distinct typed IDs. A different scheme needs a documented compelling reason/review. Tokens, short codes and provider-owned IDs remain separate categories. Target configuration, encoding and concrete constructors **TBD**. See Section 3.3 and [Durable Object design Section 6.2](durable-object-design.md#shared-types). |
+| LLD-021 | Rust error library and component-local ownership | **Confirmed user direction** — use `thiserror` for application-owned typed errors in adjacent component `error.rs` files; auth errors belong in `auth/error.rs`. Concrete variants/conversions/versions/tests **TBD**; transport mappings remain in the API design. See Section 3.4. |
+| LLD-022 | API design document extraction | **Confirmed user direction** — `plans/api-design.md` is the sole home for API organization/contracts/inventories/catalog/Request–Response/WSS design. LLD Sections 3.1–3.2 and 6–7 link to it; stable operation IDs/content are preserved. Unresolved contract details remain **TBD**. |
+| LLD-023 | Account password length and character policy | **Confirmed user direction** — at least 10 characters, any combination of ASCII characters, no required mix of character classes. Applies to host/admin account password setup/reset and consistent later verification. **Earlier hashing deferral superseded by LLD-024**; maximum length and UI/transport details remain TBD. See Section 9.1 and the API password inputs. |
+| LLD-024 | Salted Argon2 account-password hashing | **Confirmed user direction** — use Argon2 with salt and RustCrypto `argon2` for host/admin passwords, superseding LLD-023's hashing deferral. Keep salt and hash in the same account-owning Durable Object; DO-019 confirms the account field name `verifier` and a complete library-generated PHC string rather than raw salt alone or separate salt/hash fields. Section 9.2 still proposes Argon2id v19, fresh 16-byte salts and 32-byte output; final profile acceptance, work factors, physical constraints, pinned version/features, Cloudflare integration, upgrade mechanics and verification remain **TBD**. No choice is made for recovery-answer or bearer-token verifiers. |
+| LLD-025 | Durable Object design document extraction | **Confirmed user direction** — move the existing schema proposal into `plans/durable-object-design.md`. It is the single home for Object ownership, DATA inventory, schema/consistency/migration worksheets, records/fields/types, invariants and storage TBDs. LLD Section 5 and API storage references link to it. Field names/types and confirmed constraints are preserved; the move does not approve pending proposals or authorize implementation. |
 
 ### 12.2 Product/source questions — do not silently decide in implementation
 
-- **Admin actions and host-idle timer:** HLD-068 predates admin override. Clarify whether a non-designated admin's action/open/resume refreshes the saved game's host-idle deadline; do not select new behavior here. **TBD**.
-- **Privileged account-management edge cases:** Self-removal, last-admin protection and any account type-editing feature are not defined by account creation permission. No role-editing feature is introduced by this template. Clarification if needed: **TBD**.
+- **Admin actions and host-idle timer:** HLD-068 predates admin override. Clarify whether a non-designated admin's action/open/resume refreshes the sole nonterminal game's host-idle deadline; do not select new behavior here. **TBD**.
+- **Privileged account-management edge cases:** Self-removal, last-admin protection and any account type-editing feature are not defined by account creation permission. HLD-078 explicitly requires an enable feature/API for disabled accounts, restricted to another enrolled admin or developer CLI; restore the pre-disable lifecycle state without reviving old sessions/links. Disablement is derived solely from populated `disabled_at`, preserving lifecycle status and storing no redundant boolean; DO-022 approves lifecycle, no-op timestamp and credential-epoch rules, plus fresh setup/reset links after enable. Account-operation races/transactions, immediate cross-Object socket revocation, self-removal and last-admin protection remain open. No role-editing feature is introduced. Remaining clarification: **TBD**.
 - **UI/speech/quality requirements:** Exact layouts, spoken-announcement behavior, accessibility/compatibility criteria and measurable quality targets still need decisions. **TBD**.
 - **Source reconciliation and HLD approval:** Resolve stale requirements/HLD wording using explicit later decisions, then obtain required stage approval separately. **TBD**.
 
 ### 12.3 Traceability index
 
-Coverage means a place to complete the design, not that every design choice or requirement is fulfilled. Ranges identify source decision rows; superseded rows are carried only as qualified in Section 1.2.
+Coverage means a place to complete the design, not that every design choice or requirement is fulfilled. LLD Section 5 references [Durable Object design](durable-object-design.md), and Sections 6–7 reference API/WSS content in [api-design.md](api-design.md), so coverage ranges containing those sections include their companion documents. Ranges identify source decision rows; superseded rows are carried only as qualified in Section 1.2.
 
-**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in Section 6.4, mapped from Section 6.2. These scoped LLD updates do not rewrite the HLD or complete detailed API/storage design.
+**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design.
 
 | HLD decisions | Template coverage |
 | --- | --- |
@@ -1122,12 +457,24 @@ Coverage means a place to complete the design, not that every design choice or r
 ### 12.4 Completion checklist
 
 - [ ] Each view has a completed worksheet, permissions, states and acceptance criteria.
-- [ ] Cloudflare physical ownership and all schema/constraint/index/migration worksheets are filled in.
-- [ ] Every logical API operation has explicit request, success, error, authorization and retry contracts.
-- [ ] WSS schemas, role projections, snapshot ordering and expiry/reconnect mechanisms are specified.
+- [ ] [Durable Object design Section 6](durable-object-design.md#schema-proposal) proposals are accepted/revised, their TBDs resolved, and all physical ownership/schema/constraint/index/migration worksheets completed.
+- [ ] [API design Section 6](api-design.md#operation-catalog) Request/Response proposals are reviewed and every API has finalized requiredness, success/error schemas/statuses, authorization and retry contracts.
+- [ ] [API design WSS schemas/protocol](api-design.md#wss-design) and storage interactions are specified, without duplicating transport contracts here.
+- [ ] UUID v7 generation/validation and component-local `thiserror` conventions are exercised on selected Rust targets; any ID exception has a reviewed compelling reason.
+- [ ] Salted Argon2 profile, PHC mapping, secure randomness, resource/abuse bounds and reset/rehash concurrency are reviewed and exercised on the selected backend target; Section 9.2 recommendations are explicitly accepted or revised.
 - [ ] Domain algorithms and distinct pattern traits preserve confirmed rules without inventing features.
 - [ ] Cross-Object transactions/retries and all retention/deletion paths have failure recovery designs.
 - [ ] Host/admin/Users permissions, privileged creation and secret boundaries are reviewed end to end.
 - [ ] Source conflicts and genuinely new product questions are resolved or explicitly deferred.
 - [ ] Tests, quality targets, Cloudflare compatibility/budget checks and operational runbooks are defined.
 - [ ] Detailed design approval is recorded; implementation receives its own explicit authorization.
+
+## Sources
+
+[1] https://docs.rs/uuid/latest/uuid — uuid — version features and UUID representation
+[2] https://docs.rs/uuid/latest/uuid/struct.Uuid.html — Uuid::now_v7 — UUID v7 generation
+[3] https://docs.rs/thiserror/latest/thiserror — thiserror — typed Rust error derivation
+[4] https://docs.rs/argon2/latest/argon2 — RustCrypto argon2 — password hashing and verification
+[5] https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html — OWASP — Password Storage Cheat Sheet
+[6] https://docs.rs/argon2/latest/argon2/constant.RECOMMENDED_SALT_LEN.html — argon2 — recommended salt length
+[7] https://docs.rs/argon2/latest/argon2/struct.Params.html — argon2 — memory, iteration, parallelism and output parameters
