@@ -197,9 +197,9 @@ Failure conditions, status/error-code mapping, durable effects and retry safety 
 | `MembershipView` | `game_id: GameId`, participant role, own `player_id: PlayerId` or `spectator_id: SpectatorId`, player alias when applicable, permitted access state, `session_expires_at: Timestamp`, player-only `recovery_enabled: bool`. No recovery answer/verifier; a spectator does not acquire player fields. |
 | `CallView` | `sequence_no: u32`, `value: String`; optionally a public-safe `called_at: Timestamp` (**TBD**). Do not implicitly expose raw call actor IDs, command IDs or storage metadata. |
 | `BoardView` | Own or otherwise authorized `player_id: PlayerId`/alias, `side_length: u8`, `cells: Vec<BoardCell>` (position, Free/Value, automatic matched state), `qualified: bool`, `qualifying_lines: Vec<CompletedLine>`. No client mark input or pre-start assigned board. |
-| `GameView` | Authorized `GameSummary` subset, permitted `configuration: GameConfiguration` fields, `calls: Vec<CallView>`, latest call/exhaustion, `view_revision: Revision`; own `MembershipView`/board for a player, permitted roster/boards for hosts/admins, audience-only state for spectators. Fields absent by role/state remain absent, not blank private copies. Exact projection **TBD**. |
+| `GameView` | Authorized `GameSummary` subset, permitted `configuration: GameConfiguration` fields, `calls: Vec<CallView>`, latest call/exhaustion, `view_revision: Revision`; own `MembershipView`/board for a player, permitted roster/boards for hosts/admins, audience-only state for spectators. Fields absent by role/state remain absent, not blank private copies. DO-067 scopes revisions to the authorized Host, Player(PlayerId) or Spectator(SpectatorId) projection; account/session grants remain separate, and one player’s private change does not advance another player’s revision. Exact projection fields remain TBD. | |
 | `FinalResultView` | `game_id: GameId`, terminal outcome, `winner: Option<WinnerSnapshot>`, `ended_at: Timestamp`, final call/board content only as authorized, original expiry metadata where relevant, and applicable view revision. Player gets only own board; account final-view grants follow their permissions; a delivered spectator result has no private boards or renewed retrieval authority. Pre-start deletion may permit only a transient cancellation notice, not a fetchable History snapshot. |
-| `HistoryView` | Safe retained `GameHistorySnapshot` fields: game/code/minimal host identity, started/ended/expiry timestamps, outcome/winner, ordered string calls, final player aliases and `HistoryPlayerSnapshot` boards. Host/admin-only; never live credentials, recovery data, spectators or intermediate replay. |
+| `HistoryView` | Safe projection of the DO-069 immutable started-terminal snapshot: game/code/host identity, started/ended/expiry, outcome/winner, accepted calls in order, and each participating player’s final alias/board cells. Host/admin-only; never credentials, recovery/session/presence data, spectators or intermediate revisions. DO-070 determines child-row order; the DTO is not direct storage serialization. |
 
 ### A. Authentication and sessions
 
@@ -1834,7 +1834,7 @@ Absent/expired History and denied-access error distinctions are **TBD**; reads n
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-|| `history` | `HistoryView` | Y | Final History with immutable ordered called strings, final participating aliases/board snapshots, optional winner and original UTC calendar-month expiry (DO-071). |
+|| `history` | `HistoryView` | Y | Final History follows the DO-069 snapshot fields/invariants and fixed DO-071 expiry; the DTO remains a safe projection, not direct storage serialization. |
 
 ### G. Live synchronization and retries
 
