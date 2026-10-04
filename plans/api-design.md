@@ -2108,7 +2108,7 @@ Maintain connected-player eligibility and spectator-disconnect state. Superseded
 
 These are proposed trusted internal presence-event arguments, not a public request body. Current epoch/connection generation and session validity must be rechecked; event enum/signature are **TBD**.
 
-Internal inputs include the IDs below, participant binding, connect/disconnect/supersede event and trusted observation time. The exact event enum/signature remain **TBD**.
+Internal inputs include the IDs below, participant binding, connect/disconnect/supersede event and trusted observation time. **Approved — DO-054:** serialize spectator presence updates in the owning GameObject using trusted commit-time. Apply disconnect only if spectator ID, current session/epoch and connection ID still match; the first matching unexpected disconnect sets the five-minute deadline, duplicates do not restart it, and stale events no-op. A valid reconnect before the deadline rechecks identity/session and atomically clears the paired timestamps without extending the session; `now >= grace_expires_at` expires first. The exact event enum/signature and hibernation reconstruction remain **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -2126,7 +2126,7 @@ Internal result: updated connected eligibility/presence projection or stale-even
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `grace_expires_at` | `Option<Timestamp>` | N | Spectator grace deadline in the applicable presence-update branch, not a player deadline or a required stale-event result. Nullability versus absence remains **TBD**. |
+| `grace_expires_at` | `Option<Timestamp>` | N | Spectator grace deadline in the applicable presence-update branch, not a player deadline or a required stale-event result. DO-053 approves the nullable stored field; internal result serialization (null versus omitted) remains **TBD**. |
 
 #### H5: `expire_spectator_grace` (Mutating)
 
@@ -2134,11 +2134,11 @@ Path: — Internal
 
 Auth scope: System
 
-Recheck a due five-minute grace deadline and current presence; release expired occupancy and delete associated spectator identity/session data.
+At `now >= grace_expires_at`, re-read the current spectator, session/epoch, presence and expected deadline; release occupancy and delete associated spectator/session data only if it is still disconnected and the scheduled deadline still matches. If reconnect committed first, the stale expiry is a no-op. DO-054 approves expiry-winning equality; exact scheduler payload/implementation remains TBD.
 
 ##### Request
 
-These are proposed trusted internal scheduled inputs, not a public request body. Read current presence/deadline before deleting; alarm payload/signature are **TBD**.
+These are proposed trusted internal scheduled inputs, not a public request body. Read current presence/deadline before deleting; expire only if `now >=` the expected deadline and the spectator is still disconnected. A stale/reconnected deadline does not release capacity. Alarm payload/signature are **TBD**.
 
 Internal scheduled inputs include the fields below, current trusted time and optional epoch/fence. Exact alarm payload/signature are **TBD**; unnamed arguments do not acquire invented field names.
 
@@ -2150,7 +2150,7 @@ Internal scheduled inputs include the fields below, current trusted time and opt
 
 ##### Response
 
-This is a proposed trusted internal result, with no board/History entry or public response. Cleanup completes only for the matching still-disconnected spectator.
+This is a proposed trusted internal result, with no board/History entry or public response. Cleanup completes only for the matching still-disconnected spectator; reconnect-first makes the scheduled event a no-op. DO-054 approves this ordering, not the physical close/scheduler integration.
 
 Exact outcome enum, credential/socket cleanup and scheduling errors are **TBD**.
 
