@@ -4,11 +4,11 @@
 
 - **Status:** Planning decision ledger DO-001–107 is complete and approved. HLD-078/DO-022 account enable rules, DO-073–090 terminal/history/receipt/rate/audit policies, DO-091–095 connection/hibernation/alarm/backpressure policies and DO-096–107 schema/deployment/verification/account-edge policies are reconciled in the companion designs. Physical SQL/runtime integration, measured Argon2/Unicode/Cloudflare compatibility, capacity forecasts and actual release-gate tests remain unverified; no implementation or tests are authorized.
 - **Business:** Rockville Brews.
-- **Primary source:** [High-level design](hld.md), including decisions HLD-001–HLD-076.
+- **Primary source:** [High-level design](hld.md), including decisions HLD-001–HLD-078, and the approved DO-001–DO-107 ledger for subsequent detailed policies.
 - **Supporting sources:** [Business requirements](requirements.md) and [hosting research](research.md).
 - **Companion designs:** [API design](api-design.md) is the single home for API organization, operations, requests/responses and WSS contracts. [Durable Object design](durable-object-design.md) is the single home for storage ownership, schema proposals, records/fields/types and schema worksheets. This LLD links to both rather than duplicating those specifications.
-- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Native Android/iOS implementation remains deferred.
-- **Approval boundary:** Creating this template does not approve the overall HLD, resolve open product questions, authorize implementation, or authorize infrastructure/account creation.
+- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 4 now contains requested screen/component/navigation proposals (LLD-026), preserving the approved domain policies. Native Android/iOS implementation remains deferred.
+- **Approval boundary:** Capturing this LLD and its UI proposals does not approve the overall HLD, finalize new UI/contract choices, authorize implementation, or authorize infrastructure/account creation.
 - **Reviewer / approval / revision:** TBD.
 
 ### 1.1 How to complete this template
@@ -99,7 +99,7 @@ Sources: HLD-020–HLD-022, HLD-032, HLD-036–HLD-045, HLD-061, HLD-064–HLD-0
 | --- | --- | --- |
 | Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | UUID-v7 typed IDs and local `thiserror` errors follow Sections 3.3–3.4; other crates, types, traits, signatures, algorithms and concrete error variants **TBD**. |
 | Shared contracts | Shared safe app/backend contract types without provider/UI dependencies. | TBD — serialization, versioning and module boundaries. |
-| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | TBD — routing, components, state management and adapters. |
+| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | Section 4 proposes routes, role-specific screens, reusable components and UI state boundaries. Exact Dioxus modules/signatures, adapters and styling remain review/implementation work. |
 | Rust API Worker | One initial deployable API service; see the authoritative [API design](api-design.md#worker-boundaries). | Contract/routing/interface/error mapping details are maintained in [api-design.md](api-design.md); finalization **TBD**. |
 | Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | Proposed `GameDirectoryObject` records in [Durable Object design Section 6.3](durable-object-design.md#directory-records); final class/binding, schema and concurrency protocol **TBD**. |
 | Per-game Durable Object | Authoritative game/board/membership state, SQLite writes and role-filtered hibernating sockets. | DO-096/100 approve GameObject per stable game_id, normalized local schema and private binding; DO-091–095 approve logical attachment/reconstruction/fencing/alarm/backpressure policies. Exact DDL, SDK handlers and deployment config remain implementation work. |
@@ -168,46 +168,377 @@ Illustrative placement, **not a selected repository scaffold**:
 
 ## 4. Views and frontend contracts
 
-### 4.1 View inventory
+**Design status:** Concrete UI design proposals captured at the user's request (LLD-026), not implemented screens or a new approval of the whole LLD. The requested public **Home**, privileged **Games**, admin-only **Users**, **Create game**, and active **Play** experiences are included, with enrollment, admission, lobby, recovery, results and History completing their flows. Approved domain/security rules remain mandatory. Suggested routes, component names, layout choices and interaction details below are reviewable UI proposals; they do not finalize API payloads, add backend permissions or authorize implementation.
 
-These are logical experiences, not a committed page/component count. Screen grouping, route paths, layout and state implementation are **TBD** for every row.
+**Source boundary:** Read this section with [HLD app experiences](hld.md#41-experiences-and-platform-delivery), [API operations](api-design.md#operation-catalog) and the [approved DO ledger](durable-object-design.md#item-review). Later approved decisions govern over stale companion summaries. This section does not rewrite the business requirements or add public self-registration, role editing, player impersonation, export, offline play or new winning patterns.
 
-| ID | View / experience | Confirmed content and permission boundary | Detailed specification |
+### 4.1 Screen inventory and navigation
+
+Preserve VIEW-01–VIEW-16 as stable experience IDs; add **VIEW-17** for the public Home page. Multiple IDs may share a page shell, and some are dialogs or nested panels rather than separate pages. Paths below are **frontend routes**, not new HTTP API endpoints. `{game_id}` and `{account_id}` are stable nonsecret IDs; a route, code or client-selected tab never establishes authority.
+
+| ID | Screen / experience | Proposed entry | Access and destination |
 | --- | --- | --- | --- |
-| VIEW-01 | Account sign-in | Host/admin password login, session-expired/access-denied feedback; no public registration. | TBD |
-| VIEW-02 | Enrollment and password setup | One-day single-use link, restricted session, mandatory personal password setup; used/expired-link outcomes. | TBD |
-| VIEW-03 | Account password reset | Privileged-issued single-use reset link and restricted new-password flow; not anonymous self-service recovery. | TBD |
-| VIEW-04 | Game list / account home | Host/admin game discovery, create/resume and role-correct cross-game access; respect the single global nonterminal-game limit. | TBD |
-| VIEW-05 | New game configuration | Pool, square board, free cells and capacities; only authorized operator in New may edit. | TBD |
-| VIEW-06 | Host/admin lobby | Fixed rules/code, player roster/presence/capacity, eligible Start, confirmed cancel/transfer; read-only for other hosts. | TBD |
-| VIEW-07 | Host/admin live game | Current/ordered calls, pool exhaustion, boards/qualifiers, random/manual calls, winner submission, confirmed end/transfer. Admin may act across games; other hosts inspect read-only. | TBD |
-| VIEW-08 | Game-code entry / join | Normalize code, explain role availability, collect player alias/optional answer; admission failures do not silently switch roles. | TBD |
-| VIEW-09 | Player lobby | No board before start; own-alias rename, answer maintenance, permitted role switch and explicit Leave. | TBD |
-| VIEW-10 | Player board | Own persisted board, automatic matches and qualification; no manual marking or digital Bingo-claim control. | TBD |
-| VIEW-11 | Player recovery / answer settings | Current-alias answer recovery or authenticated answer maintenance; never display stored answer/verifier or offer alternate recovery. | TBD |
-| VIEW-12 | Audience / venue display | Current/previous calls, objective and result; venue readability and optional speech details TBD; no private boards. | TBD |
-| VIEW-13 | Result / cancellation notice | Role-specific final view, independent Exit; local-only spectator final result versus bounded existing player authorization. Pre-start cancellation does not create History. | TBD |
-| VIEW-14 | History list / detail | Host/admin read-only final calls/aliases/boards until common expiry; no export, reopening or membership restoration. | TBD |
-| VIEW-15 | **Users** and account-management flow | Admin-only list of host/admin accounts; authorized creation/link/reissue/reset/disable/delete and enable. Enable requires another enrolled admin account (no self-enable), or the separate developer CLI path (HLD-078, API B9). Backend must also deny non-admin listing/operations; never list secrets. | TBD |
-| VIEW-16 | Shared connection / error states | Connecting, Synchronizing, Live, Reconnecting, expired/unavailable and denied states; stale view is read-only, no offline mutation queue. | TBD |
+| VIEW-17 | [Home](#view-17) | `/` | Public default entry: game-code field, Join, and host/admin login. No public game roster or History list. |
+| VIEW-01 | [Account login](#view-01) | `/login` | Shared host/admin sign-in; successful normal session opens Games. |
+| VIEW-02 | [Enrollment and password setup](#view-02) | `/enroll` via private link | Valid enrollment link/restricted session only; completed setup opens Games. |
+| VIEW-03 | [Password reset](#view-03) | `/reset-password` via private link | Valid reset link/restricted session only; completion returns to Login, not automatic login. |
+| VIEW-04 | [Games dashboard](#view-04) | `/games` | Enabled, Verified hosts/admins; current game plus historical games and Create game entry. |
+| VIEW-05 | [Create game / New game setup](#view-05) | `/games/new`; `/games/{game_id}/setup` | Hosts/admins create; only designated host/admin edits an existing New game. Other hosts inspect read-only. |
+| VIEW-06 | [Host/admin lobby](#view-06) | `/games/{game_id}/lobby` | Account-authorized Awaiting Players view; only designated host/admin controls Start, Cancel and Transfer. |
+| VIEW-07 | [Host/admin Play](#view-07) | `/games/{game_id}/play` | Account-authorized In Progress view; operator controls or read-only host inspection. |
+| VIEW-08 | [Join and role selection](#view-08) | `/join/{code}` after Home lookup | Limited discovery, then explicit player/spectator admission or verified restoration. |
+| VIEW-09 | [Player lobby](#view-09) | `/games/{game_id}/lobby` | Existing player session in Awaiting Players; no board yet. |
+| VIEW-10 | [Player Play](#view-10) | `/games/{game_id}/play` | Own persisted board, automatic matches and own qualification only. |
+| VIEW-11 | [Recovery / answer settings](#view-11) | `/recover`; nested player settings panel | Public proof-entry form versus authenticated own-answer maintenance are separate modes. |
+| VIEW-12 | [Spectator / venue display](#view-12) | Authorized lobby/play shell; in-page Display mode | Spectator admission within capacity, audience projection only. Display mode grants no extra access. |
+| VIEW-13 | [Result / cancellation notice](#view-13) | `/games/{game_id}/result`; transient notice | Existing eligible final-view grants only; spectator result is already-delivered local state. |
+| VIEW-14 | [History list / detail](#view-14) | History section on Games; `/history/{game_id}` | Hosts/admins only, unexpired started-game snapshots; never resume gameplay. |
+| VIEW-15 | [Users / account management](#view-15) | `/users`, `/users/new`, `/users/{account_id}` | Verified admin only; safe account metadata, provisioning and guarded management. |
+| VIEW-16 | [Connection / access / error boundary](#view-16) | Shared across routes | Loading, syncing, reconnecting, denied, expired, unavailable and command-outcome states. |
 
-### 4.2 Per-view worksheet — copy for each view
+**Primary journeys**
 
-| Specification item | Value to fill |
+- Attendee: **Home → Join → Player lobby or Spectator view → Play → Result → Exit to Home**. In Progress closes new player entry; existing-player recovery is separate from a new join.
+- Returning player: **Home/Join → verified existing membership**, or **Recover → same membership** using game code, exact current alias and previously enrolled answer. Neither path regenerates a board.
+- Host/admin: **Home → Login → Games → Create game → New setup → Open lobby → Start → Play → Result → Exit to Games**. Creation, lobby publication and Start are distinct actions/states.
+- Historical inspection: **Games → History detail → Games**. No transition from History into active play.
+- Admin: **Games → Users → account detail / Create account → private link handoff**. The recipient follows the separate enrollment/reset flow. First-admin bootstrap stays outside the app in the developer CLI.
+- Opening a saved game route resolves current backend lifecycle and authorization before choosing its screen. Route a New game to setup, Awaiting Players to lobby, In Progress to Play, and a terminal game only to a permitted result/History destination. Never create a replacement game or follow a reused code into a new membership automatically.
+
+### 4.2 Shared layout, components and state rules
+
+#### Application shell and role-aware navigation
+
+- **`AppShell` / `BrandHeader`:** visible **Brews Bingo** title and **Rockville Brews** identity, one clear page heading, Home navigation, and a compact session/connection area. Public Home remains accessible rather than automatically replacing `/` with Games.
+- **`AccountNavigation`:** Games for normal host/admin sessions; Users only for normal admin sessions; account username, role badge and **Log out**. Before login show **Host / admin login**. This includes the requested admin login without removing the approved host login path. Restricted enrollment/reset sessions do not get privileged navigation.
+- **`GameHeader`:** lifecycle label, published code if any, caller's role/view mode, and permitted designated-host reference. Use a safe account-display projection when provided; ordinary hosts must not query admin-only Users just to render a host name. New games have no code yet; do not introduce a persisted game-title field merely for a heading.
+- **`CapabilityGate`:** render controls from current server-derived permissions plus lifecycle, not route names or a client role selector. Read-only host/admin viewing is not a participant admission and does not consume player/spectator capacity. The board and membership panels must use the explicitly authorized account or participant context; never combine projections accidentally when both sessions exist.
+- On narrow screens use a single-column layout, labelled navigation menu and full-width primary actions. On wider screens use a main content column plus a secondary rules/roster panel. Play can use a wider control/board split; venue mode dedicates most space to calls. Breakpoints are content-driven implementation details, not new platform scope.
+
+#### Reusable presentation components
+
+| Proposed component | Responsibility and limits |
 | --- | --- |
-| View ID, title, HLD/BR references | TBD |
-| Route/navigation entry, exit and back behavior | TBD |
-| Role/state permissions and backend enforcement references | TBD |
-| Components, layout, responsive breakpoints and venue treatment | TBD |
-| Displayed fields, source API/events and privacy projection | TBD |
-| Form fields, validation messages and accessible labels | TBD |
-| Actions, confirmations, pending state and duplicate-submit handling | TBD |
-| Loading, empty, error, forbidden, stale and expired states | TBD |
-| Live subscriptions, resynchronization and state replacement | TBD |
-| Session expiry/logout, multi-tab behavior and private-cache clearing | TBD |
-| Keyboard/screen-reader support, focus and visual contrast | TBD |
-| Optional speech ownership/settings/error behavior where applicable | TBD |
-| Test scenarios and acceptance evidence | TBD |
+| `GameCodeForm` / `GameCodeBadge` | Accessible code input and validation; large selectable/copyable published code. Copy is user-initiated and failure leaves selectable text. A code is not an authentication token. |
+| `LifecycleBadge` / `PermissionBanner` | Exact New, Awaiting Players, In Progress, Resolved, Cancelled labels; distinguish designated operator, admin override and read-only viewer. |
+| `RulesSummary` / `CapacitySummary` | Pool bounds, square size, free-cell configuration, Single Line objective and permitted player/spectator counts. State which counts are connected versus occupying seats. |
+| `BoardGrid` | Read-only row/column-labelled cells; distinct FREE, matched and unmatched treatments; completed-line highlighting only from authorized backend evaluation. Setup uses a separate interactive free-cell editor, not this player board. |
+| `CurrentCall` / `OrderedCallList` | Latest committed value prominently; complete ordered record with sequence labels and an explicit no-calls state. Preserve string values and call order. |
+| `PlayerRoster` / `BoardInspector` / `QualificationList` | Account-only roster/presence and private boards/qualifiers; player screens use own-board/own-qualification components, spectators receive neither. |
+| `CommandFeedback` / `ConfirmationDialog` | In-flight, committed, rejected, unknown-outcome and pending-coordination feedback; target-specific confirmations and retry discipline. |
+| `ConnectionBanner` / `AccessBoundary` | Connecting/Synchronizing/Live/Reconnecting, freshness/expiry warnings and safe exits; never equate socket liveness with current authority. |
+| `EmptyState` / `InlineError` / `LoadMore` | Distinguish legitimate empty data from failed/forbidden loads; explicit retry, no fabricated totals or client-made records. Paging controls require an agreed server contract. |
+| `PrivateLinkHandoff` | Newly issued enrollment/reset link and expiry for the authorized issuer only; never part of lists, history, notifications, analytics or retry receipts. |
+
+#### Form, command and navigation behavior
+
+1. Client validation explains the same rules as the backend; backend checks remain decisive. Keep rejected nonsecret edits available for correction, focus the error summary/field, and never partially present a rejected mutation as saved.
+2. Show action-specific pending labels and suppress duplicate clicks. Accept only committed responses/snapshots as game truth; do not optimistically draw, mark, award, admit, switch roles or announce success.
+3. An interrupted response is **unknown outcome**, not failure. Resolve the original actor/command context through the approved retry/result mechanism (G4 where available); do not create another random call or another game with a fresh command ID. Reject expired-command replay rather than executing it anew. Credential issuance has separate no-secret-replay recovery (DO-029/080).
+4. Refresh snapshots after stale revisions, concurrent Start/transfer/terminal changes or capacity conflicts. Remove invalid controls immediately; close an obsolete winner/transfer dialog. Do not report socket closure, purge or reservation release complete merely because work was queued.
+5. **Back, Leave, Exit and Log out are different.** Leaving an unsaved creation form discards only the local draft after a proposed discard confirmation; it does not create or cancel a game. Navigating away from a saved New/lobby/live game does not implicitly cancel it. Explicit participant Leave follows role/state semantics; terminal Exit retires the applicable grant; Log out revokes the current account session, not every login and not the game outcome.
+6. Do not treat refresh, tab close, browser Back, socket loss or hibernation as a successfully committed Leave/Exit. App-provided terminal navigation should run Exit first and handle an unknown result honestly. Browser/history navigation always revalidates access. Exact unload/multi-tab wiring remains an implementation detail; it must not relax grant expiry or post-Exit denial.
+7. Passwords, recovery answers and raw access links stay out of route/query state, persistent browser storage, logs and analytics. Keep sensitive form values only in the active form, clear them on success, dismissal, expiry or navigation, and never rehydrate them from a receipt. Protected game/account/History data is not an offline archive; clear unauthorized views on logout, expiry, revocation or role/context change.
+
+#### Accessibility, mobile and venue design targets
+
+**Proposed acceptance targets, not a claim of compliance:** semantic landmarks/headings, persistent field labels, keyboard-operable controls, visible focus, screen-reader error/status announcements, sufficient contrast and touch-sized actions; use WCAG 2.2 AA as the implementation review target. Test actual browser/assistive-technology support later.
+
+- Do not encode role, connection, matches or qualification by color alone. Give each board cell a readable row/column, value or FREE label, and match state. Player cells are not mark buttons.
+- In the setup free-cell editor, use keyboard-operable selected/unselected cells with coordinate labels and a text summary. Board previews must not announce random or assigned player values.
+- Confirmation dialogs state the target and consequence, focus safely, allow dismissal before submission and restore focus. Avoid generic “OK” for destructive actions; use **Cancel game**, **End without winner**, **Delete account**, or **Transfer host**.
+- Announce newly committed calls/qualification changes concisely rather than re-reading an entire board on each frame; do not move focus on passive updates. A user navigating older calls is not forcibly scrolled away.
+- Large boards/call histories remain inspectable on mobile without shrinking text into unreadability; allow an explicit zoom/scroll region with equivalent accessible cell descriptions. Venue mode emphasizes large high-contrast current value, recent calls and objective, with an accessible full ordered list still available.
+- Optional spoken announcements are required by BR-020. The suggested device-local controls and failure behavior in VIEW-12 remain a proposal for LLD-014; no global audio controller or automatic multi-device coordination is implied.
+
+### 4.3 Screen specifications
+
+<a id="view-17"></a>
+#### VIEW-17 — Home / public entry
+
+**Purpose/access:** Default page for everyone, including attendees without accounts. Sources: user-requested Home, BR-001/017, HLD-017/056–058. Contract touchpoints: A2, C4 and D3; lookup is not admission.
+
+**Components/layout**
+- Branded header, concise “Join a game at Rockville Brews” heading, and a central `GameCodeForm` with **Game code** label, text field, helper text and primary **Join** button. Submit by button or Enter.
+- Header **Host / admin login** button; for an already validated normal account show **Games**, plus **Users** only for admins. Keep attendee entry usable in either case.
+- Secondary **Recover player access** link to VIEW-11. An optional **Continue your game** card may appear only after validating the caller's existing session/membership; a remembered code alone cannot produce a resume grant.
+
+**Behavior/states:** Trim outer ASCII spaces, accept case-insensitive code input and display its uppercase form; require exactly eight A–Z/0–9 characters and reject internal spaces. Do not silently truncate pasted values. Show inline format errors, a checking state, and a safe unavailable/not-joinable response for invalid/closed codes under the final error contract. Successful lookup opens VIEW-08 or restores verified existing membership; it never creates a game or seat itself. Network failure leaves the code editable with Retry. Do not list public live-game participants or historical games.
+
+<a id="view-01"></a>
+#### VIEW-01 — Host / admin login
+
+**Purpose/access:** One account login form for both roles; no role picker, self-registration or public admin bootstrap. Sources: HLD-061/063/074–075, DO-020/021/030–034. Contracts: A1, A2, A7.
+
+**Components:** Username, password, a proposed show/hide-password control, primary **Log in**, **Back to Home**, and help text directing users needing setup/reset to an authorized admin/developer for a link. Use password-manager-compatible fields; show current-session status without reading HttpOnly cookies.
+
+**Validation/navigation:** Trim boundary ASCII whitespace from username, preserve its remaining case, apply 10–50 ASCII characters/no internal ASCII whitespace, and compare case-sensitively. Preserve the password exactly; do not trim, case-fold or silently truncate it. Password policy is Section 9.1; control-character browser/transport behavior and maximum size remain unresolved, not silently narrowed by a field widget. Successful normal login opens Games (or a revalidated same-app protected destination); do not replay a previously failed mutation after login.
+
+**States:** Pending submission, safe generic login failure, throttled/retry-later, expired session and unavailable service. Public messages must not enumerate account existence, disabled status or reset state unless the final safe contract explicitly permits that distinction. Restricted sessions go only to their authorized setup/reset flow. Logging out clears account-private UI state without ending the game or inventing an all-sessions logout feature.
+
+<a id="view-02"></a>
+#### VIEW-02 — Enrollment / first password setup
+
+**Purpose/access:** Complete a provisioned account's mandatory first password before Games/Users access. Sources: HLD-009/010, DO-028/029/032. Contracts: A3, A4, A2.
+
+**Components:** Link-validation progress, minimal authorized account identity/purpose, new-password input and proposed confirmation input, policy help, show/hide control, **Set password**, and a safe return/help action. No role editor or admin-created initial password.
+
+**Behavior/states:** Read the private link fragment, promptly clear it with `history.replaceState`, and redeem via protected POST; keep tokens out of queries/logs/analytics and load no third-party scripts on this page. A valid restricted session shows the form; match confirmation locally and submit only the actual password. Generic used/expired/revoked/invalid-link feedback directs the recipient to obtain a fresh authorized link. Do not turn loading, refresh or retries into multiple redemptions.
+
+On committed completion, the account becomes Verified and its distinct normal session retains the restricted session's original absolute expiry; navigate to Games. If completion committed but its response/cookie was lost, offer normal password login, not replay of a bearer or an extra setup transaction. If still pending and restricted authority was lost, use authorized link reissue. Preserve the no-store/referrer restrictions.
+
+<a id="view-03"></a>
+#### VIEW-03 — Password reset
+
+**Purpose/access:** Privileged-issued reset link, not email-based self-service or anonymous password recovery. Sources: HLD-064/065, DO-028/029/033. Contracts: A5, A6, A2.
+
+**Components:** Same secure link boundary and password/confirmation components as enrollment, purpose-specific copy, **Set new password**, and login/help navigation.
+
+**Behavior/states:** Require a valid reset-only session; preserve exact password input and all account policy. Explain that the previous password is unavailable while reset is pending, and link expiry does not restore it. On successful completion retire reset authority, clear the restricted cookie and navigate to Login with a nonsecret success message; **do not auto-login**. A lost committed response is recovered through password login; if reset is still required, an authorized issuer supplies a successor link. Generic invalid-link and throttling states mirror enrollment without exposing account secrets.
+
+<a id="view-04"></a>
+#### VIEW-04 — Games dashboard
+
+**Purpose/access:** Landing page after host/admin login, containing both the current game and historical games as requested. Sources: HLD-028/029/032/077, DO-014–016/057/058/071. Contracts: C1, C2, C9 and F3/F4.
+
+**Components/layout**
+- Page heading **Games**, primary **Create game** navigation button, shared account navigation and refresh/load feedback.
+- **Current game** card, at most one: state, issued code or “Not published”, safe designated-host reference, relevant timestamps and server-derived access mode. Render **Resume setup**, **Open lobby**, or **Open play** for the selected lifecycle; non-designated hosts get **View read-only**, while admins see an explicit cross-game operator banner.
+- **Historical games** section beneath it: outcome, game code, ended time, winner alias only when Resolved, expiry and **View history**. Empty copy distinguishes “No current game” from “No unexpired historical games”. See VIEW-14 for detail.
+
+**Behavior/states:** The Create game button opens the form; it does not create on navigation. When a nonterminal slot is occupied, disable creation with a visible reason and link to the existing authorized view. Include a preparing/reconciling state if creation/release is pending; a missing summary is not proof the slot is free. Backend creation still resolves races. Historical rows remain available while a new game is running. Do not count terminal History toward the active-game limit, expose deleted pre-start games as History, or label a terminal game “Resume”.
+
+Propose newest-ended-first History and a **Load more** control when the API supports it; pagination/sort semantics remain a contract task. Do not fetch all History to fake paging, expose an unverified total, or treat failed loading as an empty list. Account-session expiry replaces protected content with Login guidance, not an attendee join.
+
+<a id="view-05"></a>
+#### VIEW-05 — Create game and saved New-game setup
+
+**Purpose/access:** Configure before inviting participants. Sources: HLD-025/033–040/046–048/068/077; DO-038–044/062. Contracts: C2, C5–C8, C10 and E10.
+
+**Components/layout:** A labelled configuration form with a side-by-side rules/free-cell preview on wide screens and stacked preview on mobile. Before creation, label it **Create game**; after a successful New record exists, label it **Game setup — New**, show save state and the server idle deadline, and provide **Back to Games** without cancelling.
+
+| Control | Default and input behavior |
+| --- | --- |
+| Numeric pool upper bound | Integer 1–1,000, default 75; fixed lower bound 1 displayed as non-editable help. Values remain strings in game data. |
+| Board size | One square side-length selector, integer 2–10, default 5; show the resulting square dimensions rather than independent width/height controls. |
+| Free cells | Enabled by default, one center cell at one-based `(ceil(side / 2), ceil(side / 2))`; checkbox/toggle plus coordinate-labelled selection grid. Disabled sends an empty position set; enabled requires at least one unique in-bounds cell. |
+| Player capacity | Integer 2–20, default 20. Explain that two currently connected eligible players are required to Start, independently of occupied seats. |
+| Spectator capacity | Integer 0–50, default 50; zero visibly means spectator entry disabled. |
+| Winning pattern | Read-only **Single Line** explanation and sample row/column/diagonal highlighting; no unapproved selectable patterns. |
+
+**Actions/validation:** Before persistence, **Create game** explicitly claims the global slot and creates New, with the authenticated creator as designated host. Afterward use **Save changes**, primary **Open lobby**, secondary **Transfer host** where eligible, and a separated **Cancel game** action with confirmation. Open lobby first ensures configuration is durably saved, then makes it fixed and publishes the code; show the consequence before confirmation. No board values are generated for preview or assigned until Start.
+
+Show pool-size versus non-free-cell validation, invalid integer/coordinate errors and feasibility warnings; the authoritative Start check must cover every retained member, not only connected players. In particular, an all-free layout cannot supply distinct boards for multiple players; never silently weaken uniqueness or silently change selected free cells. When shrinking a board would invalidate selected positions, propose an explicit reset-to-default choice or require correction instead of silently discarding positions.
+
+**Persistence/contract seam:** C6 creation-with-configuration versus default-only creation remains unresolved in the API. If the final contract uses C6 followed by C7, make partial success visible: the New game exists and occupies the slot even if saving the user's configuration fails. Resume/retry against that same game; do not claim combined atomicity or create another game. Draft state is not an extra server lifecycle state.
+
+**States:** Invalid form, unsaved changes, creating/saving/publishing, revision conflict, another game claimed the slot, unexpected lifecycle transition, idle expiry and unknown command outcome. On successful publication navigate to the host/admin lobby and remove edit controls. There is no return from Awaiting Players to editable New. Passive viewing/reconnect does not renew the idle deadline; admin actions do not renew another designated host's deadline.
+
+<a id="view-06"></a>
+#### VIEW-06 — Host/admin Awaiting Players lobby
+
+**Purpose/access:** Invite and inspect attendance before Start. Sources: HLD-038–040/043/048/059–062/068/074; DO-039–044/053–055. Contracts: C5, C9/C10, D2/D3, E6/E10, G1/G3.
+
+**Components:** Large published code with Copy, fixed `RulesSummary`, player occupied/max and connected-eligible counts shown separately, spectator occupied/max count including retained grace seats, account-only roster with aliases and present/disconnected indicators, and permitted host assignment/status. No player boards yet; show a “Boards are assigned when the game starts” explanation, not placeholder random cards.
+
+**Operator actions:** Primary **Start game** enabled only while synchronized and current prerequisites appear satisfied; **Cancel game** with deletion/no-History confirmation; **Transfer host** with eligible target selection and confirmation; **Back to Games**. State the unmet Start reason, including fewer than two connected eligible players, validation/feasibility failure or pending authority. Backend rechecks all conditions and the global reservation at commit.
+
+**Transfer panel:** Show only eligible enabled Verified Host targets, selected target identity and “takes effect immediately; no acceptance step”. Use the expected assignment revision and no same-target transfer. Target discovery for an ordinary host needs a dedicated safe projection in the API design; do not reuse admin Users or offer admin roles as targets. After commit remove the outgoing ordinary host's mutations; admin override remains separate.
+
+**States:** Empty roster, last-slot joins, stale presence, Start/transfer/cancel races and failed generation. A failed Start leaves Awaiting Players without partial boards. A committed Start replaces the lobby with the authorized Play view; cancellation shows the transient notice. Non-designated hosts see the same authorized read-only information but no mutation controls, accompanied by an explicit read-only banner. No kick-player or manual presence-edit feature is added.
+
+<a id="view-08"></a>
+#### VIEW-08 — Join / choose how to participate
+
+**Purpose/access:** Public code lookup plus explicit admission; no attendee account required. Sources: HLD-017/018/049–058; DO-045/047/052–055. Contracts: C4, D1/D3, D5/D6, D13.
+
+**Components:** Code and permitted lifecycle/entry summary, role cards **Play** and **Spectate**, player-only **Alias** input and optional private **What do you like most about Brews?** recovery-answer field, primary role-specific Join button, **Recover existing player** and **Use another code** links. Expose only fields in the limited entry projection, not the account GameSummary, roster, other aliases or boards.
+
+**Rules/help:** Alias is nonempty, maximum 20 ASCII characters after trimming outer ordinary spaces; printable letters/digits/punctuation and internal spaces are permitted, with exact case-sensitive uniqueness. Explain that the current alias must be remembered. The optional answer is private authentication material, not survey feedback; blank means no recovery enrollment. State that code + exact current alias + enrolled answer is the only lost-player-session recovery, and that no host can look it up or override it.
+
+**Behavior/states:** Awaiting Players offers both roles within capacity. In Progress offers new spectator entry and separate existing-player recovery, never a new-player Join or role promotion. Terminal/unissued/unavailable codes offer no join. Full/disabled roles show a reason; rejection never silently admits the visitor under another role. Alias conflicts are corrected within the form, not checked through the backend-only D4 helper as a new public endpoint. On Start racing a player join, show updated role choices. On committed admission, consume one seat and navigate directly to the authorized lobby/play snapshot; a valid existing session restores instead of adding another membership. Failed requests must not display a claimed alias/seat as accepted.
+
+<a id="view-09"></a>
+#### VIEW-09 — Player lobby
+
+**Purpose/access:** Already-admitted player waiting for Start. Sources: HLD-034/041/043/045/052–055/066–067; DO-046–052/055. Contracts: D1, D7/D8/D10/D14, C5, G1/G3.
+
+**Components:** Own alias, game code/status, rules/objective and permitted occupancy summary; prominent **Waiting for the host to start** panel; **Rename alias**, **Recovery settings**, **Switch to spectator**, and **Leave game**. No board, other private aliases/roster or host controls are required for this projection.
+
+**Behavior:** Rename preserves stable membership/seat/answer and session deadline; announce the new current alias needed for recovery. Proposed confirmation before player-to-spectator switch explains loss of player seat, alias and recovery answer. Proposed pre-start Leave confirmation explains the same removal and that rejoining is a fresh capacity/alias decision. Failed switch/rename/Leave preserves current displayed committed state. Role switch goes straight to the admitted spectator view with no second Join.
+
+**States:** Rename conflict, target capacity full, session replaced/expired, or Start racing an edit. On accepted Start, fetch the already-assigned own board and transition to Play; never generate it client-side. On pre-start cancellation, show a transient cancellation notice; no board/History retrieval follows. A transient disconnect retains membership but does not count as a connected player for Start.
+
+<a id="view-07"></a>
+#### VIEW-07 — Play: host/admin console
+
+**Purpose/access:** Operate or inspect an In Progress game. Sources: BR-002–010/018/026–027, HLD-023/024/026/042/060/062/074; DO-061–068. Contracts: C5/C10, E1/E2/E4–E9/E11, G1/G3/G4.
+
+**Layout/components**
+- Top: game code/state, designation/view-mode banner and connection status.
+- Main panel: large latest committed call, Single Line objective, ordered call history and remaining-value/exhaustion status. Before any call show **No values called yet**, never a fabricated initial value.
+- Operator control area: prominent **Draw random value**; separate manual-value text field and **Call value** button. Validate against the actual remaining string pool; no arbitrary numeric coercion or silent repair of invalid/duplicate values.
+- Private inspection panel: player roster/board selector, read-only board cells and completed lines, plus a **Qualifying players** list. Show all eligible retained players, including disconnected or intentionally departed ones; lack of presence is not disqualification.
+- Lifecycle action area: **Submit winner**, **Transfer host**, **End without winner**, and **Back to Games**, visually separated from draw controls.
+
+**Winner/end interaction:** Selecting a qualifier highlights its board and current alias/stable identity; proposed final confirmation names the selected winner and explains that submission immediately ends the game as Resolved. It is the operator's choice after the real-life Bingo exchange, not automatic ranking or a digital player claim. Backend revalidates qualification at commit. **End without winner** requires confirmation and produces Cancelled with started-game History. Neither terminal action needs a second close command. Dismissing confirmation changes nothing.
+
+**Controls/states:** Random/manual actions are unavailable while unsynchronized, pending an unresolved call, exhausted or terminal. Exhaustion does not auto-end the game: authorized winner/no-winner actions remain. Show committed call and matches together; never draw or advance speech from a speculative response. A lost acknowledgement triggers original-command resolution. Non-designated ordinary hosts can inspect boards/qualifiers read-only but have no call, transfer, award or end controls. Admin action on another host's game does not transfer assignment. Terminal commit switches to Result; remove all live mutations.
+
+<a id="view-10"></a>
+#### VIEW-10 — Play: player board
+
+**Purpose/access:** The caller's assigned board only. Sources: HLD-024/026/034/042/062, DO-047/052/055/059–068. Contracts: D1/D11/D14, E1/E3/E5, G1/G3.
+
+**Components:** Own alias and game identity, large read-only `BoardGrid`, latest/ordered calls, Single Line objective, own qualification status, connection banner, **Recovery settings** and **Leave game**. FREE cells are visibly valueless/pre-satisfied; matching and completed lines come from the backend. Do not include mark/unmark, board regeneration, new-player Join, post-start alias/role editing, or an in-app **Bingo** claim button.
+
+**Qualification:** Show **Your board qualifies — say Bingo and your alias to the host** when the backend flags it, including before the first call if free cells form a line. Qualification does not mean the player has won; only a committed operator award changes the result.
+
+**Leave/recovery states:** Proposed Leave confirmation explains that the seat, same board and winner eligibility remain until game end; it does not free a slot for a replacement. Return requires a still-valid session or the approved answer proof, never alias alone. Reconnection displays the same assigned board and missed committed matches. A replaced session shows a safe “This session was replaced” state when the authorized contract supports it; no recovery answer or other board is exposed. Expiry clears private content and offers eligible recovery, not indefinite stale access. End transitions to the bounded own-result view.
+
+<a id="view-11"></a>
+#### VIEW-11 — Player recovery and private answer settings
+
+**Recovery mode (`/recover`):** Game-code field, exact current-alias field, private answer input, **Recover access**, **Back to Home/Join**, and a concise no-alternative-recovery explanation. Prefill a nonsecret code only; do not enumerate remembered aliases or expose whether another player enrolled an answer. Contracts: D13 with C4/D3 as needed; DO-045/049–052/080/085–087.
+
+Send proof to the backend without treating client comparison as authority. Approved answer comparison is versioned Unicode NFC → trim outer Unicode whitespace → case-fold, preserving internal whitespace/punctuation; this does not change case-sensitive alias rules. Invalid proof uses safe generic feedback, and throttling follows server-provided retry availability rather than a client promise. Clear proof from form state after the attempt flow. A successful recovery replaces prior player sessions/sockets and opens the existing lobby or same assigned board; it consumes no new seat. A lost issuance response requires fresh proof rather than replaying a cookie. Closed games, forgotten aliases and missing/forgotten answers have no fallback, host override or terminal recovery.
+
+**Settings mode (nested panel):** Available only with valid own player authority in Awaiting Players/In Progress. Show only **Recovery enabled/not enabled**, an empty new-answer field, **Set/Replace answer**, and **Remove recovery answer** with a proposed warning that future lost-session recovery will be unavailable. Never reveal, prefill or echo the saved answer/verifier. Contract: D14. Accepted maintenance does not rotate/extend the current session. Closing settings returns to the same lobby/Play without joining again; role switch/removal/terminal transition deletes the recovery record under the approved policy.
+
+<a id="view-12"></a>
+#### VIEW-12 — Spectator and venue display
+
+**Purpose/access:** Read-only audience information, distinct from the operator console. Sources: BR-014/018–020, HLD-016/018/023/044/045/054/069; DO-047/053–055/073/095. Contracts: D1/D6/D9/D12, C5/E1, G1/G3.
+
+**Lobby components:** Code/state, permitted rules/capacity summary, **Waiting for the game to start**, **Switch to player** while Awaiting Players and target eligibility allows, and **Leave**. Switching opens alias/optional-answer fields and commits a new player membership only after validation; failure preserves the spectator seat.
+
+**Live/venue components:** Large current value, visible recent calls, complete ordered-call view, Single Line objective, status/connection banner, **Display mode** and **Leave**. Display mode proposes a simplified high-contrast layout and user-initiated fullscreen where supported, with an obvious exit-fullscreen control. It is a presentation toggle on an authorized audience view, not a capacity bypass, separate public data feed or operator-page screen share. An attendee-facing device must not render hidden account/private-board controls behind a CSS toggle.
+
+**Boundaries/states:** No player boards, qualifiers, Users, winner-selection or host mutation controls. New spectators can enter during In Progress within capacity; they cannot become players then. Explicit Leave releases the seat immediately. Accidental disconnect preserves the seat only within the server's five-minute grace and original session lifetime; a later return requires fresh admission. At terminal completion render only an actually delivered winner/no-winner result; after server spectator cleanup, refresh/reconnect cannot fetch it again.
+
+**Speech proposal (LLD-014):** Include an **Announce new calls on this device** toggle, initially off, enabled by an explicit user gesture; recommend one venue device to avoid duplicate audible announcements. Speak only newly committed live call sequences while enabled, never resync backlog, rejected calls or repeated frames. Pause on stale/terminal/unauthorized state and provide a visible unsupported/blocked/muted status without blocking gameplay. Voice/language/rate choices, replay controls and cross-device ownership remain review items, not new authoritative game state.
+
+<a id="view-13"></a>
+#### VIEW-13 — Results and cancellation notice
+
+**Purpose/access:** Communicate the terminal outcome without reopening the game. Sources: HLD-027/036/037/069–072, DO-056/058/069–075. Contracts: F1/F2 and the last authorized WSS result.
+
+**Components:** **Resolved — winner: [approved alias projection]** or **Cancelled — no winner**, ended time when available, authorized final calls/board panel, and prominent **Exit**. Show a pre-start cancellation explanation separately: no boards or History were created and the game is unavailable for re-entry. Never require all participants to Exit to finalize or release the game.
+
+| Viewer | Final content and Exit behavior |
+| --- | --- |
+| Existing eligible player | Own final board, permitted calls/result, no other private boards. Access lasts only until Exit or original session expiry. Exit removes all terminal grants for that player; no new recovery or post-Exit return. |
+| Existing eligible host/admin account viewer | Authorized final content under its pre-existing grant, capped by session/History expiry. **Exit to Games** deletes grants for that account/game across sessions but does not log the account out or remove separate History rights. A later account login cannot recreate this terminal grant. |
+| Connected spectator that received the result | Audience result already in memory; **Exit to Home** clears it locally. No server grant is retained; refresh/reconnect is not a result-recovery route. |
+| Pre-start cancellation recipient | Transient cancellation notice and return navigation; cleanup does not wait for receipt/Exit and there is no History link. |
+| New, expired or already-exited viewer | Safe unavailable/access-ended page; no final-game admission. An independently authenticated host/admin may open unexpired History instead. |
+
+No Replay game, restart, further call, second winner, edit outcome, or export button. A host/admin **View History** action uses the separate History route, with app-controlled departure from the result following Exit semantics. If terminal Exit completion is unknown, keep it marked pending and reconcile; do not claim server access was revoked solely because the component disappeared. Backend expiry remains effective even if cleanup is delayed.
+
+<a id="view-14"></a>
+#### VIEW-14 — Historical games and History detail
+
+**Purpose/access:** Cross-host read-only inspection for normal host/admin accounts, not former participant entitlement. Sources: BR-021, HLD-029/032/072, DO-069–075. Contracts: F3/F4.
+
+**List:** Lives in the Games dashboard, satisfying the requested historical-games display. Show code, terminal outcome, ended time, winner only for Resolved, expiry and **View history**. Do not mix pre-start cancellations or expired entries into the list. Suggested outcome filtering/newest-ended-first sorting and cursor paging need final API agreement; no fabricated total or extra datastore is implied.
+
+**Detail components:** Read-only outcome/winner header, original game code, permitted host identity and started/ended/expiry times; complete final ordered calls; participating-player aliases and a selectable/expandable final-board inspector. Preserve API ordering (calls by sequence, players by stable ID, cells row-major). Show final cells/matches, not intermediate board playback or unsupported live-presence data. Include **Back to Games**, no gameplay controls.
+
+**Privacy/expiry:** No recovery material, session metadata, spectators, account credentials or export/download action. Do not reconstruct removed editable configuration or resurrect live memberships from a snapshot. Display the server's fixed UTC three-calendar-month expiry with a timezone-labelled human date; the client must not recompute a rolling retention period. At expiry/unavailability replace cached protected content with an unavailable message and remove stale list entries; viewing, revisiting or another game never extends the deadline. Loading failure is not proof a history record does not exist, and History permission never grants terminal-game re-entry.
+
+<a id="view-15"></a>
+#### VIEW-15 — Users, provisioning and account detail
+
+**Purpose/access:** Admin-only account management; hosts, players, spectators and unauthenticated callers must fail both route and API guards. Sources: HLD-074–078, DO-020–022/028/029/036/088–090/105–107. Contracts: B1–B9. No developer console, audit browser or infrastructure credentials in the app.
+
+**Users list components:** **Users** heading, **Create account**, optional role/lifecycle filters, refresh/load feedback, and a responsive table/card list. Propose columns **Username**, **Role (Host/Admin)**, **Lifecycle (PendingEnrollment/Verified/ResetRequired)**, **Access (Enabled/Disabled)**, **Created**, and **Manage**. Enabled/Disabled is derived from `disabled_at`, separate from lifecycle. Account detail can expose its safe ID and authorized lifecycle timestamps. Do not display epochs, hashes, salts, tokens, previous links or anonymous game memberships. Render permitted username control characters safely/visibly without changing the exact underlying comparison value.
+
+**Create account:** Username field with the same trim/case/ASCII validation as Login; explicit **Host / Admin** role selection at creation only, with additional privilege explanation for Admin; **Create account** and Cancel. Dispatch the corresponding B3/B4 operation rather than an unrestricted role-edit endpoint. Do not request an initial password or invite an anonymous user to bootstrap an admin.
+
+**Account detail/action panel:** Refresh the target and server-derived action eligibility before confirmation/commit. Select action labels from lifecycle/access, not a single ambiguous “status”.
+
+| Action | Availability, confirmation and visible effect |
+| --- | --- |
+| Reissue enrollment link | Enabled PendingEnrollment only; explain that predecessor links/restricted sessions become invalid. Existing verified accounts use reset instead. |
+| Issue / reissue reset link | Enabled enrolled or ResetRequired target according to B6; explain immediate old-password/session invalidation and that expiry of the link does not restore the old password. No admin-supplied replacement password. |
+| Disable account | Not self; reject while target hosts a nonterminal game or if it would leave no enabled Verified admin. Confirmation identifies target and loss of access. Do not auto-cancel/transfer the target's game. |
+| Enable account | Disabled target only, another eligible admin or separate CLI path; preserve lifecycle and revoked credentials. Explain whether password setup/reset is still needed; no self-enable or role change. |
+| Delete account | Not self, no hosted nonterminal game, not the last enabled Verified admin. Irreversible target-specific confirmation; unrelated/unexpired History is retained. |
+
+Role is immutable after creation; no Promote/Demote, edit-username, bulk removal or audit-export feature is proposed. When a guard blocks management, show its safe authorized reason and an appropriate existing-game/admin-setup next step, not a client override. Creation/management has pending/rejected/unknown-result states; disabling access is not proof every socket has acknowledged close. Show pending close work separately only when the contract supplies it.
+
+**Private link handoff:** After committed creation/issuance show purpose, target, fixed expiry, selectable newly issued URL and a user-initiated Copy button in a dedicated dismissible panel. Warn the admin to deliver it privately. Do not embed a sample secret in docs, turn the URL into account metadata, persist it in browser storage, auto-open it as the issuer, or put it in a generic success toast. Clearing the panel/navigation clears the in-memory secret. Same-command retries cannot recover it; offer explicit successor reissue after a lost/dismissed URL and explain predecessor invalidation. Self-target reset handoff, where issuer authentication is invalidated, requires final safe response/redaction UX review rather than an invented permission exception.
+
+**List states:** Loading, empty, filters-with-no-results, failed page, forbidden/expired session, target deleted concurrently and action blocked by a newer lifecycle/game assignment. Role/status filters and pagination are proposed API seams; do not silently omit unloaded accounts or claim a complete count. No username-search endpoint is introduced by this layout.
+
+<a id="view-16"></a>
+#### VIEW-16 — Shared connection, permission and failure states
+
+**Sources:** HLD-020–022, DO-034/036/052/055–058/067/068/079/080/091–095. Contracts: A2, D1, G1/G3/G4 and each owning operation. These are UI states, not extra persisted game lifecycle variants.
+
+| UI state | What to show and allow |
+| --- | --- |
+| Loading / Connecting | Label the requested screen, show a progress placeholder without fabricated counts or an assigned board, and keep game mutations disabled. |
+| Synchronizing | Existing connection is not enough; wait for the authorized full snapshot and revision alignment before enabling controls. |
+| Live | Show committed state and currently permitted actions; keep periodic/foreground freshness checks separate from heartbeat liveness. |
+| Reconnecting / stale | Visibly stale last-authorized view only while access remains eligible; no mutations/offline queue. Retry with approved jittered backoff capped at 30 seconds. Do not replay old speech or generate a replacement card. |
+| Command outcome unknown | Preserve nonsecret command context and check the original result; show why another draw/create/award cannot yet be issued safely. Credentials follow their separate fresh-auth/reissue rules. |
+| Coordination pending | Explain only the supplied pending work; no false “all sockets closed”, “deleted”, or “new game ready” claim. |
+| Expired / revoked / replaced | Stop protected updates and clear private content. Offer Login for accounts or eligible nonterminal recovery for players; spectators need eligible restoration or fresh admission. Do not extend credentials. |
+| Forbidden | Render a safe access-denied page with Home/authorized navigation; hide Users/private boards and never treat an empty hidden control as backend enforcement. |
+| Unavailable / ended / History expired | Explain that the requested access is unavailable without leaking protected data. Offer Home or permitted Games/History, never auto-join a newly reused code. |
+| Throttled / service failure | Safe inline retry guidance; respect server timing, do not spin on failed auth or infer account existence. A temporary network failure does not mean an empty roster/list. |
+
+A second socket for one participant session may supersede the first; present a safe reconnect/replaced-session state, not two counted seats. Account logins may coexist, but terminal account Exit spans that account/game's grants. On visibility resume, restore authorization and snapshot/revision state before controls; when a gap or bounded-delivery failure occurs, replace from an authorized snapshot rather than merging speculative local gameplay.
+
+### 4.4 UI state ownership and API handoff
+
+The proposed Dioxus component names above are responsibilities, not Rust files or selected signatures. Keep three separate state classes: **ephemeral UI** (open panel, unsaved input, board selection), **validated session/capabilities** (never bearer contents), and **server snapshots plus command results/revisions**. Only the last two govern protected rendering; none becomes a local authoritative copy. Account and participant contexts need separate permission checks even when using the same game route.
+
+| Experience group | Existing proposed operations to use | Remaining contract work, not a new endpoint here |
+| --- | --- | --- |
+| Home / Join / Recovery | A2, C4, D1/D3, D5/D6/D13 | Limited entry projection, session-context resolution, safe errors and admission/restore response shapes. D4 remains internal. |
+| Login / Enrollment / Reset | A1–A7 | Safe auth/link errors, exact cookie/redirect behavior and original-deadline handling; passwords/confirmation UI do not change request fields. |
+| Games / Setup / Lobby | C1/C2/C5–C10, D2/D3, E6/E10 | Creation/defaults/configuration save seam, capability/display-name projections, safe eligible-transfer-target discovery for ordinary hosts, revision/confirmation transport. |
+| Account / player / audience Play | C5/C10, E1–E5/E7–E9/E11, D11/D12/D14 | Role-specific snapshots, safe public call fields and command outcomes; no direct storage-record serialization. |
+| Player lobby / role switch / settings | D1/D7–D10/D14 | Own membership fields, accepted-switch routing and conditional errors without a second admission. |
+| Result / History | F1–F4 | Exact Exit pending/retry result, permitted final-view fields, History list columns/sort/paging. No result grant from History. |
+| Users | B1–B9 | Safe columns, capability/guard reasons, role/lifecycle filters/paging and secure new-link handoff; no broad Users exposure for host transfer. |
+| Synchronization | G1/G3/G4 with approved DO view revisions | Snapshot/update envelope, close/error mapping, pending-command resolution, hibernation and framework wiring. System coordination helpers remain backend-only. |
+
+For each implementation slice, extend the existing per-operation contract in `api-design.md` rather than silently adding a UI-specific endpoint or copying storage structs. Frontend routes above do not finalize the API catalog. Literal copy, styling tokens, icons and breakpoint values can be refined without changing authority, persistence, lifecycle, retention or input policies.
+
+### 4.5 UI acceptance checklist — specification, not executed tests
+
+| ID | Scenario and required result |
+| --- | --- |
+| UI-AC-01 | Directly open `/` on desktop/mobile: branded Home has labelled game-code input, Join/Enter submission and host/admin login; no public Games/Users/History data leak. |
+| UI-AC-02 | Validate code trimming/case/length/internal spaces, case-sensitive usernames and aliases, and exact password preservation. Invalid submissions do not create a game, seat or session. |
+| UI-AC-03 | Test anonymous, restricted, host, admin, player and spectator route/direct-API denial; switching a client route/tab/role must not grant Users, other boards or game mutation access. |
+| UI-AC-04 | Login/setup/reset reach the correct next screen: setup retains original expiry, reset requires login; used/expired links and lost secret responses do not replay credentials. |
+| UI-AC-05 | Games shows at most one nonterminal card, blocks competing creation, and still displays unexpired History; incomplete coordination is not shown as a free slot. |
+| UI-AC-06 | Create/Save/Open lobby validate defaults/bounds/free coordinates, preserve partial creation truth and stop editing after publication. Leaving the screen does not silently cancel the saved game. |
+| UI-AC-07 | Lobby distinguishes occupied and connected counts; disconnected retained players get boards but do not satisfy the connected minimum. Start failure leaves no partial boards; no board exists before committed Start. |
+| UI-AC-08 | Join/rename/switch/Leave races with Start/capacity preserve correct membership on rejection, use exact current aliases and never auto-switch roles or admit twice. |
+| UI-AC-09 | Operator Play supports random/manual calls, complete ordered history, exhaustion, qualified-winner selection and confirmed no-winner end. Duplicate clicks/lost ACKs cannot produce extra calls or outcomes. |
+| UI-AC-10 | Other hosts inspect read-only; admins act without silently becoming designated host; transfer removes outgoing ordinary-host mutations at commit and uses no admin-only Users access for target lookup. |
+| UI-AC-11 | Player Play has only own board/qualification, no marks/claim button; spectators/venue display never receive private boards or qualifiers. FREE/initial qualification and departed-player eligibility remain correct. |
+| UI-AC-12 | Recovery/settings never reveal saved proof, permit alias lookup or bypass terminal rules. Recovered play uses the same board, and replaced sockets do not create extra seats. |
+| UI-AC-13 | Disconnect/gap/hibernation/replacement/expiry transitions visibly gate actions; authorized snapshots restore state without offline mutations, renewed TTLs or replayed audio. |
+| UI-AC-14 | Results honor each role's grant and Exit scope; spectator refresh cannot recover final data; pre-start cancellation has no History; browser Back does not bypass completed Exit. |
+| UI-AC-15 | History remains read-only across a new game and disappears at original expiry; no export, live replay, extra private fields or inherited authority from a reused code. |
+| UI-AC-16 | Users is admin-only; creation roles are explicit/immutable, self/last-admin/hosted-game removal guards hold, enable preserves lifecycle, and links are one-time private handoffs with honest pending-close feedback. |
+| UI-AC-17 | Keyboard, focus, labels, contrast, non-color statuses, large-board mobile inspection and venue-distance readability are exercised. Optional speech handles unsupported/blocked devices without blocking gameplay or repeating resync backlog. |
+
+### 4.6 Remaining UI review and implementation gates
+
+- Review proposed screen grouping/routes, action copy, visual styling and responsive behavior (LLD-001/026); the above fills the design inventory, not Dioxus modules or a prototype.
+- Finalize Users filters/paging/action-capability projections and private-link handoff edge cases (LLD-002), without changing DO-105–107 protections or adding role editing.
+- Finalize the API seams in Section 4.4, including ordinary-host transfer-target discovery; a UI dependency is not approval of an unreviewed public account-list API.
+- Settle optional speech ownership/controls, browser/assistive-technology matrix and measurable venue/accessibility targets (LLD-014). The proposed local opt-in behavior is not yet a separately approved audio policy.
+- Resolve browser input/transport of all permitted ASCII controls and still-unselected password/answer size caps without silent narrowing, truncation or new normalization.
+- Confirm frontend handling of navigation/unload, account/participant coexistence, unknown command outcomes and terminal Exit races against the final contracts. Do not add implicit game cancellation or broaden session grants.
+- Implement and execute UI-AC-01–UI-AC-17 only after separate implementation authorization. All 107 approved DO decisions remain unchanged by these UI proposals.
 
 ## 5. Durable Object design — external reference
 
@@ -290,7 +621,7 @@ For each row, fill in sequence, participants, records, preconditions, commit poi
 - Apply the same rule to first-password setup and password reset, and preserve the entered password exactly for later verification. Do not trim whitespace, case-fold or silently truncate it. Count the decoded password characters, not transport escape notation.
 - Do not silently narrow “ASCII” to alphanumeric or printable-only characters. **TBD —** exact UI/input and transport handling for ASCII control characters; any proposed character exclusion requires an explicit policy revision rather than an implementation assumption.
 - **Password hashing: salted Argon2 via RustCrypto `argon2`, confirmed by subsequent LLD-024 (Section 9.2).** The earlier hashing deferral is superseded. DO-019 approves combined PHC storage in `AccountRecord.verifier`; DO-023 approves Argon2id v19, fresh 16-byte salts, 32-byte output and SQLite `TEXT` mapping. Production work factors, accepted verifier/cost bounds, target integration, resource validation and upgrade mechanics remain **TBD**; store protected verifiers, never plaintext.
-- **TBD —** maximum password length and request-size limits; “at least 10” selects a minimum, not an exact length or a chosen upper bound. UI confirmation fields and exact API validation/error representations remain **TBD** in [API design](api-design.md#shared-contracts).
+- **TBD —** maximum password length and request-size limits; “at least 10” selects a minimum, not an exact length or a chosen upper bound. Section 4 proposes a client-side password confirmation field for setup/reset; it does not add a credential field to the API. Final UI approval and exact API validation/error representations remain **TBD** in [API design](api-design.md#shared-contracts).
 
 This policy is for provisioned account passwords, not anonymous-player recovery answers, game aliases, bearer tokens or UUID identifiers. It does not change enrollment/reset authorization or session deadlines.
 
@@ -351,7 +682,7 @@ No application tests have been implemented or run by this template. Exact test f
 | Domain and schema | Pool/string rules, every supported board size, free cells, distinct-board feasibility, Single Line, unique calls and data constraints. | TBD |
 | Identifier convention | UUID v7 generation/parse validation across selected targets, distinct newtypes, stable retry IDs and no ID-as-credential assumptions. | **TBD** — no target build/runtime evidence yet. |
 | Component errors | `thiserror` derives, local `error.rs` ownership, typed conversion/source chains, secret redaction and deliberate transport mappings. | **TBD** — concrete error/contract tests not implemented. |
-| Views and permissions | Host versus admin controls, Users frontend/backend denial, private-board projection, missing/expired sessions and restricted enrollment. | TBD |
+| Views and permissions | Home entry, host/admin controls, Users frontend/backend denial, private-board projection, missing/expired sessions and restricted enrollment. | UI-AC-01–UI-AC-17 in Section 4.5 specify screen/role/lifecycle scenarios; no UI implementation or application tests have been run. |
 | Worker routing and Object isolation | Multiple API handlers in the single Worker reach the correct authoritative owner; unknown codes do not create games, and Object IDs/bindings never replace user authorization. | TBD |
 | Account lifecycle | Concurrent redemption, reissue/reset revocation, first-admin creation, non-owner overrides, removal blocked by hosted nonterminal game. | TBD |
 | Password policy | Reject fewer than 10 characters and non-ASCII input; accept policy-valid ASCII passwords without character-class quotas; preserve whitespace/case and decoded input through setup/reset/login. | **TBD** — UI/transport edge cases and tests; hashing scenarios are listed below. |
@@ -361,7 +692,7 @@ No application tests have been implemented or run by this template. Exact test f
 | Durable recovery | Restart/hibernation, commit with lost ACK/broadcast, snapshot race, revision gap, stale socket and original-command retry. | DO-091–095 approve logical fail-closed attachment reconstruction, socket fencing, durable deadline alarm and close/resync bounds; DO-076–084 approve receipts/outbox phases/retries. Release-gate tests approved by DO-104 but not run. |
 | Expiry/retention | One-day credentials, five-minute spectator grace, 24-hour host-idle cancellation, and DO-071 UTC three-calendar-month History deadline with month-end clamp/end-exclusive denial; no resurrection/export. | DO-071 policy approved; schedulers, purge and restore integration remain TBD. |
 | Terminal access | Player final-view window, spectator local-only result, pre-start deletion, independent Exit and post-exit denial. | TBD |
-| Browser/accessibility | Desktop/mobile matrix, venue readability, keyboard/screen readers and optional spoken-announcement behavior. | TBD |
+| Browser/accessibility | Desktop/mobile matrix, venue readability, keyboard/screen readers and optional spoken-announcement behavior. | Section 4.2 proposes accessibility/layout targets; VIEW-12 proposes local speech controls; UI-AC-17 covers future validation. Device matrix, audio policy review and results remain pending. |
 | Capacity/resilience | DO-103 requires max legal game plus owner peak-event/History forecast measurement for each Object’s storage, row reads/writes, requests, duration/CPU, alarms and WSS fan-out; reverify quotas and require ≤50% of applicable quota, else stop for architecture/cost review. | Gate approved; forecast and measurement results remain TBD. |
 
 Latency, concurrency/load targets, measurable accessibility criteria and failure/cleanup budgets: **TBD**, not inferred from provider documentation.
@@ -395,8 +726,8 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 
 | ID | Decision / specification | Status / selected detail |
 | --- | --- | --- |
-| LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | TBD |
-| LLD-002 | Users fields/actions/filters and protected account-management UX | TBD |
+| LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | Concrete proposals in Section 4 / LLD-026: public Home, account navigation, setup/lobby/role-specific Play, recovery/results/History, shared components and UI state/accessibility targets. Route/layout review, exact Dioxus implementation and executed UI checks remain pending. |
+| LLD-002 | Users fields/actions/filters and protected account-management UX | VIEW-15 proposes safe columns, creation/detail panels, guarded actions and one-time private-link handoff. Role/access/lifecycle constraints remain approved; filter/paging/capability contracts and handoff edge-case UX still need review. |
 | LLD-003 | Cloudflare account/session store placement and ownership | DO-001 approves one AccountsObject per environment; DO-100 approves GAME_DIRECTORY/ACCOUNTS/GAMES private bindings and environment isolation. Ownership is approved; exact deployment config/internal methods remain implementation work. |
 | LLD-004 | SQLite tables/types/keys/indexes, record mappings and migrations | DO-096–099 approve owner-local normalized mappings/type/privacy, local FKs/cross-owner validation, unique/check/parameterized-query rules and versioned forward-only migrations. Exact DDL/statements/index query plans and runtime migration hooks remain TBD. |
 | LLD-005 | Directory/game coordination and command idempotency/reconciliation | DO-014/015 approve one nullable `game_id` reservation row, claim-first creation, same-ID/same-code GameObject recreation after failure, and compare-by-ID acquire/release without a generation counter in [Durable Object design Section 6.3](durable-object-design.md#directory-records). DO-016 approves idempotent terminal compare-and-clear (matching ID clears; NULL is complete; different ID is stale/no-op). DO-017 approves a presence-only account-assignment gate keyed by account_id; DO-018 approves acquire-before-check, assignment blocking, clear-and-reject for hosted games, and retain-and-retry on interruption. DO-076–084 approve owner/actor-scoped receipts, fingerprints, bounded typed results, retention, secret-safe issuance retry, typed pending payloads, per-operation fences/ACKs and capped retry/reconciliation. Physical transport/recovery remains implementation work. |
@@ -408,7 +739,7 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 | LLD-011 | Presence/Leave/Exit mechanics, timer scheduling and terminal notice/deletion ordering | DO-053 approves spectator record/grace fields; DO-054 approves disconnect/reconnect/expiry ordering and stale-event guards; DO-055 approves participant-session binding/access in [Durable Object design Section 6.5](durable-object-design.md#game-records). DO-056 approves terminal player grant/Exit/replay/deletion; DO-057/058 approve account LiveView/final-view and cross-session Exit policies; DO-059 approves logical board fields/types; DO-060 approves board row mapping/projection checks. DO-073/056/058 policies are approved for terminal notice and final-view cleanup; DO-091–095 approve attachment, reconstruction, fencing, alarms and backpressure policies. Rust SDK/socket-close integration remains **TBD**. |
 | LLD-012 | History placement/indexing, calendar-month expiry, cleanup and backup/restore | Final History remains in the original Game Object with a minimal Directory index. DO-069 approves immutable snapshot/winner/player fields and constraints; DO-070 approves parent/call/player/cell row mapping and ordering; DO-071 approves UTC calendar-month expiry/month-end clamping/end-exclusive denial. DO-072 approves atomic materialization/cleanup; DO-073 approves best-effort spectator result delivery followed by server identity/session deletion without ACK wait; DO-074 approves primary scheduled purge/code reuse; DO-075 approves copy/index/log expiry and restore non-resurrection. Provider scheduling, backup/log controls and physical cleanup remain **TBD**. |
 | LLD-013 | CLI interfaces, binding/credential scopes, secure link handoff and bootstrap | DO-101 approves the restricted developer CLI invoking authorized Worker management/bootstrap operations with controlled credentials, no direct SQLite and no browser exposure. Exact credential scopes, transport, commands and packaging remain TBD. |
-| LLD-014 | Optional speech, browser matrix, quality/load targets and acceptance tests | DO-103 approves max-game plus owner-provided peak forecast capacity validation with 2× quota headroom; DO-104 approves the schema/transaction/race/security/load release-gate plan. Actual measurements/tests are not run. Optional speech and browser matrix remain TBD. |
+| LLD-014 | Optional speech, browser matrix, quality/load targets and acceptance tests | DO-103 approves max-game plus owner-provided peak forecast capacity validation with 2× quota headroom; DO-104 approves the schema/transaction/race/security/load release-gate plan. VIEW-12 proposes device-local opt-in speech with no resync replay; Section 4.2 proposes responsive/accessibility targets and UI-AC-17 covers future validation. Audio behavior approval, browser/assistive-technology matrix and measurable venue targets remain pending; no measurements/tests have been run. |
 | LLD-015 | Build/deployment/observability and quota verification | DO-100–104 approve isolated bindings, pinned-toolchain/clock/RNG policy, forward migrations, 2× quota capacity gate and test/verification release gate. Exact pins, provider runtime integration, forecast and actual results remain unverified. |
 | LLD-016 | Initial API Worker organization and Durable Object boundary | One Worker serves app endpoints; DO-100 approves private GAME_DIRECTORY/ACCOUNTS/GAMES bindings and per-environment isolation; DO-101 approves Worker-only ingress, typed internal peer calls/ACKs and restricted developer-CLI backend operations. Module layout, exact transport/auth credentials and SDK integration remain implementation work. |
 | LLD-017 | Proposed operation catalog and auth-scope notation | Captured at user request — [API design Section 6](api-design.md#operation-catalog) retains category headers and per-operation ID/function/access-type heading, Path, Auth scope and description. Scope labels are Admin, Host, Player, Anyone and the user-selected System for internal work. Proposed names/paths remain reviewable; Anyone never bypasses required session/proof/ownership, Host includes admin with applicable game guards, and System is not an account role or public endpoint. Potential Request/Response fields are recorded under LLD-019; final schemas and function signatures remain **TBD**. Object structures are separately proposed under LLD-018, not finalized by this catalog. |
@@ -420,19 +751,20 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 | LLD-023 | Account password length and character policy | **Confirmed user direction** — at least 10 characters, any combination of ASCII characters, no required mix of character classes. Applies to host/admin account password setup/reset and consistent later verification. **Earlier hashing deferral superseded by LLD-024**; maximum length and UI/transport details remain TBD. See Section 9.1 and the API password inputs. |
 | LLD-024 | Salted Argon2 account-password hashing | **Confirmed user direction** — use Argon2 with salt and RustCrypto `argon2` for host/admin passwords, superseding LLD-023's hashing deferral. DO-019 approves `verifier` as one complete library-generated PHC string rather than raw salt alone or separate salt/hash fields. **DO-023 approves** Argon2id v19, fresh independent 16-byte salts, 32-byte output and SQLite `TEXT` mapping. **DO-024 approves** explicit work factors, the OWASP benchmark starting point, bounded fail-closed verification and a pre-production runtime-validation gate; production tuning/caps and target measurements remain unverified. Compatible crate pin and upgrade mechanics remain open. |
 | LLD-025 | Durable Object design document extraction | **Confirmed user direction** — move the existing schema proposal into `plans/durable-object-design.md`. It is the single home for Object ownership, DATA inventory, schema/consistency/migration worksheets, records/fields/types, invariants and storage TBDs. LLD Section 5 and API storage references link to it. Field names/types and confirmed constraints are preserved; the move does not approve pending proposals or authorize implementation. |
+| LLD-026 | Requested UI screen/component designs | **Requested design proposals — not implemented:** Section 4 preserves VIEW-01–VIEW-16 and adds VIEW-17 Home with game-code input, Join and shared host/admin login. Defines Games with History, Create/setup, account/player/spectator lobby/Play, Users, enrollment/reset, recovery, result/History, shared state/privacy/accessibility rules, existing API touchpoints and UI-AC-01–UI-AC-17. User-requested screen coverage is recorded; new routes/layout/audio details remain proposals and API contracts remain in the companion document. |
 
 ### 12.2 Product/source questions — do not silently decide in implementation
 
 - **Designated-host idle timer (DO-040/041):** Only intentional open/resume or an accepted, state-changing action by the current designated host renews the 24-hour pre-start deadline; a designated-host-initiated transfer qualifies once. Non-designated admin override/open/resume, including admin transfer, does not renew; the successor inherits the existing deadline. DO-041 approves end-exclusive trusted-time comparison at serialized transaction point; expiry wins at equality, no grace, stale alarms recheck/reschedule and never affect In Progress/newer reservation. Physical alarm scheduling and cross-Object recovery remain TBD.
 - **Privileged account-management edge cases (DO-105–107):** App-admin self-disable/delete is prohibited; CLI remains separately privileged subject to hosted-game and last-admin guards. Every disable/delete preserves at least one enabled Verified admin; Disabled/PendingEnrollment/ResetRequired do not count. No first-release role-editing operation is approved; role is fixed at account creation. DO-022/HLD-078 enable authority and `disabled_at` lifecycle rules remain unchanged. Physical serialization and API error mapping remain implementation work.
-- **UI/speech/quality requirements:** Exact layouts, spoken-announcement behavior, accessibility/compatibility criteria and measurable quality targets still need decisions. **TBD**.
+- **UI/speech/quality requirements:** Section 4 / LLD-026 now proposes screen layouts, navigation, controls, shared failure states and UI acceptance scenarios. Styling/routes and contract seams remain reviewable; device-local opt-in speech is proposed, not separately approved. Exact compatibility and measurable venue/accessibility/quality targets remain TBD (Section 4.6, LLD-014).
 - **Source reconciliation and HLD approval:** Resolve stale requirements/HLD wording using explicit later decisions, then obtain required stage approval separately. **TBD**.
 
 ### 12.3 Traceability index
 
 Coverage means a place to complete the design, not that every design choice or requirement is fulfilled. LLD Section 5 references [Durable Object design](durable-object-design.md), and Sections 6–7 reference API/WSS content in [api-design.md](api-design.md), so coverage ranges containing those sections include their companion documents. Ranges identify source decision rows; superseded rows are carried only as qualified in Section 1.2.
 
-**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design.
+**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work.
 
 | HLD decisions | Template coverage |
 | --- | --- |
@@ -458,7 +790,7 @@ Coverage means a place to complete the design, not that every design choice or r
 
 ### 12.4 Completion checklist
 
-- [ ] Each view has a completed worksheet, permissions, states and acceptance criteria.
+- [ ] Review/finalize the Section 4 screen specifications, route/contract seams and UI-AC acceptance scenarios; proposed coverage is recorded, not implemented or tested.
 - [ ] [Durable Object design Section 6](durable-object-design.md#schema-proposal) proposals are accepted/revised, their TBDs resolved, and all physical ownership/schema/constraint/index/migration worksheets completed.
 - [ ] [API design Section 6](api-design.md#operation-catalog) Request/Response proposals are reviewed and every API has finalized requiredness, success/error schemas/statuses, authorization and retry contracts.
 - [ ] [API design WSS schemas/protocol](api-design.md#wss-design) and storage interactions are specified, without duplicating transport contracts here.
