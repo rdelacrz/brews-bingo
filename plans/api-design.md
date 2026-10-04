@@ -96,7 +96,7 @@ These stable API-01–API-33 rows remain a high-level coverage checklist, not fi
 | API-16 | Random / manual value call | Designated host/admin, playable In Progress; valid undrawn value → atomic calls/matches/qualification result. | E7, E8 | Proposed Request/Response: E7, E8 in Section 6; final contract **TBD**. |
 | API-17 | Submit one qualified winner | Designated host/admin validates same-game qualification; commit Resolved once. | E9, H9 | Proposed Request/Response: E9, H9 in Section 6; final contract **TBD**. |
 | API-18 | Cancel / manually end game | Designated host/admin with required confirmation; commit Cancelled, apply pre-start versus started retention. | E10, E11, H7, H8 | Proposed Request/Response: E10, E11, H7, H8 in Section 6; final contract **TBD**. |
-| API-19 | Transfer designated host | Authorized operator confirms target; immediate committed transfer, no recipient acceptance or data reset. | C10, H12 | Proposed Request/Response: C10, H12 in Section 6; final contract **TBD**. |
+| API-19 | Transfer designated host | Current designated host or admin confirms a distinct eligible Host target; require expected host-assignment revision, immediate committed transfer, no recipient acceptance or data reset. | C10, H12 | Proposed Request/Response: C10, H12 in Section 6; final contract **TBD**. |
 | API-20 | Query command outcome | Authorized original command context; resolve lost acknowledgement without another effect. | G4, G5, H11 | Proposed Request/Response: G4, G5, H11 in Section 6; final contract **TBD**. |
 | API-21 | Resolve game code / entry eligibility | Known published code only; discovery is not identity or admission. | C4, D3 | Proposed Request/Response: C4, D3 in Section 6; final contract **TBD**. |
 | API-22 | Join as player | Awaiting Players, valid available alias/free slot, optional answer; no board before start. | D4, D5 | Proposed Request/Response: D4, D5 in Section 6; final contract **TBD**. |
@@ -927,26 +927,26 @@ Terminal/exited-view routing and denied/expired outcomes remain **TBD**; do not 
 
 Path: `POST /api/games/{game_id}/host-transfer`
 
-Auth scope: Host
+Auth scope: Designated Host / Admin
 
-Validate designated-host or admin authority, target eligibility, absence of a target AccountAssignmentGate and confirmation; immediately replace designated-host assignment while preserving game data and the same global reservation. No recipient acceptance is required (DO-017/018).
+Transfer only in New/AwaitingPlayers/InProgress. Revalidate current designated-host/admin authority and the distinct eligible target at commit; reject if the target's Directory assignment gate is present. Require the expected host-assignment revision and atomically compare-and-set `designated_host_id` in the GameObject, incrementing `host_assignment_revision` and game `revision` once each and writing the authenticated actor-scoped command receipt. An exact actor/command/fingerprint retry within the applicable live-receipt window returns the receipt without another increment; command-ID reuse with a different fingerprint rejects. Expired-receipt replay remains governed by DO-076–DO-084. Preserve game data and the same global reservation; no recipient acceptance. The removal/transfer race follows DO-039's gate-first versus commit-first order; a gate precheck alone is insufficient. The transfer's actor-scoped CommandReceipt is distinct from the broader AdminAuditRecord/audit-retention policy (DO-088–DO-090).
 
 ##### Request
 
 **Potential inputs (proposal):** Path parameter: `game_id: GameId`. A designated host/admin session is supplied by cookie.
 
-Command metadata: `command_id: CommandId`, possible `expected_host_assignment_revision: Revision`; metadata is not assigned here to the body.
+Command metadata (required): `command_id: CommandId`, `expected_host_assignment_revision: Revision`. Metadata is not assigned here to the body. The authenticated actor comes from the session cookie; actor identity is never caller-supplied.
 
-Confirmation binding, eligible-target discovery for ordinary hosts and version transport remain **TBD**; no incoming acceptance token.
+Eligible-target discovery for ordinary hosts, confirmation binding and wire representation of the required expected revision remain **TBD**; no incoming acceptance token.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `target_account_id` | `AccountId` | Y | Selected target account for the host transfer. |
+| `target_account_id` | `AccountId` | Y | Selected distinct, enabled, Verified account whose role is Host and whose Directory assignment gate is absent. |
 | `confirmed` | `bool` | Y | Proposed confirmation field, required to be true for the selected target; confirmation binding remains TBD. |
 
 ##### Response
 
-**Potential outputs (proposal):** Preserve game contents and reservations. Failure candidates: terminal game, invalid/disabled/pending target, assignment gate, stale confirmation or denied authority.
+**Potential outputs (proposal):** Preserve game contents and reservations. Failure candidates: terminal game, invalid/disabled/unverified/non-Host target, target assignment gate, missing/stale host-assignment revision, denied authority, or same-command ID with a different request fingerprint.
 
 Exact eligibility/error/confirmation contract remains **TBD**; transfer success is a committed assignment, not a pending invitation.
 
