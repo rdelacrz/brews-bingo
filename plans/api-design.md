@@ -179,7 +179,7 @@ Failure conditions, status/error-code mapping, durable effects and retry safety 
 - Field names/DTO shapes below remain proposals; application-generated system ID types now follow the confirmed UUID v7 convention (LLD-020). Shared ID, timestamp, enum and configuration notation follows [Durable Object design Section 6](durable-object-design.md#schema-proposal); it does not select Rust serialization or JSON encodings. `object` means a described, not-yet-finalized projection. `Option<T>` indicates conditional/nullable data, not whether a JSON key must be omitted or present as null; that distinction is **TBD**.
 - **TBD for every entry unless separately approved:** final input requiredness/defaults, validation limits, field encodings, media/API versions, request/response envelopes, success/error statuses, remaining header names, exact error variants, general caching policy, rate limits and contract tests. DO-028 approves no-store and safe generic invalid-link handling; DO-031 approves the account session cookie and exact-Origin requirement. Local notes highlight additional operation-specific TBDs. Existing confirmed guards still apply; a tentative field must not change a product rule.
 - The cookie is browser-supplied credential transport, not a body field or proof that the frontend is trusted. Derive actor, role, stable membership, assignment and expiry server-side; do not accept client-provided authority claims. For browser-cookie-authenticated state-changing HTTPS requests and WSS upgrades, require the exact configured application `Origin` and reject absent/mismatched values (DO-031); `SameSite` alone is insufficient. For an account WSS upgrade, register the unique `connection_id` against the current enabled Verified/Normal session in AccountsObject before sending an authorized snapshot (DO-035); close the socket if registration fails. Under DO-036, revalidate session/epoch before each account-authorized outgoing frame and suppress/close on failed or unavailable authority; close-command completion requires target acknowledgement. A frame already authorized/in flight at revocation commit may race. Other CSRF/CORS mechanics and error mapping remain **TBD**.
-- Proposed `command_id: CommandId` metadata supports retry-sensitive mutations. Its placement/requiredness, actor binding, receipt lifetime and rejection of inadmissibly old commands remain **TBD** generally. DO-029 specifically fixes link-issuance same-ID behavior: no duplicate mint or raw-secret replay, with a secret-free receipt retained 30 days containing account/link IDs, purpose, committed outcome and expiry. A possible `expected_revision` or confirmation field does not replace commit-time lifecycle/authorization checks. Client-visible revisions must belong to the authorized projection, not expose private internal mutation counts.
+- Proposed `command_id: CommandId` metadata supports retry-sensitive mutations. DO-076–080 approve owner/actor-scoped receipts, canonical SHA-256 fingerprinting, typed secret-free outcomes ≤4 KiB, 24-hour ordinary receipt retention (DO-029 link receipts retain 30 days), old-command rejection and credential-secret non-replay. Accepted calls use DO-065 sequence/receipt policy. Endpoint-specific command-ID requiredness/placement, wire envelope and error mapping remain **TBD**. Commit-time authority checks remain mandatory; client-visible revisions belong only to authorized projections.
 - Passwords, bearer-link redemption tokens and recovery answers appear only as conceptual input fields, never sample values. Under DO-028, the access-link token is delivered only in a canonical HTTPS URL fragment, cleared with `history.replaceState`, and then sent only in a protected HTTPS body—never a request path/query, cookie, log or WSS frame. Do not expose session bearer values, stored verifiers or private recovery material in response bodies. Session issuance/rotation occurs through protected HttpOnly cookies.
 - **Sensitive-output exception:** authorized account/link creation, reissue and reset may deliver the newly issued enrollment/reset URL to the authorized administrator/developer. Those URLs are bearer secrets, not ordinary account metadata, list/detail fields, logs or secret-free receipt payloads. No real URL/token appears here. DO-028 approves canonical-origin fragment links, `Cache-Control: no-store`, and redacted logs/traces. Under DO-029, a repeated link-issuance request with the same `command_id` returns only its secret-free 30-day receipt, never the URL/token; an undelivered URL requires an explicit new reissue command, which invalidates predecessors. A committed-but-lost redemption response requires a fresh purpose-appropriate link while setup/reset remains pending; completed setup/reset uses login or the admin reset flow, not credential rollback.
 - Failure candidates are design prompts, not promises to disclose every cause. Use safe authentication/recovery errors and do not reveal another actor's identity, answer-enrollment status or private records. DO-028 requires one safe generic invalid-link result across access-link validation failures. Potential shared error fields are `code: String`, safe `message: String` and optional nonsecret correlation reference; final envelope/status/retry hints for other errors are **TBD**. An interrupted response is not proof the command failed or is safe to resubmit with a new ID.
@@ -197,9 +197,9 @@ Failure conditions, status/error-code mapping, durable effects and retry safety 
 | `MembershipView` | `game_id: GameId`, participant role, own `player_id: PlayerId` or `spectator_id: SpectatorId`, player alias when applicable, permitted access state, `session_expires_at: Timestamp`, player-only `recovery_enabled: bool`. No recovery answer/verifier; a spectator does not acquire player fields. |
 | `CallView` | `sequence_no: u32`, `value: String`; optionally a public-safe `called_at: Timestamp` (**TBD**). Do not implicitly expose raw call actor IDs, command IDs or storage metadata. |
 | `BoardView` | Own or otherwise authorized `player_id: PlayerId`/alias, `side_length: u8`, `cells: Vec<BoardCell>` (position, Free/Value, automatic matched state), `qualified: bool`, `qualifying_lines: Vec<CompletedLine>`. No client mark input or pre-start assigned board. |
-| `GameView` | Authorized `GameSummary` subset, permitted `configuration: GameConfiguration` fields, `calls: Vec<CallView>`, latest call/exhaustion, `view_revision: Revision`; own `MembershipView`/board for a player, permitted roster/boards for hosts/admins, audience-only state for spectators. Fields absent by role/state remain absent, not blank private copies. DO-067 scopes revisions to the authorized Host, Player(PlayerId) or Spectator(SpectatorId) projection; account/session grants remain separate, and one player’s private change does not advance another player’s revision. Exact projection fields remain TBD. | |
+| `GameView` | Authorized `GameSummary` subset, permitted `configuration: GameConfiguration` fields, `calls: Vec<CallView>`, latest call/exhaustion, `view_revision: Revision`; own `MembershipView`/board for a player, permitted roster/boards for hosts/admins, audience-only state for spectators. Fields absent by role/state remain absent, not blank private copies. DO-067 scopes revisions to Host, Player(PlayerId) or Spectator(SpectatorId); DO-068 defines advancement, snapshot/update ordering and gap resync. Account/session grants remain separate, and one player’s private change does not advance another player’s revision. Exact projection fields remain TBD. | |
 | `FinalResultView` | `game_id: GameId`, terminal outcome, `winner: Option<WinnerSnapshot>`, `ended_at: Timestamp`, final call/board content only as authorized, original expiry metadata where relevant, and applicable view revision. Player gets only own board; account final-view grants follow their permissions; a delivered spectator result has no private boards or renewed retrieval authority. Pre-start deletion may permit only a transient cancellation notice, not a fetchable History snapshot. |
-| `HistoryView` | Safe projection of the DO-069 immutable started-terminal snapshot: game/code/host identity, started/ended/expiry, outcome/winner, accepted calls in order, and each participating player’s final alias/board cells. Host/admin-only; never credentials, recovery/session/presence data, spectators or intermediate revisions. DO-070 determines child-row order; the DTO is not direct storage serialization. |
+| `HistoryView` | Safe projection of the DO-069 immutable started-terminal snapshot: game/code/host identity, started/ended/expiry, outcome/winner, calls ordered by `sequence_no`, players ordered by `player_id`, and each participating player’s final alias/board cells in one-based row-major order. Host/admin-only; never credentials, recovery/session/presence data, spectators or intermediate revisions. DO-070’s child-row layout is private storage, not direct DTO serialization. |
 
 ### A. Authentication and sessions
 
@@ -593,13 +593,13 @@ Path: `POST /api/users/{account_id}/disable`
 
 Auth scope: Admin
 
-Acquire the Directory gate before checking hosted games; while it is held, reject new-game/host-transfer assignments to this account. If a nonterminal hosted game exists, clear the gate and reject disable. Otherwise disable the account and revoke credentials/connections, then clear the gate. If interrupted, retain the gate and retry safely.
+Acquire the Directory gate first; while held, reject new-game/host-transfer assignments to this account. If a nonterminal hosted game exists, clear the gate and reject. Otherwise run a serialized AccountsObject mutation that revalidates actor/target, rejects app-admin self-disable (DO-105), and atomically rejects disabling the last enabled Verified admin with the disable/revocation (DO-106). On success disable and revoke credentials/connections, then clear the gate. If interrupted, retain the gate and retry safely.
 
 ##### Request
 
 Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. No business-body fields are proposed here.
 
-Command metadata `command_id: CommandId` is proposed; removal confirmation, self-removal and last-admin behavior remain **TBD**. No body placement is assigned to this metadata.
+Command metadata `command_id: CommandId` remains proposed; DO-105 forbids app-admin self-disable/delete and DO-106 prevents leaving zero enabled Verified admins. Removal confirmation, endpoint requiredness/transport and error mapping remain **TBD**; no body placement is assigned here.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -625,13 +625,13 @@ Path: `DELETE /api/users/{account_id}`
 
 Auth scope: Admin
 
-Acquire the Directory gate before checking hosted games; while it is held, reject new-game/host-transfer assignments to this account. If a nonterminal hosted game exists, clear the gate and reject deletion. Otherwise delete account/credential data without deleting unrelated or unexpired History, then clear the gate. If interrupted, retain the gate and retry safely.
+Acquire the Directory gate first; while held, reject new-game/host-transfer assignments to this account. If a nonterminal hosted game exists, clear the gate and reject. Otherwise run a serialized AccountsObject mutation that revalidates actor/target, rejects app-admin self-delete (DO-105), and atomically rejects deleting the last enabled Verified admin with the deletion/revocation (DO-106). On success delete account/credential data without deleting unrelated or unexpired History, then clear the gate. If interrupted, retain the gate and retry safely.
 
 ##### Request
 
 Path input is `account_id: AccountId`. Cookie input is an enrolled admin session. Do not assume a DELETE body.
 
-Command metadata `command_id: CommandId` is proposed. Confirmation/header placement and repeat-delete policy remain **TBD**.
+Command metadata `command_id: CommandId` remains proposed. DO-105/106 govern self-removal/last-admin; confirmation/header placement, repeat-delete response and command requiredness remain **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1592,7 +1592,7 @@ No selected value, board changes or qualification supplied by the client.
 
 Proposed response may additionally contain optional host-visible qualification/board changes; grouping is **TBD**, with no field names specified.
 
-Return only after the call, matching board changes, qualification, revision and command outcome/receipt commit consistently. Retry uses the same committed value, never another random draw.
+DO-066 approves this call, matching board changes, qualification, affected view revisions and accepted-call receipt in one owning-Game-Object transaction; authorized WSS follows commit. Retry uses the same committed value/result without new writes, never another random draw.
 
 Failure candidates: exhausted pool, non-In-Progress state, stale/conflicting command or denied authority. Exhaustion does not automatically end the game.
 
@@ -1609,7 +1609,7 @@ Path: `POST /api/games/{game_id}/calls/manual`
 
 Auth scope: Host
 
-The designated host or an authorized admin submits a string value. Validate pool membership/nonduplication and perform the same durable progression as a random call.
+The designated host or an authorized admin submits a string value. Validate pool membership/nonduplication and perform the same durable progression as a random call under DO-066’s atomic owning-Game-Object write set; authorized WSS follows commit.
 
 ##### Request
 
@@ -1844,7 +1844,7 @@ Path: `GET /api/games/{game_id}/stream` — WebSocket upgrade
 
 Auth scope: Anyone
 
-A valid authorized account or participant session is required, including for spectators. Register/supersede the appropriate connection and send a full role-specific snapshot. This is mutating because connection/presence state changes; existing membership is not duplicated.
+A valid authorized account or participant session is required, including for spectators. Register/supersede the appropriate connection and send a full role-specific snapshot. DO-068 makes attachment registration and snapshot/revision capture one serialized cut; the snapshot precedes later updates. This is mutating because connection/presence state changes; existing membership is not duplicated.
 
 ##### Request
 
@@ -1863,7 +1863,7 @@ Proposed transport: successful WebSocket upgrade followed by a full authorized `
 
 Supersede the prior participant-session socket without allocating another seat.
 
-Handshake rejection, close codes, hibernation/expiry/revocation and snapshot ordering are **TBD**. No spectator terminal reconnect.
+Handshake rejection/close-code mapping and SDK delivery remain TBD. DO-091 approves a versioned compact JSON connection attachment capped at 512 encoded bytes; reject malformed/oversized/unsupported state fail-closed. DO-092 makes attachments lookup hints only and requires durable authority/presence/session/epoch/expiry/grant/current-connection/view-revision reconstruction on wake and protected actions; invalid sockets close before snapshot. DO-093 approves prepare-then-fence socket replacement. DO-094 approves one durable earliest-deadline alarm per Object. DO-095 caps encoded frames at 256 KiB and unsent queue at 1 MiB/socket; close on pressure/failure rather than drop revisioned state, then reconnect with authorized snapshot. No spectator terminal reconnect.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1897,7 +1897,7 @@ The table describes proposed outbound socket frames on the existing stream, not 
 
 There is no gameplay write and no client acknowledgement required to establish the committed result. A queued send is not proof that the recipient received it.
 
-Internal delivery/backpressure outcome and exact frame types are **TBD**. No credential/recovery fields, private-board leaks or new public endpoint.
+DO-068 requires monotonically increasing authorized-view revisions; clients ignore duplicate/stale updates and request a fresh authorized snapshot on a detected gap. DO-095 requires commit-before-send and close/resync on pressure or delivery failure; 256 KiB encoded frame and 1 MiB unsent queue/socket caps apply. Exact frame types, close-code mapping and provider delivery guarantees remain implementation work. No credential/recovery fields, private-board leaks or new public endpoint.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1925,7 +1925,7 @@ The view is derived from the session, not a caller-chosen role/player ID. Revisi
 
 ##### Response
 
-Only role-specific revisions are compared; an unchanged result does not renew credentials or host activity. Delta versus full-snapshot behavior is **TBD**, with the snapshot-first baseline preserved.
+Only role-specific revisions are compared; an unchanged result does not renew credentials or host activity. A detected gap requires fresh authorized snapshot state under DO-068; the unchanged response representation and any non-gap optimization remain **TBD**.
 
 Expired/exited/forbidden view restrictions and no terminal spectator retrieval remain enforced.
 
@@ -1933,7 +1933,7 @@ Expired/exited/forbidden view restrictions and no terminal spectator retrieval r
 | --- | --- | --- | --- |
 | `up_to_date` | `bool` | Y | Proposed indication of whether the client's authorized view is current. |
 | `view_revision` | `Revision` | Y | Revision of the authorized role-specific view. |
-| `snapshot` | `Option<GameView>` | N | Fresh authorized snapshot when fresh state is needed, or a permitted final view. The final-view alternative and delta versus full-snapshot behavior remain **TBD**; snapshot-first baseline is preserved. Nullability versus absence remains **TBD**. |
+| `snapshot` | `Option<GameView>` | N | Fresh authorized snapshot when fresh state is needed, including detected revision gaps; permitted final-view alternatives, unchanged-response representation and nullability versus absence remain **TBD**. |
 
 #### G4: `get_command_result` (Non-mutating)
 
@@ -2120,7 +2120,7 @@ Internal inputs include the IDs below, participant binding, connect/disconnect/s
 
 This is a proposed trusted internal presence result. Count distinct valid-session players, not sockets. A stale closure cannot clear replacement presence or release its seat.
 
-Projection revision, deadline/notification results and hibernation reconstruction are **TBD**.
+Projection revision remains governed by DO-067/068; DO-092 requires reconstruction from authoritative durable state after hibernation and close-before-snapshot for invalid connections. DO-094 requires earliest persisted-deadline alarm processing. Exact runtime handlers/results remain implementation work.
 
 Internal result: updated connected eligibility/presence projection or stale-event no-op. Exact projection/result shape remains **TBD**.
 
@@ -2140,7 +2140,7 @@ At `now >= grace_expires_at`, re-read the current spectator, session/epoch, pres
 
 These are proposed trusted internal scheduled inputs, not a public request body. Read current presence/deadline before deleting; expire only if `now >=` the expected deadline and the spectator is still disconnected. A stale/reconnected deadline does not release capacity. Alarm payload/signature are **TBD**.
 
-Internal scheduled inputs include the fields below, current trusted time and optional epoch/fence. Exact alarm payload/signature are **TBD**; unnamed arguments do not acquire invented field names.
+DO-094 approves one durable earliest-deadline alarm per Object across persisted domain deadlines and pending-work `next_attempt_at`; on wake, process bounded due work using trusted time, reread authority and schedule the next earliest deadline. Exact platform payload/signature and SDK handler wiring remain TBD; unnamed arguments do not acquire invented fields.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -2289,13 +2289,13 @@ Path: — Internal
 
 Auth scope: System
 
-Enforce DO-071’s fixed UTC calendar-month deadline at `now >= expires_at` and delete final records plus related indexes/copies. Prevent expired data from reappearing through restore.
+Enforce DO-071’s fixed UTC calendar-month deadline at `now >= expires_at`; deny History/code reuse eligibility at expiry even if purge is delayed. DO-074 requires durable idempotent primary purge and Directory compare-by-game_id clearing; DO-075 prevents secondary-copy/index/log retention or restore resurrection. Never renew expiry.
 
 ##### Request
 
 These are proposed trusted internal scheduled inputs for the three-calendar-month retention deadline, not a public request body. Enumerate associated indexes/copies through trusted owners; no caller-selected retention extension.
 
-Batch selection/restore checks are **TBD**.
+DO-074 requires stable identity/deadline checks and Directory compare-by-game_id cleanup so stale purge cannot erase a reused code; DO-075 requires expiry checks before restore exposure. Batch selection mechanics remain implementation work.
 
 Internal scheduled inputs include the fields below, trusted time and original History identity/version. Unnamed argument types and exact signature remain **TBD**.
 
@@ -2308,9 +2308,9 @@ Internal scheduled inputs include the fields below, trusted time and original Hi
 
 This is a proposed trusted internal result. Never return deleted calls/aliases/boards in purge results. Deny expired reads even while physical cleanup is incomplete.
 
-Exact calendar calculation, cross-owner cleanup and restore-time verification are **TBD**.
+DO-074/075 approve primary and secondary expiry semantics; physical cross-owner cleanup and restore-verification mechanisms remain implementation work.
 
-Internal result: expired History/indexes/copies purged, not-yet-due/stale no-op, or pending retry. Possible bounded deletion counts/progress remain **TBD**, with no new field names assigned.
+Internal result distinguishes expired purge complete, not-yet-due/stale safe no-op, or pending retry. DO-074/075 require no false completion and no expired-data resurrection; bounded deletion-count/progress field names remain TBD.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -2352,7 +2352,7 @@ Path: — Internal
 
 Auth scope: System
 
-Record the actual admin actor, target, operation and result without secrets. Audit storage, retention and any administrative read interface remain TBD.
+Record actual admin actor, target, operation and verified outcome without secrets. DO-088–090 approve owner-local audit records, account/game ownership, `AdminActorRef::{Account, DeveloperCli}`, authenticated admin success/reject/failure capture, 90-day retention and developer-CLI-only reads; no client audit UI/API.
 
 ##### Request
 
@@ -2362,7 +2362,7 @@ Never substitute the designated host for the acting admin or pass credentials/an
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `actor_account_id` | `AccountId` | Y | Actual acting admin account, not the designated host substituted for that actor. |
+|| `actor` | `AdminActorRef` | Y | `Account(AccountId)` or `DeveloperCli`; actual acting privileged path, never substitute designated host. |
 | `operation_name` | `String` | Y | Admin operation being recorded. |
 | `target` | `TargetRef` | Y | Target of the actual admin operation. |
 | `outcome` | `AuditOutcome` | Y | Verified outcome of the admin operation, without secrets. |
@@ -2372,7 +2372,7 @@ Never substitute the designated host for the acting admin or pass credentials/an
 
 This is a proposed trusted internal result. Exact result/failure policy is **TBD**.
 
-Retention deadline is server-selected under a reviewed policy (**TBD**), not a client override. No new audit-read UI/API or hidden History archive.
+DO-090 fixes retention at 90 days from `occurred_at`; server denies after expiry, deletes copies/indexes and prevents restore resurrection. No client audit-read UI/API or hidden History archive; privileged developer-CLI read only.
 
 Owner/storage, allowed metadata, reliable rejected/failed-action capture and purge behavior are **TBD**.
 
@@ -2397,19 +2397,19 @@ Final message grouping/names are **TBD**; rows describe required purposes, not c
 | Final result / cancellation notice | Resolved winner or Cancelled no-winner; spectator delivery/deletion and player final-view rules differ. | TBD |
 | Synchronization repair | Detect stale/gapped/obsolete views and fetch fresh authorized state; private changes must not create false public gaps. | TBD |
 | Connection liveness | Hibernation-compatible heartbeat/auto-response; does not renew session TTL or prove state freshness. | TBD |
-| Expired / revoked / forbidden connection | Stop unauthorized delivery; closing/deauthorization and client feedback mechanics TBD. | TBD |
+| Expired / revoked / forbidden connection | DO-092 requires close before snapshot when reconstructed authority is invalid/uncertain; DO-036 requires fail-closed frame authorization. Close-code and client feedback mapping remain implementation details. | TBD |
 
 ### 7.2 Per-message and transport worksheet
 
 - **Purpose / trigger / originating owner / recipients:** TBD.
 - **Event identifier, version, payload schema and sanitized example:** TBD.
-- **Per-role field projection and authorized-view revision model:** TBD.
-- **Snapshot capture/subscription ordering and missing-update prevention:** TBD.
-- **Durable commit boundary versus emission and acknowledgement:** TBD.
-- **Duplicate/out-of-order/gap handling and obsolete-socket rejection:** TBD.
-- **Participant-session single-live-socket enforcement versus concurrent account logins:** TBD.
-- **Durable Object hibernation handlers, socket attachments and restoration:** TBD.
-- **Expiry/revocation/grace scheduling without in-memory-only timers:** TBD.
-- **Payload/buffer limits, backpressure, heartbeat/check intervals and reconnect jitter:** TBD — preserve the HLD's 30-second reconnect cap.
+- **Per-role field projection and authorized-view revision model:** DO-067/068 approve Host/Player/Spectator projection boundaries, freshness revisions, snapshot/subscription ordering and gap recovery; exact payload fields, envelopes and transport remain TBD.
+- **Snapshot capture/subscription ordering and missing-update prevention:** DO-068 requires one serialized attachment/snapshot/revision cut and snapshot-before-later-update order. DO-091/092 cap/version/check attachments and reconstruct authority after hibernation; DO-095 requires commit-before-send and close/resync on pressure/failure. Provider delivery guarantees remain TBD.
+- **Durable commit boundary versus emission and acknowledgement:** DO-066/095 require accepted authoritative state to commit before WSS emission; DO-073 does not require an application ACK for terminal spectator delivery before identity/session cleanup. Exact peer delivery/outbox and close-work acknowledgements remain implementation details under DO-036/083.
+- **Duplicate/out-of-order/gap handling and obsolete-socket rejection:** DO-068 requires duplicate/stale suppression and full authorized resync on a detected gap. DO-093 fences the superseded participant connection at commit and makes stale close events unable to clear its replacement; DO-095 closes on delivery pressure/failure for reconnect/resync. Runtime socket control/API remains implementation work.
+- **Participant-session single-live-socket enforcement versus concurrent account logins:** DO-093 approves prepare/authenticate new socket before atomically replacing the current connection ID; failed precommit preserves old socket, after commit old actions/frames fail, stale close cannot remove replacement. Count participant sessions, not sockets; host account concurrent login policy remains separate.
+- **Durable Object hibernation handlers, socket attachments and restoration:** Logical rules are approved by DO-091/092: <=512-byte versioned attachment is a lookup hint; rebuild authority from SQLite on wake/protected action, fail closed, preserve healthy connections as presence. Runtime handler/API/SDK integration remains TBD.
+- **Expiry/revocation/grace scheduling without in-memory-only timers:** DO-094 approves one durable earliest-deadline alarm per Object across persisted domain deadlines and pending-work retries, bounded trusted-time processing, authoritative reread and earliest reschedule. Platform alarm-handler integration remains TBD.
+- **Payload/buffer limits and backpressure:** DO-095 approves 256 KiB encoded frame and 1 MiB unsent queue per socket; commit before send, close rather than drop revisioned state, reconnect via authorized snapshot. Oversize legal snapshot requires separately reviewed chunking. Preserve HLD 30-second reconnect cap; heartbeat/check intervals remain TBD.
 - **Frontend state transitions, resync gating and private-cache clearing:** TBD.
-- **Protocol compatibility, close behavior and tests:** TBD.
+- **Protocol compatibility, close behavior and tests:** DO-091–095 approve fail-closed attachment limits, hibernation authority reconstruction, socket fencing, durable deadline scheduling and close/resync on bounded-delivery failure. Exact close-code/error mapping, version negotiation, provider compatibility and executed tests remain TBD.
