@@ -1808,7 +1808,7 @@ No exports, account credentials, spectator identities or renewed membership. Acc
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `games` | `Vec<object>` | Y | History summaries with proposed `game_id: GameId`, `game_code: GameCode`, terminal outcome/time, `expires_at: Timestamp` and optional winning alias; exact summary columns TBD. Includes only unexpired started-game History across hosts. |
+|| `games` | `Vec<object>` | Y | History summaries with proposed `game_id: GameId`, `game_code: GameCode`, terminal outcome/time, `expires_at: Timestamp` and optional winning alias; exact summary columns TBD. Deadline follows DO-071’s UTC three-calendar-month rule. Includes only unexpired started-game History across hosts. |
 | `next_cursor` | `Option<String>` | N | Possible continuation cursor if paging is chosen. Paging and nullability versus absence TBD. |
 
 #### F4: `get_game_history` (Non-mutating)
@@ -1830,11 +1830,11 @@ Proposed request: path `game_id: GameId`; cookie carrying an enrolled host/admin
 
 Proposed read-only final History response. No intermediate replay/archive, sessions, account credentials, recovery verifiers, spectator identities, membership restoration, renewed game access or mutation.
 
-Absent/expired History and denied-access error distinctions are **TBD**; reads never extend the three-month deadline.
+Absent/expired History and denied-access error distinctions are **TBD**; reads never extend the DO-071 UTC calendar deadline, which denies at `now >= expires_at`.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `history` | `HistoryView` | Y | Final History with immutable ordered called strings, final participating aliases/board snapshots, optional winner and original expiry. |
+|| `history` | `HistoryView` | Y | Final History with immutable ordered called strings, final participating aliases/board snapshots, optional winner and original UTC calendar-month expiry (DO-071). |
 
 ### G. Live synchronization and retries
 
@@ -2281,7 +2281,7 @@ Internal result: immutable `GameHistorySnapshot` reference and fixed History exp
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `history_expires_at` | `Timestamp` | Y | Fixed History expiry determined by the original terminal timestamp, not extended by replay or a caller-supplied date. Exact replay no-op/cleanup failure variants are **TBD**. |
+|| `history_expires_at` | `Timestamp` | Y | Fixed expiry computed once under DO-071 from the first terminal timestamp by UTC calendar-month addition with month-end clamping; never extended by replay or a caller-supplied date. Exact replay no-op/cleanup failure variants are **TBD**. |
 
 #### H10: `purge_expired_history` (Mutating)
 
@@ -2289,7 +2289,7 @@ Path: — Internal
 
 Auth scope: System
 
-Enforce the three-calendar-month deadline and delete final records plus related indexes/copies. Prevent expired data from reappearing through restore.
+Enforce DO-071’s fixed UTC calendar-month deadline at `now >= expires_at` and delete final records plus related indexes/copies. Prevent expired data from reappearing through restore.
 
 ##### Request
 
@@ -2302,7 +2302,7 @@ Internal scheduled inputs include the fields below, trusted time and original Hi
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `game_id` | `GameId` | Y | Game whose expired History and related indexes/copies are subject to purge. |
-| `history_expires_at` | `Timestamp` | Y | Expected History expiry deadline; not a caller-selected retention extension. |
+|| `history_expires_at` | `Timestamp` | Y | Expected DO-071 UTC calendar expiry deadline; not a caller-selected retention extension. |
 
 ##### Response
 
