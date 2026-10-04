@@ -1,0 +1,860 @@
+{
+  "status": "complete_verified",
+  "verified_at_utc": "2026-10-04T17:28:42.755315+00:00",
+  "root": "/root/workspace/brews-bingo",
+  "artifacts": {
+    "graph.json": "/root/workspace/brews-bingo/graphify-out/graph.json",
+    "GRAPH_REPORT.md": "/root/workspace/brews-bingo/graphify-out/GRAPH_REPORT.md",
+    "graph.html": "/root/workspace/brews-bingo/graphify-out/graph.html",
+    "manifest.json": "/root/workspace/brews-bingo/graphify-out/manifest.json",
+    "canonical-corpus.json": "/root/workspace/brews-bingo/graphify-out/canonical-corpus.json",
+    "refresh-verification.json": "/root/workspace/brews-bingo/graphify-out/refresh-verification.json",
+    "extraction": "/root/workspace/brews-bingo/graphify-out/.graphify_extract.json",
+    "analysis": "/root/workspace/brews-bingo/graphify-out/.graphify_analysis.json",
+    "labels": "/root/workspace/brews-bingo/graphify-out/.graphify_labels.json",
+    "label_signatures": "/root/workspace/brews-bingo/graphify-out/.graphify_labels.json.sig"
+  },
+  "canonical_sources": [
+    "AGENTS.md",
+    "plans/requirements.md",
+    "plans/hld.md",
+    "plans/lld.md",
+    "plans/api-design.md",
+    "plans/durable-object-design.md",
+    "plans/research.md"
+  ],
+  "changed_sources": [
+    "AGENTS.md",
+    "plans/requirements.md",
+    "plans/hld.md",
+    "plans/lld.md",
+    "plans/api-design.md",
+    "plans/durable-object-design.md"
+  ],
+  "preserved_sources": [
+    "plans/research.md"
+  ],
+  "excluded_generated_sources": [
+    "graphify-out/memory/query_20261003_165131_5dc344fd_what_is_the_exact_relationship_between_role_and_de.md",
+    "graphify-out/memory/query_20261003_165132_1cc58b04_what_is_the_exact_relationship_between_br_029_and.md",
+    "graphify-out/memory/query_20261003_165132_50b53b32_what_is_the_exact_relationship_between_aws_amplify.md",
+    "graphify-out/memory/query_20261003_165132_a1184f88_what_is_the_exact_relationship_between_api_gateway.md",
+    "graphify-out/memory/query_20261003_165132_e0d2b564_what_is_the_exact_relationship_between_br_013_and.md",
+    "graphify-out/memory/query_20261003_165132_f1875f64_what_is_the_exact_relationship_between_br_021_and.md",
+    "graphify-out/memory/query_20261003_165132_f4f6da70_why_does_durable_object_design_connect_so_many_com.md"
+  ],
+  "counts_before": {
+    "nodes": 647,
+    "edges": 1078
+  },
+  "counts_after": {
+    "nodes": 798,
+    "edges": 2630,
+    "communities": 26
+  },
+  "raw_evidence_edges": 2733,
+  "collapsed_edge_count": 103,
+  "edge_collapse_caveat": "Undirected simple graph collapses duplicate/reciprocal endpoint pairs; full provenance retained in edge all_evidence/all_relations attributes and .graphify_extract.json.",
+  "source_coverage_nodes": {
+    "plans/research.md": 89,
+    "plans/lld.md": 144,
+    "plans/durable-object-design.md": 218,
+    "plans/api-design.md": 150,
+    "plans/hld.md": 140,
+    "plans/requirements.md": 49,
+    "AGENTS.md": 8
+  },
+  "source_hashes_before": {
+    "AGENTS.md": {
+      "sha256": "ab2f22d81a94cdafa6b3e176b9644522bfa52baf5cb44dbe7b0749e68fb8fce1",
+      "md5": "cf7354350b9653bfc0dc8f512673bff3",
+      "manifest_semantic_hash_before": "c694bd7f19e7435b3a49dee91555d84d",
+      "lines": 17,
+      "words": 264
+    },
+    "plans/requirements.md": {
+      "sha256": "db76009ef2f2c2ff996f46ce691dec7bc2b3461e56c1716986f3e5e90633ecd2",
+      "md5": "3f6a048a893bf44107c32baba87580d3",
+      "manifest_semantic_hash_before": "00b1da84550ded52ec7862d68f4fdfc7",
+      "lines": 100,
+      "words": 1945
+    },
+    "plans/hld.md": {
+      "sha256": "155002e39bd1c23ea4ee54476ae1b2b4bbb80f9fbecd2419dd3939a18df91b2a",
+      "md5": "9375df24fed8056e9f3ed238ae2fa3be",
+      "manifest_semantic_hash_before": "e7a489fd12865148d6aefc0dc5b876c4",
+      "lines": 1052,
+      "words": 37422
+    },
+    "plans/lld.md": {
+      "sha256": "578fbbd15aa5af510cac1f705722cd546760702aeb14e93c8bb8b0be26b7dce9",
+      "md5": "8f6213797a18a855f334a9d421a99f09",
+      "manifest_semantic_hash_before": "d3e535c8ebf564a8bec5cd47a2150df4",
+      "lines": 814,
+      "words": 18779
+    },
+    "plans/api-design.md": {
+      "sha256": "e1ddd6592152e45dab67502ab46a2663d3027d8894a3d60f8ceeeab5070f6c5b",
+      "md5": "ae977f9cf4a0da83ac6ed3e09223c1ad",
+      "manifest_semantic_hash_before": "f16d245a273d982073a759d20dbee02c",
+      "lines": 2415,
+      "words": 24362
+    },
+    "plans/durable-object-design.md": {
+      "sha256": "964ae5b9bfacaf40f2b464655cfab7ee40d0e6671f2b56302aaf29ebc2682229",
+      "md5": "70a43d8c9f72415ac84a1546c2b1fe96",
+      "manifest_semantic_hash_before": "5a79f1f11484973312a95be2abc8fa51",
+      "lines": 1155,
+      "words": 24823
+    },
+    "plans/research.md": {
+      "sha256": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "md5": "8e722d9ebe8e5385bc56f762430fcd84",
+      "manifest_semantic_hash_before": "8e722d9ebe8e5385bc56f762430fcd84",
+      "lines": 467,
+      "words": 6618
+    }
+  },
+  "source_hashes_at_extraction": {
+    "AGENTS.md": {
+      "sha256": "ab2f22d81a94cdafa6b3e176b9644522bfa52baf5cb44dbe7b0749e68fb8fce1",
+      "md5": "cf7354350b9653bfc0dc8f512673bff3",
+      "manifest_semantic_hash_before": "c694bd7f19e7435b3a49dee91555d84d",
+      "lines": 17,
+      "words": 264
+    },
+    "plans/requirements.md": {
+      "sha256": "db76009ef2f2c2ff996f46ce691dec7bc2b3461e56c1716986f3e5e90633ecd2",
+      "md5": "3f6a048a893bf44107c32baba87580d3",
+      "manifest_semantic_hash_before": "00b1da84550ded52ec7862d68f4fdfc7",
+      "lines": 100,
+      "words": 1945
+    },
+    "plans/hld.md": {
+      "sha256": "155002e39bd1c23ea4ee54476ae1b2b4bbb80f9fbecd2419dd3939a18df91b2a",
+      "md5": "9375df24fed8056e9f3ed238ae2fa3be",
+      "manifest_semantic_hash_before": "e7a489fd12865148d6aefc0dc5b876c4",
+      "lines": 1052,
+      "words": 37422
+    },
+    "plans/lld.md": {
+      "sha256": "de751a6d370b53ed452db322b811d31c8e34f9333152ca4f0ca3dae581d644c0",
+      "md5": "c659fdbd0a532fb67f72941b7168d1cb",
+      "manifest_semantic_hash_before": "d3e535c8ebf564a8bec5cd47a2150df4",
+      "lines": 961,
+      "words": 21838
+    },
+    "plans/api-design.md": {
+      "sha256": "e1ddd6592152e45dab67502ab46a2663d3027d8894a3d60f8ceeeab5070f6c5b",
+      "md5": "ae977f9cf4a0da83ac6ed3e09223c1ad",
+      "manifest_semantic_hash_before": "f16d245a273d982073a759d20dbee02c",
+      "lines": 2415,
+      "words": 24362
+    },
+    "plans/durable-object-design.md": {
+      "sha256": "964ae5b9bfacaf40f2b464655cfab7ee40d0e6671f2b56302aaf29ebc2682229",
+      "md5": "70a43d8c9f72415ac84a1546c2b1fe96",
+      "manifest_semantic_hash_before": "5a79f1f11484973312a95be2abc8fa51",
+      "lines": 1155,
+      "words": 24823
+    },
+    "plans/research.md": {
+      "sha256": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "md5": "8e722d9ebe8e5385bc56f762430fcd84",
+      "manifest_semantic_hash_before": "8e722d9ebe8e5385bc56f762430fcd84",
+      "lines": 467,
+      "words": 6618
+    }
+  },
+  "source_hashes_after": {
+    "AGENTS.md": {
+      "sha256": "ab2f22d81a94cdafa6b3e176b9644522bfa52baf5cb44dbe7b0749e68fb8fce1",
+      "md5": "cf7354350b9653bfc0dc8f512673bff3"
+    },
+    "plans/requirements.md": {
+      "sha256": "db76009ef2f2c2ff996f46ce691dec7bc2b3461e56c1716986f3e5e90633ecd2",
+      "md5": "3f6a048a893bf44107c32baba87580d3"
+    },
+    "plans/hld.md": {
+      "sha256": "155002e39bd1c23ea4ee54476ae1b2b4bbb80f9fbecd2419dd3939a18df91b2a",
+      "md5": "9375df24fed8056e9f3ed238ae2fa3be"
+    },
+    "plans/lld.md": {
+      "sha256": "de751a6d370b53ed452db322b811d31c8e34f9333152ca4f0ca3dae581d644c0",
+      "md5": "c659fdbd0a532fb67f72941b7168d1cb"
+    },
+    "plans/api-design.md": {
+      "sha256": "e1ddd6592152e45dab67502ab46a2663d3027d8894a3d60f8ceeeab5070f6c5b",
+      "md5": "ae977f9cf4a0da83ac6ed3e09223c1ad"
+    },
+    "plans/durable-object-design.md": {
+      "sha256": "964ae5b9bfacaf40f2b464655cfab7ee40d0e6671f2b56302aaf29ebc2682229",
+      "md5": "70a43d8c9f72415ac84a1546c2b1fe96"
+    },
+    "plans/research.md": {
+      "sha256": "e4892ea90645c12ac1b336e4b14bf1bff29cb20582367780b2ce01e37a2cf52e",
+      "md5": "8e722d9ebe8e5385bc56f762430fcd84"
+    }
+  },
+  "authorized_mid_refresh_source_revisions": [
+    {
+      "source_file": "plans/lld.md",
+      "reason": "Parent user-authorized LLD-only routing recommendation update; parent confirmed complete before extraction",
+      "sha256_before": "578fbbd15aa5af510cac1f705722cd546760702aeb14e93c8bb8b0be26b7dce9",
+      "sha256_after": "ecd66b0d84e487cf870a1742e009a178586d202fcff41079cc453c3784223ccd",
+      "new_decision": "LLD-027",
+      "source_written_by_refresh": false
+    },
+    {
+      "source_file": "plans/lld.md",
+      "reason": "Parent user-authorized LLD-only Tailwind styling selection; LLD-only incremental semantic delta",
+      "sha256_before": "ecd66b0d84e487cf870a1742e009a178586d202fcff41079cc453c3784223ccd",
+      "sha256_after": "de751a6d370b53ed452db322b811d31c8e34f9333152ca4f0ca3dae581d644c0",
+      "new_decision": "LLD-028",
+      "source_written_by_refresh": false
+    }
+  ],
+  "all_sources_unchanged_since_extraction": true,
+  "manifest_semantic_hashes": {
+    "plans/api-design.md": "ae977f9cf4a0da83ac6ed3e09223c1ad",
+    "plans/durable-object-design.md": "70a43d8c9f72415ac84a1546c2b1fe96",
+    "plans/hld.md": "9375df24fed8056e9f3ed238ae2fa3be",
+    "plans/lld.md": "c659fdbd0a532fb67f72941b7168d1cb",
+    "plans/requirements.md": "3f6a048a893bf44107c32baba87580d3",
+    "plans/research.md": "8e722d9ebe8e5385bc56f762430fcd84",
+    "AGENTS.md": "cf7354350b9653bfc0dc8f512673bff3"
+  },
+  "manifest_matches_current_hashes": true,
+  "changed_sources_cache_saved": 6,
+  "changed_sources_cache_misses_after_save": [],
+  "unchanged_research_preserved": {
+    "nodes": 89,
+    "edges": 234,
+    "exact_except_regenerated_community_metadata": true
+  },
+  "ids_preserved": 453,
+  "ids_removed": 194,
+  "ids_added": 345,
+  "do_ledger": {
+    "rows": 107,
+    "statuses": {
+      "Approved": 104,
+      "Approved (revised)": 3
+    },
+    "ids": [
+      "DO-001",
+      "DO-002",
+      "DO-003",
+      "DO-004",
+      "DO-005",
+      "DO-006",
+      "DO-007",
+      "DO-008",
+      "DO-009",
+      "DO-010",
+      "DO-011",
+      "DO-012",
+      "DO-013",
+      "DO-014",
+      "DO-015",
+      "DO-016",
+      "DO-017",
+      "DO-018",
+      "DO-019",
+      "DO-020",
+      "DO-021",
+      "DO-022",
+      "DO-023",
+      "DO-024",
+      "DO-025",
+      "DO-026",
+      "DO-027",
+      "DO-028",
+      "DO-029",
+      "DO-030",
+      "DO-031",
+      "DO-032",
+      "DO-033",
+      "DO-034",
+      "DO-035",
+      "DO-036",
+      "DO-037",
+      "DO-038",
+      "DO-039",
+      "DO-040",
+      "DO-041",
+      "DO-042",
+      "DO-043",
+      "DO-044",
+      "DO-045",
+      "DO-046",
+      "DO-047",
+      "DO-048",
+      "DO-049",
+      "DO-050",
+      "DO-051",
+      "DO-052",
+      "DO-053",
+      "DO-054",
+      "DO-055",
+      "DO-056",
+      "DO-057",
+      "DO-058",
+      "DO-059",
+      "DO-060",
+      "DO-061",
+      "DO-062",
+      "DO-063",
+      "DO-064",
+      "DO-065",
+      "DO-066",
+      "DO-067",
+      "DO-068",
+      "DO-069",
+      "DO-070",
+      "DO-071",
+      "DO-072",
+      "DO-073",
+      "DO-074",
+      "DO-075",
+      "DO-076",
+      "DO-077",
+      "DO-078",
+      "DO-079",
+      "DO-080",
+      "DO-081",
+      "DO-082",
+      "DO-083",
+      "DO-084",
+      "DO-085",
+      "DO-086",
+      "DO-087",
+      "DO-088",
+      "DO-089",
+      "DO-090",
+      "DO-091",
+      "DO-092",
+      "DO-093",
+      "DO-094",
+      "DO-095",
+      "DO-096",
+      "DO-097",
+      "DO-098",
+      "DO-099",
+      "DO-100",
+      "DO-101",
+      "DO-102",
+      "DO-103",
+      "DO-104",
+      "DO-105",
+      "DO-106",
+      "DO-107"
+    ]
+  },
+  "ui": {
+    "view_ids": [
+      "VIEW-01",
+      "VIEW-02",
+      "VIEW-03",
+      "VIEW-04",
+      "VIEW-05",
+      "VIEW-06",
+      "VIEW-07",
+      "VIEW-08",
+      "VIEW-09",
+      "VIEW-10",
+      "VIEW-11",
+      "VIEW-12",
+      "VIEW-13",
+      "VIEW-14",
+      "VIEW-15",
+      "VIEW-16",
+      "VIEW-17"
+    ],
+    "acceptance_ids": [
+      "UI-AC-01",
+      "UI-AC-02",
+      "UI-AC-03",
+      "UI-AC-04",
+      "UI-AC-05",
+      "UI-AC-06",
+      "UI-AC-07",
+      "UI-AC-08",
+      "UI-AC-09",
+      "UI-AC-10",
+      "UI-AC-11",
+      "UI-AC-12",
+      "UI-AC-13",
+      "UI-AC-14",
+      "UI-AC-15",
+      "UI-AC-16",
+      "UI-AC-17"
+    ],
+    "all_proposals": true,
+    "tests_executed": false
+  },
+  "diagnostics": {
+    "node_count": 798,
+    "unverified_node_count": 0,
+    "raw_edge_count": 2733,
+    "non_object_edges": 0,
+    "missing_endpoint_edges": 0,
+    "dangling_endpoint_edges": 0,
+    "external_reference_edges": 0,
+    "self_loop_edges": 0,
+    "valid_candidate_edges": 2733,
+    "exact_duplicate_edges": 0,
+    "directed_unique_endpoint_pairs": 2688,
+    "directed_same_endpoint_collapsed_edges": 45,
+    "undirected_unique_endpoint_pairs": 2630,
+    "undirected_same_endpoint_collapsed_edges": 103,
+    "same_endpoint_group_count": 17,
+    "relation_variant_groups": 0,
+    "source_file_variant_groups": 0,
+    "source_location_variant_groups": 17,
+    "context_variant_groups": 0,
+    "post_build_graph_type": "Graph",
+    "post_build_node_count": 798,
+    "post_build_edge_count": 2630,
+    "post_build_error": "",
+    "producer_suppression": {
+      "path": "/root/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
+      "total_sites": 12,
+      "sites": [
+        {
+          "line": 1676,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+        },
+        {
+          "line": 2209,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+        },
+        {
+          "line": 2211,
+          "name": "seen_doc_refs",
+          "tuple_arity": 0,
+          "sample": "seen_doc_refs: set[str] = set()"
+        },
+        {
+          "line": 2628,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+        },
+        {
+          "line": 2775,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids = {n.get(\"id\") for n in nodes}"
+        },
+        {
+          "line": 3501,
+          "name": "seen_keys",
+          "tuple_arity": 0,
+          "sample": "seen_keys: set[tuple] = set()"
+        },
+        {
+          "line": 3670,
+          "name": "seen_keys",
+          "tuple_arity": 0,
+          "sample": "seen_keys: set[tuple] = set()"
+        },
+        {
+          "line": 5777,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 5885,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 5964,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 6479,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 6480,
+          "name": "seen_edges",
+          "tuple_arity": 4,
+          "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+        }
+      ],
+      "error": ""
+    },
+    "examples": [
+      {
+        "source": "plans_lld_section_5_durable_object_design_external_reference",
+        "target": "plans_durable_object_design_design_document",
+        "edge_count": 9,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "/root/workspace/brews-bingo/plans/lld.md"
+        ],
+        "source_locations": [
+          "L679",
+          "L681",
+          "L682",
+          "L683",
+          "L684",
+          "L685",
+          "L686",
+          "L690",
+          "L692"
+        ],
+        "contexts": [
+          ""
+        ]
+      },
+      {
+        "source": "plans_lld_section_12_1_detailed_decisions_for_the_user_to_fill",
+        "target": "plans_durable_object_design_design_document",
+        "edge_count": 7,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "/root/workspace/brews-bingo/plans/lld.md"
+        ],
+        "source_locations": [
+          "L859",
+          "L867",
+          "L869",
+          "L871",
+          "L873",
+          "L880",
+          "L882"
+        ],
+        "contexts": [
+          ""
+        ]
+      },
+      {
+        "source": "plans_lld_section_6_api_design_external_reference",
+        "target": "plans_api_design_brews_bingo_api_design",
+        "edge_count": 6,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "/root/workspace/brews-bingo/plans/lld.md"
+        ],
+        "source_locations": [
+          "L696",
+          "L698",
+          "L699",
+          "L700",
+          "L701",
+          "L702"
+        ],
+        "contexts": [
+          ""
+        ]
+      },
+      {
+        "source": "plans_api_design_section_a_authentication_and_sessions",
+        "target": "plans_lld_document_status",
+        "edge_count": 6,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "/root/workspace/brews-bingo/plans/api-design.md"
+        ],
+        "source_locations": [
+          "L218",
+          "L223",
+          "L306",
+          "L310",
+          "L362",
+          "L366"
+        ],
+        "contexts": [
+          ""
+        ]
+      },
+      {
+        "source": "plans_lld_section_12_1_detailed_decisions_for_the_user_to_fill",
+        "target": "plans_api_design_brews_bingo_api_design",
+        "edge_count": 5,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "/root/workspace/brews-bingo/plans/lld.md"
+        ],
+        "source_locations": [
+          "L859",
+          "L868",
+          "L869",
+          "L879",
+          "L881"
+        ],
+        "contexts": [
+          ""
+        ]
+      }
+    ]
+  },
+  "output_consistency": {
+    "json_nodes": 798,
+    "json_edges": 2630,
+    "html_nodes": 798,
+    "html_edges": 2630,
+    "html_communities": 26,
+    "report_counts_match": true,
+    "html_endpoint_relation_set_matches_json": true,
+    "no_dangling_hyperedge_members": true
+  },
+  "ambiguities": [
+    {
+      "node_id": "plans_lld_ambiguity_account_placement",
+      "source_file": "plans/lld.md",
+      "source_location": "L47",
+      "description": "LLD baseline still calls placement TBD; current DO-001 and DO-100 approve the singleton and bindings.",
+      "authoritative_references": [
+        "DO-001",
+        "DO-100"
+      ]
+    },
+    {
+      "node_id": "plans_lld_ambiguity_recovery_pending",
+      "source_file": "plans/lld.md",
+      "source_location": "L688",
+      "description": "Historical navigation prose says pending, but both authoritative ledger status rows are Approved.",
+      "authoritative_references": [
+        "DO-052",
+        "DO-055"
+      ]
+    },
+    {
+      "node_id": "plans_api_design_ambiguity_placement",
+      "source_file": "plans/api-design.md",
+      "source_location": "L31-L40",
+      "description": "API boundary summary leaves placement/binding acceptance TBD despite approved DO-001/100; router and exact SDK interfaces remain TBD.",
+      "authoritative_references": [
+        "DO-001",
+        "DO-100"
+      ]
+    },
+    {
+      "node_id": "plans_api_design_ambiguity_argon2_variant",
+      "source_file": "plans/api-design.md",
+      "source_location": "L218",
+      "description": "API login note leaves variant TBD although DO-023 approves Argon2id v19; actual production costs/caps remain unmeasured.",
+      "authoritative_references": [
+        "DO-023",
+        "DO-024"
+      ]
+    },
+    {
+      "node_id": "plans_api_design_ambiguity_admin_idle",
+      "source_file": "plans/api-design.md",
+      "source_location": "L904",
+      "description": "DO-040 settles no renewal by non-designated admin; physical race/alarm wiring remains implementation work.",
+      "authoritative_references": [
+        "DO-040",
+        "DO-041"
+      ]
+    },
+    {
+      "node_id": "plans_api_design_ambiguity_code_reuse",
+      "source_file": "plans/api-design.md",
+      "source_location": "L2292",
+      "description": "H10 says deny code reuse eligibility at expiry; DO-074 explicitly permits reuse at expiry with compare-by-game-ID cleanup. Do not silently adopt the API phrase.",
+      "authoritative_references": [
+        "DO-074"
+      ]
+    },
+    {
+      "node_id": "plans_durable_object_design_ambiguity_approval_cursor",
+      "source_file": "plans/durable-object-design.md",
+      "source_location": "L314",
+      "description": "DO-025 is already Approved in the authoritative ledger, despite retained historical next-item wording.",
+      "authoritative_references": [
+        "DO-025"
+      ]
+    },
+    {
+      "node_id": "plans_durable_object_design_ambiguity_verifier_profile",
+      "source_file": "plans/durable-object-design.md",
+      "source_location": "L152",
+      "description": "Shared-type summary leaves recovery algorithm/format TBD; approved DO-023/051 settle profiles while production measurements remain open.",
+      "authoritative_references": [
+        "DO-023",
+        "DO-051"
+      ]
+    },
+    {
+      "node_id": "plans_durable_object_design_ambiguity_spectator_cleanup_order",
+      "source_file": "plans/durable-object-design.md",
+      "source_location": "L625-L627",
+      "description": "DO-056 summary says deletion at terminal commit; later DO-073 requires best-effort connected delivery after terminal commit then deletion, without ACK wait.",
+      "authoritative_references": [
+        "DO-056",
+        "DO-073"
+      ]
+    },
+    {
+      "node_id": "plans_requirements_ambiguity_offline",
+      "source_file": "plans/requirements.md",
+      "source_location": "L43",
+      "description": "Original BR-016/D-005 offline wording persists; later HLD-020 explicitly supersedes offline gameplay.",
+      "authoritative_references": [
+        "BR-016",
+        "D-005",
+        "HLD-020"
+      ]
+    },
+    {
+      "node_id": "plans_requirements_ambiguity_designated_host",
+      "source_file": "plans/requirements.md",
+      "source_location": "L42",
+      "description": "Later HLD-074 allows valid admin cross-game actions without changing designated host.",
+      "authoritative_references": [
+        "BR-015",
+        "HLD-074"
+      ]
+    },
+    {
+      "node_id": "plans_requirements_ambiguity_history",
+      "source_file": "plans/requirements.md",
+      "source_location": "L58",
+      "description": "Interpretation denies implied persistence/history despite explicit requirements and later final-History policies.",
+      "authoritative_references": [
+        "BR-013",
+        "BR-021",
+        "HLD-032"
+      ]
+    },
+    {
+      "node_id": "plans_api_design_ambiguity_router_tbd",
+      "source_file": "plans/api-design.md",
+      "source_location": "L27",
+      "description": "Later LLD-027 explicitly selects Dioxus Router, Axum HTTP service and native DO boundaries. API prose remains unchanged; contracts/pins and compatibility tests remain pending.",
+      "authoritative_references": [
+        "LLD-027"
+      ]
+    }
+  ],
+  "token_usage": {
+    "input": null,
+    "output": null,
+    "status": "unknown; host subagent usage not exposed",
+    "external_model_api_used": false
+  },
+  "application_tests_run": false,
+  "installations_performed": false,
+  "source_documents_written_by_refresh": [],
+  "built_at_commit": "e6eed6ad1129a2b58c5485156186c12977981602",
+  "artifact_sha256": {
+    "graph.json": "60b78b2ad497e1ed861c3d6140d3bbf8c32483169604acdd0c23e5e05cc6816b",
+    "GRAPH_REPORT.md": "0344a5210b11991e07cd61759c3a2964ee170056d735516360061a495c91fcf1",
+    "graph.html": "b75eb7571fea2eac154f0e36c5b725ff5b8d67052b0893c3d2fe1edf54aba9ca",
+    "manifest.json": "baf6391fb63b439fcdb9cac7210b9a2b3354082159dbfcc842437231fde8fc34",
+    ".graphify_labels.json": "37351c770ed83f096157496909ce2fc80b369b29d76704ec33f44fa4286e5774",
+    ".graphify_labels.json.sig": "95473a74b3a69207c5054a7747b5ed1216188a15ff5301e8651fe96271e68551"
+  },
+  "routing": {
+    "decision": "LLD-027",
+    "status": "Selected direction",
+    "source_location": "L889",
+    "selected": [
+      "Dioxus Router browser navigation",
+      "Axum HTTP service within one Rust Worker",
+      "selective Worker-first /api and /api/* with same-origin SPA assets",
+      "native Durable Object state, alarms and hibernating WebSockets"
+    ],
+    "acceptance_ids": [
+      "ROUTE-AC-01",
+      "ROUTE-AC-02",
+      "ROUTE-AC-03",
+      "ROUTE-AC-04",
+      "ROUTE-AC-05",
+      "ROUTE-AC-06",
+      "ROUTE-AC-07",
+      "ROUTE-AC-08"
+    ],
+    "tests_executed": false,
+    "api_router_tbd_scoped_supersession_verified": true,
+    "pins_contracts_compatibility_unfinalized": true,
+    "verified_navigation_path_ids": [
+      "plans_lld_dioxus_router",
+      "plans_lld_lld_027",
+      "plans_lld_native_do_routing"
+    ]
+  },
+  "styling": {
+    "decision": "LLD-028",
+    "status": "Confirmed user direction",
+    "source_location": "L890",
+    "selected": "Dioxus-integrated Tailwind CSS in RSX/shared components; build-time static CSS",
+    "browser_runtime_cdn_compiler_selected": false,
+    "worker_css_generation_selected": false,
+    "pins_theme_build_tests_unresolved": true,
+    "history_policy_changed": false
+  },
+  "community_label_signatures_verified": true,
+  "final_artifact_readback_verified": true,
+  "cleanup": {
+    "new_intermediates_archived_to": "/root/.hermes/cache/scratch/brews-bingo-graphify-refresh-20261004T192956",
+    "archived_names": [
+      "refresh-analysis.json",
+      "refresh-api-operations-current.txt",
+      "refresh-base-graph.json",
+      "refresh-base-manifest.json",
+      "refresh-baselines.json",
+      "refresh-before.json",
+      "refresh-build-log.txt",
+      "refresh-conflicts.json",
+      "refresh-diff-AGENTS.txt",
+      "refresh-diff-api-design.txt",
+      "refresh-diff-durable-object-design.txt",
+      "refresh-diff-hld.txt",
+      "refresh-diff-lld.txt",
+      "refresh-diff-requirements.txt",
+      "refresh-do-notes-current.txt",
+      "refresh-full-extraction.json",
+      "refresh-graph.pkl",
+      "refresh-labels.json",
+      "refresh-lld-line-map.json",
+      "refresh-lld-routing-baseline.md",
+      "refresh-merge-base.json",
+      "refresh-outline-AGENTS.txt",
+      "refresh-outline-api-design.txt",
+      "refresh-outline-durable-object-design.txt",
+      "refresh-outline-hld.txt",
+      "refresh-outline-lld.txt",
+      "refresh-outline-requirements.txt",
+      "refresh-semantic-other.json",
+      "refresh-semantic.json",
+      "refresh-stage",
+      "refresh_accept_parent.py",
+      "refresh_build.py",
+      "refresh_cleanup.py",
+      "refresh_extract.py",
+      "refresh_finalize_semantics.py",
+      "refresh_inspect.py",
+      "refresh_lld_delta.py",
+      "refresh_prepare.py",
+      "refresh_publish.py"
+    ],
+    "preexisting_artifacts_deleted": []
+  }
+}

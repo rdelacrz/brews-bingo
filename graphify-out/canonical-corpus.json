@@ -1,0 +1,15 @@
+{
+  "root": "/root/workspace/brews-bingo",
+  "sources": [
+    "AGENTS.md",
+    "plans/requirements.md",
+    "plans/hld.md",
+    "plans/lld.md",
+    "plans/api-design.md",
+    "plans/durable-object-design.md",
+    "plans/research.md"
+  ],
+  "exclude_generated": true,
+  "semantic_prompt": "/root/.hermes/skills/graphify/references/extraction-spec.md",
+  "note": "Explicit allowlist for future refreshes; do not re-index graphify-out fragments, query memory or generated graph/report files."
+}

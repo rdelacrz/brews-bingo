@@ -7,7 +7,7 @@
 - **Primary source:** [High-level design](hld.md), including decisions HLD-001–HLD-078, and the approved DO-001–DO-107 ledger for subsequent detailed policies.
 - **Supporting sources:** [Business requirements](requirements.md) and [hosting research](research.md).
 - **Companion designs:** [API design](api-design.md) is the single home for API organization, operations, requests/responses and WSS contracts. [Durable Object design](durable-object-design.md) is the single home for storage ownership, schema proposals, records/fields/types and schema worksheets. This LLD links to both rather than duplicating those specifications.
-- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 4 now contains requested screen/component/navigation proposals (LLD-026), preserving the approved domain policies. Native Android/iOS implementation remains deferred.
+- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 3.5 / LLD-027 selects Dioxus Router, Axum inside the single Rust Worker, selective API-first asset routing and native Durable Object state/socket handlers. Section 4 retains the requested screen/component/navigation proposals (LLD-026). Native Android/iOS implementation remains deferred.
 - **Approval boundary:** Capturing this LLD and its UI proposals does not approve the overall HLD, finalize new UI/contract choices, authorize implementation, or authorize infrastructure/account creation.
 - **Reviewer / approval / revision:** TBD.
 
@@ -31,6 +31,7 @@ Use explicit later HLD decisions over older source wording:
 - HLD-063 deferred password policy to LLD; LLD-023 settles the minimum length and ASCII/composition rules. LLD-024 now selects salted Argon2 via RustCrypto `argon2`, superseding the hashing deferral. Older hashing-TBD wording in the HLD is superseded for that selection; [API design](api-design.md) follows the selected algorithm/library. Remaining profile/runtime details stay **TBD** in Section 9.2.
 - HLD-073–HLD-076 establish **host** and **admin**, admin cross-game controls, privileged provisioning and the admin-only **Users** view. Older host-only provisioning/account descriptions are not an additional restriction on admins.
 - BR-015's designated-host-only rule is qualified by HLD-074's admin override. Board, History and platform scope also have later HLD refinements.
+- LLD-027 selects the routing libraries and integration boundaries in Section 3.5, superseding older router-choice deferrals. API paths/DTOs/error contracts remain in the API companion; that document is not rewritten by this scoped LLD update.
 
 Source-document wording reconciliation remains separate; this template does not edit or claim full consistency of those documents. Any ambiguity not explicitly settled remains `TBD` in Section 12.
 
@@ -40,10 +41,10 @@ Source-document wording reconciliation remains separate; this template does not 
 
 | Area | Confirmed input | Source |
 | --- | --- | --- |
-| Frontend | Rust/Dioxus, client-rendered web first; all approved app features on desktop/mobile browsers. Latest stable versions are rechecked and pinned later, not chosen here. | HLD Sections 4.1–4.3; HLD-003, HLD-019 |
-| Backend | One Rust Cloudflare API Worker initially, using `workers-rs`, serving multiple endpoints through organized handlers. Managed server-side authority, not one Worker per endpoint or a conventional native server process. | HLD Sections 3, 5; LLD-016 |
-| Delivery | Workers Static Assets; HTTPS commands/authentication and authenticated WSS snapshots/updates. SSR/fullstack server functions are not selected. | HLD Sections 4.2, 7.1 |
-| Durable ownership | Game Directory Durable Object for discovery/global coordination; one SQLite-backed Game Durable Object per game for gameplay/memberships/boards. Account-store placement remains **TBD**; [Durable Object design Section 6](durable-object-design.md#schema-proposal) proposes a separate singleton Accounts Object without adopting it as confirmed HLD input. | HLD Sections 3, 5, 6; HLD-005, HLD-020 |
+| Frontend | Rust/Dioxus, client-rendered web first, with Dioxus Router for typed navigation (LLD-027) and Dioxus-integrated Tailwind CSS styling (LLD-028). All approved app features on desktop/mobile browsers; compatible versions remain to be pinned/validated. | HLD Sections 4.1–4.3; HLD-003, HLD-019; LLD-027/028 |
+| Backend | One Rust Cloudflare API Worker using `workers-rs` and Axum as its HTTP request service; responsibility-based handlers call authoritative state owners. No Worker per endpoint or conventional listening server. | HLD Sections 3, 5; LLD-016/027 |
+| Delivery | Workers Static Assets with SPA navigation fallback; same-origin `/api` and `/api/*` run Worker-first, never fall through to app HTML. HTTPS commands/authentication and native GameObject WSS; SSR/fullstack server functions are not selected. | HLD Sections 4.2, 7.1; LLD-027 |
+| Durable ownership | Approved per-environment Directory and AccountsObject plus one SQLite-backed GameObject per stable game_id; DO-100 private bindings are GAME_DIRECTORY/ACCOUNTS/GAMES. Axum dispatches to these owners; it does not replace them or hold authoritative global state. | DO-001/096/100/101; LLD-027; [Durable Object design](durable-object-design.md#object-boundaries) |
 | Global limits | Exactly one nonterminal New/Awaiting Players/In Progress game application-wide. Claim the sole Directory reservation at New creation, keep it through start, and release after Resolved/Cancelled; terminal History is excluded. Separate Objects are not a shared transaction. | HLD-012, HLD-039 (superseded), HLD-077 |
 | Exact lifecycle | **New → Awaiting Players → In Progress → Resolved** for a winner. **New**, **Awaiting Players** or **In Progress → Cancelled** for a no-winner ending. Neither terminal state reopens. | HLD-027, HLD-036–HLD-038 |
 | Configuration and start | Configuration changes only in New; no Awaiting Players → New. Start needs at least two distinct currently connected players with valid sessions and the same global reservation still held by this game. Spectators never gate start. | HLD-038, HLD-040, HLD-048, HLD-077 |
@@ -99,11 +100,11 @@ Sources: HLD-020–HLD-022, HLD-032, HLD-036–HLD-045, HLD-061, HLD-064–HLD-0
 | --- | --- | --- |
 | Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | UUID-v7 typed IDs and local `thiserror` errors follow Sections 3.3–3.4; other crates, types, traits, signatures, algorithms and concrete error variants **TBD**. |
 | Shared contracts | Shared safe app/backend contract types without provider/UI dependencies. | TBD — serialization, versioning and module boundaries. |
-| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | Section 4 proposes routes, role-specific screens, reusable components and UI state boundaries. Exact Dioxus modules/signatures, adapters and styling remain review/implementation work. |
-| Rust API Worker | One initial deployable API service; see the authoritative [API design](api-design.md#worker-boundaries). | Contract/routing/interface/error mapping details are maintained in [api-design.md](api-design.md); finalization **TBD**. |
-| Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | Proposed `GameDirectoryObject` records in [Durable Object design Section 6.3](durable-object-design.md#directory-records); final class/binding, schema and concurrency protocol **TBD**. |
+| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | LLD-027 selects Dioxus Router and LLD-028 selects Dioxus-integrated Tailwind styling. Section 4 proposes screen routes/components and UI state boundaries; exact modules/signatures, adapters, path spellings and visual tokens remain review/implementation work. |
+| Rust API Worker | One initial deployable API service; LLD-027 selects Axum HTTP dispatch through the Worker fetch entrypoint. | Section 3.5 defines router/asset/native-upgrade integration boundaries. Endpoint/DTO/error contracts remain in [api-design.md](api-design.md); exact SDK wiring and middleware remain unverified. |
+| Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | Approved Directory ownership and private GAME_DIRECTORY binding; [record/protocol decisions](durable-object-design.md#directory-records) remain authoritative. Concrete SDK dispatch, SQL and concurrency integration remain implementation work. |
 | Per-game Durable Object | Authoritative game/board/membership state, SQLite writes and role-filtered hibernating sockets. | DO-096/100 approve GameObject per stable game_id, normalized local schema and private binding; DO-091–095 approve logical attachment/reconstruction/fencing/alarm/backpressure policies. Exact DDL, SDK handlers and deployment config remain implementation work. |
-| Account/session authority | Strongly consistent credential lifecycle and server-owned account permissions. | Proposed singleton `AccountsObject` in [Durable Object design Section 6.1](durable-object-design.md#object-boundaries) / [Durable Object design Section 6.4](durable-object-design.md#account-records); placement acceptance, interfaces and atomicity **TBD**. |
+| Account/session authority | Strongly consistent credential lifecycle and server-owned account permissions. | DO-001/100 approve AccountsObject per environment and private ACCOUNTS binding. Axum session resolution uses this authority; no positive cross-request authorization cache. Exact [account protocol](durable-object-design.md#account-records) and SDK integration remain implementation work. |
 | Developer CLI | Developer-restricted account operations through an authorized persistence/backend path. | TBD — language, packaging, commands, auth and private output delivery. |
 | Later `platform/android` / `platform/ios` | Future Dioxus adapters/entrypoints without duplicating domain/contracts. | TBD — deferred; no native implementation in this release. |
 
@@ -111,11 +112,11 @@ The `uuid` and `thiserror` libraries are selected in Sections 3.3–3.4. Compati
 
 ### 3.1 API Worker organization — moved
 
-The single-Worker design and endpoint organization now live in [API design Section 2.1](api-design.md#21-one-api-worker-multiple-endpoints). LLD-016 remains confirmed; this is a document move, not a deployment change.
+The single-Worker design and endpoint organization live in [API design Section 2.1](api-design.md#21-one-api-worker-multiple-endpoints). LLD-016 remains confirmed. LLD-027 / [Section 3.5](#routing-design) now selects Axum HTTP routing and its integration boundaries; the API catalog/contracts remain in the companion, whose older router-choice TBD is superseded for that choice only.
 
 ### 3.2 API/state-owner boundary — moved
 
-Worker/endpoint/Object distinctions, the request-flow diagram and namespace-versus-user authorization boundary now live in [API design Section 2.2](api-design.md#22-worker-endpoint-and-durable-object-boundaries). Persisted Object records now live in [Durable Object design](durable-object-design.md#schema-proposal); LLD Section 5 is its navigation reference.
+Worker/endpoint/Object distinctions and the namespace-versus-user authorization boundary live in [API design Section 2.2](api-design.md#22-worker-endpoint-and-durable-object-boundaries). LLD-027 preserves private state ownership and specifies Axum-to-owner/native WebSocket dispatch in [Section 3.5](#routing-design). Persisted records remain in [Durable Object design](durable-object-design.md#schema-proposal); LLD Section 5 is its navigation reference.
 
 <a id="identifier-policy"></a>
 
@@ -166,6 +167,137 @@ Illustrative placement, **not a selected repository scaffold**:
 
 **TBD —** final module tree, concrete error types/variants/messages, conversion boundaries, redaction tests, retry classification and runtime/toolchain compatibility. This records implementation conventions only; no `error.rs`, Cargo dependency or application code is created now.
 
+<a id="routing-design"></a>
+### 3.5 Routing design — Dioxus Router, Axum and native Durable Objects
+
+**Selected direction (LLD-027, user-requested incorporation of the routing recommendation):** Use **Dioxus Router for browser navigation**, **Axum for HTTP routing inside the single Rust API Worker**, and **native Cloudflare Durable Object handlers/bindings for authoritative state, alarms and hibernating WebSockets**. This extends LLD-016 without introducing a Worker per endpoint, SSR, a conventional listening server or a new datastore. Library/boundary selection is settled here; exact crate versions, feature combinations, middleware ordering, deployment configuration and executed compatibility checks remain unverified.
+
+**Scope and provenance:** Official routing/SDK documentation was consulted on 2026-10-04.[8][9][10] API operation IDs, methods/paths, DTOs and WSS envelopes remain owned by [API design](api-design.md#operation-catalog); this section records the library integration and dispatch boundaries, not a second endpoint catalog. The companion's older “router choice TBD” wording is superseded for library choice by LLD-027; editing that companion is outside this LLD-only update. Section 4's individual screen paths/layouts remain proposals, not automatically finalized by choosing a router.
+
+#### 3.5.1 Routing layers and request flow
+
+| Layer | Selected responsibility | Boundary |
+| --- | --- | --- |
+| Cloudflare ingress and Static Assets | Serve the static Dioxus build; send `/api` and `/api/*` to Worker code before asset handling. Use SPA fallback for browser screen navigation. | Serving HTML/Wasm is not an account or game authorization decision. No protected data embedded in the public static shell. |
+| Dioxus Router in the browser | Typed `Routable` routes, navigation and layout selection for Home, Login, Games, Users, setup/lobby/Play and History. | Route guards improve UX but cannot authorize backend data or mutations. |
+| Axum in the API Worker | Dispatch HTTP method/path; extract typed input; apply shared request processing; call the appropriate service/state owner; map safe responses/errors. | Router state is not the authoritative store for sessions, games, command receipts or membership. |
+| Durable Object handlers and bindings | Reach `GAME_DIRECTORY`, `ACCOUNTS` and the correct `GAMES` instance using the DO-100 identities; revalidate domain rules and commit through the owning Object. | Private bindings and stable IDs are not end-user proof. No public Object access or cross-Object SQL transaction is added. |
+| Native GameObject WebSocket and alarm handlers | Accept authorized hibernating connections, reconstruct authority, enforce per-frame checks and process persisted deadlines. | Axum HTTP routing does not replace DO-091–095 hibernation, fencing, alarms or bounded delivery. |
+
+Dioxus documents a typed `Routable` enum and `Router` component for URL parsing, navigation and rendering.[8] Axum provides method/path routing, typed extractors and Tower middleware; `workers-rs` documents serving an Axum router through its fetch event using the `http` feature.[9][10]
+
+```text
+Browser navigation: GET /users
+  -> Cloudflare Static Assets / SPA shell
+  -> Dioxus Router selects Users
+  -> validated session/capability check for presentation
+  -> GET /api/users to load protected data
+
+API request: GET /api/users
+  -> Rust Worker fetch entrypoint
+  -> Axum method/path dispatch and authoritative admin check
+  -> AccountsObject -> safe response (never credential records)
+
+Game command: /api/games/{game_id}/...
+  -> Axum handler -> owning GameObject through private binding
+  -> current authority/lifecycle/revision checks -> durable commit
+  -> safe HTTP result and permitted post-commit updates
+
+Game stream upgrade: GET /api/games/{game_id}/stream
+  -> Worker upgrade dispatch and session/Origin validation
+  -> owning GameObject native WebSocket acceptance/handlers
+  -> authorized initial snapshot, hibernation and subsequent updates
+```
+
+A host can load the same static application shell as an admin, but must still be denied `/api/users`. Similarly, changing a screen URL or player ID cannot expose another player's board. Unknown codes must not instantiate games; Directory discovery and owner selection retain the approved stable-ID and lifecycle rules.
+
+#### 3.5.2 Static assets, SPA fallback and same-origin API routing
+
+Use a same-origin browser/API arrangement for the initial web deployment, preserving the host-only account cookie and exact-Origin checks. Reserve `/api` and its descendants for backend responses, including the existing proposed game-stream upgrade path. The selected asset configuration shape is:
+
+```toml
+# Illustrative configuration shape only; not an existing deployment file.
+[assets]
+directory = "<Dioxus web build output>"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api", "/api/*"]
+```
+
+`ASSETS` is the static asset collection binding, not another Durable Object namespace or persistence store. Resolve the actual build directory, generated Rust Worker entrypoint and compatibility date when creating a separately authorized deployment configuration. Cloudflare supports SPA fallback and selective Worker-first path patterns; its documentation specifically recommends this split for SPA/API applications.[12][13]
+
+- A direct navigation or refresh of a screen path such as `/games/{game_id}/play` must load the app shell, then let Dioxus resolve the route and revalidate session/game state. A client-side unknown screen renders a Not Found experience, not a fabricated game.
+- API requests must reach backend dispatch even when typed into the address bar as navigation requests or when their path could match a static file. Include the exact `/api` root as well as `/api/*`; do not exempt privileged API paths with negative asset patterns.
+- Unknown API paths return an API not-found response; unsupported methods return an appropriate method error under the final contract. **Never send an API failure to SPA fallback**, redirect it silently to the login HTML page or return `200 index.html` as a JSON/API result. Authentication failures remain API responses interpreted by the frontend.
+- Do not blanket-enable Worker-first processing for every static asset merely to authenticate the public shell. Cloudflare distinguishes direct asset serving from Worker invocations, and SPA navigation behavior depends on compatibility settings; pin and test the chosen configuration rather than relying on an implicit default.[12][13]
+- If Worker code explicitly serves non-API assets through `ASSETS`, guard that fallback by request class/path so API and upgrade requests cannot enter it. Missing asset handling and MIME types must not deliver HTML where JavaScript/Wasm is expected.
+- The public shell must contain no personalized bootstrap data or secrets. Protected API responses retain their access/cache rules; link pages retain DO-028 fragment clearing, no-store, no-referrer and no-third-party constraints. Loading a SPA page does not weaken API authorization.
+
+#### 3.5.3 Axum handler organization and middleware
+
+Use a thin `#[event(fetch)]` entrypoint that passes ordinary HTTP requests into the Axum router/service. The documented Workers integration calls the router with the request and returns its response; **do not introduce `TcpListener`, `axum::serve` or a conventional `#[tokio::main]` server loop** for this architecture.[9] This does not prohibit compatible runtime utilities; any timer/task middleware still needs Worker-target validation.
+
+Group routes by responsibility, with module names below illustrative rather than a selected repository scaffold:
+
+| Router/handler group | Responsibility | Authorization placement |
+| --- | --- | --- |
+| Authentication and sessions | Login, current session, enrollment/reset and logout. | Public or restricted-purpose entry with applicable Origin, proof, expiry and abuse checks; not an unconditional normal-session middleware gate. |
+| Users/account management | Listing, provisioning and guarded account actions. | Enabled Verified admin; preserve self-removal, last-admin and hosted-game guards at the owning mutation. |
+| Game discovery/configuration | Code lookup, current/list/read, create, configure, publish and transfer. | Public discovery returns only its limited projection; account reads and designated-host/admin mutations are distinct policies. |
+| Participants and recovery | Join, restore, rename, switch, Leave and answer maintenance. | Participant or recovery-proof checks, not account-only authorization; no arbitrary client role/identity trust. |
+| Gameplay | Authorized reads, Start, calls, winner and no-winner ending. | Role-specific projections and current designated-host/admin permission; owner rechecks state/qualification at commit. |
+| Results and History | Bounded final-view access/Exit and account-only unexpired History. | Final-view grants and History permission remain different; no new terminal admission. |
+| Game stream upgrade | Recognize and forward the approved upgrade to the correct GameObject. | Session, exact-Origin, registration and native upgrade boundary in Section 3.5.4. |
+
+Use Axum extraction for typed path/query/JSON inputs, but validate domain meaning explicitly: parsing a UUID does not check UUID v7, authorize an actor or prove that a game exists. Keep transport DTOs separate from credential-bearing storage structs. Use component-local `thiserror` types and deliberate safe HTTP mappings rather than exposing raw SDK errors.
+
+Shared request processing covers approved Origin checks, bounded request bodies, authoritative session resolution, route-specific capability checks and safe error/correlation handling. Axum's Tower integration supplies middleware composition; exact compatible layers, order, numeric limits and public error envelopes remain implementation/contract decisions.[10] Apply the correct checks to login/link/participant routes instead of locking all `/api/*` behind an account session. Do not use permissive credentialed CORS or browser route guards as a substitute for backend authorization.
+
+Keep handlers thin: parse/validate transport, derive the authenticated actor, call the responsible service/owner and format the result. The owner still validates enabled/lifecycle/session epoch, assignment, expected revision, command identity, game state, capacity and winner eligibility at its commit boundary. Middleware success cannot authorize a later conflicting mutation. `AppState` may carry request-safe configuration and binding/service handles, not mutable global gameplay or a cross-request positive authorization cache.
+
+**Choice rationale:** Axum's extractors, composed routers and middleware fit the planned multi-area API better than a large manual dispatch function. The built-in `worker::Router` remains a documented method/path router with shared data, but is not the selected top-level API router; no second parallel HTTP router is required just for ordinary endpoints.[10][15] Axum does not select storage, idempotency, RPC encoding or stateful scheduling.
+
+#### 3.5.4 Native Durable Object WebSocket boundary
+
+Keep the existing proposed `GET /api/games/{game_id}/stream` endpoint rather than inventing a separate public socket namespace. Worker dispatch validates the request/Origin/session and forwards through the private binding; the owning GameObject completes authoritative registration and accepts the server socket through Cloudflare's hibernation-aware API. Cloudflare recommends that API and documents forwarding the upgrade from a Worker to a Durable Object.[14]
+
+Do not substitute Axum's conventional WebSocket task loop for the GameObject's native acceptance and wake/message/close handlers. Preserve DO-035/036 registration and per-frame account checks, DO-055/093 participant-session fencing, DO-068 snapshot-before-update ordering, DO-091/092 attachment reconstruction and DO-094/095 alarm/delivery rules. Account-session and participant-session validation remain distinct even though the URL is shared.
+
+The upgrade path must preserve the provider's WebSocket-bearing response and successful handshake status across Rust/HTTP conversions. Whether dispatch forwards this branch before ordinary Axum body handling or uses a validated Axum-compatible adapter remains an integration choice. Never wrap a successful upgrade in JSON, drain it through body middleware or treat a failed upgrade as an asset request. Test that conversion and close behavior explicitly; platform documentation alone does not establish that the selected Rust feature combination works.
+
+#### 3.5.5 Worker/Wasm integration and remaining validation
+
+- Enable the selected `workers-rs` standard-HTTP integration and a compatible Axum feature set. The official example uses `worker` features `http`/`axum` and disables Axum's default features while selecting the needed extractors; it is a reference, not an approved dependency pin or permission to copy native-server defaults.[9][11]
+- Axum handlers/state impose `Send` requirements that can conflict with JavaScript-backed SDK values or futures. `workers-rs` documents `SendFuture`, `SendWrapper` and `#[worker::send]` helpers for its environment.[9] Use them only where required and valid for the pinned SDK/runtime; do not add ad hoc unsafe `Send` implementations or assume native thread safety.
+- Pin and validate Dioxus, Axum, Tower, `http`/body types, Worker SDK, build tooling and compatibility date together. Check feature compatibility, bundle size, startup and request overhead on the actual target; no cost/performance claim follows merely from adopting Axum.
+- Preserve multiple `Set-Cookie` headers, status codes, content types, safe error bodies, binding access and credential redaction through adapters. Verify timeout/cancellation semantics: an HTTP timeout may follow a committed mutation, so the original command/receipt recovery rules still apply.
+- Concrete API schemas/requiredness, middleware ordering, per-route request limits, module signatures, native upgrade conversion and final frontend path spellings remain **TBD**. The single-Worker topology, chosen routing libraries and native state-owner boundaries are **selected**, not tested. No application code, dependency, configuration file, resource or deployment is created by this section.
+
+#### 3.5.6 Routing acceptance scenarios — not executed
+
+| ID | Future verification |
+| --- | --- |
+| ROUTE-AC-01 | Open/refresh Home, Users and a nested game screen: static shell plus Dioxus route resolution works; screen loading itself reveals no protected data. |
+| ROUTE-AC-02 | Request `/api`, an unknown `/api/*` path and a wrong method, including navigation headers and a colliding asset path: backend dispatch/error response wins; never SPA HTML. |
+| ROUTE-AC-03 | Exercise anonymous, restricted, host, admin, player and spectator contexts against public/restricted/protected routes; direct API calls cannot bypass Origin, authority or owner commit-time rules. |
+| ROUTE-AC-04 | Verify typed parsing/domain validation, bounded body rejection, component-error redaction, preserved cookie headers and same-origin session behavior through the Worker/Axum adapter. |
+| ROUTE-AC-05 | Upgrade the game stream through the Worker/DO boundary: preserve the native WebSocket response, registration/snapshot order, fail-closed rejection, wake reconstruction, expiry and replacement fencing. |
+| ROUTE-AC-06 | Simulate timeout/lost response after a committed command; recover the same result without another draw/create/award or replayed credential secret. |
+| ROUTE-AC-07 | Check genuine static asset delivery, missing assets, frontend Not Found, and SPA/API prefix separation under the pinned compatibility date; no HTML masquerading as Wasm/JS/JSON. |
+| ROUTE-AC-08 | Build and exercise the pinned Worker/Wasm feature combination and selected middleware under the approved DO-103/104 compatibility/capacity gates. Record results; none are claimed here. |
+
+<a id="styling-design"></a>
+### 3.6 Dioxus-integrated Tailwind styling
+
+**Confirmed user direction (LLD-028):** Style the initial desktop/mobile web UI with **Tailwind CSS in Dioxus components**, using the Dioxus build/asset workflow. This selects the styling approach; it does not select a component library, a color palette, design tokens, theme modes or exact package versions, and does not authorize application implementation.
+
+- Write Tailwind utility classes on Dioxus RSX elements and encapsulate repeated visual patterns in the shared components from Section 4.2. Maintain accessible semantics, focus/disabled/error states, board match/qualification distinctions, responsive layouts and venue readability independently of styling classes.
+- Compile Tailwind during local development and the production build; deliver the generated stylesheet with the Dioxus static assets. Do not generate CSS in the API Worker or use a browser/CDN Tailwind compiler in production. Axum and Durable Objects keep their backend responsibilities unchanged.
+- Dioxus's current tutorial documents automatic Tailwind CLI execution during serve/build when a `tailwind.css` input is present at the app root, with output in the assets folder.[16] Its styling guide shows RSX source scanning and linking generated CSS through `document::Stylesheet` / `asset!`.[17] Prefer the built-in Dioxus workflow; the guide's separate manual watcher is an alternative, not a second required compiler. Pin and validate one build path with the selected Dioxus CLI/Tailwind versions before implementation.
+- Ensure source discovery covers every shared Rust/RSX component used by the web build, not just the web entrypoint. Choose complete class strings for conditional variants, or an explicit inclusion mechanism supported by the pinned Tailwind version; production builds must retain every reachable state style. Exact workspace paths and CSS input/output filenames remain implementation details.
+- Palette, typography, spacing, breakpoints and any theme tokens remain design work under LLD-001/026. Tailwind is the selected styling foundation, not a replacement for component behavior, backend authorization or the UI acceptance scenarios. No additional UI kit or custom CSS policy is selected here.
+- Before release, verify production CSS loading on direct/nested navigation, responsive and venue views, keyboard focus/contrast/non-color status cues, and all conditional board/validation/connection states. These are future checks, not completed browser or build tests.
+
 ## 4. Views and frontend contracts
 
 **Design status:** Concrete UI design proposals captured at the user's request (LLD-026), not implemented screens or a new approval of the whole LLD. The requested public **Home**, privileged **Games**, admin-only **Users**, **Create game**, and active **Play** experiences are included, with enrollment, admission, lobby, recovery, results and History completing their flows. Approved domain/security rules remain mandatory. Suggested routes, component names, layout choices and interaction details below are reviewable UI proposals; they do not finalize API payloads, add backend permissions or authorize implementation.
@@ -208,6 +340,8 @@ Preserve VIEW-01–VIEW-16 as stable experience IDs; add **VIEW-17** for the pub
 ### 4.2 Shared layout, components and state rules
 
 #### Application shell and role-aware navigation
+
+**Styling foundation:** All proposed screens and shared presentation components use the Dioxus-integrated Tailwind approach in [Section 3.6](#styling-design). Visual tokens/layout details remain reviewable; the styling framework is selected, not TBD.
 
 - **`AppShell` / `BrandHeader`:** visible **Brews Bingo** title and **Rockville Brews** identity, one clear page heading, Home navigation, and a compact session/connection area. Public Home remains accessible rather than automatically replacing `/` with Games.
 - **`AccountNavigation`:** Games for normal host/admin sessions; Users only for normal admin sessions; account username, role badge and **Log out**. Before login show **Host / admin login**. This includes the requested admin login without removing the approved host login path. Restricted enrollment/reset sessions do not get privileged navigation.
@@ -493,7 +627,7 @@ A second socket for one participant session may supersede the first; present a s
 
 ### 4.4 UI state ownership and API handoff
 
-The proposed Dioxus component names above are responsibilities, not Rust files or selected signatures. Keep three separate state classes: **ephemeral UI** (open panel, unsaved input, board selection), **validated session/capabilities** (never bearer contents), and **server snapshots plus command results/revisions**. Only the last two govern protected rendering; none becomes a local authoritative copy. Account and participant contexts need separate permission checks even when using the same game route.
+LLD-027 selects Dioxus Router for these screens and Axum for their backend HTTP requests; [Section 3.5](#routing-design) defines the separation. The proposed component names above are responsibilities, not Rust files or selected signatures. Keep three separate state classes: **ephemeral UI** (open panel, unsaved input, board selection), **validated session/capabilities** (never bearer contents), and **server snapshots plus command results/revisions**. Only the last two govern protected rendering; none becomes a local authoritative copy. Account and participant contexts need separate permission checks even when using the same game route.
 
 | Experience group | Existing proposed operations to use | Remaining contract work, not a new endpoint here |
 | --- | --- | --- |
@@ -532,7 +666,7 @@ For each implementation slice, extend the existing per-operation contract in `ap
 
 ### 4.6 Remaining UI review and implementation gates
 
-- Review proposed screen grouping/routes, action copy, visual styling and responsive behavior (LLD-001/026); the above fills the design inventory, not Dioxus modules or a prototype.
+- Review proposed screen grouping/routes, action copy, visual tokens and responsive behavior (LLD-001/026); LLD-028 selects Dioxus-integrated Tailwind. The above fills the design inventory, not Dioxus modules or a prototype.
 - Finalize Users filters/paging/action-capability projections and private-link handoff edge cases (LLD-002), without changing DO-105–107 protections or adding role editing.
 - Finalize the API seams in Section 4.4, including ordinary-host transfer-target discovery; a UI dependency is not approval of an unreviewed public account-list API.
 - Settle optional speech ownership/controls, browser/assistive-technology matrix and measurable venue/accessibility targets (LLD-014). The proposed local opt-in behavior is not yet a separately approved audio policy.
@@ -683,7 +817,7 @@ No application tests have been implemented or run by this template. Exact test f
 | Identifier convention | UUID v7 generation/parse validation across selected targets, distinct newtypes, stable retry IDs and no ID-as-credential assumptions. | **TBD** — no target build/runtime evidence yet. |
 | Component errors | `thiserror` derives, local `error.rs` ownership, typed conversion/source chains, secret redaction and deliberate transport mappings. | **TBD** — concrete error/contract tests not implemented. |
 | Views and permissions | Home entry, host/admin controls, Users frontend/backend denial, private-board projection, missing/expired sessions and restricted enrollment. | UI-AC-01–UI-AC-17 in Section 4.5 specify screen/role/lifecycle scenarios; no UI implementation or application tests have been run. |
-| Worker routing and Object isolation | Multiple API handlers in the single Worker reach the correct authoritative owner; unknown codes do not create games, and Object IDs/bindings never replace user authorization. | TBD |
+| Worker routing and Object isolation | Dioxus/SPA paths are separate from Axum API dispatch and native DO upgrade/handler paths; unknown codes do not create games, and bindings/IDs never replace authorization. | ROUTE-AC-01–ROUTE-AC-08 in Section 3.5 specify future compatibility, fallback, auth/cookie, upgrade and retry checks; none have been executed. |
 | Account lifecycle | Concurrent redemption, reissue/reset revocation, first-admin creation, non-owner overrides, removal blocked by hosted nonterminal game. | TBD |
 | Password policy | Reject fewer than 10 characters and non-ASCII input; accept policy-valid ASCII passwords without character-class quotas; preserve whitespace/case and decoded input through setup/reset/login. | **TBD** — UI/transport edge cases and tests; hashing scenarios are listed below. |
 | Password hashing | Correct/wrong password verification; independent salts for the same password; PHC round-trip and embedded-parameter use; malformed/unsupported/out-of-bounds verifier rejection; RNG failure; no secrets in projections/logs; setup/reset/login and proposed rehash races; WASM resource/concurrency measurements. | **TBD** — tests/benchmarks not implemented or executed; account and recovery-answer production costs/caps remain untuned pending target measurements. Algorithm/format decisions are partially approved in DO-023/024 and DO-051. |
@@ -701,11 +835,11 @@ Latency, concurrency/load targets, measurable accessibility criteria and failure
 
 | Item | Detailed specification |
 | --- | --- |
-| Rust/Dioxus/Workers SDK/toolchain compatible pinned versions | DO-102 approves pinning stable Rust/Cargo.lock and a compatible Worker SDK/build pair after compatibility validation; exact version pins and Dioxus target validation remain TBD. |
+| Rust/Dioxus/Workers SDK/toolchain compatible pinned versions | DO-102 approves pinning stable Rust/Cargo.lock and a compatible Worker SDK/build pair after compatibility validation. LLD-028 requires a compatible pinned Dioxus CLI/Tailwind build path, generated CSS and shared-RSX source coverage. Exact pins and target/build validation remain TBD. |
 | UUID/error libraries | `uuid` with UUID v7 and `thiserror` selected. DO-096 approves canonical lowercase-hyphenated UUID TEXT; DO-102 approves trusted Worker UTC time and platform CSPRNG with fail-closed error/no fallback. Compatible crate pins, target integration and validation remain TBD (Sections 3.3–3.4). |
 | Password-hashing library/runtime | Salted Argon2 via RustCrypto `argon2` selected for account passwords; DO-051 separately approves Argon2id v19/PHC for recovery answers. **TBD** — pinned compatible version/features, secure WASM randomness, hashing placement, production costs/caps, CPU/memory/concurrency benchmarks and failure handling. |
-| Single API Worker entrypoint/module routing, Object classes, bindings and deployment configuration | **TBD** — preserve LLD-016; proposed Object names/structures in [Durable Object design Section 6](durable-object-design.md#schema-proposal) do not finalize bindings, deployment configuration or SDK interfaces. |
-| Static asset build, routing, caching and private-route separation | TBD |
+| Single API Worker entrypoint/module routing, Object classes, bindings and deployment configuration | LLD-027 selects Axum via the workers-rs HTTP fetch service and native DO socket/alarm handlers; preserve LLD-016 and DO-100 private bindings. Concrete entrypoint build output, SDK/feature pins, middleware and deployment configuration remain unverified. |
+| Static asset build, routing, caching and private-route separation | LLD-027 selects Dioxus Router, same-origin Static Assets SPA fallback and Worker-first `/api` plus `/api/*`; reserve API errors/upgrades from HTML fallback. ASSETS is an asset binding, not a state store. Actual build directory, compatibility date and response/cache header wiring remain validation work. |
 | Local / test / production environments and isolated resources | TBD |
 | SQLite schema/Object migrations and version compatibility | DO-099 approves owner-local versioned forward-only transactional migration with fail-closed startup and compatible-backout/forward-fix policy; DO-075 restore expiry enforcement. Exact DDL/runtime hooks remain TBD. |
 | Secrets, developer CLI setup and initial-admin bootstrap procedure | HLD-075/DO-101 approve CLI-only first-admin bootstrap and restricted backend management interface; credentials stay in controlled developer environment. Exact secret names/scopes/operations remain TBD. |
@@ -726,12 +860,12 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 
 | ID | Decision / specification | Status / selected detail |
 | --- | --- | --- |
-| LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | Concrete proposals in Section 4 / LLD-026: public Home, account navigation, setup/lobby/role-specific Play, recovery/results/History, shared components and UI state/accessibility targets. Route/layout review, exact Dioxus implementation and executed UI checks remain pending. |
+| LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | Concrete UI proposals remain in Section 4 / LLD-026. LLD-027 selects Dioxus Router and LLD-028 selects Tailwind through the Dioxus build/asset workflow. Exact screen paths/layouts, visual tokens, component signatures and executed accessibility/UI checks remain pending. |
 | LLD-002 | Users fields/actions/filters and protected account-management UX | VIEW-15 proposes safe columns, creation/detail panels, guarded actions and one-time private-link handoff. Role/access/lifecycle constraints remain approved; filter/paging/capability contracts and handoff edge-case UX still need review. |
 | LLD-003 | Cloudflare account/session store placement and ownership | DO-001 approves one AccountsObject per environment; DO-100 approves GAME_DIRECTORY/ACCOUNTS/GAMES private bindings and environment isolation. Ownership is approved; exact deployment config/internal methods remain implementation work. |
 | LLD-004 | SQLite tables/types/keys/indexes, record mappings and migrations | DO-096–099 approve owner-local normalized mappings/type/privacy, local FKs/cross-owner validation, unique/check/parameterized-query rules and versioned forward-only migrations. Exact DDL/statements/index query plans and runtime migration hooks remain TBD. |
 | LLD-005 | Directory/game coordination and command idempotency/reconciliation | DO-014/015 approve one nullable `game_id` reservation row, claim-first creation, same-ID/same-code GameObject recreation after failure, and compare-by-ID acquire/release without a generation counter in [Durable Object design Section 6.3](durable-object-design.md#directory-records). DO-016 approves idempotent terminal compare-and-clear (matching ID clears; NULL is complete; different ID is stale/no-op). DO-017 approves a presence-only account-assignment gate keyed by account_id; DO-018 approves acquire-before-check, assignment blocking, clear-and-reject for hosted games, and retain-and-retry on interruption. DO-076–084 approve owner/actor-scoped receipts, fingerprints, bounded typed results, retention, secret-safe issuance retry, typed pending payloads, per-operation fences/ACKs and capped retry/reconciliation. Physical transport/recovery remains implementation work. |
-| LLD-006 | Worker API methods/routes, request/response/error schemas and compatibility | Proposed functions/methods/paths/scopes (LLD-017) and per-operation Request/Response fields/types/effects (LLD-019) in [API design Section 6](api-design.md#operation-catalog); final requiredness, encodings, complete schemas/statuses, signatures and compatibility **TBD**. |
+| LLD-006 | Worker API methods/routes, request/response/error schemas and compatibility | LLD-027 selects Axum in the single Rust Worker, responsibility-based handler composition and strict API/SPA separation. Existing proposed functions/paths/DTOs remain in [API design Section 6](api-design.md#operation-catalog); final requiredness, errors/statuses, wire schemas, middleware ordering and native upgrade adapters remain TBD. |
 | LLD-007 | WSS payloads/revisions, privacy projections, hibernation and backpressure | DO-067/068 approve per-view projection boundaries/revisions, single-cut attachment+snapshot ordering, monotonic updates, gap-triggered full resync, independent authority checks and terminal counter lifetime in [Durable Object design Section 6.5](durable-object-design.md#game-records); persisted session/attachment records remain in [Sections 6.4/6.8](durable-object-design.md#account-records). WSS contracts live in [API design Section 7](api-design.md#wss-design). DO-091–095 approve v1 attachment cap, authoritative hibernation reconstruction, participant replacement fencing, earliest-deadline alarm and frame/queue close-resync limits. Rust SDK delivery integration remains implementation work. |
 | LLD-008 | Board generation/feasibility, matching and pattern-specific trait signatures | DO-044/061/062/063 approve feasibility, uniqueness, bounded generation/failure and the Single Line evaluator contract; target RNG/SQL/transaction integration and implementation tests remain TBD |
 | LLD-009 | Password policy, token/cookie/verifier implementation and request security | Minimum 10 characters and any combination of ASCII characters confirmed by LLD-023 (Section 9.1); salted Argon2 via RustCrypto `argon2` confirmed by LLD-024 (Section 9.2). DO-019 approves AccountRecord fields/types/nullability and combined PHC storage in `verifier`; DO-022 approves lifecycle/disablement and credential-epoch rules in [Durable Object design Section 6.4](durable-object-design.md#account-records). DO-076–090 approve receipts, secret-safe retries, rate-limit and audit policies; DO-101 approves trusted Worker/Object/CLI boundary. Production Argon2 costs/caps, exact Unicode runtime, cookie/wire encoding, physical SQL and provider integration remain **TBD**. |
@@ -741,7 +875,7 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 | LLD-013 | CLI interfaces, binding/credential scopes, secure link handoff and bootstrap | DO-101 approves the restricted developer CLI invoking authorized Worker management/bootstrap operations with controlled credentials, no direct SQLite and no browser exposure. Exact credential scopes, transport, commands and packaging remain TBD. |
 | LLD-014 | Optional speech, browser matrix, quality/load targets and acceptance tests | DO-103 approves max-game plus owner-provided peak forecast capacity validation with 2× quota headroom; DO-104 approves the schema/transaction/race/security/load release-gate plan. VIEW-12 proposes device-local opt-in speech with no resync replay; Section 4.2 proposes responsive/accessibility targets and UI-AC-17 covers future validation. Audio behavior approval, browser/assistive-technology matrix and measurable venue targets remain pending; no measurements/tests have been run. |
 | LLD-015 | Build/deployment/observability and quota verification | DO-100–104 approve isolated bindings, pinned-toolchain/clock/RNG policy, forward migrations, 2× quota capacity gate and test/verification release gate. Exact pins, provider runtime integration, forecast and actual results remain unverified. |
-| LLD-016 | Initial API Worker organization and Durable Object boundary | One Worker serves app endpoints; DO-100 approves private GAME_DIRECTORY/ACCOUNTS/GAMES bindings and per-environment isolation; DO-101 approves Worker-only ingress, typed internal peer calls/ACKs and restricted developer-CLI backend operations. Module layout, exact transport/auth credentials and SDK integration remain implementation work. |
+| LLD-016 | Initial API Worker organization and Durable Object boundary | One API Worker serves the app. DO-100/101 preserve private GAME_DIRECTORY/ACCOUNTS/GAMES bindings, typed trusted peer operations and restricted CLI. LLD-027 selects Dioxus Router, Axum HTTP dispatch and native DO state/socket handlers. No endpoint-per-Worker split or conventional listening server; exact SDK/transport/module wiring remains unverified. |
 | LLD-017 | Proposed operation catalog and auth-scope notation | Captured at user request — [API design Section 6](api-design.md#operation-catalog) retains category headers and per-operation ID/function/access-type heading, Path, Auth scope and description. Scope labels are Admin, Host, Player, Anyone and the user-selected System for internal work. Proposed names/paths remain reviewable; Anyone never bypasses required session/proof/ownership, Host includes admin with applicable game guards, and System is not an account role or public endpoint. Potential Request/Response fields are recorded under LLD-019; final schemas and function signatures remain **TBD**. Object structures are separately proposed under LLD-018, not finalized by this catalog. |
 | LLD-018 | Durable Object records and types | The DO-001–107 logical design decisions are approved and logged in [Durable Object design Section 6](durable-object-design.md#schema-proposal), with physical schema and implementation gates kept distinct. All approved logical decisions are recorded; exact DDL/runtime mechanisms and verification remain implementation work. |
 | LLD-019 | Proposed per-operation Request and Response inputs/outputs | Captured at user request — every A1–H12 operation in [API design Section 6](api-design.md#operation-catalog) has Request/Response subheadings with potential typed fields, session/cookie effects and failure candidates. Shared safe DTO descriptions do not expose storage records. Internal helpers use internal inputs/results; WSS entries distinguish upgrade/frames/push. Final schemas, requiredness, encodings, status/error contracts, retry/security mechanisms and tests remain **TBD**; no new endpoint or implementation is approved. |
@@ -752,6 +886,8 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 | LLD-024 | Salted Argon2 account-password hashing | **Confirmed user direction** — use Argon2 with salt and RustCrypto `argon2` for host/admin passwords, superseding LLD-023's hashing deferral. DO-019 approves `verifier` as one complete library-generated PHC string rather than raw salt alone or separate salt/hash fields. **DO-023 approves** Argon2id v19, fresh independent 16-byte salts, 32-byte output and SQLite `TEXT` mapping. **DO-024 approves** explicit work factors, the OWASP benchmark starting point, bounded fail-closed verification and a pre-production runtime-validation gate; production tuning/caps and target measurements remain unverified. Compatible crate pin and upgrade mechanics remain open. |
 | LLD-025 | Durable Object design document extraction | **Confirmed user direction** — move the existing schema proposal into `plans/durable-object-design.md`. It is the single home for Object ownership, DATA inventory, schema/consistency/migration worksheets, records/fields/types, invariants and storage TBDs. LLD Section 5 and API storage references link to it. Field names/types and confirmed constraints are preserved; the move does not approve pending proposals or authorize implementation. |
 | LLD-026 | Requested UI screen/component designs | **Requested design proposals — not implemented:** Section 4 preserves VIEW-01–VIEW-16 and adds VIEW-17 Home with game-code input, Join and shared host/admin login. Defines Games with History, Create/setup, account/player/spectator lobby/Play, Users, enrollment/reset, recovery, result/History, shared state/privacy/accessibility rules, existing API touchpoints and UI-AC-01–UI-AC-17. User-requested screen coverage is recorded; new routes/layout/audio details remain proposals and API contracts remain in the companion document. |
+| LLD-027 | Rust routing libraries and Cloudflare dispatch boundaries | **Selected direction at user request:** Dioxus Router for browser routes; Axum as the HTTP service inside the single Rust API Worker; Static Assets SPA fallback with Worker-first `/api` and `/api/*`; native Durable Object state, alarms and hibernating WebSockets. Section 3.5 records module/middleware responsibility, authoritative checks, no API-to-HTML fallback, Worker/Wasm Send/feature caveats and ROUTE-AC-01–08. Exact pins, wire contracts, adapters and measured/tested compatibility remain pending; no implementation authorized. |
+| LLD-028 | Dioxus-integrated Tailwind styling | **Confirmed user direction:** Use Tailwind CSS in Dioxus RSX/shared UI components, compile through the Dioxus-compatible build workflow and serve generated CSS as a static asset. Section 3.6 records source coverage, conditional styles and future production/accessibility checks. Exact toolchain pins, visual tokens and component-library choices remain open; no implementation or tests performed. |
 
 ### 12.2 Product/source questions — do not silently decide in implementation
 
@@ -764,7 +900,7 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 
 Coverage means a place to complete the design, not that every design choice or requirement is fulfilled. LLD Section 5 references [Durable Object design](durable-object-design.md), and Sections 6–7 reference API/WSS content in [api-design.md](api-design.md), so coverage ranges containing those sections include their companion documents. Ranges identify source decision rows; superseded rows are carried only as qualified in Section 1.2.
 
-**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work.
+**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work. LLD-027 selects the routing library/integration split in Section 3.5 without finalizing individual UI paths, API contracts or runtime compatibility. LLD-028 records the user-selected Dioxus-integrated Tailwind styling foundation; visual design tokens and build validation remain separate.
 
 | HLD decisions | Template coverage |
 | --- | --- |
@@ -801,6 +937,7 @@ Coverage means a place to complete the design, not that every design choice or r
 - [ ] Host/admin/Users permissions, privileged creation and secret boundaries are reviewed end to end.
 - [ ] Source conflicts and genuinely new product questions are resolved or explicitly deferred.
 - [ ] Tests, quality targets, Cloudflare compatibility/budget checks and operational runbooks are defined.
+- [ ] Exercise ROUTE-AC-01–ROUTE-AC-08 on the pinned Worker/Wasm stack; verify API/SPA separation, typed/auth/cookie handling, native upgrades and committed-command recovery.
 - [ ] Detailed design approval is recorded; implementation receives its own explicit authorization.
 
 ## Sources
@@ -812,3 +949,13 @@ Coverage means a place to complete the design, not that every design choice or r
 [5] https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html — OWASP — Password Storage Cheat Sheet
 [6] https://docs.rs/argon2/latest/argon2/constant.RECOMMENDED_SALT_LEN.html — argon2 — recommended salt length
 [7] https://docs.rs/argon2/latest/argon2/struct.Params.html — argon2 — memory, iteration, parallelism and output parameters
+[8] https://dioxuslabs.com/learn/0.7/essentials/router — Dioxus typed routing
+[9] https://docs.rs/worker/0.8.7/worker — workers-rs HTTP integration and Send helpers
+[10] https://docs.rs/axum/latest/axum — Axum routing, extractors and Tower middleware
+[11] https://raw.githubusercontent.com/cloudflare/workers-rs/main/examples/axum/Cargo.toml — Official Axum-on-Workers dependency example
+[12] https://developers.cloudflare.com/workers/static-assets/routing/single-page-application — Workers Static Assets SPA routing
+[13] https://developers.cloudflare.com/workers/static-assets/binding — Static Assets binding and selective Worker-first paths
+[14] https://developers.cloudflare.com/durable-objects/best-practices/websockets — Durable Object hibernating WebSockets
+[15] https://docs.rs/worker/latest/worker/struct.Router.html — Built-in worker::Router alternative
+[16] https://dioxuslabs.com/learn/0.7/tutorial/new_app — Dioxus built-in Tailwind build support
+[17] https://dioxuslabs.com/learn/0.7/guides/utilities/tailwind — Tailwind styling in Dioxus components

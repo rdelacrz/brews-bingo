@@ -1,269 +1,221 @@
 # Graph Report - brews-bingo  (2026-10-04)
 
 ## Corpus Check
-- 14 indexed source files (12 re-extracted) · ~93,143 words
+- 7 files · ~117,272 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 647 nodes · 1078 edges · 63 communities (34 shown, 29 thin omitted)
-- Extraction: 98% EXTRACTED · 1% INFERRED · 1% AMBIGUOUS · INFERRED: 9 edges (avg confidence: 0.78)
-- Extractor token usage: unavailable from delegated extractors. Graphify benchmark: ~3.8× fewer tokens per query (32,350-word benchmark corpus; ~43,133 naive tokens vs. ~11,371 average query tokens).
-- Source freshness: refreshed `AGENTS.md` and the current API, Durable Object, HLD and LLD planning documents; retained unchanged requirements/research sources and seven dated saved query traces. The graph is a navigation aid, not an authority—verify current planning sources for decisions.
+- 798 nodes · 2630 edges · 26 communities (22 shown, 4 thin omitted)
+- Extraction: 99% EXTRACTED · 0% INFERRED · 1% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.85)
+- Token usage/cost: **unknown** — host semantic subagent usage is not exposed. No external model API was used; this is not a zero-cost claim.
 
 ## Community Hubs (Navigation)
-- Hosting Provider Research
-- Realtime Game Architecture
-- Realtime Game Architecture
-- Authentication and Password Security
-- Authentication and Password Security
-- Business Requirements and Product Scope
-- Authorization and Account Management
-- Game Lifecycle and Reservations
-- Game Object Data Models
-- Gameplay APIs and Player Workflows
-- Gameplay APIs and Player Workflows
-- Authorization and Account Management
-- Client Synchronization and Views
-- Board and Cell Data Models
-- Final Results and Views
-- Account Sessions and Credentials
-- Commands and Revision Tracking
-- Durable Object Design Decisions
-- Realtime Game Architecture
-- Planning Documents and Sources
-- Directory and Game Indexes
-- Durable Object Design Decisions
-- Authorization and Account Management
-- Directory and Game Indexes
-- Client Synchronization and Views
-- Operational Controls and Audit
-- WebSocket Connections and Attachments
-- Decision Review Workflow
-- Graphify Usage Guidance
-- Historical Graphify Traces
-- Authentication and Password Security
-- Durable Object Design Decisions
-- Account Sessions and Credentials
-- Account Lifecycle and Disablement
-- Requirements and Persistence
-- Game Lifecycle and Reservations
-- Security and Privacy
-- Host Authorization and Idle Cancellation
-- Game Configuration Rules
-- Hosting Provider Research
-- Hosting Provider Research
-- Identifier Conventions
-- Retention and Reliability
-- Deployment and Verification
-- Account Lifecycle States
-- Account Lifecycle States
-- Account Lifecycle States
-- Backend Components and Design Reviews
-- Realtime Game Architecture
-- Backend Components and Design Reviews
-- Platform Architecture
-- Game Lifecycle and Reservations
-- Authentication and Password Security
-- History and Retention
-- Authorization and Account Management
-- Account Sessions and Credentials
+- Approved Durable Ownership Policies
+- UI Proposals and API Views
+- Preserved Hosting Research
+- Participant Sessions and Recovery
+- Cross-Document Design Navigation
+- Game Lifecycle and Capacity
+- Requirements and Technology Baseline
+- High-Level Design Navigation
+- Selected Rust Routing Boundaries
+- Account Login and Enrollment
+- Unexecuted UI and Release Gates
+- Roles and Platform Boundaries
+- History and Directory Maintenance
+- Board Generation and Qualification
+- Argon2 Verifier and Validation
+- Account Lifecycle and Enablement
+- Case-Sensitive Participant Identity
+- Canonical Planning Sources
+- Tailwind and Accessible Components
+- Privileged Link Handoff
+- Authoritative Sessions and Revocation
+- Offline Wording Supersession
+- Privileged Account Removal Guards
+- Unfinalized Contract Planning
+- Single Nonterminal Game Reservation
 
 ## God Nodes (most connected - your core abstractions)
-1. `Brews Bingo — Durable Object Design` - 79 edges
-2. `Hosting Research — September 30, 2026; recommendations only, no provider selected here` - 40 edges
-3. `Business Requirements — approved scope, not implementation authorization` - 38 edges
-4. `Research shortlist — compare Cloudflare stateful backend against Vercel Hobby + Neon/Supabase; no selection` - 33 edges
-5. `Brews Bingo API Design` - 28 edges
-6. `Low-Level Design — planning template, detailed acceptance pending` - 27 edges
-7. `AWS — credible low-cost candidate, not verified forever-free complete stack` - 23 edges
-8. `Game Durable Object` - 17 edges
-9. `Membership, admission, aliases and recovery` - 15 edges
-10. `Players, spectators and access` - 14 edges
+1. `DO ledger complete; logical policy approved` - 139 edges
+2. `7.2 Review queue` - 110 edges
+3. `13. Design decision register` - 80 edges
+4. `Brews Bingo — Low-Level Design Template` - 49 edges
+5. `Hosting Research — September 30, 2026; recommendations only, no provider selected here` - 46 edges
+6. `Online-only authoritative gameplay` - 43 edges
+7. `Confirmed domain baseline` - 41 edges
+8. `Brews Bingo — API Design` - 40 edges
+9. `Brews Bingo — High-Level Design` - 39 edges
+10. `Brews Bingo — Durable Object Design` - 37 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `BR-021 approved: host can review completed games’ draw records after starting a new game` --conceptually_related_to--> `Unreconciled note: tracking does not imply past-game persistence or closed-app survival`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165132_f1875f64_what_is_the_exact_relationship_between_br_021_and.md → graphify-out/memory/query_20261003_165132_e0d2b564_what_is_the_exact_relationship_between_br_013_and.md
-- `Persistence and realtime are separate decisions; free Postgres alone is not reliable cross-instance broadcast` --references--> `BR-002 [Approved — revised wording] — The application shall support either randomly selecting a bingo value or allowing the bingo caller to enter a value manually. Every entered or selected value shall be represented as a string and validated against the valid string pool for the game; values outside the pool or already drawn in that game shall be rejected.`  [EXTRACTED]
-  plans/research.md → plans/requirements.md
-- `Persistence and realtime are separate decisions; free Postgres alone is not reliable cross-instance broadcast` --references--> `BR-007 [Approved] — A bingo value shall not be drawn more than once within the same game.`  [EXTRACTED]
-  plans/research.md → plans/requirements.md
-- `Persistence and realtime are separate decisions; free Postgres alone is not reliable cross-instance broadcast` --references--> `BR-018 [Approved] — The host shall have an operating view separate from the audience's display of the game.`  [EXTRACTED]
-  plans/research.md → plans/requirements.md
-- `Hosting Research — September 30, 2026; recommendations only, no provider selected here` --references--> `Business Requirements — approved scope, not implementation authorization`  [EXTRACTED]
-  plans/research.md → plans/requirements.md
+- `Purge API wording conflicts with expiry-based code reuse` --conceptually_related_to--> `DO-074 — Scheduled purge and Directory/Game code-reservation reuse coordination [Approved]`  [AMBIGUOUS]
+  plans/api-design.md → plans/durable-object-design.md
+- `Lifecycle-aware authorized frontend navigation` --semantically_similar_to--> `Server-verified role and lifecycle dispatch`  [INFERRED] [semantically similar]
+  plans/lld.md → plans/api-design.md
+- `Six canonical planning documents` --references--> `Hosting Research — September 30, 2026; recommendations only, no provider selected here`  [EXTRACTED]
+  AGENTS.md → plans/research.md
+- `Six canonical planning documents` --references--> `Brews Bingo — High-Level Design`  [EXTRACTED]
+  AGENTS.md → plans/hld.md
+- `Six canonical planning documents` --references--> `Brews Bingo — Low-Level Design Template`  [EXTRACTED]
+  AGENTS.md → plans/lld.md
 
 ## Hyperedges (group relationships)
-- **Cross-Object game creation and recovery** — plans_api_design_create_game, plans_api_design_coordinate_global_game_reservation, plans_api_design_reconcile_pending_operation [EXTRACTED 1.00]
-- **Terminal outcome retention and access split** — plans_api_design_award_game_winner, plans_api_design_cancel_unstarted_game, plans_api_design_end_game_without_winner, plans_api_design_purge_cancelled_unstarted_game, plans_api_design_finalize_game_retention, plans_api_design_purge_expired_history, plans_api_design_get_game_result, plans_api_design_exit_game_result [EXTRACTED 1.00]
-- **Account Lifecycle States** — agents_account_lifecycle, agents_pendingenrollment, agents_verified, agents_resetrequired [EXTRACTED 1.00]
-- **Documents Form the Planning Sources of Truth** — agents_planning_sources_of_truth, agents_plans_requirements_md, agents_plans_hld_md, agents_plans_lld_md, agents_plans_api_design_md, agents_plans_durable_object_design_md, agents_plans_research_md [EXTRACTED 1.00]
-- **Item-by-item review queue (DO-029–DO-107)** — plans_durable_object_design_do_029, plans_durable_object_design_do_030, plans_durable_object_design_do_031, plans_durable_object_design_do_032, plans_durable_object_design_do_033, plans_durable_object_design_do_034, plans_durable_object_design_do_035, plans_durable_object_design_do_036, plans_durable_object_design_do_037, plans_durable_object_design_do_038, plans_durable_object_design_do_039, plans_durable_object_design_do_040, plans_durable_object_design_do_041, plans_durable_object_design_do_042, plans_durable_object_design_do_043, plans_durable_object_design_do_044, plans_durable_object_design_do_045, plans_durable_object_design_do_046, plans_durable_object_design_do_047, plans_durable_object_design_do_048, plans_durable_object_design_do_049, plans_durable_object_design_do_050, plans_durable_object_design_do_051, plans_durable_object_design_do_052, plans_durable_object_design_do_053, plans_durable_object_design_do_054, plans_durable_object_design_do_055, plans_durable_object_design_do_056, plans_durable_object_design_do_057, plans_durable_object_design_do_058, plans_durable_object_design_do_059, plans_durable_object_design_do_060, plans_durable_object_design_do_061, plans_durable_object_design_do_062, plans_durable_object_design_do_063, plans_durable_object_design_do_064, plans_durable_object_design_do_065, plans_durable_object_design_do_066, plans_durable_object_design_do_067, plans_durable_object_design_do_068, plans_durable_object_design_do_069, plans_durable_object_design_do_070, plans_durable_object_design_do_071, plans_durable_object_design_do_072, plans_durable_object_design_do_073, plans_durable_object_design_do_074, plans_durable_object_design_do_075, plans_durable_object_design_do_076, plans_durable_object_design_do_077, plans_durable_object_design_do_078, plans_durable_object_design_do_079, plans_durable_object_design_do_080, plans_durable_object_design_do_081, plans_durable_object_design_do_082, plans_durable_object_design_do_083, plans_durable_object_design_do_084, plans_durable_object_design_do_085, plans_durable_object_design_do_086, plans_durable_object_design_do_087, plans_durable_object_design_do_088, plans_durable_object_design_do_089, plans_durable_object_design_do_090, plans_durable_object_design_do_091, plans_durable_object_design_do_092, plans_durable_object_design_do_093, plans_durable_object_design_do_094, plans_durable_object_design_do_095, plans_durable_object_design_do_096, plans_durable_object_design_do_097, plans_durable_object_design_do_098, plans_durable_object_design_do_099, plans_durable_object_design_do_100, plans_durable_object_design_do_101, plans_durable_object_design_do_102, plans_durable_object_design_do_103, plans_durable_object_design_do_104, plans_durable_object_design_do_105, plans_durable_object_design_do_106, plans_durable_object_design_do_107 [EXTRACTED 1.00]
 - **Research comparison only: integrated Cloudflare versus Vercel with two alternative free Postgres plans** — plans_research_cloudflare, plans_research_vercel_neon_stack, plans_research_vercel_supabase_stack [EXTRACTED 1.00]
+- **Separate frontend, Worker and Object routing authority** — plans_lld_lifecycle_navigation, plans_api_design_single_api_worker, plans_durable_object_design_worker_only_ingress [INFERRED 0.85]
+- **Three approved durable ownership boundaries** — plans_durable_object_design_accountsobject, plans_durable_object_design_gamedirectoryobject, plans_durable_object_design_gameobject [EXTRACTED 1.00]
+- **LLD-027 selected routing libraries and native owner boundaries** — plans_lld_dioxus_router, plans_lld_axum, plans_lld_native_do_routing, plans_lld_static_assets_api_split [EXTRACTED 1.00]
 
-## Communities (63 total, 29 thin omitted)
+## Communities (26 total, 4 thin omitted)
 
-### Community 0 - "Hosting Provider Research"
+### Community 0 - "Approved Durable Ownership Policies"
 Cohesion: 0.05
-Nodes (84): BR-002 [Approved — revised wording] — The application shall support either randomly selecting a bingo value or allowing the bingo caller to enter a value manually. Every entered or selected value shall be represented as a string and validated against the valid string pool for the game; values outside the pool or already drawn in that game shall be rejected., BR-007 [Approved] — A bingo value shall not be drawn more than once within the same game., BR-016 [Approved] — An active game shall remain usable if the venue loses its internet connection., BR-018 [Approved] — The host shall have an operating view separate from the audience's display of the game., D-005 — Clarified: Internet may be intermittent. The app shall continue operating through temporary internet outages., AWS Amplify Hosting — documented 12-month allowance, applicability to new accounts unconfirmed, API Gateway WebSockets — metered messages/connection-minutes; two-hour connection and ten-minute idle limits, AWS — credible low-cost candidate, not verified forever-free complete stack (+76 more)
+Nodes (100): API-11 — Create New game, cancel_idle_unstarted_game, coordinate_global_game_reservation, create_game, purge_expired_history, record_admin_action, AccountsObject, ActorRef (+92 more)
 
-### Community 1 - "Realtime Game Architecture"
-Cohesion: 0.07
-Nodes (51): Admin, Admin-only Users view, App layer, Audience spectator, Awaiting Players, Backend account and session authority, Brews Bingo High-Level Design, Business requirements (+43 more)
-
-### Community 2 - "Realtime Game Architecture"
+### Community 1 - "UI Proposals and API Views"
 Cohesion: 0.06
-Nodes (60): HLD-002 Online-only state authority and backend location, HLD-005 Persistence and retention approach, HLD-006 Communication and synchronization approach, HLD-007 Authentication, permissions and participant identity, HLD-008 Cloudflare hosting and cost boundary, HLD-010 Access-link enrollment and first-password setup, HLD-011 Host/host game-management capabilities, HLD-012 Start prerequisite and application-wide game limit (+52 more)
+Nodes (95): API-04 — Session validation / logout, API-07 — Reissue enrollment link, API-08 — Initiate account password reset, API-10 — List / inspect games, API-12 — Read / update configuration, API-14 — Open / resume selected game, API-15 — Start game, API-16 — Random / manual value call (+87 more)
 
-### Community 3 - "Authentication and Password Security"
+### Community 2 - "Preserved Hosting Research"
 Cohesion: 0.06
-Nodes (32): API contract review worksheets, API-01–API-33 coverage index, Auth-scope notation, Authentication and sessions, Role-specific view revisions and resynchronization, Brews Bingo API Design, complete_password_reset, complete_password_setup (+24 more)
+Nodes (79): AWS Amplify Hosting — documented 12-month allowance, applicability to new accounts unconfirmed, API Gateway WebSockets — metered messages/connection-minutes; two-hour connection and ten-minute idle limits, AWS — credible low-cost candidate, not verified forever-free complete stack, AWS Free account — reported six-month-or-credit-exhaustion lifetime, separate 12-month credit expiry, Google Cloud Run — conventional-container candidate with billable active WebSockets and 60-minute request limit, Cloudflare Workers/Pages + SQLite-backed Durable Objects — leading candidate, not selected, CloudFront flat-rate Free — reported ongoing $0 delivery on a Paid AWS account; not a backend bundle, Cloudflare D1 — optional candidate database, not required in the proposed research stack (+71 more)
 
-### Community 4 - "Authentication and Password Security"
-Cohesion: 0.06
-Nodes (33): AccountRecord complete PHC verifier field — DO-019 approved, Self-removal, last-admin protection, and account-operation race details — unresolved, API/WSS proposals are centralized in api-design.md; final contracts remain TBD, Explicit Argon2 costs, OWASP benchmark point, bounded fail-closed policy, runtime gate — DO-024 approved; production tuning pending, Conditional opportunistic rehash policy — DO-025 approved, Argon2id v19, 16-byte fresh salt, 32-byte output, SQLite TEXT — DO-023 approved, Detailed design approval and implementation authorization — pending, Low-Level Design — planning template, detailed acceptance pending (+25 more)
+### Community 3 - "Participant Sessions and Recovery"
+Cohesion: 0.08
+Nodes (51): API-23 — Join as spectator, API-29 — Final-view Exit / access cleanup, exit_game_result, expire_spectator_grace, get_game_result, update_participant_presence, AccountGameAccess, AccountGameViewAccess (+43 more)
 
-### Community 5 - "Business Requirements and Product Scope"
-Cohesion: 0.07
-Nodes (33): BR-001 [Approved] — The application shall be called Brews Bingo., BR-003 [Approved] — The application shall display the most recently drawn bingo value., BR-004 [Approved] — The application shall keep a record of the bingo values drawn during the current game., BR-005 [Approved] — The application shall let users see all bingo values drawn during the current game., BR-006 [Approved] — Each game shall draw only from a configured pool of valid string values. The current iteration shall focus on generating and tracking values stored as strings; the pool may represent any agreed bingo format or combination of bingo values., BR-008 [Approved] — The bingo host shall control when each next value is drawn., BR-009 [Approved] — The application shall clearly indicate when no undrawn values remain., BR-010 [Approved] — The host shall be able to review drawn values in the order they were called. (+25 more)
+### Community 4 - "Cross-Document Design Navigation"
+Cohesion: 0.09
+Nodes (3): Brews Bingo — API Design, Brews Bingo — Durable Object Design, Brews Bingo — Low-Level Design Template
 
-### Community 6 - "Authorization and Account Management"
-Cohesion: 0.13
-Nodes (11): Users and privileged account operations, Account lifecycle states, Cookie-backed sessions and credential epochs, DO-022 — credential epoch and enable, DO-027 — link verifier, DO-028 — protected access-link handoff, DO-029 — approved secret-free link-issuance receipt, DO-030 — session-row binding (+3 more)
-
-### Community 7 - "Game Lifecycle and Reservations"
+### Community 5 - "Game Lifecycle and Capacity"
 Cohesion: 0.14
-Nodes (17): Backend-only coordination and maintenance, cancel_idle_unstarted_game, claim_game_code, coordinate_global_game_reservation, create_game, expire_spectator_grace, Game discovery, configuration and ownership, get_current_nonterminal_game (+9 more)
+Nodes (31): HLD-001 — Backend server, app, and developer CLI layers, HLD-005 — Persistence and retention approach, HLD-011 — Host/host game-management capabilities, HLD-013 — Resume saved unstarted games, HLD-014 — Explicit confirmation before manual ending, HLD-018 — Configurable player and spectator limits with hard maxima, HLD-024 — One host-selected winner and final result, HLD-027 — Final Resolved outcome, independent exits and History-only return (+23 more)
 
-### Community 8 - "Game Object Data Models"
-Cohesion: 0.23
-Nodes (16): Brews Bingo — Durable Object Design, DO-045 — PlayerRecord fields/types and alias-key constraints [Pending], DO-046 — Atomic alias rename and participant-session binding updates [Pending], DO-047 — Atomic role switching, leave and session updates [Pending], DO-048 — Player leave-timestamp meaning after return [Pending], DO-049 — PlayerRecoveryRecord fields/types and version metadata [Pending], DO-050 — Recovery-answer normalization and version migration [Pending], DO-051 — Recovery-answer verifier algorithm/format/work factors [Pending] (+8 more)
+### Community 6 - "Requirements and Technology Baseline"
+Cohesion: 0.10
+Nodes (28): DO-043 — Practical numeric pool/resource ceiling [Approved], HLD-003 — Rust/Dioxus frontend and web-first platform delivery, HLD-004 — Backend structure and technology choices, Rust, BR-001 — The application shall be called Brews Bingo., BR-002 — The application shall support either randomly selecting a bingo value or allowing the bingo caller to enter a value manually. Every entered or selected value shall be represented as a string and validated against the valid string pool for the game; values outside the pool or already drawn in that game shall be rejected., BR-003 — The application shall display the most recently drawn bingo value., BR-004 — The application shall keep a record of the bingo values drawn during the current game. (+20 more)
 
-### Community 9 - "Gameplay APIs and Player Workflows"
-Cohesion: 0.13
-Nodes (15): get_game_availability, get_my_membership, is_alias_claimed, join_game_as_player, leave_player_game, leave_player_lobby, leave_spectator_game, list_game_players (+7 more)
+### Community 8 - "Selected Rust Routing Boundaries"
+Cohesion: 0.15
+Nodes (12): LLD-001 — Dioxus view grouping, routes, components, state management and accessibility, LLD-006 — Worker API methods/routes, request/response/error schemas and compatibility, LLD-016 — Initial API Worker organization and Durable Object boundary, LLD-027 — Rust routing libraries and Cloudflare dispatch boundaries, ROUTE-AC-01 — Open/refresh Home, Users and a nested game screen: static shell plus Dioxus route resolution works; screen loading itself reveals no protected data., ROUTE-AC-02 — Request /api, an unknown /api/ path and a wrong method, including navigation headers and a colliding asset path: backend dispatch/error response wins; never SPA HTML., ROUTE-AC-03 — Exercise anonymous, restricted, host, admin, player and spectator contexts against public/restricted/protected routes; direct API calls cannot bypass Origin, authority or owner commit-time rules., ROUTE-AC-04 — Verify typed parsing/domain validation, bounded body rejection, component-error redaction, preserved cookie headers and same-origin session behavior through the Worker/Axum adapter. (+4 more)
 
-### Community 10 - "Gameplay APIs and Player Workflows"
+### Community 9 - "Account Login and Enrollment"
+Cohesion: 0.14
+Nodes (16): Agent guidance, API-02 — Enrollment-link redemption / password setup, API-03 — Reset-link redemption / new password, complete_password_reset, complete_password_setup, login_account, redeem_enrollment_link, redeem_password_reset_link (+8 more)
+
+### Community 10 - "Unexecuted UI and Release Gates"
+Cohesion: 0.10
+Nodes (20): DO-103 — Singleton capacity, storage sizes and read/write amplification validation plan [Approved], DO-104 — Schema/constraint/transaction/race/security/load test acceptance criteria [Approved], LLD-014 — Optional speech, browser matrix, quality/load targets and acceptance tests, UI-AC-01 — Directly open / on desktop/mobile: branded Home has labelled game-code input, Join/Enter submission and host/admin login; no public Games/Users/History data leak. [UI proposal], UI-AC-02 — Validate code trimming/case/length/internal spaces, case-sensitive usernames and aliases, and exact password preservation. Invalid submissions do not create a game, seat or session. [UI proposal], UI-AC-03 — Test anonymous, restricted, host, admin, player and spectator route/direct-API denial; switching a client route/tab/role must not grant Users, other boards or game mutation access. [UI proposal], UI-AC-04 — Login/setup/reset reach the correct next screen: setup retains original expiry, reset requires login; used/expired links and lost secret responses do not replay credentials. [UI proposal], UI-AC-05 — Games shows at most one nonterminal card, blocks competing creation, and still displays unexpired History; incomplete coordination is not shown as a free slot. [UI proposal] (+12 more)
+
+### Community 11 - "Roles and Platform Boundaries"
 Cohesion: 0.17
-Nodes (12): award_game_winner, call_manual_value, cancel_unstarted_game, end_game_without_winner, finalize_game_retention, get_game_boards, get_game_qualification, get_my_board (+4 more)
+Nodes (9): Dioxus, HLD-009 — Developer-only CLI and privileged app provisioning, HLD-019 — Extensible platform folder boundaries, HLD-064 — Privileged account forgotten-password reset, HLD-065 — Privileged account enrollment-link reissue, HLD-073 — Rename ordinary hosting account type to host, HLD-074 — New admin role: account management and cross-game actions, HLD-075 — Admin-account creation restricted to CLI/existing admins (+1 more)
 
-### Community 11 - "Authorization and Account Management"
-Cohesion: 0.24
-Nodes (11): create_admin_account, create_host_account, delete_account, disable_account, find_hosted_nonterminal_games, get_user, initiate_password_reset, list_users (+3 more)
+### Community 12 - "History and Directory Maintenance"
+Cohesion: 0.13
+Nodes (14): API-13 — Publish Awaiting Players, API-17 — Submit one qualified winner, claim_game_code, finalize_game_retention, find_hosted_nonterminal_games, purge_cancelled_unstarted_game, reconcile_pending_operation, AccountAssignmentGate (+6 more)
 
-### Community 12 - "Client Synchronization and Views"
-Cohesion: 0.24
-Nodes (8): connect_game_stream, expire_or_revoke_credentials, GameView, get_game, get_game_calls, logout_session, synchronize_game_view, update_participant_presence
+### Community 13 - "Board Generation and Qualification"
+Cohesion: 0.39
+Nodes (12): DO-044 — Configuration validation and start-time feasibility algorithm [Approved], DO-062 — Feasible random board generation and randomness failure handling [Approved], DO-063 — Matching/qualification algorithms and pattern-specific Rust trait signatures [Approved], HLD-023 — Pattern-specific Rust traits and Single Line qualification, HLD-025 — Square board sizes and default, HLD-026 — Automatic matching and durable per-player boards, HLD-033 — Random board generation and position-sensitive uniqueness, HLD-034 — Board generation and assignment immediately after host start (+4 more)
 
-### Community 13 - "Board and Cell Data Models"
+### Community 14 - "Argon2 Verifier and Validation"
+Cohesion: 0.32
+Nodes (9): AccountRecord, DATA-01 — Provisioned account, DO-019 — AccountRecord fields/types and nullability [Approved], DO-023 — Remaining password-verifier profile and physical encoding constraints [Approved], DO-024 — Argon2 work factors, supported bounds and runtime validation plan [Approved], DO-025 — Password-verifier upgrades and concurrent-reset protection [Approved], LLD-009 — Password policy, token/cookie/verifier implementation and request security, LLD-023 — Account password length and character policy (+1 more)
+
+### Community 15 - "Account Lifecycle and Enablement"
 Cohesion: 0.18
-Nodes (11): Boards, calls and view revisions, DO-059 — PlayerBoardRecord, BoardCell and CompletedLine fields/types [Pending], DO-060 — Board/cell physical row mapping and persisted-projection checks [Pending], DO-061 — Exact full-board uniqueness enforcement [Pending], DO-062 — Feasible random board generation and randomness failure handling [Pending], DO-063 — Matching/qualification algorithms and pattern-specific Rust trait signatures [Pending], DO-064 — CallRecord fields/types and keys [Pending], DO-065 — Call sequencing/overflow and actor-scoped receipt relationship [Pending] (+3 more)
+Nodes (12): API-05 — Users account listing, API-33 — Enable disabled account, enable_account, get_user, list_users, SafeAccount, AccountRole, AccountStatus (+4 more)
 
-### Community 14 - "Final Results and Views"
-Cohesion: 0.22
-Nodes (8): exit_game_result, Final views and History, FinalResultView, get_game_history, get_game_result, HistoryView, list_game_history, purge_expired_history
+### Community 16 - "Case-Sensitive Participant Identity"
+Cohesion: 0.40
+Nodes (15): DO-045 — PlayerRecord fields/types and case-sensitive alias uniqueness [Approved (revised)], HLD-007 — Authentication, permissions and participant identity, HLD-010 — Access-link enrollment and first-password setup, HLD-017 — Role choice, aliases and state-based admission, HLD-021 — Single-use access URLs and one-day role-bound sessions, HLD-022 — Optional Brews-answer player-session recovery, HLD-030 — Player alias length, character categories and reuse, HLD-031 — No alternate player recovery; replacement invalidates old session (+7 more)
 
-### Community 15 - "Account Sessions and Credentials"
+### Community 19 - "Privileged Link Handoff"
+Cohesion: 0.27
+Nodes (11): API-06 — Provision host/admin account, create_admin_account, create_host_account, initiate_password_reset, reissue_enrollment_link, AccessLinkRecord, DATA-02 — Access/enrollment/reset credential, DO-026 — AccessLinkRecord fields/types and constraints [Approved] (+3 more)
+
+### Community 20 - "Authoritative Sessions and Revocation"
+Cohesion: 0.26
+Nodes (11): expire_or_revoke_credentials, AccessLinkPurpose, AccountSessionRecord, AccountSessionScope, AccountSocketSubscription, DATA-03 — Account and restricted sessions, DO-030 — AccountSessionRecord fields/types and constraints [Approved], DO-034 — Account authority lookup/caching and expired/revoked artifact cleanup [Approved] (+3 more)
+
+### Community 21 - "Offline Wording Supersession"
 Cohesion: 0.20
-Nodes (10): Accounts and credentials, DO-029 — Enrollment reissue/predecessor cleanup and consumed-link lost-response handling [Approved]; epoch-bumping reissue, predecessor invalidation, secret-free 30-day receipts, and no secret replay, DO-030 — AccountSessionRecord fields/types and constraints [Approved]; fixed one-day absolute lifetime and timestamp-derived revocation state, DO-031 — Cookie/session format, binding and request protection [Approved]; 32-byte CSPRNG/SHA-256 verifier, __Host cookie, and exact-Origin protections, DO-032 — Restricted-to-normal session rotation transaction [Pending], DO-033 — Post-reset session issuance and navigation behavior [Pending], DO-034 — Account authority lookup/caching and expired/revoked artifact cleanup [Pending], DO-035 — AccountSocketSubscription fields/types, uniqueness and registration races [Pending] (+2 more)
+Nodes (9): HLD-002 — Online-only state authority and backend location, HLD-006 — Communication and synchronization approach, HLD-008 — Cloudflare hosting and cost boundary, HLD-020 — Durable WSS recovery and online-only gameplay, BR-016 — An active game shall remain usable if the venue loses its internet connection., D-002 — Which desktop and mobile browsers, Android versions/devices, and iOS versions/devices are required for launch?, D-003 — Will attendees use physical bingo cards, or is managing player cards part of the desired app?, D-004 — Will a person verify winning claims, or is the app expected to help validate them? (+1 more)
 
-### Community 16 - "Commands and Revision Tracking"
-Cohesion: 0.20
-Nodes (10): Command receipts and pending work, DO-076 — CommandReceipt/ActorRef fields/types and actor-scoped keys [Pending], DO-077 — Request fingerprints and same-ID/different-request rejection [Pending], DO-078 — Typed secret-free command results and size bounds [Pending], DO-079 — Receipt retention and old-command admissibility/retry window [Pending], DO-080 — Credential-issuing command retry handling without stored raw secrets [Pending], DO-081 — PendingOperation/TargetRef/CoordinationPhase fields/types [Pending], DO-082 — Typed per-operation outbox payloads, owners and trust boundaries [Pending] (+2 more)
-
-### Community 17 - "Durable Object Design Decisions"
-Cohesion: 0.20
-Nodes (10): DO-096 — Per-record SQL/table/column mappings and privacy/read-write classifications [Pending], DO-097 — Local foreign keys versus cross-Object reference validation [Pending], DO-098 — Unique/check constraints and parameterized query specifications [Pending], DO-099 — Schema initialization/migration/backout and restore compatibility [Pending], DO-100 — Durable Object namespace identities, binding names and environment isolation [Pending], DO-101 — Trusted internal interfaces and developer-CLI/backend integration [Pending], DO-102 — SDK/toolchain/dependency pins and target clock/randomness wiring [Pending], DO-103 — Singleton capacity, storage sizes and read/write amplification validation plan [Pending] (+2 more)
-
-### Community 18 - "Realtime Game Architecture"
-Cohesion: 0.20
-Nodes (10): Cloudflare Workers Rust language support, Dioxus, Dioxus 0.7 documentation, Dioxus bundling documentation, Dioxus deployment documentation, Dioxus latest stable release page, Rust, Rust Durable Object State documentation (+2 more)
-
-### Community 19 - "Planning Documents and Sources"
-Cohesion: 0.25
-Nodes (7): Agent Guidance, plans/api-design.md, plans/durable-object-design.md, plans/hld.md, plans/lld.md, plans/requirements.md, plans/research.md
-
-### Community 20 - "Directory and Game Indexes"
-Cohesion: 0.25
-Nodes (8): DO-038 — GameRecord and TerminalOutcome fields/types, defaults and constraints [Pending], DO-039 — Host-assignment/revision transactions and actor attribution [Pending], DO-040 — Host-idle renewal policy for non-designated admin activity [Pending], DO-041 — Idle cancellation versus activity/start timer races [Pending], DO-042 — GameConfiguration fields/types and disabled free-cell representation [Pending], DO-043 — Practical numeric pool/resource ceiling [Pending], DO-044 — Configuration validation and start-time feasibility algorithm [Pending], Game and configuration
-
-### Community 21 - "Durable Object Design Decisions"
-Cohesion: 0.25
-Nodes (8): DO-069 — History snapshot/winner/player fields/types and immutable constraints [Pending], DO-070 — History child-table layout and ordered collections [Pending], DO-071 — Three-calendar-month timezone/month-end expiry calculation [Pending], DO-072 — Terminal snapshot materialization and obsolete-live-data cleanup [Pending], DO-073 — Terminal notice/revocation/deletion ordering without indefinite acknowledgement waits [Pending], DO-074 — Scheduled purge and Directory/Game code-reservation reuse coordination [Pending], DO-075 — History copies/indexes/log cleanup and restore-time expiry enforcement [Pending], History and retention
-
-### Community 22 - "Authorization and Account Management"
-Cohesion: 0.43
-Nodes (8): HLD-009 Developer-only CLI and privileged app provisioning, HLD-064 Privileged account forgotten-password reset, HLD-065 Privileged account enrollment-link reissue, HLD-070 Account retention and safe privileged removal, HLD-073 Rename ordinary hosting account type to host, HLD-074 New admin role: account management and cross-game actions, HLD-075 Admin-account creation restricted to CLI/existing admins, HLD-076 Admin-only Users view for provisioned accounts
-
-### Community 23 - "Directory and Game Indexes"
-Cohesion: 0.29
-Nodes (5): Directory account-assignment gate, DO-014 — reservation record, DO-015 — reservation compare-and-set, DO-016 — idempotent terminal reservation result, HLD-077 — global nonterminal-game slot
-
-### Community 24 - "Client Synchronization and Views"
+### Community 22 - "Privileged Account Removal Guards"
 Cohesion: 0.38
-Nodes (6): call_random_value, execute_command_idempotently, get_command_result, Live synchronization and retries, reconcile_pending_operation, send_game_update
+Nodes (7): API-09 — Disable / delete account, delete_account, disable_account, DO-105 — Privileged self-disable/delete policy [Approved], DO-106 — Last-admin disable/delete protection [Approved], DO-107 — Role-editing feature scope confirmation [Approved], HLD-070 — Account retention and safe privileged removal
 
-### Community 25 - "Operational Controls and Audit"
+### Community 23 - "Unfinalized Contract Planning"
 Cohesion: 0.29
-Nodes (7): Abuse controls and audit, DO-085 — RateLimitBucket fields/types and enforcement ownership [Pending], DO-086 — Rate-limit scopes, thresholds, windows and success/failure accounting [Pending], DO-087 — Rate-limit subject-key privacy, caller/game controls and bucket retention [Pending], DO-088 — AdminAuditRecord fields/types, storage owner and event contents [Pending], DO-089 — Durable audit capture of rejected/failed actions and developer attribution [Pending], DO-090 — Audit retention/deletion and privileged read policy [Pending]
+Nodes (6): API-01 — Account password login, LLD-002 — Users fields/actions/filters and protected account-management UX, LLD-008 — Board generation/feasibility, matching and pattern-specific trait signatures, LLD-021 — Rust error library and component-local ownership, LLD-022 — API design document extraction, LLD-025 — Durable Object design document extraction
 
-### Community 26 - "WebSocket Connections and Attachments"
-Cohesion: 0.33
-Nodes (6): Connections and scheduling, DO-091 — ConnectionAttachment/ViewerRef fields/types, encoding/version/size [Pending], DO-092 — Hibernation authority revalidation and presence reconstruction [Pending], DO-093 — Socket supersession and one-live-socket fencing [Pending], DO-094 — Durable alarm scheduling across idle/grace/session/history deadlines [Pending], DO-095 — Backpressure, message size bounds and delivery failure handling [Pending]
-
-### Community 27 - "Decision Review Workflow"
-Cohesion: 0.40
-Nodes (3): Dependent Decisions, DO-032 Is Next Pending After DO-029–DO-031 Approvals, Independent Approvals in the Same Category
-
-### Community 29 - "Historical Graphify Traces"
-Cohesion: 0.40
-Nodes (5): Account-session design, reached in the cited graph through AccountsObject, AccountsObject: separate SQLite-backed singleton per environment (as described by the query snapshot), Business Requirements: approved scope is not implementation authorization, Historical Graphify snapshot: Durable Object Design — planning-only; DO-022 approved, DO-023 next, Hosting Research: recommendations only; no provider selected in the cited snapshot
-
-### Community 30 - "Authentication and Password Security"
-Cohesion: 0.50
-Nodes (3): LLD-023 — password policy, LLD-024 — salted Argon2, Salted Argon2 password hashing
-
-### Community 31 - "Durable Object Design Decisions"
-Cohesion: 0.50
-Nodes (4): DO-105 — Privileged self-disable/delete policy [Pending], DO-106 — Last-admin disable/delete protection [Pending], DO-107 — Role-editing feature scope confirmation [Pending], Privileged product edge cases
-
-### Community 32 - "Account Sessions and Credentials"
-Cohesion: 0.50
-Nodes (4): Fragment-only link delivery and atomic redemption — DO-028 approved, Link reissue and secret-free lost-response receipts — DO-029 approved, AccountSessionRecord, bearer secret, digest, cookie profile — DO-030/DO-031 approved, Session rotation transaction — DO-032 pending
-
-### Community 35 - "Requirements and Persistence"
-Cohesion: 0.67
-Nodes (3): BR-013 approved: active-game drawn-value record survives accidental page refresh or application restart, Unreconciled note: tracking does not imply past-game persistence or closed-app survival, BR-021 approved: host can review completed games’ draw records after starting a new game
-
-### Community 37 - "Game Lifecycle and Reservations"
-Cohesion: 0.67
-Nodes (3): Admin action effect on host-idle timer — unresolved product question, Single global nonterminal game slot and immutable terminal lifecycle, Detailed workflow commit/recovery/test specifications remain TBD
+### Community 24 - "Single Nonterminal Game Reservation"
+Cohesion: 0.36
+Nodes (7): HLD-012 — Start prerequisite and application-wide game limit, HLD-015 — Awaiting Players state and game-code joining, HLD-016 — Spectator entry before and during a game, HLD-039 — Former independent saved-unstarted and In-Progress limits, HLD-056 — Game-code alphabet and input handling, HLD-077 — One application-wide nonterminal game at a time, BR-011 — The host shall be able to run multiple games during an event sequentially. At most one game may be nonterminal at a time (New, Awaiting Players or In Progress); another game may be created only after the current game becomes Resolved or Cancelled. Terminal games do not occupy the limit.
 
 ## Ambiguous Edges - Review These
 - `AWS Amplify Hosting — documented 12-month allowance, applicability to new accounts unconfirmed` → `Unconfirmed AWS new-account API Gateway/Amplify allowances: credit catalogs differ from older 12-month pricing language`  [AMBIGUOUS]
   plans/research.md · relation: conceptually_related_to
 - `API Gateway WebSockets — metered messages/connection-minutes; two-hour connection and ten-minute idle limits` → `Unconfirmed AWS new-account API Gateway/Amplify allowances: credit catalogs differ from older 12-month pricing language`  [AMBIGUOUS]
   plans/research.md · relation: conceptually_related_to
-- `BR-013 [Approved] — An active game's drawn-value record shall survive an accidental page refresh or application restart.` → `Unreconciled interpretation note: tracking does not yet imply past-game persistence or closed-app survival`  [AMBIGUOUS]
+- `BR-013 — An active game's drawn-value record shall survive an accidental page refresh or application restart.` → `Historical tracking interpretation conflicts with approved persistence`  [AMBIGUOUS]
   plans/requirements.md · relation: conceptually_related_to
-- `BR-021 [Approved] — The host shall be able to review completed games' draw records after starting a new game.` → `Unreconciled interpretation note: tracking does not yet imply past-game persistence or closed-app survival`  [AMBIGUOUS]
+- `BR-015 — Only the designated host shall be able to change the active game or draw values. How this is enforced remains undecided.` → `Older designated-host-only requirement qualified by admin override`  [AMBIGUOUS]
   plans/requirements.md · relation: conceptually_related_to
-- `Host-idle cancellation; admin refresh/open/resume effect is unresolved` → `Role and designated-host authorization`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165131_5dc344fd_what_is_the_exact_relationship_between_role_and_de.md · relation: conceptually_related_to
-- `BR-013 approved: active-game drawn-value record survives accidental page refresh or application restart` → `Unreconciled note: tracking does not imply past-game persistence or closed-app survival`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165132_e0d2b564_what_is_the_exact_relationship_between_br_013_and.md · relation: conceptually_related_to
-- `Unreconciled note: tracking does not imply past-game persistence or closed-app survival` → `BR-021 approved: host can review completed games’ draw records after starting a new game`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165132_f1875f64_what_is_the_exact_relationship_between_br_021_and.md · relation: conceptually_related_to
-- `BR-029 approved via clarification: configurable board dimensions default to 5×5 and numeric range must fill the board` → `GameConfiguration is a proposed logical struct, not implemented or fully approved`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165132_1cc58b04_what_is_the_exact_relationship_between_br_029_and.md · relation: conceptually_related_to
-- `API Gateway WebSockets: metered messages and connection-minutes, with two-hour connection and ten-minute idle limits` → `Unconfirmed AWS new-account API Gateway/Amplify allowances`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165132_a1184f88_what_is_the_exact_relationship_between_api_gateway.md · relation: conceptually_related_to
-- `AWS Amplify Hosting: documented 12-month build/CDN allowance; applicability to new accounts unconfirmed` → `Unconfirmed AWS new-account API Gateway/Amplify allowances; credit catalog differs from older 12-month pricing language`  [AMBIGUOUS]
-  graphify-out/memory/query_20261003_165132_50b53b32_what_is_the_exact_relationship_between_aws_amplify.md · relation: conceptually_related_to
+- `BR-016 — An active game shall remain usable if the venue loses its internet connection.` → `Unreconciled offline requirement versus online-only direction`  [AMBIGUOUS]
+  plans/requirements.md · relation: conceptually_related_to
+- `BR-021 — The host shall be able to review completed games' draw records after starting a new game.` → `Historical tracking interpretation conflicts with approved persistence`  [AMBIGUOUS]
+  plans/requirements.md · relation: conceptually_related_to
+- `D-005 — What internet access can be relied on at the venue?` → `Unreconciled offline requirement versus online-only direction`  [AMBIGUOUS]
+  plans/requirements.md · relation: conceptually_related_to
+- `HLD-020 — Durable WSS recovery and online-only gameplay` → `Unreconciled offline requirement versus online-only direction`  [AMBIGUOUS]
+  plans/requirements.md · relation: conceptually_related_to
+- `HLD-032 — Final-board History and common three-month TTL` → `Historical tracking interpretation conflicts with approved persistence`  [AMBIGUOUS]
+  plans/requirements.md · relation: conceptually_related_to
+- `HLD-074 — New admin role: account management and cross-game actions` → `Older designated-host-only requirement qualified by admin override`  [AMBIGUOUS]
+  plans/requirements.md · relation: conceptually_related_to
+- `LLD-027 — Rust routing libraries and Cloudflare dispatch boundaries` → `API router-TBD summary superseded by scoped LLD-027 selection`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-001 — Separate singleton AccountsObject placement/cardinality [Approved]` → `Stale AccountsObject acceptance TBD`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-001 — Separate singleton AccountsObject placement/cardinality [Approved]` → `Stale account-placement TBD versus approved ownership`  [AMBIGUOUS]
+  plans/lld.md · relation: conceptually_related_to
+- `DO-023 — Remaining password-verifier profile and physical encoding constraints [Approved]` → `Stale password-variant TBD`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-023 — Remaining password-verifier profile and physical encoding constraints [Approved]` → `Stale EncodedVerifier profile deferral`  [AMBIGUOUS]
+  plans/durable-object-design.md · relation: conceptually_related_to
+- `DO-024 — Argon2 work factors, supported bounds and runtime validation plan [Approved]` → `Stale password-variant TBD`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-025 — Password-verifier upgrades and concurrent-reset protection [Approved]` → `Historical DO-025 next cursor is stale`  [AMBIGUOUS]
+  plans/durable-object-design.md · relation: conceptually_related_to
+- `DO-040 — Host-idle renewal policy for non-designated admin activity [Approved]` → `Stale non-designated-admin idle effect TBD`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-041 — Idle cancellation versus activity/start timer races [Approved]` → `Stale non-designated-admin idle effect TBD`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-051 — Recovery-answer verifier algorithm/format/work factors [Approved]` → `Stale EncodedVerifier profile deferral`  [AMBIGUOUS]
+  plans/durable-object-design.md · relation: conceptually_related_to
+- `DO-052 — Recovery and answer-replacement transaction/session-socket fencing [Approved]` → `Stale DO-052/055 pending wording`  [AMBIGUOUS]
+  plans/lld.md · relation: conceptually_related_to
+- `DO-055 — ParticipantSessionRecord fields/types and live/final access constraints [Approved]` → `Stale DO-052/055 pending wording`  [AMBIGUOUS]
+  plans/lld.md · relation: conceptually_related_to
+- `DO-056 — Minimal terminal player-session record and Exit/replay/deletion guards [Approved]` → `Terminal spectator cleanup timing needs precedence`  [AMBIGUOUS]
+  plans/durable-object-design.md · relation: conceptually_related_to
+- `DO-073 — Terminal notice/revocation/deletion ordering without indefinite acknowledgement waits [Approved]` → `Terminal spectator cleanup timing needs precedence`  [AMBIGUOUS]
+  plans/durable-object-design.md · relation: conceptually_related_to
+- `DO-074 — Scheduled purge and Directory/Game code-reservation reuse coordination [Approved]` → `Purge API wording conflicts with expiry-based code reuse`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-100 — Durable Object namespace identities, binding names and environment isolation [Approved]` → `Stale AccountsObject acceptance TBD`  [AMBIGUOUS]
+  plans/api-design.md · relation: conceptually_related_to
+- `DO-100 — Durable Object namespace identities, binding names and environment isolation [Approved]` → `Stale account-placement TBD versus approved ownership`  [AMBIGUOUS]
+  plans/lld.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **172 isolated node(s):** `[10] Introducing Netlify's Free plan`, `[2] Fair Use Guidelines - Vercel`, `[23] Firebase pricing plans - Google`, `[27] Limits · Cloudflare Pages docs`, `[30] Oracle Cloud Free Tier` (+167 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 198 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **49 isolated node(s):** `[10] Introducing Netlify's Free plan`, `[2] Fair Use Guidelines - Vercel`, `[23] Firebase pricing plans - Google`, `[27] Limits · Cloudflare Pages docs`, `[30] Oracle Cloud Free Tier` (+44 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 104 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -272,13 +224,73 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `API Gateway WebSockets — metered messages/connection-minutes; two-hour connection and ten-minute idle limits` and `Unconfirmed AWS new-account API Gateway/Amplify allowances: credit catalogs differ from older 12-month pricing language`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `BR-013 [Approved] — An active game's drawn-value record shall survive an accidental page refresh or application restart.` and `Unreconciled interpretation note: tracking does not yet imply past-game persistence or closed-app survival`?**
+- **What is the exact relationship between `BR-013 — An active game's drawn-value record shall survive an accidental page refresh or application restart.` and `Historical tracking interpretation conflicts with approved persistence`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `BR-021 [Approved] — The host shall be able to review completed games' draw records after starting a new game.` and `Unreconciled interpretation note: tracking does not yet imply past-game persistence or closed-app survival`?**
+- **What is the exact relationship between `BR-015 — Only the designated host shall be able to change the active game or draw values. How this is enforced remains undecided.` and `Older designated-host-only requirement qualified by admin override`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Host-idle cancellation; admin refresh/open/resume effect is unresolved` and `Role and designated-host authorization`?**
+- **What is the exact relationship between `BR-016 — An active game shall remain usable if the venue loses its internet connection.` and `Unreconciled offline requirement versus online-only direction`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `BR-013 approved: active-game drawn-value record survives accidental page refresh or application restart` and `Unreconciled note: tracking does not imply past-game persistence or closed-app survival`?**
+- **What is the exact relationship between `BR-021 — The host shall be able to review completed games' draw records after starting a new game.` and `Historical tracking interpretation conflicts with approved persistence`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Unreconciled note: tracking does not imply past-game persistence or closed-app survival` and `BR-021 approved: host can review completed games’ draw records after starting a new game`?**
+- **What is the exact relationship between `D-005 — What internet access can be relied on at the venue?` and `Unreconciled offline requirement versus online-only direction`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
+## Canonical incremental refresh verification
+
+- Canonical corpus: 7 files; 6 changed sources semantically re-extracted; unchanged research extraction preserved.
+- Generated fragments, historical graph snapshots and saved query memories are excluded from the semantic corpus.
+- Current DO status rows: **107 total, 104 Approved, 3 Approved (revised), 0 pending**. Logical approval is not implementation or test evidence.
+- UI coverage: **17 VIEW IDs and UI-AC-01–UI-AC-17**, all proposals / unexecuted acceptance scenarios.
+- **LLD-027 selected direction:** Dioxus Router browser navigation, Axum HTTP service inside one Worker, same-origin Worker-first `/api` and `/api/*` SPA split, and native DO state/alarms/hibernating WebSockets. Earlier API router-TBD wording is superseded only for that choice; pins/contracts remain unfinalized. ROUTE-AC-01–08 are future, unexecuted checks.
+- **LLD-028 confirmed direction:** Dioxus-integrated Tailwind styling in RSX/shared components, compiled into static assets. No production browser/CDN compiler or API Worker CSS generation. Exact pins, visual tokens and build/browser validation remain open; History policy is unchanged.
+- 13 explicit source-conflict/ambiguity nodes; current ledger rows outrank stale approval cursors and summary prose. No source documents were reconciled by this refresh.
+- Edge-collapse caveat: 2733 raw evidence edges → 2630 undirected simple-graph edges (103 endpoint-pair collapses). Repeated/reciprocal evidence and all relations are retained in `all_evidence` / `all_relations` on collapsed edges; topology is not a multigraph.
+- No dangling endpoints, missing endpoints or self-loops; seven-source coverage and hashes verified. JSON, report and embedded HTML node/edge/community counts match.
+- Pre-existing research node attributes/edges remain intact except regenerated community/display metadata; source content unchanged.
+- See `refresh-verification.json` for absolute paths, before/after hashes, exact counts, diagnostics and authorized mid-refresh source revisions.
+
+### Semantic communities (all nodes)
+
+| Community | Label | Nodes | Cohesion |
+| --- | --- | ---: | ---: |
+| 0 | Approved Durable Ownership Policies | 126 | 0.052825396825396824 |
+| 1 | UI Proposals and API Views | 114 | 0.056202453035242975 |
+| 2 | Preserved Hosting Research | 88 | 0.0577324973876698 |
+| 3 | Participant Sessions and Recovery | 59 | 0.0771478667445938 |
+| 4 | Cross-Document Design Navigation | 40 | 0.08974358974358974 |
+| 5 | Game Lifecycle and Capacity | 34 | 0.1354723707664884 |
+| 6 | Requirements and Technology Baseline | 32 | 0.1028225806451613 |
+| 7 | High-Level Design Navigation | 31 | 0.06451612903225806 |
+| 8 | Selected Rust Routing Boundaries | 27 | 0.150997150997151 |
+| 9 | Account Login and Enrollment | 23 | 0.1422924901185771 |
+| 10 | Unexecuted UI and Release Gates | 23 | 0.10276679841897234 |
+| 11 | Roles and Platform Boundaries | 21 | 0.17142857142857143 |
+| 12 | History and Directory Maintenance | 18 | 0.13071895424836602 |
+| 13 | Board Generation and Qualification | 17 | 0.3897058823529412 |
+| 14 | Argon2 Verifier and Validation | 16 | 0.31666666666666665 |
+| 15 | Account Lifecycle and Enablement | 16 | 0.18333333333333332 |
+| 16 | Case-Sensitive Participant Identity | 16 | 0.4 |
+| 17 | Canonical Planning Sources | 15 | 0.13333333333333333 |
+| 18 | Tailwind and Accessible Components | 15 | 0.13333333333333333 |
+| 19 | Privileged Link Handoff | 14 | 0.27472527472527475 |
+| 20 | Authoritative Sessions and Revocation | 14 | 0.26373626373626374 |
+| 21 | Offline Wording Supersession | 11 | 0.2 |
+| 22 | Privileged Account Removal Guards | 10 | 0.37777777777777777 |
+| 23 | Unfinalized Contract Planning | 8 | 0.2857142857142857 |
+| 24 | Single Nonterminal Game Reservation | 8 | 0.35714285714285715 |
+| 25 | Lifecycle-Aware Frontend Navigation | 2 | 1.0 |
+
+### Source ambiguities
+
+- `plans/lld.md:L47` — LLD baseline still calls placement TBD; current DO-001 and DO-100 approve the singleton and bindings.
+- `plans/lld.md:L688` — Historical navigation prose says pending, but both authoritative ledger status rows are Approved.
+- `plans/api-design.md:L31-L40` — API boundary summary leaves placement/binding acceptance TBD despite approved DO-001/100; router and exact SDK interfaces remain TBD.
+- `plans/api-design.md:L218` — API login note leaves variant TBD although DO-023 approves Argon2id v19; actual production costs/caps remain unmeasured.
+- `plans/api-design.md:L904` — DO-040 settles no renewal by non-designated admin; physical race/alarm wiring remains implementation work.
+- `plans/api-design.md:L2292` — H10 says deny code reuse eligibility at expiry; DO-074 explicitly permits reuse at expiry with compare-by-game-ID cleanup. Do not silently adopt the API phrase.
+- `plans/durable-object-design.md:L314` — DO-025 is already Approved in the authoritative ledger, despite retained historical next-item wording.
+- `plans/durable-object-design.md:L152` — Shared-type summary leaves recovery algorithm/format TBD; approved DO-023/051 settle profiles while production measurements remain open.
+- `plans/durable-object-design.md:L625-L627` — DO-056 summary says deletion at terminal commit; later DO-073 requires best-effort connected delivery after terminal commit then deletion, without ACK wait.
+- `plans/requirements.md:L43` — Original BR-016/D-005 offline wording persists; later HLD-020 explicitly supersedes offline gameplay.
+- `plans/requirements.md:L42` — Later HLD-074 allows valid admin cross-game actions without changing designated host.
+- `plans/requirements.md:L58` — Interpretation denies implied persistence/history despite explicit requirements and later final-History policies.
+- `plans/api-design.md:L27` — Later LLD-027 explicitly selects Dioxus Router, Axum HTTP service and native DO boundaries. API prose remains unchanged; contracts/pins and compatibility tests remain pending.
