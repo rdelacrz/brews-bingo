@@ -1150,7 +1150,7 @@ Path: `PATCH /api/games/{game_id}/membership/alias`
 
 Auth scope: Player
 
-Before start, claim the new alias and release the old one. Preserve membership, seat, answer verifier and original session expiry.
+In Awaiting Players only, validate the caller's stable player binding and candidate alias, then atomically claim the new exact-case alias and release the old one while preserving membership, seat, answer verifier and original session expiry. The player session binds by stable `player_id`, not alias; rename does not rewrite/rotate credentials or renew expiry. Current alias is read from PlayerRecord. Self-rename/no-op response behavior, retry metadata and response/error types remain **TBD**.
 
 ##### Request
 
@@ -1164,9 +1164,9 @@ Command metadata: `command_id: CommandId`; optional `expected_revision: Revision
 
 ##### Response
 
-The old alias is released; stable membership, recovery verifier and seat remain. Any credential rebinding must not extend the original session expiry.
+The old alias is released; stable membership, recovery verifier and seat remain. The player session stays bound by stable `player_id`; do not rewrite/rotate credentials or extend the original session expiry. Response fields are the current PlayerRecord identity/alias and unchanged expiry.
 
-Failure candidates: started/terminal game, invalid/claimed alias or stale/invalid session. Atomic rebinding/response contract **TBD**.
+Failure candidates: started/terminal game, invalid/claimed alias or stale/invalid session. Idempotency metadata, response/error variants and self-rename/no-op response remain **TBD**; they must not change the approved atomic alias/session-binding behavior.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1181,13 +1181,13 @@ Path: `POST /api/games/{game_id}/membership/switch-to-spectator`
 
 Auth scope: Player
 
-Before start, acquire spectator admission, release player seat/alias and delete the player recovery verifier. Failure preserves the original role.
+DO-047: before start, atomically acquire spectator admission, release player seat/alias and delete the PlayerRecoveryRecord. Retire player-role session/socket authority and replace it with spectator authority at the same absolute session expiry, never extending it. Failure preserves original role, seat and recovery proof.
 
 ##### Request
 
 Path: `game_id: GameId`. Cookie: valid existing player session. No target identity or recovery answer.
 
-Command metadata: `command_id: CommandId`; transport/placement is **TBD**, not assigned to the body here. No body fields are specified; the role-switch session/confirmation representation is **TBD**.
+Command metadata: `command_id: CommandId`; transport/placement is **TBD**, not assigned to the body here. No body fields are specified; exact response/confirmation representation remains **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1196,7 +1196,7 @@ Command metadata: `command_id: CommandId`; transport/placement is **TBD**, not a
 
 The player alias/seat are released and the recovery verifier is deleted.
 
-Cookie effect: replace/deauthorize player authority for the new spectator binding. Rotation/deadline mechanics **TBD**; no implicit session-lifetime renewal.
+Cookie effect: replace/deauthorize player authority for the new spectator binding at the existing session's fixed absolute expiry; do not extend its lifetime. DO-055 still defines the complete participant-session schema/access constraints; physical fencing and retry mechanics remain TBD.
 
 Failure candidates: non-lobby state or no spectator capacity. Rejection preserves the original player membership/session and verifier.
 
@@ -1211,13 +1211,13 @@ Path: `POST /api/games/{game_id}/membership/switch-to-player`
 
 Auth scope: Anyone
 
-A valid existing spectator session is required. Before start, claim an eligible player seat/alias, release spectator occupancy and optionally enroll a fresh answer. Do not restore deleted credentials or permit an unauthenticated membership takeover.
+DO-047: a valid existing spectator session is required. Before start, claim an eligible player seat/alias, create a fresh PlayerRecord/PlayerId, release spectator occupancy and optionally enroll a fresh answer. Do not restore deleted credentials or permit an unauthenticated membership takeover.
 
 ##### Request
 
 Path: `game_id: GameId`. Cookie: valid existing spectator session. The switch is before start; it does not permit unauthenticated membership takeover.
 
-Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. No old/deleted player session or answer is restored. Input/rotation/deadline semantics **TBD**.
+Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here. No old/deleted player session or answer is restored. Replace role-bound session authority at the original fixed absolute expiry without extension (DO-047).
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1228,9 +1228,9 @@ Proposed command metadata: `command_id: CommandId`; transport/placement remains 
 
 No board before start.
 
-Cookie effect: bind authority to the admitted player and retire spectator authority/occupancy without implicit lifetime renewal.
+Cookie effect: bind authority to the fresh player membership and retire spectator authority/occupancy at the original fixed expiry without extension (DO-047).
 
-Failure candidates: no player slot, invalid/claimed alias or non-lobby state. Preserve spectator role/seat on rejection; exact session transition **TBD**.
+Failure candidates: no player slot, invalid/claimed alias or non-lobby state. Preserve spectator role/seat/session on rejection. DO-055 still defines complete session fields/access rules; physical fencing/retry details remain TBD.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1243,7 +1243,7 @@ Path: `POST /api/games/{game_id}/membership/leave`
 
 Auth scope: Player
 
-Player Leave before start releases seat/alias and removes that membership from the start roster. Returning requires fresh eligible admission. Dispatch this branch using server-verified role and lifecycle.
+DO-047: player Leave before start removes membership, recovery proof and session authority, releases seat/alias, and removes that membership from the start roster. Returning requires fresh eligible admission. Dispatch this branch using server-verified role and lifecycle.
 
 ##### Request
 
@@ -1258,7 +1258,7 @@ The server verifies the pre-start branch using role and lifecycle. Optional life
 
 The proposed acknowledgment body below or an empty success may be returned; the choice is **TBD**.
 
-Cookie effect: clear/deauthorize removed membership credentials; release seat/alias, delete recovery material and remove the membership from the start roster. Returning requires fresh eligible admission.
+Cookie effect: clear/deauthorize removed membership credentials; release seat/alias, delete recovery material and remove the membership from the start roster. Returning requires fresh eligible admission (DO-047).
 
 Repeat/lost-response handling and Start/Leave conflict contract **TBD**; no board or new session is returned.
 
@@ -1274,7 +1274,7 @@ Path: `POST /api/games/{game_id}/membership/leave`
 
 Auth scope: Player
 
-Player Leave during play retains seat, board, automatic matching and award eligibility. Preserve approved valid-session/answer-based return. Dispatch this branch using server-verified role and lifecycle.
+DO-047: player Leave during play retains membership, seat, board, automatic matching and award eligibility. A still-valid session may return until its original fixed expiry; after expiry, approved answer-based recovery may restore the same membership. Do not extend session expiry. Dispatch this branch using server-verified role and lifecycle.
 
 ##### Request
 
@@ -1289,9 +1289,9 @@ The server selects the In Progress branch using verified role and lifecycle; the
 
 The fields below describe a potential response body; exact body/status **TBD**.
 
-Retain board, alias/seat, automatic matching and award eligibility. Preserve valid-session or enrolled-answer return; this is not logout or terminal Exit.
+Retain membership, board, alias/seat, automatic matching and award eligibility. Preserve return through the still-valid fixed-expiry session or enrolled-answer proof; this is not logout or terminal Exit (DO-047).
 
-Socket detachment, repeat Leave and terminal races **TBD**.
+Socket detachment/fencing, repeat Leave and terminal race mechanics **TBD**; approved policy retains session eligibility only through its original expiry (DO-047).
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1306,7 +1306,7 @@ Path: `POST /api/games/{game_id}/membership/leave`
 
 Auth scope: Anyone
 
-A valid spectator session is required. Immediately release that spectator’s occupancy and delete its identity/session data. Explicit Leave does not receive accidental-disconnect grace. Dispatch using server-verified role and lifecycle.
+DO-047: a valid spectator session is required. Immediately release that spectator’s occupancy and revoke/delete its session data. Explicit Leave does not receive accidental-disconnect grace; later entry requires fresh admission. Dispatch using server-verified role and lifecycle.
 
 ##### Request
 
@@ -1340,7 +1340,7 @@ Verify submitted code, current alias and enrolled answer; replace old sessions/s
 
 ##### Request
 
-No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. Answer normalization, throttling and interrupted-recovery replay handling remain **TBD**.
+No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. DO-050 approves answer normalization version 1: Unicode NFC, trim outer Unicode whitespace, then Unicode case-fold; preserve internal whitespace and punctuation. Select normalization by the stored record version. Verifier profile/abuse controls (DO-051/052) and interrupted-recovery replay handling remain **TBD**.
 
 No arbitrary player/account/board replacement input.
 
@@ -1348,7 +1348,7 @@ No arbitrary player/account/board replacement input.
 | --- | --- | --- | --- |
 | `game_code` | `String` | Y | Game code submitted for recovery; normalize by confirmed rules. |
 | `alias` | `String` | Y | Current player alias; outer-space trim under HLD-051, then exact case-sensitive comparison with the current retained membership (DO-045 approved). |
-| `recovery_answer` | `String` | Y | Required sensitive proof: the enrolled recovery answer. Answer normalization **TBD**. |
+| `recovery_answer` | `String` | Y | Required sensitive proof: the enrolled recovery answer. Apply normalization profile selected by the stored `normalization_version`; version 1 is Unicode NFC → outer Unicode-whitespace trim → case-fold, preserving internal whitespace/punctuation (DO-050). |
 
 ##### Response
 
@@ -1380,7 +1380,7 @@ Proposed command metadata: `command_id: CommandId`; method-specific validation/t
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `recovery_answer` | `String` | N | Sensitive new/replacement answer required for PUT; not supplied for DELETE. Conditional across methods, not optional when setting/replacing the answer. |
+| `recovery_answer` | `String` | N | Sensitive new/replacement answer required for PUT; apply the existing record's normalization profile when replacing and version 1 for a new record (DO-050: Unicode NFC → outer Unicode-whitespace trim → case-fold, preserving internal whitespace/punctuation). Not supplied for DELETE. Conditional across methods, not optional when setting/replacing the answer. |
 
 ##### Response
 
