@@ -1733,7 +1733,7 @@ Path: `GET /api/games/{game_id}/result`
 
 Auth scope: Host, Player
 
-Return only a permitted final view. Players use the existing `TerminalPlayerViewRecord` grant (DO-056), with original expiry and no post-Exit recreation; hosts/admins use existing eligible account-view authorization, with terminal downgrade/Exit scope under DO-058. Spectators cannot fetch/reconnect after terminal cleanup.
+Return only a permitted final view. Players use the existing `TerminalPlayerViewRecord` grant (DO-056), with original expiry and no post-Exit recreation; hosts/admins use existing eligible account-view authorization under DO-058’s approved downgrade and account/game-wide Exit across sessions, bounded by account-session/History expiry. Spectators cannot fetch/reconnect after terminal cleanup.
 
 ##### Request
 
@@ -1760,7 +1760,7 @@ Path: `POST /api/games/{game_id}/exit`
 
 Auth scope: Anyone
 
-Requires existing final-view authorization when server-side cleanup is needed. For players, atomically delete all terminal grants for that stable player ID and close their connections, without changing outcomes or other users. Account-view Exit scope remains DO-058. Spectator local-only Exit requires no request after server data deletion.
+Requires existing final-view authorization when server-side cleanup is needed. For players, atomically delete all terminal grants for that stable player ID and close their connections, without changing outcomes or other users. Account-view Exit follows DO-058: delete all grants for that account/game across sessions without logging out or removing History permission. Spectator local-only Exit requires no request after server data deletion.
 
 ##### Request
 
@@ -1773,11 +1773,11 @@ No target player/account ID. Spectator local-only Exit after deletion and pre-st
 
 ##### Response
 
-Proposed response may contain `exited: bool` or be an empty success; the choice is **TBD**. Player Exit removes all terminal grants for that player; account-view cleanup follows DO-058. Cookie effects and response shape remain TBD.
+Proposed response may contain `exited: bool` or be an empty success; the choice is **TBD**. Player Exit removes all terminal grants for that player; account-view cleanup follows DO-058 across sessions. Cookie effects and response shape remain TBD.
 
 Account authentication remains valid; game result/History and other viewers remain unchanged. Exit does not wait for other viewers, and the caller cannot recreate final-view authority through resume.
 
-Player Exit retries cannot recreate a deleted grant. Account multi-session Exit scope is DO-058; response and no-session local behavior remain **TBD**.
+Player Exit retries cannot recreate a deleted grant. DO-058 approves account/game-wide Exit across sessions; response and no-session local behavior remain **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
