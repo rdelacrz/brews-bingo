@@ -1340,7 +1340,7 @@ Verify submitted code, current alias and enrolled answer; replace old sessions/s
 
 ##### Request
 
-No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. DO-050 approves answer normalization version 1: Unicode NFC, trim outer Unicode whitespace, then Unicode case-fold; preserve internal whitespace and punctuation. Select normalization by the stored record version. DO-051 approves Argon2id v19, fresh independent 16-byte CSPRNG salt, 32-byte output and PHC-encoded verifier; 19 MiB / 2 iterations / parallelism 1 is only a benchmark starting point, with production costs/caps pending target measurements. DO-052 abuse controls and recovery/session/socket transaction/fencing details plus interrupted-recovery replay handling remain **TBD**.
+No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. DO-050 approves answer normalization version 1: Unicode NFC, trim outer Unicode whitespace, then Unicode case-fold; preserve internal whitespace and punctuation. Select normalization by the stored record version. DO-051 approves Argon2id v19, fresh independent 16-byte CSPRNG salt, 32-byte output and PHC-encoded verifier; 19 MiB / 2 iterations / parallelism 1 is only a benchmark starting point, with production costs/caps pending target measurements. DO-052 approves verification outside the write transaction followed by commit-time revalidation of lifecycle, membership/current alias and unchanged verifier/version; success advances `session_epoch`, invalidates predecessor sessions, and issues a fresh fixed one-day session. Old sockets fail authorization at the next frame; close completion requires acknowledgement. A committed-but-lost response requires fresh answer proof; session secrets are never replayed. Rate-limit thresholds/durable implementation and exact Unicode library details remain **TBD**.
 
 No arbitrary player/account/board replacement input.
 
@@ -1354,9 +1354,9 @@ No arbitrary player/account/board replacement input.
 
 Return the body only after successful proof, restoring the same nonterminal membership and any existing board.
 
-Cookie effect: issue a fresh one-day HttpOnly player session; revoke predecessor tokens/sockets atomically with recovery. No new membership/seat/board.
+Cookie effect: after atomic recovery commit, issue a fresh fixed one-day player session at the incremented `session_epoch`; predecessor sessions become invalid atomically, with socket close work asynchronous and tracked to closed/already-absent acknowledgement. No new membership/seat/board.
 
-Invalid code/alias/answer, absent enrollment and terminal game produce safe failure without answer/account enumeration; exact errors and lost-response behavior **TBD**.
+Invalid code/alias/answer, absent enrollment and terminal game produce safe failure without answer/account enumeration; committed-but-lost response recovery requires fresh answer proof and never replays a session secret. Exact errors remain **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1370,7 +1370,7 @@ Path: `PUT /api/games/{game_id}/membership/recovery-answer` or `DELETE /api/game
 
 Auth scope: Player
 
-Set/replace the caller’s answer using PUT or delete it using DELETE in Awaiting Players/In Progress. Deletion disables answer recovery. A lost-session caller cannot use this operation to establish ownership.
+Set/replace the caller’s answer using PUT or delete it using DELETE in Awaiting Players/In Progress. Deletion disables answer recovery. A lost-session caller cannot use this operation to establish ownership. DO-052 approves atomic serialization with concurrent recovery: revalidate the verifier/version before recovery commit; an answer update that wins first makes the stale proof fail closed. Answer management does not rotate or extend the caller’s current session.
 
 ##### Request
 
