@@ -63,7 +63,7 @@ An Object's in-memory state is temporary; accepted game data must remain in its 
 | Transport and routing | One API Worker serves multiple HTTPS endpoints and WSS upgrades, dispatching to handlers and authoritative backend owners (LLD-016). | Proposed methods/paths in Section 6; final contracts, base URL/versioning, Rust router/handler signatures and internal calls remain TBD. |
 | Authentication | Backend-issued `__Host-brews_session` cookie with `Secure; HttpOnly; Path=/; SameSite=Lax`, no `Domain`, HTTPS-only; fixed one-day expiry and restricted versus normal scopes (DO-031). Account links/sessions must match current `credential_epoch` (DO-022) plus scope/purpose, expiry, revocation, lifecycle and `disabled_at`. DO-028 approves atomic link consumption/session creation; DO-030 approves session-row binding; DO-032/033 approve enrollment rotation and post-reset fresh login. DO-034 requires current authoritative account/session validation for each protected request and disallows an unrevalidated positive authorization cache across requests. DO-035 requires WSS subscription registration against current enabled Verified/Normal session authority in one AccountsObject transaction, with registration-first/revocation-first ordering and fail-closed socket handling. DO-036 requires durable same-transaction revocation work and per-outgoing-frame authority revalidation; DO-037 requires expiry sweeps to enqueue idempotent closes and retain subscription targets through close/absence acknowledgement before deletion. Do not report all sockets closed before target acknowledgements. | SQL/outbox fields, sweep cadence/scheduling, indexes, exact-Origin implementation/error mapping and remaining wire details. |
 | Authorization | Server-owned role plus game assignment; admin overrides ownership only. Users/account-list data is admin-only. | TBD — middleware, checks and commit-time reauthorization. |
-| Request validation | Preserve string values, alias/code normalization, lifecycle and capacity rules. | Potential operation inputs in Section 6; final media types, encodings, requiredness, validation/unknown-field policy and limits **TBD**. |
+| Request validation | Preserve string values, alias outer-space trimming/case-sensitive comparison, code normalization, lifecycle and capacity rules. | Potential operation inputs in Section 6; final media types, encodings, requiredness, validation/unknown-field policy and limits **TBD**. |
 | Response contract | Return authorized state/results only; secret fields absent from normal views and logs; privileged link issuance uses a separate protected handoff. DO-028 requires canonical-origin links, no-store handoff and token-redacted logs/traces. | Potential safe projections/outputs in Section 6; final envelopes, fields/encodings, status codes and remaining cache/transport details **TBD**. |
 | Retry safety | Actor/game-scoped command identity and durable outcome lookup; repeat accepted command without repeating effects. | TBD — idempotency transport, conflict behavior, result retention and retry policy. |
 | Errors | Component-owned errors use `thiserror` in local `error.rs` files per [LLD Section 3.4](lld.md#error-conventions). Deliberately map them to safe transport errors; never expose raw source chains. | **TBD** — public codes/statuses, response schemas, messages, WSS close behavior, retry classification and mapping tests. |
@@ -101,7 +101,7 @@ These stable API-01–API-33 rows remain a high-level coverage checklist, not fi
 | API-21 | Resolve game code / entry eligibility | Known published code only; discovery is not identity or admission. | C4, D3 | Proposed Request/Response: C4, D3 in Section 6; final contract **TBD**. |
 | API-22 | Join as player | Awaiting Players, valid available alias/free slot, optional answer; no board before start. | D4, D5 | Proposed Request/Response: D4, D5 in Section 6; final contract **TBD**. |
 | API-23 | Join as spectator | Awaiting Players/In Progress and spectator capacity; no player privileges. | D6, H5 | Proposed Request/Response: D6, H5 in Section 6; final contract **TBD**. |
-| API-24 | Rename own alias | Valid player session, Awaiting Players; available normalized name, stable membership and unchanged session expiry. | D7 | Proposed Request/Response: D7 in Section 6; final contract **TBD**. |
+| API-24 | Rename own alias | Valid player session, Awaiting Players; valid available case-sensitive alias after outer-space trimming, stable membership and unchanged session expiry. | D7 | Proposed Request/Response: D7 in Section 6; final contract **TBD**. |
 | API-25 | Switch participant role | Awaiting Players and target eligibility; consistent seat/session/alias/verifier transition, no second admission. | D8, D9 | Proposed Request/Response: D8, D9 in Section 6; final contract **TBD**. |
 | API-26 | Participant Leave | Valid owner; pre-start player versus In Progress player versus spectator policies differ. | D10, D11, D12 | Proposed Request/Response: D10, D11, D12 in Section 6; final contract **TBD**. |
 | API-27 | Recover player session | Code + current alias + enrolled answer; nonterminal restoration of same membership, replace old sessions/sockets. | D13 | Proposed Request/Response: D13 in Section 6; final contract **TBD**. |
@@ -215,7 +215,7 @@ Validate submitted account credentials and enrollment/reset/disabled state; crea
 
 No existing account session is required; request-origin/CSRF and abuse controls still apply. The password is sensitive input and must be sent in the HTTPS body only.
 
-Username rules follow [DO-020/021](durable-object-design.md#account-records): trim leading/trailing ASCII whitespace (`0x09`–`0x0D` and `0x20`) before validating 10–50 decoded ASCII characters with no internal whitespace. Preserve trimmed original casing in storage/display; compute temporary ASCII-lowercase values for case-insensitive uniqueness/login, with no stored normalized key. Other permitted ASCII controls, including NUL and DEL, remain unchanged. Apply consistently to CLI/admin account creation and login. SQL/constraint enforcement, control-character transport/UI handling and validation/error mechanics remain **TBD**. Password upper bounds remain separately **TBD**. Password hashing is selected as salted Argon2 via RustCrypto `argon2` ([LLD-024](lld.md#password-hashing)); variant, work factors, version, features and runtime details remain **TBD**.
+Username rules follow [DO-020/021](durable-object-design.md#account-records): trim leading/trailing ASCII whitespace (`0x09`–`0x0D` and `0x20`) before validating 10–50 decoded ASCII characters with no internal whitespace. Preserve trimmed original casing in storage/display. DO-021's approved user revision uses exact case-sensitive equality for uniqueness and login; usernames differing only by case are distinct. No lowercase/case-folded comparison or normalized key is used. Other permitted ASCII controls, including NUL and DEL, remain unchanged. Apply consistently to CLI/admin account creation and login. SQL/constraint enforcement must preserve case-sensitive uniqueness; control-character transport/UI handling and validation/error mechanics remain **TBD**. Password upper bounds remain separately **TBD**. Password hashing is selected as salted Argon2 via RustCrypto `argon2` ([LLD-024](lld.md#password-hashing)); variant, work factors, version, features and runtime details remain **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1054,7 +1054,7 @@ Path: — Internal
 
 Auth scope: System
 
-Check a normalized alias claim within a game during admission, rename or role switching. No public alias-availability endpoint is implied.
+Check an exact case-sensitive trimmed alias claim within a game during admission, rename or role switching. No public alias-availability endpoint is implied.
 
 ##### Request
 
@@ -1065,7 +1065,7 @@ The transaction context must belong to admission, rename or role switching. The 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `game_id` | `GameId` | Y | Owning game supplied to the internal operation. |
-| `alias_key` | `String` | Y | Normalized alias claim to check within the owning game. |
+| `alias` | `String` | Y | Candidate alias after HLD-051 outer-space trimming; compare exact case-sensitive spelling against each retained PlayerRecord alias in the owning game. This is the alias itself, not a duplicate normalized key. |
 | `exclude_player_id` | `PlayerId` | N | Optional exclusion for a same-membership rename, supplied by the trusted caller. |
 
 ##### Response
@@ -1076,7 +1076,7 @@ An advisory check alone does not claim the alias; the enclosing transaction enfo
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `claimed` | `bool` | Y | Whether the normalized alias claim is already claimed in the game, subject to the unresolved self-rename semantics. |
+| `claimed` | `bool` | Y | Whether the exact case-sensitive trimmed alias is already claimed in the game, subject to the unresolved self-rename semantics. |
 
 #### D5: `join_game_as_player` (Mutating)
 
@@ -1340,14 +1340,14 @@ Verify submitted code, current alias and enrolled answer; replace old sessions/s
 
 ##### Request
 
-No existing session is required, but approved recovery proof is mandatory. Normalize code/alias by confirmed rules; answer normalization, throttling and interrupted-recovery replay handling **TBD**.
+No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. Answer normalization, throttling and interrupted-recovery replay handling remain **TBD**.
 
 No arbitrary player/account/board replacement input.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `game_code` | `String` | Y | Game code submitted for recovery; normalize by confirmed rules. |
-| `alias` | `String` | Y | Current player alias; normalize by confirmed rules. |
+| `alias` | `String` | Y | Current player alias; outer-space trim under HLD-051, then exact case-sensitive comparison with the current retained membership (DO-045 approved). |
 | `recovery_answer` | `String` | Y | Required sensitive proof: the enrolled recovery answer. Answer normalization **TBD**. |
 
 ##### Response
@@ -1546,7 +1546,7 @@ Path: `POST /api/games/{game_id}/start`
 
 Auth scope: Host
 
-The designated host or an authorized admin validates the connected-player minimum, that this game still owns the single global nonterminal-game reservation, and board feasibility; transitions this same game to In Progress and persists boards/initial qualification for the retained start roster.
+The designated host or an authorized admin validates the connected-player minimum, that this game still owns the single global nonterminal-game reservation, and DO-044's exact distinct-layout feasibility against every retained start-time player membership; it transitions this same game to In Progress and persists boards/initial qualification for the retained start roster.
 
 ##### Request
 
