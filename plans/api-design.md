@@ -1274,7 +1274,7 @@ Path: `POST /api/games/{game_id}/membership/leave`
 
 Auth scope: Player
 
-DO-047: player Leave during play retains membership, seat, board, automatic matching and award eligibility. A still-valid session may return until its original fixed expiry; after expiry, approved answer-based recovery may restore the same membership. Do not extend session expiry. Dispatch this branch using server-verified role and lifecycle.
+DO-047: player Leave during play retains membership, seat, board, automatic matching and award eligibility. A still-valid session may return until its original fixed expiry; after expiry, approved answer-based recovery may restore the same membership. Do not extend session expiry. DO-048: `last_explicit_leave_at` records the latest explicit Leave event and remains set after return; it does not indicate current presence. Dispatch this branch using server-verified role and lifecycle.
 
 ##### Request
 
@@ -1340,7 +1340,7 @@ Verify submitted code, current alias and enrolled answer; replace old sessions/s
 
 ##### Request
 
-No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. DO-050 approves answer normalization version 1: Unicode NFC, trim outer Unicode whitespace, then Unicode case-fold; preserve internal whitespace and punctuation. Select normalization by the stored record version. Verifier profile/abuse controls (DO-051/052) and interrupted-recovery replay handling remain **TBD**.
+No existing session is required, but approved recovery proof is mandatory. Normalize the game code by HLD-056; trim the submitted alias under HLD-051 and require exact case-sensitive spelling under DO-045. DO-050 approves answer normalization version 1: Unicode NFC, trim outer Unicode whitespace, then Unicode case-fold; preserve internal whitespace and punctuation. Select normalization by the stored record version. DO-051 approves Argon2id v19, fresh independent 16-byte CSPRNG salt, 32-byte output and PHC-encoded verifier; 19 MiB / 2 iterations / parallelism 1 is only a benchmark starting point, with production costs/caps pending target measurements. DO-052 abuse controls and recovery/session/socket transaction/fencing details plus interrupted-recovery replay handling remain **TBD**.
 
 No arbitrary player/account/board replacement input.
 
