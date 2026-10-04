@@ -841,7 +841,7 @@ Command metadata: `command_id: CommandId`; possible `expected_revision: Revision
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `numeric_upper_bound` | `u32` | N | Proposed optional numeric upper-bound patch field; omitted-field versus null/replace semantics remain TBD. |
+| `numeric_upper_bound` | `u32` | N | Optional numeric upper-bound patch; require 1–1,000 inclusive (DO-043), default 75; string pool is `1..=numeric_upper_bound`. Omitted-field versus null/replace semantics remain TBD. |
 | `board_side_length` | `u8` | N | Proposed optional board side-length patch field; omitted-field versus null/replace semantics remain TBD. |
 | `free_cells_enabled` | `bool` | N | Proposed optional free-cell enablement patch field; omitted-field versus null/replace semantics remain TBD. |
 | `free_cell_positions` | `Vec<CellPosition>` | N | Proposed optional free-cell positions patch field; omitted-field versus null/replace semantics remain TBD. |
@@ -914,7 +914,7 @@ Potential command metadata: `command_id: CommandId`; identify an intentional ope
 
 ##### Response
 
-**Potential outputs (proposal):** Return existing code/boards; do not recreate them. Passive/other-host views do not renew the host-idle timer. Non-designated admin renewal behavior remains **TBD**.
+**Potential outputs (proposal):** Return existing code/boards; do not recreate them. Passive/other-host views do not renew the host-idle timer. Under DO-040, non-designated admin open/resume does not renew it either; the current designated host's accepted qualifying activity is required.
 
 Terminal/exited-view routing and denied/expired outcomes remain **TBD**; do not reopen terminal access.
 
@@ -2197,11 +2197,11 @@ Path: — Internal
 
 Auth scope: System
 
-After rechecking state/deadline, cancel an unstarted game following 24 hours of qualifying-host inactivity. Release the same global nonterminal-game reservation after terminal/deletion coordination and trigger cleanup.
+After rechecking state/deadline, cancel an unstarted game following 24 hours of qualifying designated-host inactivity under DO-040/041. At the serialized transaction point, trusted `now >= idle_cancel_due_at` means expiry wins, including equality; commit Cancelled/HostIdleTimeout, delete pre-start game/participant data without History, then compare-by-game-ID release the same global reservation. An early/stale alarm rereads/reschedules; it cannot cancel In Progress or release a newer reservation. Alarm scheduling and cross-Object recovery remain TBD.
 
 ##### Request
 
-These are proposed trusted internal scheduled inputs, not a public request body. Re-read state and qualifying designated-host activity before applying the 24-hour inactivity cancellation; admin-override timer behavior is **TBD**.
+These are proposed trusted internal scheduled inputs, not a public request body. Under DO-041, compare trusted transaction-point time end-exclusively to the current `idle_cancel_due_at`; re-read state/activity and reschedule early/stale alarms. Expiry wins at or after due; DO-040 excludes non-designated-admin override actions from timer renewal. Physical schedule/delivery remains TBD.
 
 Internal scheduled inputs include the fields below, trusted time and activity/lifecycle revision. The latter arguments remain unnamed with types **TBD**.
 
