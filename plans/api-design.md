@@ -1196,7 +1196,7 @@ Command metadata: `command_id: CommandId`; transport/placement is **TBD**, not a
 
 The player alias/seat are released and the recovery verifier is deleted.
 
-Cookie effect: replace/deauthorize player authority for the new spectator binding at the existing session's fixed absolute expiry; do not extend its lifetime. DO-055 still defines the complete participant-session schema/access constraints; physical fencing and retry mechanics remain TBD.
+Cookie effect: replace/deauthorize player authority for the new spectator binding at the existing session's fixed absolute expiry; do not extend its lifetime. DO-055 approves the stable participant binding/access model; physical fencing, token/cookie transport and retry mechanics remain TBD, with DO-056 covering terminal record/Exit rules.
 
 Failure candidates: non-lobby state or no spectator capacity. Rejection preserves the original player membership/session and verifier.
 
@@ -1230,7 +1230,7 @@ No board before start.
 
 Cookie effect: bind authority to the fresh player membership and retire spectator authority/occupancy at the original fixed expiry without extension (DO-047).
 
-Failure candidates: no player slot, invalid/claimed alias or non-lobby state. Preserve spectator role/seat/session on rejection. DO-055 still defines complete session fields/access rules; physical fencing/retry details remain TBD.
+Failure candidates: no player slot, invalid/claimed alias or non-lobby state. Preserve spectator role/seat/session on rejection. DO-055 approves the participant-session fields/access rules; physical fencing/retry details remain TBD, and DO-056 covers terminal record/Exit rules.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
