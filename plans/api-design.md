@@ -61,7 +61,7 @@ An Object's in-memory state is temporary; accepted game data must remain in its 
 | API concern | Confirmed input | Implementation specification |
 | --- | --- | --- |
 | Transport and routing | One API Worker serves multiple HTTPS endpoints and WSS upgrades, dispatching to handlers and authoritative backend owners (LLD-016). | Proposed methods/paths in Section 6; final contracts, base URL/versioning, Rust router/handler signatures and internal calls remain TBD. |
-| Authentication | Backend-issued `__Host-brews_session` cookie with `Secure; HttpOnly; Path=/; SameSite=Lax`, no `Domain`, HTTPS-only; fixed one-day expiry and restricted versus normal scopes (DO-031). Account links/sessions must match current `credential_epoch` (DO-022) plus scope/purpose, expiry, revocation, lifecycle and `disabled_at`. DO-028 approves atomic link consumption/session creation; DO-030 approves session-row binding. | TBD — authoritative account/session lookup, transaction/locking details, exact-Origin implementation/error mapping and other wire details. |
+| Authentication | Backend-issued `__Host-brews_session` cookie with `Secure; HttpOnly; Path=/; SameSite=Lax`, no `Domain`, HTTPS-only; fixed one-day expiry and restricted versus normal scopes (DO-031). Account links/sessions must match current `credential_epoch` (DO-022) plus scope/purpose, expiry, revocation, lifecycle and `disabled_at`. DO-028 approves atomic link consumption/session creation; DO-030 approves session-row binding; DO-032/033 approve enrollment rotation and post-reset fresh login. DO-034 requires current authoritative account/session validation for each protected request and disallows an unrevalidated positive authorization cache across requests. DO-035 requires WSS subscription registration against current enabled Verified/Normal session authority in one AccountsObject transaction, with registration-first/revocation-first ordering and fail-closed socket handling. DO-036 requires durable same-transaction revocation work and per-outgoing-frame authority revalidation; DO-037 requires expiry sweeps to enqueue idempotent closes and retain subscription targets through close/absence acknowledgement before deletion. Do not report all sockets closed before target acknowledgements. | SQL/outbox fields, sweep cadence/scheduling, indexes, exact-Origin implementation/error mapping and remaining wire details. |
 | Authorization | Server-owned role plus game assignment; admin overrides ownership only. Users/account-list data is admin-only. | TBD — middleware, checks and commit-time reauthorization. |
 | Request validation | Preserve string values, alias/code normalization, lifecycle and capacity rules. | Potential operation inputs in Section 6; final media types, encodings, requiredness, validation/unknown-field policy and limits **TBD**. |
 | Response contract | Return authorized state/results only; secret fields absent from normal views and logs; privileged link issuance uses a separate protected handoff. DO-028 requires canonical-origin links, no-store handoff and token-redacted logs/traces. | Potential safe projections/outputs in Section 6; final envelopes, fields/encodings, status codes and remaining cache/transport details **TBD**. |
@@ -178,7 +178,7 @@ Failure conditions, status/error-code mapping, durable effects and retry safety 
 - **Table notation:** `Field` is the body field name, `Type` is its proposed data type, and `Required` contains only `Y` or `N`. `Y` means required in the described proposed payload; `N` means optional or conditional, with the condition stated in `Description` or the preceding paragraphs. Conditional requirements still apply when their branch is selected; `N` does not permit ignoring a selected branch's required data. These are proposed requiredness flags, not final contract approval. A header-only table has no specified fields: preceding prose distinguishes no body from a schema still TBD. `$` denotes the entire body/result when no wrapping property was proposed; it is not a literal JSON key. Dotted paths denote nested fields rather than new top-level properties. Tables for internal operations describe trusted argument/result payloads; WSS tables explicitly distinguish application messages from the bodyless HTTP upgrade.
 - Field names/DTO shapes below remain proposals; application-generated system ID types now follow the confirmed UUID v7 convention (LLD-020). Shared ID, timestamp, enum and configuration notation follows [Durable Object design Section 6](durable-object-design.md#schema-proposal); it does not select Rust serialization or JSON encodings. `object` means a described, not-yet-finalized projection. `Option<T>` indicates conditional/nullable data, not whether a JSON key must be omitted or present as null; that distinction is **TBD**.
 - **TBD for every entry unless separately approved:** final input requiredness/defaults, validation limits, field encodings, media/API versions, request/response envelopes, success/error statuses, remaining header names, exact error variants, general caching policy, rate limits and contract tests. DO-028 approves no-store and safe generic invalid-link handling; DO-031 approves the account session cookie and exact-Origin requirement. Local notes highlight additional operation-specific TBDs. Existing confirmed guards still apply; a tentative field must not change a product rule.
-- The cookie is browser-supplied credential transport, not a body field or proof that the frontend is trusted. Derive actor, role, stable membership, assignment and expiry server-side; do not accept client-provided authority claims. For browser-cookie-authenticated state-changing HTTPS requests and WSS upgrades, require the exact configured application `Origin` and reject absent/mismatched values (DO-031); `SameSite` alone is insufficient. Other CSRF/CORS mechanics and error mapping remain **TBD**.
+- The cookie is browser-supplied credential transport, not a body field or proof that the frontend is trusted. Derive actor, role, stable membership, assignment and expiry server-side; do not accept client-provided authority claims. For browser-cookie-authenticated state-changing HTTPS requests and WSS upgrades, require the exact configured application `Origin` and reject absent/mismatched values (DO-031); `SameSite` alone is insufficient. For an account WSS upgrade, register the unique `connection_id` against the current enabled Verified/Normal session in AccountsObject before sending an authorized snapshot (DO-035); close the socket if registration fails. Under DO-036, revalidate session/epoch before each account-authorized outgoing frame and suppress/close on failed or unavailable authority; close-command completion requires target acknowledgement. A frame already authorized/in flight at revocation commit may race. Other CSRF/CORS mechanics and error mapping remain **TBD**.
 - Proposed `command_id: CommandId` metadata supports retry-sensitive mutations. Its placement/requiredness, actor binding, receipt lifetime and rejection of inadmissibly old commands remain **TBD** generally. DO-029 specifically fixes link-issuance same-ID behavior: no duplicate mint or raw-secret replay, with a secret-free receipt retained 30 days containing account/link IDs, purpose, committed outcome and expiry. A possible `expected_revision` or confirmation field does not replace commit-time lifecycle/authorization checks. Client-visible revisions must belong to the authorized projection, not expose private internal mutation counts.
 - Passwords, bearer-link redemption tokens and recovery answers appear only as conceptual input fields, never sample values. Under DO-028, the access-link token is delivered only in a canonical HTTPS URL fragment, cleared with `history.replaceState`, and then sent only in a protected HTTPS body—never a request path/query, cookie, log or WSS frame. Do not expose session bearer values, stored verifiers or private recovery material in response bodies. Session issuance/rotation occurs through protected HttpOnly cookies.
 - **Sensitive-output exception:** authorized account/link creation, reissue and reset may deliver the newly issued enrollment/reset URL to the authorized administrator/developer. Those URLs are bearer secrets, not ordinary account metadata, list/detail fields, logs or secret-free receipt payloads. No real URL/token appears here. DO-028 approves canonical-origin fragment links, `Cache-Control: no-store`, and redacted logs/traces. Under DO-029, a repeated link-issuance request with the same `command_id` returns only its secret-free 30-day receipt, never the URL/token; an undelivered URL requires an explicit new reissue command, which invalidates predecessors. A committed-but-lost redemption response requires a fresh purpose-appropriate link while setup/reset remains pending; completed setup/reset uses login or the admin reset flow, not credential rollback.
@@ -239,7 +239,7 @@ Path: `GET /api/session`
 
 Auth scope: Anyone
 
-Resolve the presented session and return its safe identity, scope, expiry and current permissions. Missing or invalid credentials do not disclose another identity or grant access. Never return credential verifiers.
+Resolve the presented session against authoritative AccountsObject session/account state on each protected request (DO-034); verify current epoch, expiry, revocation, account enabled/lifecycle and scope before returning its safe identity, scope, expiry and permissions. Do not grant from an unrevalidated positive cache. Missing or invalid credentials do not disclose another identity or grant access. Never return credential verifiers.
 
 ##### Request
 
@@ -297,7 +297,7 @@ Path: `POST /api/auth/enrollment/complete`
 
 Auth scope: Anyone
 
-A valid restricted enrollment session is required. Persist the chosen password verifier and setup completion; rotate into normal account authority without extending the restricted session’s original deadline.
+A valid restricted enrollment session is required. After password hashing, follow DO-032: in one AccountsObject transaction, revalidate enabled `PendingEnrollment` state, the unexpired/unrevoked `EnrollmentOnly` session and matching epoch; persist the verifier, set `Verified`/`password_set_at`, increment the epoch once, revoke the restricted session and create one `Normal` session at the new epoch. The new session preserves the restricted session's original absolute deadline. Post-reset session behavior is separate under DO-033.
 
 ##### Request
 
@@ -311,7 +311,7 @@ Enforce the password policy before storing a verifier. Password hashing is selec
 
 ##### Response
 
-Successful setup provides normal authority. Retire/rotate the restricted credential, preserving its original absolute expiry; do not echo the password or return account salt, hash or verifier.
+Successful setup returns the DO-032 normal `SessionView` and, only after commit, a distinct bearer in the DO-031 `__Host-brews_session` cookie with the original absolute expiry preserved. Retire the restricted session in the same transaction; if the committed response/cookie is lost, use password login rather than replaying the new secret or rolling back setup. Do not echo the password or return account salt, hash or verifier.
 
 Failure candidates are an invalid, expired or replaced restricted session, already-completed setup or password-policy rejection; the exact contract remains **TBD**.
 
@@ -353,7 +353,7 @@ Path: `POST /api/auth/password-reset/complete`
 
 Auth scope: Anyone
 
-A valid restricted reset session is required. Replace the password verifier, complete reset state and retire restricted reset authority. Exact post-reset navigation/session behavior remains TBD.
+A valid restricted reset session is required. After password hashing, follow DO-033: in one AccountsObject transaction revalidate the enabled `ResetRequired` account, unexpired/unrevoked `PasswordResetOnly` session and matching epoch; store the verifier, set `Verified`/`password_set_at`, increment the epoch exactly once and retire reset-only authority. Do not issue a `Normal` session automatically; clear the shared cookie and direct the user to password login.
 
 ##### Request
 
@@ -367,14 +367,14 @@ Apply the same password validation and exact-input preservation rule as setup, e
 
 ##### Response
 
-Retire reset-only authority. Whether a normal session is issued, its deadline rules and navigation remain **TBD**; do not promise automatic login. A possible next action may indicate sign-in versus a normal-session transition, with the choice **TBD**.
+On successful reset, retire reset-only authority, clear the `__Host-brews_session` cookie and direct the user to password login; do not issue a normal session automatically (DO-033). The new login creates a normal session with its own fixed one-day expiry. If the committed reset response is lost, use the new password to log in; do not replay secrets or roll back the reset.
 
 Failure candidates are replaced or expired reset authority, invalid account state or password rejection. Do not return the password or account salt, hash or verifier.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `reset_completed` | `bool` | Y | Whether password reset completed. |
-| `next_action` | `String` | N | Possible indication of sign-in versus a normal-session transition; the choice remains TBD. |
+| `next_action` | `String` | N | If included, indicates sign-in after reset (DO-033); exact wire value/schema remains TBD. |
 
 #### A7: `logout_session` (Mutating)
 
@@ -561,7 +561,7 @@ Path: `POST /api/users/{account_id}/password-reset-links`
 
 Auth scope: Admin
 
-For an enabled enrolled account, enter `ResetRequired` and issue a one-day reset link; for an already enabled `ResetRequired` account, atomically reissue a fresh link while keeping old-password login blocked. Each issuance/reissue increments `credential_epoch` exactly once and revokes predecessor links/account sessions. Reset initiation revokes target-account sessions and requests socket revocation; a committed cross-Object/socket delivery is not implied until separately confirmed. Reject reset operations while `disabled_at` is populated. Reset-link expiry does not restore old-password access (DO-022/DO-029).
+For an enabled enrolled account, enter `ResetRequired` and issue a one-day reset link; for an already enabled `ResetRequired` account, atomically reissue a fresh link while keeping old-password login blocked. Each issuance/reissue increments `credential_epoch` exactly once and revokes predecessor links/account sessions. Reset initiation also records durable DO-036 socket-revocation work for affected subscriptions; do not claim close completion until the owning GameObjects acknowledge targets. Reject reset operations while `disabled_at` is populated. Reset-link expiry does not restore old-password access (DO-022/DO-029).
 
 ##### Request
 
@@ -574,9 +574,9 @@ Command metadata `command_id: CommandId` is proposed; requiredness/transport rem
 
 ##### Response
 
-The reset URL is sensitive. Success implies the specified reset gate/predecessor invalidation is effective; do not report immediate socket revocation complete based only on a queued message. Use the canonical HTTPS origin, fragment-only token, `Cache-Control: no-store` and token-redacted logs/traces (DO-028).
+The reset URL is sensitive. Success implies the reset gate, predecessor invalidation and durable DO-036 revocation-work commit; it does not imply that every GameObject has acknowledged socket closure. Do not report all sockets closed while any target remains pending. Use the canonical HTTPS origin, fragment-only token, `Cache-Control: no-store` and token-redacted logs/traces (DO-028).
 
-A repeated request with the same `command_id` returns only the secret-free 30-day receipt (account/link IDs, purpose, committed outcome, expiry); it never mints another token or replays the URL. New issuance after a lost URL requires an explicit successor reissue, which invalidates predecessors. A committed-but-lost redemption response is recovered via a fresh link only while status remains `ResetRequired`; after successful reset use password login. Exact cross-Object delivery and response envelopes remain **TBD**; old-password login must remain blocked while reset is pending.
+A repeated request with the same `command_id` returns only the secret-free 30-day receipt (account/link IDs, purpose, committed outcome, expiry); it never mints another token or replays the URL. New issuance after a lost URL requires an explicit successor reissue, which invalidates predecessors. A committed-but-lost redemption response is recovered via a fresh link only while status remains `ResetRequired`; after successful reset use password login. Exact outbox/result envelopes, retry status and response encoding remain **TBD**; the DO-036 delivery and acknowledgment rules apply. Old-password login must remain blocked while reset is pending.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -655,7 +655,7 @@ Path: `POST /api/users/{account_id}/enable` (proposed)
 
 Auth scope: Admin
 
-**Confirmed capability and actor restriction (HLD-078; DO-022):** Enable an existing disabled host/admin account only when the caller is a different fully enrolled admin account with valid authority, or the developer using the separately privileged CLI path. Enforce caller-account ID != target-account ID for app-admin calls; ordinary hosts, participants, unauthenticated callers and the disabled target itself cannot enable it. This is not role editing, deleted-account restoration or automatic revival of revoked/expired credentials. **Approved outcome:** clear the authoritative `disabled_at` timestamp while preserving the existing lifecycle `status`. No disabled boolean is stored. Previously Verified accounts may log in afresh with their existing password; PendingEnrollment still needs setup, and ResetRequired still needs reset. Do not revive old sessions/links. Pending setup/reset requires a newly issued link through the existing flow. Clear `disabled_at` on the accepted enable transition; an authorized already-enabled retry is a no-op without timestamp changes. DO-022 approves the credential-epoch increments and match checks; exact transaction, concurrency and cross-Object delivery remain TBD.
+**Confirmed capability and actor restriction (HLD-078; DO-022):** Enable an existing disabled host/admin account only when the caller is a different fully enrolled admin account with valid authority, or the developer using the separately privileged CLI path. Enforce caller-account ID != target-account ID for app-admin calls; ordinary hosts, participants, unauthenticated callers and the disabled target itself cannot enable it. This is not role editing, deleted-account restoration or automatic revival of revoked/expired credentials. **Approved outcome:** clear the authoritative `disabled_at` timestamp while preserving the existing lifecycle `status`. No disabled boolean is stored. Previously Verified accounts may log in afresh with their existing password; PendingEnrollment still needs setup, and ResetRequired still needs reset. Do not revive old sessions/links. Pending setup/reset requires a newly issued link through the existing flow. Clear `disabled_at` on the accepted enable transition; an authorized already-enabled retry is a no-op without timestamp changes. DO-022 approves the credential-epoch increments and match checks; DO-036 approves durable cross-Object socket-revocation work/acknowledgement and fail-closed frame checks. Exact transaction, concurrency and physical outbox integration remain **TBD**.
 
 ##### Request
 
@@ -2170,9 +2170,9 @@ Enforce credential expiry/revocation, stop unauthorized socket delivery and clea
 
 ##### Request
 
-These are proposed trusted internal arguments, not public request fields. Use typed references rather than raw passwords/tokens. Batch scope, epoch propagation and invocation form are **TBD**.
+These are proposed trusted internal arguments, not public request fields. Use typed references rather than raw passwords/tokens. DO-036 fixes the per-subscription revocation target and epoch-fencing requirements; batch limits and invocation form remain **TBD**.
 
-Internal inputs: target account/session/link/member scope, expiry or revocation reason, trusted time and expected epoch/deadline where needed. Expected epoch/deadline is conditional; exact signature, field names and reference types are **TBD**.
+Internal inputs: target account/session/link/member scope, expiry or revocation reason, trusted time and expected epoch/deadline where needed. For account revocation, DO-036 atomically persists work for each affected DO-035 subscription and uses the current epoch. Expected epoch/deadline is conditional; batch limits, exact signature, field names, reference types and invocation form remain **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -2181,9 +2181,9 @@ Internal inputs: target account/session/link/member scope, expiry or revocation 
 
 This is a proposed trusted internal result. Pending propagation must remain distinguishable from completed work; exact bounded status is **TBD**.
 
-No retained player-membership deletion solely from token expiry and no secret material in results/logs. Immediate revocation protocol remains **TBD**.
+No retained player-membership deletion solely from token expiry and no secret material in results/logs. DO-036's durable close/acknowledgement protocol applies to account sockets; do not report a connection closed until its GameObject acknowledges it closed or already absent.
 
-The internal result reports credentials made unusable, affected subscriptions/sockets deauthorized and expired artifacts removed, while distinguishing pending propagation from completed work. Exact bounded status/result shape is **TBD**.
+The internal result distinguishes credential invalidation committed from per-connection close propagation. Report each affected target as pending or acknowledged closed/already absent; only acknowledgements certify socket closure. Keep retries durable and do not expose secrets. Exact bounded status/result shape remains **TBD**.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
