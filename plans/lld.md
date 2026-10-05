@@ -7,7 +7,7 @@
 - **Primary source:** [High-level design](hld.md), including decisions HLD-001–HLD-078, and the approved DO-001–DO-107 ledger for subsequent detailed policies.
 - **Supporting sources:** [Business requirements](requirements.md) and [hosting research](research.md).
 - **Companion designs:** [API design](api-design.md) is the single home for API organization, operations, requests/responses and WSS contracts. [Durable Object design](durable-object-design.md) is the single home for storage ownership, schema proposals, records/fields/types and schema worksheets. This LLD links to both rather than duplicating those specifications.
-- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 3.5 / LLD-027 selects Dioxus Router, Axum inside the single Rust Worker, selective API-first asset routing and native Durable Object state/socket handlers. Section 4 retains the requested screen/component/navigation proposals (LLD-026). Native Android/iOS implementation remains deferred.
+- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 3.5 / LLD-027 selects Dioxus Router, Axum inside the single Rust Worker, selective API-first asset routing and native Durable Object state/socket handlers. Section 3.6 / LLD-028 selects Dioxus-integrated Tailwind styling; Section 3.7 / LLD-029 records the proposed Cargo workspace, folder/module tree and dependency boundaries. Section 11.1 / LLD-030 selects the build/test tooling baseline, including native Linux mold. Section 3.8 / LLD-031 selects envy-based typed configuration for the Cloudflare backend and Dioxus frontend, with separate private/public inputs. Section 4 retains the requested screen/component/navigation proposals (LLD-026). Native Android/iOS implementation remains deferred.
 - **Approval boundary:** Capturing this LLD and its UI proposals does not approve the overall HLD, finalize new UI/contract choices, authorize implementation, or authorize infrastructure/account creation.
 - **Reviewer / approval / revision:** TBD.
 
@@ -98,17 +98,17 @@ Sources: HLD-020–HLD-022, HLD-032, HLD-036–HLD-045, HLD-061, HLD-064–HLD-0
 
 | Logical component | Confirmed responsibility | Detailed design to fill |
 | --- | --- | --- |
-| Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | UUID-v7 typed IDs and local `thiserror` errors follow Sections 3.3–3.4; other crates, types, traits, signatures, algorithms and concrete error variants **TBD**. |
-| Shared contracts | Shared safe app/backend contract types without provider/UI dependencies. | TBD — serialization, versioning and module boundaries. |
-| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | LLD-027 selects Dioxus Router and LLD-028 selects Dioxus-integrated Tailwind styling. Section 4 proposes screen routes/components and UI state boundaries; exact modules/signatures, adapters, path spellings and visual tokens remain review/implementation work. |
-| Rust API Worker | One initial deployable API service; LLD-027 selects Axum HTTP dispatch through the Worker fetch entrypoint. | Section 3.5 defines router/asset/native-upgrade integration boundaries. Endpoint/DTO/error contracts remain in [api-design.md](api-design.md); exact SDK wiring and middleware remain unverified. |
+| Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | Sections 3.3–3.4 define UUID-v7 typed IDs/local `thiserror` errors; Section 3.7 proposes a provider-independent `shared/domain` crate and game/board/pattern submodules. Approved DO algorithm contracts remain authoritative; exact package/interfaces and implementation remain unverified. |
+| Shared contracts | Shared safe app/backend contract types without provider/UI dependencies. | Section 3.7 proposes `shared/contracts` with feature-grouped safe DTOs, separate from private storage/internal Object messages. Serialization, versioning and exact interfaces remain TBD in the API companion. |
+| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | LLD-027/028 select Dioxus Router/Tailwind; LLD-031 selects envy parsing of allowlisted public configuration through a platform adapter, not browser OS-env access. Section 3.7 proposes shared feature/component/client modules; Section 4 supplies view proposals. Exact interfaces, screen paths and visual tokens remain review/implementation work. |
+| Rust API Worker | One initial deployable API service; LLD-027 selects Axum HTTP dispatch through the Worker fetch entrypoint. | Sections 3.5/3.7 define dispatch and proposed backend modules; LLD-031 selects envy configuration via explicit worker::Env text/secret adapters, keeping resource handles typed and separate. Endpoint/DTO/error contracts remain in [api-design.md](api-design.md); SDK/middleware/configuration wiring remains unverified. |
 | Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | Approved Directory ownership and private GAME_DIRECTORY binding; [record/protocol decisions](durable-object-design.md#directory-records) remain authoritative. Concrete SDK dispatch, SQL and concurrency integration remain implementation work. |
 | Per-game Durable Object | Authoritative game/board/membership state, SQLite writes and role-filtered hibernating sockets. | DO-096/100 approve GameObject per stable game_id, normalized local schema and private binding; DO-091–095 approve logical attachment/reconstruction/fencing/alarm/backpressure policies. Exact DDL, SDK handlers and deployment config remain implementation work. |
 | Account/session authority | Strongly consistent credential lifecycle and server-owned account permissions. | DO-001/100 approve AccountsObject per environment and private ACCOUNTS binding. Axum session resolution uses this authority; no positive cross-request authorization cache. Exact [account protocol](durable-object-design.md#account-records) and SDK integration remain implementation work. |
-| Developer CLI | Developer-restricted account operations through an authorized persistence/backend path. | TBD — language, packaging, commands, auth and private output delivery. |
-| Later `platform/android` / `platform/ios` | Future Dioxus adapters/entrypoints without duplicating domain/contracts. | TBD — deferred; no native implementation in this release. |
+| Developer CLI | Developer-restricted account operations through authorized Worker management/bootstrap operations; no direct SQLite access (DO-101). | Section 3.7 proposes a separate Rust CLI package with commands/client modules. Language/package adoption, command interfaces, auth and private output delivery remain TBD. |
+| Later `platform/android` / `platform/ios` | Future Dioxus adapters/entrypoints without duplicating domain/contracts or the full UI. | Section 3.7 reserves future platform boundaries; no native workspace members/SDKs are required initially. Native auth, secure storage, lifecycle, packaging and parity validation remain deferred. |
 
-The `uuid` and `thiserror` libraries are selected in Sections 3.3–3.4. Compatible pinned dependency/toolchain/SDK versions, target configuration and build commands remain **TBD**. This inventory does not create a repository scaffold.
+The `uuid` and `thiserror` libraries are selected in Sections 3.3–3.4. [Section 3.7](#workspace-layout) adds the requested visual workspace/module proposal, not a scaffold or finalized manifests. [Section 11.1](#build-tooling) selects the build/test tools, including target-scoped native Linux mold. Compatible pinned dependency/toolchain/SDK versions, target configuration and build commands remain **TBD**.
 
 ### 3.1 API Worker organization — moved
 
@@ -165,7 +165,7 @@ Illustrative placement, **not a selected repository scaffold**:
 - Keep passwords, tokens, recovery answers, credential-bearing URLs and other sensitive inputs out of error fields, `Display`/`Debug` output and logs. A source chain can contain private implementation details; it is not automatically safe for external disclosure.
 - Internal Rust errors are not public response schemas. The transport boundary maps them deliberately to safe HTTP/WSS errors; that contract, public codes/statuses and close behavior are specified separately in [API design](api-design.md#shared-contracts) and remain **TBD**. Do not serialize raw component errors or expose provider diagnostics by default.
 
-**TBD —** final module tree, concrete error types/variants/messages, conversion boundaries, redaction tests, retry classification and runtime/toolchain compatibility. This records implementation conventions only; no `error.rs`, Cargo dependency or application code is created now.
+**TBD —** final adoption/interfaces for the proposed Section 3.7 module tree, concrete error types/variants/messages, conversion boundaries, redaction tests, retry classification and runtime/toolchain compatibility. This records implementation conventions only; no `error.rs`, Cargo dependency or application code is created now.
 
 <a id="routing-design"></a>
 ### 3.5 Routing design — Dioxus Router, Axum and native Durable Objects
@@ -297,6 +297,222 @@ The upgrade path must preserve the provider's WebSocket-bearing response and suc
 - Ensure source discovery covers every shared Rust/RSX component used by the web build, not just the web entrypoint. Choose complete class strings for conditional variants, or an explicit inclusion mechanism supported by the pinned Tailwind version; production builds must retain every reachable state style. Exact workspace paths and CSS input/output filenames remain implementation details.
 - Palette, typography, spacing, breakpoints and any theme tokens remain design work under LLD-001/026. Tailwind is the selected styling foundation, not a replacement for component behavior, backend authorization or the UI acceptance scenarios. No additional UI kit or custom CSS policy is selected here.
 - Before release, verify production CSS loading on direct/nested navigation, responsive and venue views, keyboard focus/contrast/non-color status cues, and all conditional board/validation/connection states. These are future checks, not completed browser or build tests.
+
+<a id="workspace-layout"></a>
+### 3.7 Proposed Cargo workspace and module structure
+
+**Requested design proposal (LLD-029), not an existing scaffold:** Organize the application as **one Cargo workspace**, retaining the HLD's `shared/`, `platform/`, `backend/` and `cli/` boundaries. Separate crates by dependency/runtime boundary and use submodules for features, rather than creating a crate for every screen or endpoint. This records the user-requested visual proposal; package names, manifests, exact interfaces and target/build wiring remain review/implementation work. Native Android/iOS delivery remains deferred, and Rust for the CLI is a proposal rather than a previously settled language choice.
+
+Read this structure with [HLD Section 4.3](hld.md#43-dioxus-baseline-and-multi-platform-organization), [routing boundaries](#routing-design), [Tailwind styling](#styling-design) and the local [Rust engineering guide](../docs/rust-best-practices.md), especially its module visibility and core/adapter dependency guidance. API schemas and durable records remain owned by their companion documents; folder placement does not change approved authorization, transaction, retention or release-gate policies.
+
+#### 3.7.1 Workspace overview
+
+`[crate]` means a proposed Cargo package with its own `Cargo.toml`; repeated manifests and module declarations are omitted for readability. Future platform folders are design placeholders, not initial workspace members requiring native SDKs. The diagram does not create any of these code or configuration files.
+
+```text
+brews-bingo/
+├── Cargo.toml                       # Workspace members, shared deps/lints
+├── Cargo.lock                       # Reproducible dependency resolution
+├── rust-toolchain.toml              # Pinned Rust toolchain
+│
+├── shared/
+│   ├── domain/                      # [crate] Pure Rust types and rules
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── ids.rs               # GameId, AccountId, PlayerId, ...
+│   │       ├── game/                # Configuration and lifecycle rules
+│   │       ├── board/               # Generation, matching, qualification
+│   │       └── pattern/             # Winning-pattern traits/implementations
+│   │
+│   ├── contracts/                   # [crate] App ↔ backend wire types
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── auth/                # Login/enrollment/session DTOs
+│   │       ├── users/               # Safe account-management DTOs
+│   │       ├── games/               # Game commands and public projections
+│   │       ├── participants/        # Join, recovery, membership DTOs
+│   │       ├── history/             # Historical game projections
+│   │       └── stream/              # WebSocket snapshots/events
+│   │
+│   └── ui/                          # [crate] Shared Dioxus application
+│       ├── assets/                  # Shared branding, icons, images
+│       └── src/
+│           ├── lib.rs
+│           ├── app.rs               # Root component and providers
+│           ├── routes.rs            # Typed Dioxus routes/layouts
+│           ├── components/          # Buttons, dialogs, board, status banner
+│           ├── features/            # Screens + feature-local state
+│           │   ├── home/
+│           │   ├── auth/
+│           │   ├── users/
+│           │   ├── games/           # List, create, configure, lobby
+│           │   ├── play/            # Host/player/spectator presentations
+│           │   └── history/
+│           ├── client/              # Typed API calls, stream reconciliation
+│           ├── config/              # Public envy types/parser/validation
+│           └── platform.rs          # Narrow platform-service interfaces
+│
+├── platform/
+│   ├── web/                         # [crate] Initial browser application
+│   │   ├── Dioxus.toml
+│   │   ├── tailwind.css             # Build input; scans shared UI too
+│   │   └── src/
+│   │       ├── main.rs              # Compose adapters and launch shared UI
+│   │       ├── config/              # Allowlisted public build-value adapter
+│   │       └── adapters/            # Browser HTTP/WS, speech, URL handling
+│   ├── android/                     # Future: launcher, adapters, packaging
+│   └── ios/                         # Future: launcher, adapters, packaging
+│
+├── backend/                         # [crate] Cloudflare Worker + DO classes
+│   ├── wrangler.toml                # Bindings, migrations, static-asset routing
+│   ├── src/
+│   │   ├── lib.rs                   # Worker fetch entrypoint / DO exports
+│   │   ├── api/                     # Thin Axum transport layer
+│   │   │   ├── router.rs
+│   │   │   ├── middleware/
+│   │   │   ├── auth/
+│   │   │   ├── users/
+│   │   │   ├── games/
+│   │   │   ├── participants/
+│   │   │   ├── history/
+│   │   │   └── stream/              # Native DO upgrade forwarding
+│   │   ├── config/                 # Private envy config / Env adapter
+│   │   ├── security/               # Passwords, session proofs, redaction
+│   │   ├── internal/               # Server-only typed Object calls
+│   │   └── objects/                # Authoritative state owners
+│   │       ├── accounts/           # Accounts, sessions, access links
+│   │       ├── directory/          # Discovery, reservations, History index
+│   │       └── game/               # Gameplay, boards, participants, History
+│   └── tests/                      # Backend integration/contract tests
+│
+├── cli/                             # [crate, proposed Rust] Developer tooling
+│   └── src/
+│       ├── main.rs
+│       ├── commands/               # Provisioning and account administration
+│       └── client/                 # Authenticated operational backend access
+│
+├── tests/
+│   └── e2e/                        # Browser-to-backend acceptance scenarios
+├── docs/                            # Engineering guidance
+└── plans/                           # Requirements and design decisions
+```
+
+The feature folders group the Section 4 views; they do not replace or reduce that inventory. For example, enrollment/reset live under `auth/`, admission can start under `home/`, participant lobby/recovery/settings can be nested under `games/` or `play/`, and results belong with the relevant play/history presentation. Exact screen-to-module placement remains reviewable. Both `api/games/` and the owning GameObject may have game-related code, but the former translates transport while the latter enforces current authority and commits state.
+
+#### 3.7.2 Component encapsulation
+
+A substantial component owns its model, operations, storage and errors instead of accumulating one oversized source file or a global collection of unrelated services. The GameObject illustrates the proposed pattern:
+
+```text
+backend/src/objects/game/
+├── mod.rs                # Small public interface / GameObject declaration
+├── commands.rs           # Mutations and commit-time checks
+├── queries.rs            # Authorized, role-filtered reads
+├── model.rs              # Private persisted records
+├── storage/              # Owner-local SQL, transactions and migrations
+├── sockets.rs            # Hibernation, attachment recovery, delivery
+├── alarms.rs             # Earliest-deadline scheduling and cleanup
+├── outbox.rs             # Durable cross-Object work and retries
+└── error.rs              # GameObject-specific thiserror errors
+```
+
+Use this pattern **where needed**, not mechanically for every folder. Accounts and Directory own their corresponding records, storage/migrations, deadlines and pending work; there is no shared cross-Object transaction or universal repository implied by `storage/`. Small components may remain single files. Each folder module needs an appropriate Rust module declaration (`mod.rs` or a sibling module file) during implementation; the overview omits that boilerplate rather than proposing unconnected source folders.
+
+Start modules/types private; expand to `pub(crate)` or an intentional public API only for a real consumer. Keep module roots and re-exports small. Follow LLD-021: typed errors belong in the owning component's adjacent `error.rs`, including nested auth/security/storage components where appropriate. Do not expose private SQL records, SDK handles or raw internal errors just to simplify API handlers. Clock/randomness integration and security helpers are backend implementation concerns; `security/` is not a new credential store or permission to move authoritative records out of their approved Objects.
+
+#### 3.7.3 Dependency direction
+
+```text
+platform/web ─────┐
+platform/android ├──▶ shared/ui ──▶ shared/contracts ──▶ shared/domain
+platform/ios ────┘
+
+backend ────────────────────────▶ shared/contracts + shared/domain
+cli ───────────────────────────▶ shared/contracts
+```
+
+Arrows mean **Rust dependencies**, not network calls. Platform adapters may depend directly on safe contracts where required, and shared UI may use pure domain types/rules when needed; no reverse dependency is permitted. Frontend and CLI reach the backend over their separately authorized transport interfaces, not by importing the backend crate.
+
+- **Pure domain, platform-specific edges:** Keep Dioxus, Cloudflare SDK types, SQL, HTTP clients, browser/native APIs and operational credentials out of `domain/`. Supply time and randomness explicitly where rules need them rather than making pure rules obtain ambient platform state. Platform-independent code is not automatically `no_std` or allocation-free.
+- **Contracts are not storage models:** Expose only deliberate request/response/event types and safe domain values. Private credential records, password verifiers and trusted Object-to-Object messages stay backend-only. Necessary credential submissions remain sensitive transport inputs with redacted diagnostics, not public response data. Final serialization/visibility follows the API design rather than a derive on a storage struct.
+- **Shared UI without platform imports:** `shared/ui/client/` owns platform-neutral request orchestration, typed responses and snapshot/revision handling. `platform.rs` defines only the capabilities the UI actually consumes; each launcher supplies concrete HTTP/WebSocket, speech, URL and other required adapters. Shared UI never imports `platform/web` or a native entrypoint. Interface shape, async dispatch and adapter injection remain TBD; no blanket trait-object or runtime choice is selected.
+- **Server authority remains intact:** Shared validation can improve UX, but cannot authorize mutations, generate the authoritative player board or award a winner. Durable Objects revalidate and commit; Axum stays a transport boundary. Native hibernating sockets, durable alarms and outbox processing stay with the state owner, preserving DO-091–095 and the approved cross-Object protocols.
+- **Restricted CLI:** The CLI uses authorized Worker management/bootstrap operations under DO-101, never direct SQLite access. Reuse safe contracts where appropriate; do not expose trusted internal Object messages or cloud credentials through client crates. Operational-only payload sharing, CLI language/package choice and authentication remain separately reviewable.
+- **No premature layers:** Avoid a catch-all `utils/`, generic repository abstraction or extra service crate without a concrete shared responsibility. Use explicit domain types, bounded work/allocation and typed local errors. Select memory profiles appropriate to each component under the Rust guide; strict heapless or zero-allocation claims require justification and measurement, not a folder name.
+
+#### 3.7.4 Platform growth, build isolation and test placement
+
+- Deliver the complete approved web scope first. Later Android/iOS entrypoints reuse the shared Dioxus application and contracts and provide native adapters/packaging rather than copying the web application. Review native authentication/session storage, secure storage, deep links, speech and foreground/background lifecycle separately; browser cookie/Origin behavior is not silently generalized to native clients. Shared code does not establish feature parity or store-release readiness.
+- Keep native SDKs, signing and platform-specific dependencies out of the initial web/Worker development path. Add deferred platform packages to the workspace only when authorized and present. Configure per-package target/feature/build selection: browser Wasm, the Worker target and native CLI/mobile builds have different runtime constraints even inside one workspace. Do not set an unconditional workspace-wide target or assume one all-features build validates them all.
+- Preserve DO-102's compatible pinned Rust/SDK/build policy and committed lockfile. Centralize compatible dependencies/lints where useful without enabling platform features everywhere; audit resolved features and avoid unnecessary default features. Exact package names, resolver, MSRV policy, versions and build commands remain TBD.
+- Compile Tailwind through the Dioxus-compatible workflow in Section 3.6, including shared RSX in source discovery and shared assets in packaging. `platform/web/tailwind.css` and `Dioxus.toml` show proposed placement, not tested build configuration. Native stylesheet/asset packaging must be validated during its own phase. Generated output paths referenced by `backend/wrangler.toml` remain unselected.
+- Keep unit tests next to implementation and crate-level integration tests in each package's `tests/`. The root `tests/e2e/` is a proposed browser-to-backend suite location, not an automatically discovered Cargo test target in a virtual workspace; select and wire its harness later. Test module privacy/contract boundaries, feature isolation, owner-local migrations, native upgrade/alarm integration and production asset coverage after implementation authorization. No such tests or builds have been executed here.
+
+<a id="environment-configuration"></a>
+### 3.8 Typed environment configuration — `envy`
+
+**Confirmed user direction (LLD-031):** Use the Rust **`envy`** crate for typed environment-variable configuration on **both the Cloudflare backend and Dioxus frontend**. Keep separate backend/private and frontend/public configuration types. `envy` deserializes into Serde types and offers `from_iter` for explicit `(String, String)` pairs; it does not supply Cloudflare bindings or browser environment access.[32][33] Library selection is settled. Exact configuration fields/names/prefixes, crate versions and build/runtime integration remain to be finalized and tested.
+
+**Runtime boundary:** Do not call `envy::from_env()` as the default loader inside either planned `wasm32-unknown-unknown` runtime. It reads `std::env::vars()`; the checked Rust target dispatch has no browser/Worker process-environment implementation and its unsupported environment enumeration panics.[37][38][39] Cloudflare's JavaScript `process.env` compatibility does not make that Rust API work automatically. Use platform adapters to supply a bounded, explicit set of string pairs to `envy::from_iter`, followed by semantic validation. Native build tooling can read its process environment, but that is distinct from runtime configuration in the shipped Wasm.
+
+#### 3.8.1 Configuration sources and flow
+
+| Consumer | Source / adapter | Typed consumption and boundary |
+| --- | --- | --- |
+| Cloudflare Worker and Durable Object code | Read explicitly named text variables and server-only secrets from the appropriate `worker::Env` supplied to the Worker/Object. Use SDK accessors such as `var` and `secret`, not process-global environment mutation. | Convert only declared string settings to pairs, deserialize with `envy::from_iter` into a backend-owned configuration type, then validate before the affected handler/service uses it. |
+| Dioxus web frontend | Capture an explicit allowlist of public variables from the frontend build environment, then embed only those values in the frontend artifact. `option_env!` is one possible capture adapter; its values are resolved at compile time, not at browser startup.[36] | At frontend initialization, supply the captured public pairs to `envy::from_iter`, validate the public configuration and inject the resulting typed value into the shared UI/client. Mirror validation in the build/release checks. No `std::env` reads in browser components. |
+| Future Android/iOS frontend | A platform adapter supplies the same public configuration contract from the approved packaging/platform source when that phase is designed. | Reuse the frontend envy parser/validation where compatible; do not assume mobile apps inherit a desktop shell environment. Native secret/session storage remains a separate concern, not embedded application configuration. |
+
+```text
+Cloudflare vars / secret bindings
+  -> backend adapter -> envy::from_iter -> validated BackendConfig
+  -> Worker / owning Durable Object services
+
+Allowlisted public frontend build variables
+  -> build-time capture -> public values in frontend artifact
+  -> envy::from_iter -> validated PublicAppConfig -> Dioxus UI/client
+```
+
+`BackendConfig` and `PublicAppConfig` are proposed type names, not implemented APIs. The two configurations do not share a struct with a runtime “hide secrets” switch. Backend types/credentials must not become dependencies of browser/mobile packages.
+
+**Backend specifics:** Cloudflare variables are bindings; `[vars]` supports text/JSON values and secrets are supplied separately through the platform. Environment-specific `vars` are non-inheritable and must be configured for each deployment environment.[34] The Rust SDK distinguishes variable/secret access, JSON `object_var` decoding, Durable Object namespaces and asset/service bindings.[35]
+
+- Use envy for declared string-valued settings. Non-string JSON bindings need an explicitly designed conversion/decoder if later required; do not assume envy automatically flattens arbitrary JSON or resource objects.
+- Keep `GAME_DIRECTORY`, `ACCOUNTS`, `GAMES` and `ASSETS` as typed SDK resource handles resolved separately from string configuration. Never stringify/serialize handles into env pairs or frontend configuration.
+- Load from the current Worker/Object environment before use, including Object reconstruction after hibernation; any configuration reuse must be scoped to the actual instance/environment and its supported update lifecycle. Do not assume an unqualified process-global singleton refreshes when bindings/secrets change. Exact caching/reload mechanics remain implementation work and do not permit positive session-authorization caching.
+
+**Frontend specifics:** All embedded frontend values are public and inspectable. Keep the existing same-origin `/api` arrangement; environment configuration does not silently authorize arbitrary cross-origin API targets, credentialed CORS or different account-cookie rules. The initial source is allowlisted build-time input, not a new runtime configuration endpoint or access to the backend's `Env`. Exact capture mechanism/generated file location is TBD. A backend binding update cannot change an already-built frontend: changing captured values requires rebuilding and delivering the corresponding client artifact. Preserve correct build invalidation/cache keys and restart/rebuild the Dioxus dev session when needed; Rust hot-patching remains selected, but is not proof that changed build-time env values were refreshed.
+
+#### 3.8.2 Module ownership, validation and secrecy
+
+Extend the proposed Section 3.7 layout with configuration responsibilities; each module keeps its own adjacent `error.rs` under LLD-021:
+
+```text
+backend/src/config/          # Cloudflare adapter, private types, validation
+shared/ui/src/config/        # Public types, envy parser, validation only
+platform/web/src/config/     # Public build-value capture / startup adapter
+```
+
+Keep environment acquisition out of `shared/domain` and transport DTO definitions. Shared UI receives validated public values through its application/provider boundary; neither components nor domain rules scan env variables. No new shared backend/frontend configuration crate is required merely to use the same library.
+
+- Define an explicit settings schema: expected key mapping, required versus optional values, approved defaults, empty-value behavior, bounded input sizes and typed/range/cross-field validation. Envy parsing is not domain validation. Missing or invalid required configuration fails closed before dependent operations; do not substitute production credentials, weaken Origin/security checks or silently borrow another environment's settings.
+- Collect only declared settings, reject duplicate/ambiguous mapped keys and validate application-owned names so misspellings are not silently interpreted as defaults. Prefix filtering may organize input, but **a public-looking prefix is not a secret classifier**: frontend export uses an explicit field allowlist. Envy key conversion belongs to configuration parsing and does not change the approved case-sensitive username/alias rules.
+- Backend secrets stay in Cloudflare secret bindings and controlled developer environments, never committed `[vars]`, public frontend variables, generated client artifacts, test snapshots or build logs. User passwords, session bearers and recovery answers are runtime credentials, not deployment configuration. Future mobile packaging is public too; it must not embed backend credentials.
+- Envy error messages can include the failing input value.[37] Map parsing/validation failures to component-owned, value-redacted configuration errors; do not log raw `envy::Error`, configuration `Debug`, input pairs or unredacted error source chains. Safe diagnostics can identify an approved key/category without exposing its value. No configuration dump endpoint or debug logging of secrets is introduced.
+- Envy is the deserializer, not a selected dotenv-file loader. Use the chosen build/development tooling to supply inputs; do not add a second ambient loader or search arbitrary `.env` files inside Wasm. Keep local secret files untracked and publish only key/schema documentation without real values. Exact local file/precedence conventions remain to be specified separately from Cloudflare's documented behavior.[34]
+- Configuration injection does not make approved product limits, KDF costs, lifecycle rules or authority client-controlled. Any new configurable policy/value must preserve its existing approval and validation gate.
+
+#### 3.8.3 Future verification — not executed
+
+| ID | Required evidence before implementation is considered complete |
+| --- | --- |
+| CONFIG-AC-01 | Build and exercise the pinned envy/Serde combination through `from_iter` on the browser and Worker Wasm targets, not only native Rust; confirm no `from_env`/OS-env runtime dependency. |
+| CONFIG-AC-02 | Verify Cloudflare text/secret acquisition, typed resource-binding separation, missing/invalid settings, environment isolation and Object reconstruction/update behavior. |
+| CONFIG-AC-03 | Verify the public build allowlist, frontend startup validation and artifact/config matching; inspect bundles/assets/source maps/logs for backend-secret leakage using safe test fixtures. |
+| CONFIG-AC-04 | Check required/optional/default/empty values, key mapping, duplicates, numeric/range/cross-field bounds and redacted parse errors; reject invalid configuration without unsafe defaults. |
+| CONFIG-AC-05 | Change a public build variable and backend runtime binding separately; prove correct rebuild/cache invalidation and backend reload behavior without claiming Dioxus hot-patching updates compile-time values. |
+
+No environment variables, secret values, configuration files, dependencies, code or tests are created by this design update. The field inventory, exact adapters/pins and measured target behavior remain unverified.
 
 ## 4. Views and frontend contracts
 
@@ -809,13 +1025,15 @@ Rust API guidance: use the crate's `Argon2`/`Params` types and high-level `Passw
 
 ## 10. Verification plan
 
-No application tests have been implemented or run by this template. Exact test files, tools, fixtures, acceptance thresholds and evidence are **TBD**.
+No application tests have been implemented or run by this template. Section 3.7 proposes test placement (adjacent unit tests, crate integration tests and a separately wired end-to-end suite). LLD-030 / [Section 11.1](#build-tooling) selects nextest for host-testable Rust packages, separate doctests and build timing/dependency-review tools; exact files, target-specific harnesses, fixtures, thresholds and executed evidence remain **TBD**.
 
 | Test area | Scenarios to specify | Cases / expected result / evidence |
 | --- | --- | --- |
+| Workspace and module boundaries | Independently build/check domain/contracts, browser UI, Worker and native CLI targets; verify no provider/UI dependencies in the core, no frontend dependency on backend/CLI, intentional features and shared RSX/asset coverage. Native mobile validation stays deferred. | Section 3.7 proposes structure/test placement; Section 11.1 selects tooling and BUILD-AC-01–BUILD-AC-06 future checks. Exact harness/build matrix remains TBD; no application checks have been executed. |
 | Domain and schema | Pool/string rules, every supported board size, free cells, distinct-board feasibility, Single Line, unique calls and data constraints. | TBD |
 | Identifier convention | UUID v7 generation/parse validation across selected targets, distinct newtypes, stable retry IDs and no ID-as-credential assumptions. | **TBD** — no target build/runtime evidence yet. |
 | Component errors | `thiserror` derives, local `error.rs` ownership, typed conversion/source chains, secret redaction and deliberate transport mappings. | **TBD** — concrete error/contract tests not implemented. |
+| Environment configuration | Envy from explicit backend/public-frontend pairs, typed binding separation, public build export, semantic validation, environment isolation and value-redacted errors. | CONFIG-AC-01–CONFIG-AC-05 in Section 3.8 are future checks, not executed tests; exact fields and pins remain TBD. |
 | Views and permissions | Home entry, host/admin controls, Users frontend/backend denial, private-board projection, missing/expired sessions and restricted enrollment. | UI-AC-01–UI-AC-17 in Section 4.5 specify screen/role/lifecycle scenarios; no UI implementation or application tests have been run. |
 | Worker routing and Object isolation | Dioxus/SPA paths are separate from Axum API dispatch and native DO upgrade/handler paths; unknown codes do not create games, and bindings/IDs never replace authorization. | ROUTE-AC-01–ROUTE-AC-08 in Section 3.5 specify future compatibility, fallback, auth/cookie, upgrade and retry checks; none have been executed. |
 | Account lifecycle | Concurrent redemption, reissue/reset revocation, first-admin creation, non-owner overrides, removal blocked by hosted nonterminal game. | TBD |
@@ -835,22 +1053,86 @@ Latency, concurrency/load targets, measurable accessibility criteria and failure
 
 | Item | Detailed specification |
 | --- | --- |
-| Rust/Dioxus/Workers SDK/toolchain compatible pinned versions | DO-102 approves pinning stable Rust/Cargo.lock and a compatible Worker SDK/build pair after compatibility validation. LLD-028 requires a compatible pinned Dioxus CLI/Tailwind build path, generated CSS and shared-RSX source coverage. Exact pins and target/build validation remain TBD. |
+| Rust/Dioxus/Workers SDK/toolchain compatible pinned versions | DO-102 approves pinning stable Rust/Cargo.lock and a compatible Worker SDK/build pair after compatibility validation. LLD-028 requires a compatible Dioxus CLI/Tailwind build path; LLD-030 selects build/test tooling including native Linux mold, separate Wasm linking and nextest/doctests. Exact versions, drivers, target/profile settings and executed validation remain TBD. |
 | UUID/error libraries | `uuid` with UUID v7 and `thiserror` selected. DO-096 approves canonical lowercase-hyphenated UUID TEXT; DO-102 approves trusted Worker UTC time and platform CSPRNG with fail-closed error/no fallback. Compatible crate pins, target integration and validation remain TBD (Sections 3.3–3.4). |
 | Password-hashing library/runtime | Salted Argon2 via RustCrypto `argon2` selected for account passwords; DO-051 separately approves Argon2id v19/PHC for recovery answers. **TBD** — pinned compatible version/features, secure WASM randomness, hashing placement, production costs/caps, CPU/memory/concurrency benchmarks and failure handling. |
 | Single API Worker entrypoint/module routing, Object classes, bindings and deployment configuration | LLD-027 selects Axum via the workers-rs HTTP fetch service and native DO socket/alarm handlers; preserve LLD-016 and DO-100 private bindings. Concrete entrypoint build output, SDK/feature pins, middleware and deployment configuration remain unverified. |
 | Static asset build, routing, caching and private-route separation | LLD-027 selects Dioxus Router, same-origin Static Assets SPA fallback and Worker-first `/api` plus `/api/*`; reserve API errors/upgrades from HTML fallback. ASSETS is an asset binding, not a state store. Actual build directory, compatibility date and response/cache header wiring remain validation work. |
-| Local / test / production environments and isolated resources | TBD |
+| Local / test / production environments and isolated resources | LLD-031 / Section 3.8 selects envy on backend/frontend, explicit Cloudflare binding adapters and allowlisted public frontend build inputs. Private/public configs remain separate; environment field inventory, prefixes, local precedence and target validation remain TBD. |
 | SQLite schema/Object migrations and version compatibility | DO-099 approves owner-local versioned forward-only transactional migration with fail-closed startup and compatible-backout/forward-fix policy; DO-075 restore expiry enforcement. Exact DDL/runtime hooks remain TBD. |
-| Secrets, developer CLI setup and initial-admin bootstrap procedure | HLD-075/DO-101 approve CLI-only first-admin bootstrap and restricted backend management interface; credentials stay in controlled developer environment. Exact secret names/scopes/operations remain TBD. |
+| Secrets, developer CLI setup and initial-admin bootstrap procedure | HLD-075/DO-101 preserve restricted CLI bootstrap/management. LLD-031 keeps backend secrets in private bindings and excludes them from frontend artifacts and raw config/error logging. Exact secret names/scopes/operations and CLI setup remain TBD. |
 | Durable deadlines/alarms or equivalent expiry/cleanup scheduling | TBD |
 | Logs, metrics, tracing, redaction and admin-action auditing | DO-088/089 approve owner-local audit records and authenticated privileged success/reject/failure capture with CLI path attribution; DO-090 approves 90-day retention and privileged CLI-only read. Secrets remain redacted; exact instrumentation is TBD. |
 | Cloudflare free-allowance verification, usage model and quota failure handling | TBD |
 | Backup/restore, expiry preservation, rollback and reconciliation runbooks | TBD |
-| CI checks, deployment verification and release rollback | TBD |
-| Deferred native adapters/build/signing | TBD — later phase only |
+| Workspace/package build and test isolation | Section 3.7 proposes one Cargo workspace with per-package target/features. LLD-030 / Section 11.1 selects local incremental/fast-profile builds, Dioxus Rust hot-patching plus RSX/assets/Tailwind reload, host nextest plus doctests, target-scoped mold, Cargo timings and cargo-machete. Exact manifests, package names, resolver/MSRV, effective profiles and commands remain TBD. |
+| CI checks, deployment verification and release rollback | LLD-030 selects Swatinem/rust-cache if GitHub Actions is selected, without choosing a CI provider; sccache remains optional. Workflow/cache trust policies, integration tests, deployment verification and release rollback wiring remain TBD. |
+| Deferred native adapters/build/signing | Section 3.7 proposes later `platform/android` / `platform/ios` entrypoints/adapters/packaging reusing shared UI/contracts. SDKs, signing, native auth/session/lifecycle and actual feature parity remain later-phase work. |
 
 No provider resources, credentials, accounts, databases or dependencies are created by this document.
+
+<a id="build-tooling"></a>
+### 11.1 Selected build and test tooling
+
+**Selected direction (LLD-030, revised by explicit user direction to include Dioxus Rust hot-patching alongside mold):** Use stable Rust/Cargo with incremental local builds and fast development profiles, Dioxus `dx serve --hotpatch` with Rust hot-patching/Subsecond enabled for supported local development edits, `cargo-nextest` with separate doctests, **mold for supported native Linux linking**, Cargo build timings and periodic `cargo-machete` reviews. Use `Swatinem/rust-cache` **if GitHub Actions is selected**; this does not itself choose a CI provider. **sccache remains optional**, not part of the required initial stack.
+
+This is a tooling selection, not an installation, build configuration, measured speedup or implementation authorization. Preserve DO-102–104, the [proposed workspace boundaries](#workspace-layout) and the local [Rust engineering guide](../docs/rust-best-practices.md). Exact compatible versions, target triples, linker drivers, Cargo/Dioxus profile settings, commands and CI cache policies remain to be validated. Primary sources were checked on 2026-10-05; referenced versions and repository `main` are research snapshots, not dependency pins.
+
+#### 11.1.1 Selection and responsibility
+
+| Tool / mechanism | Status | Intended benefit and boundary |
+| --- | --- | --- |
+| Stable Rust/Cargo, scoped checks and local incremental compilation | **Selected** | Keep repeat development builds incremental and scope checks/builds to the relevant package, target and feature set. Avoid rebuilding release artifacts for every edit. Profile choices trade compile time, runtime behavior and debugging; measure the actual workflow.[18][19] |
+| Dioxus `dx serve --hotpatch` with Rust hot-patching/Subsecond and RSX/assets/Tailwind reload | **Selected by user direction** | Enable Rust hot-patching in the supported local Dioxus development workflow, alongside RSX/assets/Tailwind reload. Preserve Sections 3.6–3.7 shared-source coverage and use a full rebuild/restart for edits outside the pinned tool’s supported patch scope. The documented experimental/workspace limits remain validation concerns, not an optional adoption decision.[20] |
+| `cargo-nextest` | **Selected for host-testable Rust packages** | Run domain/contracts tests and later native CLI tests with nextest. It builds test binaries through `cargo test --no-run`, then executes individual tests in parallel processes; it is a test runner, not a replacement Rust compiler.[23] |
+| `cargo test --doc` | **Selected alongside nextest** | Keep doctests as a separate step; nextest's documentation explicitly requires this.[24] |
+| mold | **Selected for supported native Linux builds** | Use target-scoped mold linking for applicable native test/CLI binaries. Selection is settled, not contingent on beating LLD in a benchmark; exact driver/version/target integration and correctness still require validation.[28] |
+| Wasm linker and future mobile toolchains | **Retain target-specific paths** | Browser and Cloudflare Worker/DO Wasm builds retain the Wasm `rust-lld` path; do not replace it with native mold flags. Android/iOS retain their platform SDK/toolchain paths when those deferred phases begin.[27] |
+| `Swatinem/rust-cache` | **Selected if GitHub Actions is selected** | Begin CI with dependency/artifact reuse. The action disables incremental compilation in that job and does not cache workspace crates by default; configure actual paths and target/profile/feature keys deliberately.[22] |
+| Cargo `--timings` | **Selected measurement tool** | Record compilation-unit timing, concurrency and the dependency critical path. Installing another tool is not evidence that it addresses the measured bottleneck.[21] |
+| `cargo-machete` | **Selected periodic dependency review** | Review potentially unused dependencies before removing them. Its scan is intentionally imprecise; generated/feature-specific usage can produce false positives, and metadata mode can modify the lockfile.[29] |
+| sccache | **Optional future experiment** | Evaluate eligible compiler-output reuse in a separate CI/non-incremental configuration first. Do not require it globally or silently disable useful local incremental compilation.[25] |
+
+#### 11.1.2 Mold and target isolation
+
+**Mold is adopted for the supported native Linux build scope**, superseding the earlier recommendation to treat it only as a benchmark candidate. Later timing measurements document its effect; they do not reopen that selection. No project speedup or integration result is claimed now.
+
+- Configure mold for explicitly supported native Linux target/driver combinations, not through unscoped global `RUSTFLAGS` or a system-wide linker replacement. Verify the invoked linker in the actual build. A Linux build host does not make its browser/Worker Wasm output a native Linux binary.
+- Native test/CLI linking and final Wasm linking are separate stages/targets. Rust's Wasm target implementation selects bundled `rust-lld` with the Wasm linker flavor.[27] Keep that path for the planned Dioxus web and Worker/DO artifacts; Axum inside the Worker does not change its target into a native server.
+- Rust 1.90 changed the default linker specifically for `x86_64-unknown-linux-gnu` to LLD.[26] That is context for comparisons, not a reason to undo the user-selected mold choice or a claim about every Linux/mobile triple.
+- Preserve platform-specific Android/iOS launchers, SDKs and linker integration in their future phases. Do not copy desktop Linux flags into native mobile builds, and do not broaden this decision to every operating system. Unsupported combinations require explicit handling/review rather than a silent claim that mold was used.
+
+#### 11.1.3 Local iteration, profiles and test coverage
+
+Keep the common edit/check/rebuild loop fast while preserving a full-debug path and separate production artifact validation:
+
+- Prefer focused `cargo check` and incremental builds for local Rust feedback. Use low development optimization and avoid blanket fat LTO or `codegen-units = 1` as a supposed compile-speed recipe. Higher optimization/LTO can cost build time, and codegen parallelism trades against runtime optimization.[19]
+- **Profile recommendation, not final settings:** evaluate `debug = "line-tables-only"` for workspace application code, reduced dependency debuginfo and a separate full-debug profile. Cargo documents this approach and the rebuild/debugger trade-off.[18] Keep assertions, overflow checks, input validation and security/resource policies intact; speed optimization does not authorize weaker correctness or password-hashing settings.
+- Apply settings to the profiles actually selected by the pinned Dioxus and Worker build commands. Do not assume changing only `[profile.dev]` controls every tool, or that one workspace-wide target/all-features invocation is valid for browser, Worker and native packages. Preserve Section 3.7's crate/adapter isolation and intentional dependency features.
+- **Dioxus Rust hot-patching/Subsecond is selected**, alongside RSX/assets/Tailwind reload. Enable it with the documented `dx serve --hotpatch` development path (or the equivalent supported by the pinned CLI); it is not merely an optional experiment. The checked guide still describes Rust hot-patching as experimental and limited to the “tip” crate, whereas RSX reload works across a workspace.[20] With `platform/web` launching `shared/ui`, verify which edits are actually patched; do not assume dependency logic is covered. For unsupported edits, require a full rebuild/restart so stale code is never mistaken for the edited application. Preserve encapsulation rather than copying UI code to bypass the limitation. This selection is for the local Dioxus workflow, not production or Cloudflare Worker/DO runtime hot-patching; exact integration and execution remain unverified.
+- Use a fast local Worker build separately from release optimization. Current `worker-build` source exposes `--dev` and `--no-opt`, the latter skipping wasm-opt; verify the chosen released tool before adopting those exact flags.[30] Keep production Wasm size/runtime checks and avoid redundant wasm-bindgen/wasm-opt passes or reinstalling unpinned tooling on every edit.
+- Nextest covers the selected host-testable code; run doctests separately and retain browser/Wasm and actual Worker/DO integration coverage. Wasm test-runner integration with nextest exists upstream, but its documented startup/session costs do not establish a fast or working browser configuration for this project.[31] Treat that integration as optional validation work, not as a reason to claim nextest is native-only or to replace target-specific tests.
+
+#### 11.1.4 CI caching and optional tools
+
+For CI, begin with the conditional artifact-cache selection rather than assuming multiple caches are always better. Pin compatible tooling, distinguish materially different toolchain/target/profile/feature combinations, and keep cache restore/upload/setup costs in the timing result. Separate trusted build artifacts from untrusted job writes; credentials must never enter cache keys, logs or committed configuration.
+
+If sccache is later evaluated, keep its settings local to the intended build job. Its Rust support requires incremental compilation to be disabled for cacheable invocations, excludes final `bin`, `dylib`, `cdylib` and `proc-macro` outputs, and requires `link` among the emitted outputs.[25] Eligible dependency compilations may benefit, but this is not a promise to cache metadata-only checks, final Wasm linking, wasm-bindgen, wasm-opt or static assets. Inspect actual hit/miss/non-cacheable statistics and total elapsed time before adopting it; do not replace the local incremental policy merely to raise cache hit counts.
+
+Bacon, cargo-binstall and additional diagnostic tools remain optional conveniences, not prerequisites. Wild, Cranelift/nightly compiler experiments, cargo-hakari, cargo-chef and cargo-udeps are not selected for the initial workflow. Revisit only for a concrete need; this section does not introduce Docker, a nightly toolchain or another linker in place of selected mold.
+
+#### 11.1.5 Verification and measurement — not executed
+
+| ID | Future check / evidence |
+| --- | --- |
+| BUILD-AC-01 | Confirm tool/version/driver compatibility and inspect actual linker use: mold for the configured native Linux targets, Wasm linker for browser/Worker artifacts, no leaked global native flags. |
+| BUILD-AC-02 | Enable Dioxus Rust hot-patching and exercise representative launcher/UI Rust, shared-ui dependency, RSX/Tailwind, backend and shared-domain edits. Verify supported edits actually patch, unsupported edits receive a full rebuild/restart, and no stale code is presented as current. Check source coverage, incremental reuse and the full-debug fallback under the effective profiles. |
+| BUILD-AC-03 | Verify nextest discovery/failing-test propagation for host packages, separate doctests, and independent browser/Worker integration coverage; report test-binary build time separately from execution. |
+| BUILD-AC-04 | Measure cold, warm no-change and controlled edit/rebuild cases plus complete release Wasm packaging; record relevant memory/artifact sizes and effective profiles. Repeatable edit benchmarks must not accidentally measure Cargo no-ops. |
+| BUILD-AC-05 | If GitHub Actions is selected, verify cache paths/keys, trust boundaries and restore/upload overhead. If sccache is trialed, compare job-level totals and cache statistics without silently disabling local incremental compilation. |
+| BUILD-AC-06 | Review cargo-machete findings across target/feature/generated-code usage, verify any approved dependency removal, and preserve existing correctness/security/release gates in production builds. |
+
+Cargo `--timings` provides compiler-unit/concurrency evidence, not the entire post-link/deploy cost.[21] Record complete pipeline elapsed time separately. Exact benchmark harnesses, thresholds, compatible pins and application results remain unverified; no build, installation, test, CI workflow or deployment is performed by documenting this selection.
 
 ## 12. Open design register and review gates
 
@@ -860,22 +1142,22 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 
 | ID | Decision / specification | Status / selected detail |
 | --- | --- | --- |
-| LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | Concrete UI proposals remain in Section 4 / LLD-026. LLD-027 selects Dioxus Router and LLD-028 selects Tailwind through the Dioxus build/asset workflow. Exact screen paths/layouts, visual tokens, component signatures and executed accessibility/UI checks remain pending. |
+| LLD-001 | Dioxus view grouping, routes, components, state management and accessibility | Concrete UI proposals remain in Section 4 / LLD-026. LLD-027 selects Dioxus Router and LLD-028 selects Tailwind through the Dioxus build/asset workflow. Exact screen paths/layouts, visual tokens, component signatures and executed accessibility/UI checks remain pending. LLD-029 / Section 3.7 proposes feature-local UI modules, shared components/client orchestration and platform adapter boundaries. LLD-031 adds separate validated public frontend configuration via envy and platform adapters. |
 | LLD-002 | Users fields/actions/filters and protected account-management UX | VIEW-15 proposes safe columns, creation/detail panels, guarded actions and one-time private-link handoff. Role/access/lifecycle constraints remain approved; filter/paging/capability contracts and handoff edge-case UX still need review. |
 | LLD-003 | Cloudflare account/session store placement and ownership | DO-001 approves one AccountsObject per environment; DO-100 approves GAME_DIRECTORY/ACCOUNTS/GAMES private bindings and environment isolation. Ownership is approved; exact deployment config/internal methods remain implementation work. |
 | LLD-004 | SQLite tables/types/keys/indexes, record mappings and migrations | DO-096–099 approve owner-local normalized mappings/type/privacy, local FKs/cross-owner validation, unique/check/parameterized-query rules and versioned forward-only migrations. Exact DDL/statements/index query plans and runtime migration hooks remain TBD. |
 | LLD-005 | Directory/game coordination and command idempotency/reconciliation | DO-014/015 approve one nullable `game_id` reservation row, claim-first creation, same-ID/same-code GameObject recreation after failure, and compare-by-ID acquire/release without a generation counter in [Durable Object design Section 6.3](durable-object-design.md#directory-records). DO-016 approves idempotent terminal compare-and-clear (matching ID clears; NULL is complete; different ID is stale/no-op). DO-017 approves a presence-only account-assignment gate keyed by account_id; DO-018 approves acquire-before-check, assignment blocking, clear-and-reject for hosted games, and retain-and-retry on interruption. DO-076–084 approve owner/actor-scoped receipts, fingerprints, bounded typed results, retention, secret-safe issuance retry, typed pending payloads, per-operation fences/ACKs and capped retry/reconciliation. Physical transport/recovery remains implementation work. |
-| LLD-006 | Worker API methods/routes, request/response/error schemas and compatibility | LLD-027 selects Axum in the single Rust Worker, responsibility-based handler composition and strict API/SPA separation. Existing proposed functions/paths/DTOs remain in [API design Section 6](api-design.md#operation-catalog); final requiredness, errors/statuses, wire schemas, middleware ordering and native upgrade adapters remain TBD. |
+| LLD-006 | Worker API methods/routes, request/response/error schemas and compatibility | LLD-027 selects Axum in the single Rust Worker, responsibility-based handler composition and strict API/SPA separation. Existing proposed functions/paths/DTOs remain in [API design Section 6](api-design.md#operation-catalog); final requiredness, errors/statuses, wire schemas, middleware ordering and native upgrade adapters remain TBD. LLD-029 proposes their placement under backend/api while owner mutations/storage remain under backend/objects. |
 | LLD-007 | WSS payloads/revisions, privacy projections, hibernation and backpressure | DO-067/068 approve per-view projection boundaries/revisions, single-cut attachment+snapshot ordering, monotonic updates, gap-triggered full resync, independent authority checks and terminal counter lifetime in [Durable Object design Section 6.5](durable-object-design.md#game-records); persisted session/attachment records remain in [Sections 6.4/6.8](durable-object-design.md#account-records). WSS contracts live in [API design Section 7](api-design.md#wss-design). DO-091–095 approve v1 attachment cap, authoritative hibernation reconstruction, participant replacement fencing, earliest-deadline alarm and frame/queue close-resync limits. Rust SDK delivery integration remains implementation work. |
 | LLD-008 | Board generation/feasibility, matching and pattern-specific trait signatures | DO-044/061/062/063 approve feasibility, uniqueness, bounded generation/failure and the Single Line evaluator contract; target RNG/SQL/transaction integration and implementation tests remain TBD |
 | LLD-009 | Password policy, token/cookie/verifier implementation and request security | Minimum 10 characters and any combination of ASCII characters confirmed by LLD-023 (Section 9.1); salted Argon2 via RustCrypto `argon2` confirmed by LLD-024 (Section 9.2). DO-019 approves AccountRecord fields/types/nullability and combined PHC storage in `verifier`; DO-022 approves lifecycle/disablement and credential-epoch rules in [Durable Object design Section 6.4](durable-object-design.md#account-records). DO-076–090 approve receipts, secret-safe retries, rate-limit and audit policies; DO-101 approves trusted Worker/Object/CLI boundary. Production Argon2 costs/caps, exact Unicode runtime, cookie/wire encoding, physical SQL and provider integration remain **TBD**. |
 | LLD-010 | Answer normalization/protection, abuse controls and recovery transactions | DO-049 approves the logical private `PlayerRecoveryRecord` fields/types/privacy; DO-050 approves version-1 Unicode NFC, outer Unicode whitespace trim and case-folding, preserving internal whitespace/punctuation, with stored-version verification and authenticated replacement on future version changes; DO-051 approves Argon2id v19, fresh independent 16-byte salt, 32-byte output and PHC encoding; 19 MiB/2/1 is only a benchmark starting point and production costs/caps require target measurements. DO-052 approves optimistic verifier revalidation, atomic answer change, session-epoch replacement and socket-fencing policy. DO-085–087 approve rate bucket fields/owners, 5 failures/15m then 15m block, and scoped HMAC/privacy policy. Exact Unicode implementation, key rotation and physical integration remain **TBD**. | DO-048–053 |
 | LLD-011 | Presence/Leave/Exit mechanics, timer scheduling and terminal notice/deletion ordering | DO-053 approves spectator record/grace fields; DO-054 approves disconnect/reconnect/expiry ordering and stale-event guards; DO-055 approves participant-session binding/access in [Durable Object design Section 6.5](durable-object-design.md#game-records). DO-056 approves terminal player grant/Exit/replay/deletion; DO-057/058 approve account LiveView/final-view and cross-session Exit policies; DO-059 approves logical board fields/types; DO-060 approves board row mapping/projection checks. DO-073/056/058 policies are approved for terminal notice and final-view cleanup; DO-091–095 approve attachment, reconstruction, fencing, alarms and backpressure policies. Rust SDK/socket-close integration remains **TBD**. |
 | LLD-012 | History placement/indexing, calendar-month expiry, cleanup and backup/restore | Final History remains in the original Game Object with a minimal Directory index. DO-069 approves immutable snapshot/winner/player fields and constraints; DO-070 approves parent/call/player/cell row mapping and ordering; DO-071 approves UTC calendar-month expiry/month-end clamping/end-exclusive denial. DO-072 approves atomic materialization/cleanup; DO-073 approves best-effort spectator result delivery followed by server identity/session deletion without ACK wait; DO-074 approves primary scheduled purge/code reuse; DO-075 approves copy/index/log expiry and restore non-resurrection. Provider scheduling, backup/log controls and physical cleanup remain **TBD**. |
-| LLD-013 | CLI interfaces, binding/credential scopes, secure link handoff and bootstrap | DO-101 approves the restricted developer CLI invoking authorized Worker management/bootstrap operations with controlled credentials, no direct SQLite and no browser exposure. Exact credential scopes, transport, commands and packaging remain TBD. |
+| LLD-013 | CLI interfaces, binding/credential scopes, secure link handoff and bootstrap | DO-101 approves the restricted developer CLI invoking authorized Worker management/bootstrap operations with controlled credentials, no direct SQLite and no browser exposure. Exact credential scopes, transport, commands and packaging remain TBD. LLD-029 proposes a separate Rust CLI package with commands/client submodules; this is not final language/package adoption. |
 | LLD-014 | Optional speech, browser matrix, quality/load targets and acceptance tests | DO-103 approves max-game plus owner-provided peak forecast capacity validation with 2× quota headroom; DO-104 approves the schema/transaction/race/security/load release-gate plan. VIEW-12 proposes device-local opt-in speech with no resync replay; Section 4.2 proposes responsive/accessibility targets and UI-AC-17 covers future validation. Audio behavior approval, browser/assistive-technology matrix and measurable venue targets remain pending; no measurements/tests have been run. |
-| LLD-015 | Build/deployment/observability and quota verification | DO-100–104 approve isolated bindings, pinned-toolchain/clock/RNG policy, forward migrations, 2× quota capacity gate and test/verification release gate. Exact pins, provider runtime integration, forecast and actual results remain unverified. |
-| LLD-016 | Initial API Worker organization and Durable Object boundary | One API Worker serves the app. DO-100/101 preserve private GAME_DIRECTORY/ACCOUNTS/GAMES bindings, typed trusted peer operations and restricted CLI. LLD-027 selects Dioxus Router, Axum HTTP dispatch and native DO state/socket handlers. No endpoint-per-Worker split or conventional listening server; exact SDK/transport/module wiring remains unverified. |
+| LLD-015 | Build/deployment/observability and quota verification | DO-100–104 approve isolated bindings, pinned-toolchain/clock/RNG policy, forward migrations, 2× quota capacity gate and test/verification release gate. Exact pins, provider runtime integration, forecast and actual results remain unverified. LLD-029 / Section 3.7 proposes the workspace and package-target/feature/test isolation; exact manifests and build commands remain open. LLD-030 selects the build/test baseline with mold for supported native Linux targets; Wasm linking stays separate and sccache optional. Exact configuration and performance results remain unverified. LLD-031 selects envy for backend/frontend env configuration with private/public separation; exact adapters, settings and environment/cache update behavior remain unverified. |
+| LLD-016 | Initial API Worker organization and Durable Object boundary | One API Worker serves the app. DO-100/101 preserve private GAME_DIRECTORY/ACCOUNTS/GAMES bindings, typed trusted peer operations and restricted CLI. LLD-027 selects Dioxus Router, Axum HTTP dispatch and native DO state/socket handlers. No endpoint-per-Worker split or conventional listening server; exact SDK/transport/module wiring remains unverified. LLD-029 proposes one backend crate containing the Worker entrypoint and private Object modules; folder decomposition does not introduce more deployments. |
 | LLD-017 | Proposed operation catalog and auth-scope notation | Captured at user request — [API design Section 6](api-design.md#operation-catalog) retains category headers and per-operation ID/function/access-type heading, Path, Auth scope and description. Scope labels are Admin, Host, Player, Anyone and the user-selected System for internal work. Proposed names/paths remain reviewable; Anyone never bypasses required session/proof/ownership, Host includes admin with applicable game guards, and System is not an account role or public endpoint. Potential Request/Response fields are recorded under LLD-019; final schemas and function signatures remain **TBD**. Object structures are separately proposed under LLD-018, not finalized by this catalog. |
 | LLD-018 | Durable Object records and types | The DO-001–107 logical design decisions are approved and logged in [Durable Object design Section 6](durable-object-design.md#schema-proposal), with physical schema and implementation gates kept distinct. All approved logical decisions are recorded; exact DDL/runtime mechanisms and verification remain implementation work. |
 | LLD-019 | Proposed per-operation Request and Response inputs/outputs | Captured at user request — every A1–H12 operation in [API design Section 6](api-design.md#operation-catalog) has Request/Response subheadings with potential typed fields, session/cookie effects and failure candidates. Shared safe DTO descriptions do not expose storage records. Internal helpers use internal inputs/results; WSS entries distinguish upgrade/frames/push. Final schemas, requiredness, encodings, status/error contracts, retry/security mechanisms and tests remain **TBD**; no new endpoint or implementation is approved. |
@@ -888,6 +1170,9 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 | LLD-026 | Requested UI screen/component designs | **Requested design proposals — not implemented:** Section 4 preserves VIEW-01–VIEW-16 and adds VIEW-17 Home with game-code input, Join and shared host/admin login. Defines Games with History, Create/setup, account/player/spectator lobby/Play, Users, enrollment/reset, recovery, result/History, shared state/privacy/accessibility rules, existing API touchpoints and UI-AC-01–UI-AC-17. User-requested screen coverage is recorded; new routes/layout/audio details remain proposals and API contracts remain in the companion document. |
 | LLD-027 | Rust routing libraries and Cloudflare dispatch boundaries | **Selected direction at user request:** Dioxus Router for browser routes; Axum as the HTTP service inside the single Rust API Worker; Static Assets SPA fallback with Worker-first `/api` and `/api/*`; native Durable Object state, alarms and hibernating WebSockets. Section 3.5 records module/middleware responsibility, authoritative checks, no API-to-HTML fallback, Worker/Wasm Send/feature caveats and ROUTE-AC-01–08. Exact pins, wire contracts, adapters and measured/tested compatibility remain pending; no implementation authorized. |
 | LLD-028 | Dioxus-integrated Tailwind styling | **Confirmed user direction:** Use Tailwind CSS in Dioxus RSX/shared UI components, compile through the Dioxus-compatible build workflow and serve generated CSS as a static asset. Section 3.6 records source coverage, conditional styles and future production/accessibility checks. Exact toolchain pins, visual tokens and component-library choices remain open; no implementation or tests performed. |
+| LLD-029 | Proposed Cargo workspace, folder layout and module encapsulation | **Requested design proposal — not scaffolded:** Section 3.7 records one Cargo workspace with shared domain/contracts/Dioxus UI, web and deferred Android/iOS platform boundaries, one Cloudflare backend crate and a proposed Rust developer CLI. Includes the visual tree, owner-local GameObject submodules, private-by-default/component-local errors, safe DTO/internal storage separation, dependency direction, platform adapters, build isolation and test placement. Existing approved domain/security rules remain unchanged; exact package names/manifests/interfaces and native/runtime validation remain pending. |
+| LLD-030 | Build/test tooling and native Linux linker selection | **Selected direction:** Stable Cargo incremental local builds/fast development profiles, Dioxus dx serve --hotpatch with Rust hot-patching/Subsecond and RSX/assets/Tailwind reload, cargo-nextest for host-testable Rust packages plus separate doctests, mold for supported native Linux builds, Cargo timings and periodic cargo-machete reviews. Swatinem/rust-cache is selected if GitHub Actions is chosen; sccache remains optional. Dioxus Rust hot-patching is explicitly selected by subsequent user direction, with documented limitations and full-rebuild fallback retained. Section 11.1 preserves Wasm/mobile linker boundaries and documents BUILD-AC-01–06. Mold adoption is settled, not benchmark-gated; compatible pins/configuration, runtime correctness and measured gains remain unverified. No installs, implementation or tests authorized. |
+| LLD-031 | Typed environment configuration on backend and frontend | **Confirmed user direction:** Use envy with separate backend/private and Dioxus/public configuration types. Section 3.8 uses explicit Cloudflare Env adapters and allowlisted public build-value adapters feeding envy::from_iter; no browser/Worker process-env assumption or frontend secret export. Resource bindings stay typed; local config/error modules own validation and redaction. CONFIG-AC-01–05 are unexecuted checks. Exact fields, prefixes, versions and runtime/build wiring remain TBD; no implementation or provisioning authorized. |
 
 ### 12.2 Product/source questions — do not silently decide in implementation
 
@@ -900,7 +1185,7 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 
 Coverage means a place to complete the design, not that every design choice or requirement is fulfilled. LLD Section 5 references [Durable Object design](durable-object-design.md), and Sections 6–7 reference API/WSS content in [api-design.md](api-design.md), so coverage ranges containing those sections include their companion documents. Ranges identify source decision rows; superseded rows are carried only as qualified in Section 1.2.
 
-**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work. LLD-027 selects the routing library/integration split in Section 3.5 without finalizing individual UI paths, API contracts or runtime compatibility. LLD-028 records the user-selected Dioxus-integrated Tailwind styling foundation; visual design tokens and build validation remain separate.
+**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work. LLD-027 selects the routing library/integration split in Section 3.5 without finalizing individual UI paths, API contracts or runtime compatibility. LLD-028 records the user-selected Dioxus-integrated Tailwind styling foundation; visual design tokens and build validation remain separate. LLD-029 captures the proposed workspace/module visualization in Section 3.7, preserving the HLD top-level boundaries and native-platform deferral; no source scaffold, dependency installation or application test is authorized. LLD-030 records the selected build/test baseline, native Linux mold and, by subsequent explicit user direction, Dioxus Rust hot-patching/Subsecond in Section 11.1. Hot-patching is selected for supported local development, with full rebuild/restart for unsupported edits; sccache stays optional, CI-cache adoption is conditional on GitHub Actions, and no target validation or performance gain is claimed. LLD-031 selects envy on both backend and frontend in Section 3.8, distinguishing runtime Cloudflare bindings from public frontend build input; configuration types/validation remain isolated and no secrets enter client artifacts.
 
 | HLD decisions | Template coverage |
 | --- | --- |
@@ -938,6 +1223,9 @@ Coverage means a place to complete the design, not that every design choice or r
 - [ ] Source conflicts and genuinely new product questions are resolved or explicitly deferred.
 - [ ] Tests, quality targets, Cloudflare compatibility/budget checks and operational runbooks are defined.
 - [ ] Exercise ROUTE-AC-01–ROUTE-AC-08 on the pinned Worker/Wasm stack; verify API/SPA separation, typed/auth/cookie handling, native upgrades and committed-command recovery.
+- [ ] Review Section 3.7 / LLD-029 package/module proposals and define the per-target dependency/feature/test matrix; verify privacy and adapter boundaries after implementation authorization.
+- [ ] Pin/configure the LLD-030 tools and execute BUILD-AC-01–BUILD-AC-06 after implementation authorization; verify selected mold use, Wasm isolation, test coverage and actual build/cache timings.
+- [ ] Finalize LLD-031 settings/adapters and execute CONFIG-AC-01–CONFIG-AC-05 after implementation authorization; validate both Wasm targets and the private/public/redacted-error boundaries.
 - [ ] Detailed design approval is recorded; implementation receives its own explicit authorization.
 
 ## Sources
@@ -959,3 +1247,25 @@ Coverage means a place to complete the design, not that every design choice or r
 [15] https://docs.rs/worker/latest/worker/struct.Router.html — Built-in worker::Router alternative
 [16] https://dioxuslabs.com/learn/0.7/tutorial/new_app — Dioxus built-in Tailwind build support
 [17] https://dioxuslabs.com/learn/0.7/guides/utilities/tailwind — Tailwind styling in Dioxus components
+[18] https://doc.rust-lang.org/cargo/guide/build-performance.html — Cargo build performance
+[19] https://doc.rust-lang.org/cargo/reference/profiles.html — Cargo profiles
+[20] https://dioxuslabs.com/learn/0.7/essentials/ui/hotreload — Dioxus hot reload and hotpatch limitations
+[21] https://doc.rust-lang.org/cargo/reference/timings.html — Cargo build timings
+[22] https://raw.githubusercontent.com/Swatinem/rust-cache/master/README.md — GitHub Actions Rust artifact cache
+[23] https://nexte.st/docs/design/how-it-works — How nextest builds and runs tests
+[24] https://nexte.st — Nextest and doctests
+[25] https://raw.githubusercontent.com/mozilla/sccache/main/docs/Rust.md — sccache Rust cache limitations
+[26] https://blog.rust-lang.org/2025/09/18/Rust-1.90.0 — Rust 1.90 LLD default
+[27] https://raw.githubusercontent.com/rust-lang/rust/1.99.0/compiler/rustc_target/src/spec/base/wasm.rs — Stable Rust Wasm linker configuration
+[28] https://github.com/rui314/mold — mold linker
+[29] https://raw.githubusercontent.com/bnjbvr/cargo-machete/main/README.md — cargo-machete
+[30] https://raw.githubusercontent.com/cloudflare/workers-rs/main/worker-build/src/build/mod.rs — worker-build development and optimization options
+[31] https://github.com/wasm-bindgen/wasm-bindgen/pull/4356 — wasm-bindgen nextest compatibility and costs
+[32] https://docs.rs/envy/0.4.2/envy — envy — typed environment configuration
+[33] https://docs.rs/envy/0.4.2/envy/fn.from_iter.html — envy::from_iter — explicit key/value deserialization
+[34] https://developers.cloudflare.com/workers/configuration/environment-variables — Cloudflare environment-variable bindings and environments
+[35] https://docs.rs/worker/0.8.7/worker/struct.Env.html — workers-rs Env — variables, secrets and resource bindings
+[36] https://doc.rust-lang.org/std/macro.option_env.html — Rust option_env! — compile-time environment capture
+[37] https://raw.githubusercontent.com/softprops/envy/master/src/lib.rs — envy parser implementation and error-value handling
+[38] https://raw.githubusercontent.com/rust-lang/rust/1.99.0/library/std/src/sys/env/unsupported.rs — Rust unsupported environment access
+[39] https://raw.githubusercontent.com/rust-lang/rust/1.99.0/library/std/src/sys/env/mod.rs — Rust environment platform dispatch
