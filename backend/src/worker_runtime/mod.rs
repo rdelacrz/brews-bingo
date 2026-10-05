@@ -1,11 +1,15 @@
 //! Cloudflare entry points; private adapters, no listening TCP server.
 mod database;
+pub(super) mod directory;
 mod edge;
+mod management;
+mod removals;
 mod runtime;
 mod wire;
 
 use crate::config::get_backend_config;
 use crate::limits::{OWNER_CALLER_IDENTITY_MAX_BYTES, OWNER_REQUEST_MAX_BYTES};
+use crate::observability::{self, Boundary, Failure};
 use crate::{
     auth::{AuthError, AuthPolicy, AuthService, RequestContext, Runtime},
     storage,
@@ -22,12 +26,21 @@ use worker::{
 };
 use zeroize::Zeroizing;
 
+/// Parse typed bytes directly so duplicate fields remain visible to Serde.
+fn decode_private_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> std::result::Result<T, ()> {
+    if bytes.iter().find(|byte| !byte.is_ascii_whitespace()) != Some(&b'{') {
+        return Err(());
+    }
+    serde_json::from_slice(bytes).map_err(|_| ())
+}
+
 #[event(fetch)]
 pub async fn fetch(
     request: HttpRequest,
     env: Env,
     _context: Context,
 ) -> Result<http::Response<Body>> {
+    crate::observability::init();
     let router = Router::new()
         .route("/api/auth/login", any(edge::handle))
         .route("/api/session", any(edge::handle))
@@ -36,6 +49,7 @@ pub async fn fetch(
         .route("/api/auth/password-reset/redeem", any(edge::handle))
         .route("/api/auth/password-reset/complete", any(edge::handle))
         .route("/api/auth/logout", any(edge::handle))
+        .route("/_dev/commands", any(management::handle))
         .fallback(edge::handle)
         .with_state(SendWrapper::new(env));
     router
@@ -51,12 +65,39 @@ pub struct AccountsObject {
     env: Env,
 }
 impl AccountsObject {
+    async fn cleanup_alarm(&self) -> Result<Response> {
+        let db = OwnerDatabase::new(self.state.storage());
+        storage::migrate(&db)
+            .map_err(|_| worker::Error::RustError("storage initialization failed".to_owned()))?;
+        let rt = WorkerRuntime;
+        let service = self
+            .service(&db, &rt)
+            .map_err(|_| worker::Error::RustError("configuration unavailable".to_owned()))?;
+        self.recover_removals(&service)
+            .await
+            .map_err(|_| worker::Error::RustError("removal recovery failed".to_owned()))?;
+        service
+            .cleanup()
+            .map_err(|_| worker::Error::RustError("cleanup failed".to_owned()))?;
+        service
+            .cleanup_management()
+            .map_err(|_| worker::Error::RustError("management cleanup failed".to_owned()))?;
+        let deadline = Self::combined_deadline(&service)
+            .map_err(|_| worker::Error::RustError("deadline lookup failed".to_owned()))?;
+        self.schedule(deadline).await?;
+        self.state.storage().sync().await?;
+        Response::empty()
+    }
+
     fn service<'a>(
         &'a self,
         db: &'a OwnerDatabase,
         rt: &'a WorkerRuntime,
     ) -> std::result::Result<AuthService<'a, OwnerDatabase, WorkerRuntime>, AuthError> {
-        let cfg = get_backend_config(&self.env).map_err(|_| AuthError::Crypto)?;
+        let cfg = get_backend_config(&self.env).map_err(|_| {
+            observability::failure(Boundary::AccountsAuth, Failure::Configuration);
+            AuthError::Crypto
+        })?;
         AuthService::new(
             db,
             rt,
@@ -95,23 +136,40 @@ impl AccountsObject {
         storage::migrate(&db)?;
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
-        let outcome = OwnerResponse::outcome(service.execute(
+        let is_completion = matches!(&message.command, crate::auth::AuthCommand::Complete { .. });
+        let result = service.execute(
             message.command,
             RequestContext {
                 command_id: message.command_id,
                 caller_identity: message.caller_identity,
             },
-        ));
-        self.schedule(service.next_deadline()?)
+        );
+        if let Err(error) = &result {
+            if is_completion && *error == AuthError::Unauthorized {
+                observability::failure(Boundary::AccountsAuth, Failure::Forbidden);
+            } else {
+                observability::auth_failure(Boundary::AccountsAuth, *error);
+            }
+        }
+        let outcome = OwnerResponse::outcome(result);
+        self.schedule(Self::combined_deadline(&service)?)
             .await
             .map_err(|_| AuthError::Storage)?;
         // Await the output gate before the private response can cause Set-Cookie.
-        self.state
-            .storage()
-            .sync()
-            .await
-            .map_err(|_| AuthError::Storage)?;
+        self.state.storage().sync().await.map_err(|_| {
+            observability::failure(Boundary::Durability, Failure::Storage);
+            AuthError::Storage
+        })?;
         Ok(outcome)
+    }
+    fn combined_deadline(
+        service: &AuthService<'_, OwnerDatabase, WorkerRuntime>,
+    ) -> std::result::Result<Option<i64>, AuthError> {
+        let auth = service.next_deadline()?;
+        let management = service
+            .next_management_deadline()
+            .map_err(|_| AuthError::Storage)?;
+        Ok(auth.into_iter().chain(management).min())
     }
     async fn schedule(&self, deadline: Option<i64>) -> Result<()> {
         let storage = self.state.storage();
@@ -139,28 +197,22 @@ impl DurableObject for AccountsObject {
         Self { state, env }
     }
     async fn fetch(&self, request: Request) -> Result<Response> {
-        let response = self
-            .execute(request)
-            .await
-            .unwrap_or_else(|error| OwnerResponse::outcome(Err(error)));
+        crate::observability::init();
+        if request.path() == "/management" {
+            return self.execute_management_request(request).await;
+        }
+        let response = self.execute(request).await.unwrap_or_else(|error| {
+            observability::auth_failure(Boundary::AccountsAuth, error);
+            OwnerResponse::outcome(Err(error))
+        });
         Response::from_json(&response).map(|r| r.with_status(200))
     }
     async fn alarm(&self) -> Result<Response> {
-        let db = OwnerDatabase::new(self.state.storage());
-        storage::migrate(&db)
-            .map_err(|_| worker::Error::RustError("storage initialization failed".to_owned()))?;
-        let rt = WorkerRuntime;
-        let service = self
-            .service(&db, &rt)
-            .map_err(|_| worker::Error::RustError("configuration unavailable".to_owned()))?;
-        service
-            .cleanup()
-            .map_err(|_| worker::Error::RustError("cleanup failed".to_owned()))?;
-        let deadline = service
-            .next_deadline()
-            .map_err(|_| worker::Error::RustError("deadline lookup failed".to_owned()))?;
-        self.schedule(deadline).await?;
-        self.state.storage().sync().await?;
-        Response::empty()
+        observability::init();
+        let result = self.cleanup_alarm().await;
+        if result.is_err() {
+            observability::failure(Boundary::AccountsAlarm, Failure::Storage);
+        }
+        result
     }
 }

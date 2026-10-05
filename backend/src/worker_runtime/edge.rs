@@ -4,6 +4,7 @@ use crate::config::get_backend_config;
 use crate::limits::{
     MILLISECONDS_PER_SECOND, OWNER_RESPONSE_MAX_BYTES, RATE_LIMIT_BLOCK_MS, SESSION_LIFETIME_MS,
 };
+use crate::observability::{self, Boundary, Failure};
 use crate::{
     api::{self, ApiError, BODY_LIMIT, Decoded, Operation, Payload},
     auth::AuthCommand,
@@ -28,14 +29,20 @@ pub(super) async fn handle(State(env): State<SendWrapper<Env>>, request: Request
     SendFuture::new(async move {
         match dispatch(&env, request).await {
             Ok(response) => response,
-            Err(error) => failure(error),
+            Err(error) => {
+                observability::api_failure(Boundary::AuthIngress, error);
+                failure(error)
+            }
         }
     })
     .await
 }
 
 async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
-    let config = get_backend_config(env).map_err(|_| ApiError::Unavailable)?;
+    let config = get_backend_config(env).map_err(|_| {
+        observability::failure(Boundary::AuthIngress, Failure::Configuration);
+        ApiError::Unavailable
+    })?;
     if request.uri().scheme_str() != Some("https") {
         return Err(ApiError::Forbidden);
     }
@@ -87,18 +94,22 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .map_err(|_| ApiError::Unavailable)?;
     let request = worker::Request::new_with_init("https://accounts.internal/auth", &init)
         .map_err(|_| ApiError::Unavailable)?;
-    let mut response = stub
-        .fetch_with_request(request)
-        .await
-        .map_err(|_| ApiError::Unavailable)?;
+    let mut response = stub.fetch_with_request(request).await.map_err(|_| {
+        observability::failure(Boundary::AccountsPeer, Failure::PeerTransport);
+        ApiError::Unavailable
+    })?;
     if response.status_code() != 200 {
+        observability::failure(Boundary::AccountsPeer, Failure::PeerProtocol);
         return Err(ApiError::Unavailable);
     }
     let data = Zeroizing::new(response.bytes().await.map_err(|_| ApiError::Unavailable)?);
     if data.len() > OWNER_RESPONSE_MAX_BYTES {
         return Err(ApiError::Unavailable);
     }
-    let result: OwnerResponse = serde_json::from_slice(&data).map_err(|_| ApiError::Unavailable)?;
+    let result: OwnerResponse = serde_json::from_slice(&data).map_err(|_| {
+        observability::failure(Boundary::AccountsPeer, Failure::PeerProtocol);
+        ApiError::Unavailable
+    })?;
     let mut response = json_response(result.status, result.body)?;
     match &result.cookie {
         CookieWire::None => {}
@@ -196,7 +207,7 @@ fn json_response(status: u16, body: serde_json::Value) -> Result<Response, ApiEr
     );
     Ok(response)
 }
-fn failure(error: ApiError) -> Response {
+pub(super) fn failure(error: ApiError) -> Response {
     let status = match error {
         ApiError::InvalidInput => 400,
         ApiError::Forbidden => 403,

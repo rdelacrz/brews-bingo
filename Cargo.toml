@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["shared/domain", "shared/contracts", "shared/config", "backend"]
-default-members = ["shared/domain", "shared/contracts", "shared/config", "backend"]
+members = ["shared/domain", "shared/contracts", "shared/config", "backend", "cli"]
+default-members = ["shared/domain", "shared/contracts", "shared/config", "backend", "cli"]
 
 [workspace.package]
 edition = "2024"

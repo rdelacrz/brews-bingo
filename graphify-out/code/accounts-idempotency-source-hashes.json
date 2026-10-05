@@ -1,0 +1,12 @@
+{
+  "files": {
+    "backend/src/auth/receipts.rs": "6e456018478e88c94867424c13605f3fa1d085fc08589760c710bdd692c91712",
+    "backend/src/auth/service.rs": "e2e5bf3f422a6f4c19da264a5ebad7ac392d4d81c64d297440d05d62e11aeba2",
+    "backend/src/auth/management/receipts.rs": "3f42429802bf8475bc37d8dd422b9dcd179905c7f6988e3d4a5a3456db8ab945",
+    "backend/src/auth/management/removal.rs": "2e10deed28bf3126a88b86dde78385af08d96daa2cc6759cd63f37d85afa4f33",
+    "backend/tests/account_management.rs": "005e68d30c62033da26f6f054bb873623ccd5ef7b55e12fad719b7e2473ac5c0",
+    "backend/tests/accounts_idempotency.rs": "7f1b66d13e2388dc99b0d8118cd7fdfdae317fb0be34668ba77797ffbe64e8c9"
+  },
+  "nodes": 1323,
+  "edges": 2967
+}

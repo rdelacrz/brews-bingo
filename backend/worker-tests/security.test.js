@@ -84,7 +84,7 @@ it("failure-only throttles persist across requests and do not create sessions", 
 });
 
 it("an auth schema newer than this binary fails closed", async () => {
-  await inOwner((_instance, state) => state.storage.sql.exec("UPDATE storage_metadata SET schema_version=2"));
+  await inOwner((_instance, state) => state.storage.sql.exec("UPDATE storage_metadata SET schema_version=schema_version+1"));
   const response = await current();
   expect(response.status).toBe(503);
   expect(response.headers.has("Set-Cookie")).toBe(false);

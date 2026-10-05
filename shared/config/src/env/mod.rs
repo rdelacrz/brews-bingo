@@ -2,9 +2,13 @@
 
 #[cfg(feature = "backend")]
 pub mod backend;
+#[cfg(all(feature = "cli", not(target_arch = "wasm32")))]
+pub mod cli;
 pub mod error;
 #[cfg(feature = "frontend")]
 pub mod frontend;
+#[cfg(any(feature = "backend", feature = "cli"))]
+mod utility;
 
 pub use error::{ConfigError, InvalidValueKind};
 
@@ -14,7 +18,7 @@ pub trait EnvSource {
     fn value(&self, key: &'static str) -> Result<Option<String>, ConfigError>;
 }
 
-#[cfg(any(feature = "backend", feature = "frontend"))]
+#[cfg(any(feature = "backend", feature = "frontend", feature = "cli"))]
 fn deserialize_error(error: envy::Error, keys: &[&'static str]) -> ConfigError {
     match error {
         envy::Error::MissingValue(missing) => keys

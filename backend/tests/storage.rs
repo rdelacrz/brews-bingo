@@ -4,7 +4,7 @@
     reason = "Test fixtures fail fast."
 )]
 mod support;
-use brews_backend::storage::{Database, SqlValue, StorageError, migrate};
+use brews_backend::storage::{CURRENT_SCHEMA_VERSION, Database, SqlValue, StorageError, migrate};
 use support::Sqlite;
 
 #[test]
@@ -18,11 +18,11 @@ fn migration_is_atomic_idempotent_and_refuses_newer_versions() {
             &[]
         )
         .unwrap(),
-        vec![vec![SqlValue::Integer(1)]]
+        vec![vec![SqlValue::Integer(CURRENT_SCHEMA_VERSION)]]
     );
     db.execute(
-        "UPDATE storage_metadata SET schema_version=2 WHERE singleton=1",
-        &[],
+        "UPDATE storage_metadata SET schema_version=? WHERE singleton=1",
+        &[SqlValue::Integer(CURRENT_SCHEMA_VERSION + 1)],
     )
     .unwrap();
     assert_eq!(migrate(&db), Err(StorageError));

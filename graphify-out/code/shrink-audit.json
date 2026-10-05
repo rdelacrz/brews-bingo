@@ -1,0 +1,5 @@
+{
+  "reason": "Old synthetic unresolved/import reference nodes are not current source declarations",
+  "removed_reference_nodes": 32,
+  "declared_source_entities_lost": 0
+}

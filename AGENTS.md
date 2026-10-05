@@ -2,7 +2,7 @@
 
 ## Project state and planning sources
 
-The user has approved all planning proposals and authorized the initial Cloudflare backend workspace and account-auth API slice (A1–A7). Implement and test this slice locally; do not implement gameplay, frontend screens or account-management APIs in this iteration. Ask only about genuine gaps/contradictions. Production deployment, infrastructure/accounts and secret provisioning remain unauthorized. The user has authorized committing and pushing the reviewed initial backend/auth slice and its documentation. Later implementation changes still require separate review and commit/push authorization. Auth password maximum is 50 ASCII characters (minimum 10); login, link redemption and setup/reset completion require a UUID-v7 Idempotency-Key header with secret-free receipts/no cookie replay. Logout is independently idempotent.
+The user has approved all planning proposals and authorized the initial Cloudflare backend workspace and account-auth API slice (A1–A7). The initial auth slice is implemented and committed. The reviewed Rust developer CLI, shared account-management logic, restricted Worker interface, minimal Directory removal coordination and selective logging are implemented. Do not implement gameplay, frontend screens or public admin-account API routes. Ask only about genuine gaps/contradictions. Production deployment, infrastructure/accounts and secret provisioning remain unauthorized. The user has authorized committing and pushing the reviewed CLI/management/logging changes and documentation. Future implementation changes require separate review and commit/push authorization. Auth password maximum is 50 ASCII characters (minimum 10); login, link redemption and setup/reset completion require a UUID-v7 Idempotency-Key header with secret-free receipts/no cookie replay. Logout is independently idempotent.
 
 Use these documents as the planning sources of truth:
 - `docs/plans/requirements.md` — business requirements and scope.
@@ -23,7 +23,7 @@ The schema review proceeds in ledger order. Batch as many independent pending ap
 
 ## Environment variables
 
-- Keep backend/private and frontend/public structs in `shared/config/src/env/`.
+- Keep backend/private, frontend/public and CLI structs in `shared/config/src/env/`; parsing helpers belong in `env/utility/`.
 - Use `new` with envy/Serde: required values error, optional fields use `None` or explicit defaults.
 - Initialize each singleton once; use `get_backend_config` and `get_frontend_config`, then read fields.
 - No custom `from_iter`, raw mirror structs or separate initialization API. Keep Wasm input adapters thin and errors redacted.
@@ -41,10 +41,14 @@ Also run nextest with `--cargo-profile release-assertions` for optimized validat
 
 ## Rust code
 
+- Keep the CLI entry point thin; commands belong in `cli/src/operations/` and client test suites under `cli/tests/`.
 - Follow `docs/rust-best-practices.md`; keep modules private unless callers need them.
+- Run `cargo fmt --all` after code writing is finished, then `cargo fmt --all --check`.
 - Use specific names and component-local typed errors; do not expose raw error chains.
 - Replace repeated policy literals with named constants at their owning boundary. Include units and share constraints across validation/storage; unrelated rules remain separate.
+- Bind SQL domain/state values from Rust enum tags or constants; do not duplicate quoted policy values or interpolate untrusted values into SQL.
 - Keep comments concise: explain non-obvious constraints, not obvious code.
+- Embed unit tests in a bottom `#[cfg(test)]` module rather than separate `*_tests.rs` files. Keep integration/HTTPS suites under the owning crate’s `tests/`.
 - Test boundaries and failure paths; verify native and Worker/Wasm behavior before reporting completion.
 
 Never expose or persist passwords, bearer tokens, or other secrets in docs, graph labels, logs, or examples.

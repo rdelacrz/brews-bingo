@@ -3,7 +3,9 @@
 use crate::limits::JS_SAFE_INTEGER_MAX;
 use std::fmt;
 
-pub const CURRENT_SCHEMA_VERSION: i64 = 1;
+pub const CURRENT_SCHEMA_VERSION: i64 = 2;
+const VERSION_ONE: i64 = 1;
+pub(crate) mod management_schema;
 
 #[derive(Clone, PartialEq)]
 pub enum SqlValue {
@@ -41,21 +43,31 @@ pub mod schema;
 
 fn metadata_statement() -> String {
     format!(
-        "CREATE TABLE IF NOT EXISTS storage_metadata(singleton INTEGER PRIMARY KEY CHECK(singleton=1),schema_version INTEGER NOT NULL CHECK(schema_version>={CURRENT_SCHEMA_VERSION}),last_observed_ms INTEGER NOT NULL CHECK(last_observed_ms BETWEEN 0 AND {JS_SAFE_INTEGER_MAX}),command_floor_ms INTEGER NOT NULL CHECK(command_floor_ms BETWEEN 0 AND {JS_SAFE_INTEGER_MAX})) STRICT"
+        "CREATE TABLE IF NOT EXISTS storage_metadata(singleton INTEGER PRIMARY KEY CHECK(singleton=1),schema_version INTEGER NOT NULL CHECK(schema_version>={VERSION_ONE}),last_observed_ms INTEGER NOT NULL CHECK(last_observed_ms BETWEEN 0 AND {JS_SAFE_INTEGER_MAX}),command_floor_ms INTEGER NOT NULL CHECK(command_floor_ms BETWEEN 0 AND {JS_SAFE_INTEGER_MAX})) STRICT"
     )
 }
 
-/// Initialize version 1 atomically; unknown versions fail closed.
+/// Apply contiguous v1 -> v2 migrations atomically; unknown versions fail closed.
 pub fn migrate<D: Database>(db: &D) -> Result<(), StorageError> {
     db.transaction(|| {
         db.execute(&metadata_statement(), &[])?;
         let rows = db.query("SELECT schema_version FROM storage_metadata WHERE singleton=1", &[])?;
-        if rows.is_empty() {
+        let mut version = if rows.is_empty() {
             for sql in schema::v1_statements() { db.execute(&sql, &[])?; }
-            db.execute("INSERT INTO storage_metadata(singleton,schema_version,last_observed_ms,command_floor_ms) VALUES(1,?,0,0)", &[SqlValue::Integer(CURRENT_SCHEMA_VERSION)])?;
-        } else if rows != vec![vec![SqlValue::Integer(CURRENT_SCHEMA_VERSION)]] {
-            return Err(StorageError);
+            db.execute("INSERT INTO storage_metadata(singleton,schema_version,last_observed_ms,command_floor_ms) VALUES(1,?,0,0)", &[SqlValue::Integer(VERSION_ONE)])?;
+            VERSION_ONE
+        } else {
+            match rows.as_slice() {
+                [row] => match row.as_slice() { [SqlValue::Integer(v)] => *v, _ => return Err(StorageError) },
+                _ => return Err(StorageError),
+            }
+        };
+        if version == VERSION_ONE {
+            for sql in management_schema::v2_statements() { db.execute(&sql, &[])?; }
+            db.execute("UPDATE storage_metadata SET schema_version=2 WHERE singleton=1 AND schema_version=1", &[])?;
+            version = 2;
         }
+        if version != CURRENT_SCHEMA_VERSION { return Err(StorageError); }
         Ok(())
     })
 }

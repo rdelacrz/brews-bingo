@@ -3,7 +3,10 @@
 
 pub mod api;
 pub mod auth;
+pub mod directory;
 mod limits;
+#[cfg(any(target_arch = "wasm32", test))]
+mod observability;
 pub mod security;
 pub mod storage;
 

@@ -208,6 +208,40 @@ fn validation_failure_still_acquires_each_declared_key_once() -> Result<(), Conf
     Ok(())
 }
 
+#[test]
+fn dev_cli_key_is_optional_but_supplied_values_are_validated() -> Result<(), ConfigError> {
+    assert!(
+        BackendConfig::new(&NativeSource::new())?
+            .dev_cli_key
+            .is_none()
+    );
+    let encoded = URL_SAFE_NO_PAD.encode([7u8; 32]);
+    let config = BackendConfig::new(&NativeSource::new().with(backend::DEV_CLI_KEY, encoded))?;
+    assert_eq!(
+        config
+            .dev_cli_key
+            .as_ref()
+            .map(|key| key.expose_secret().len()),
+        Some(32)
+    );
+    assert!(
+        BackendConfig::new(&NativeSource::new().with(backend::DEV_CLI_KEY, "PRIVATE_VALUE_MARKER"))
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn management_and_rate_limit_keys_cannot_be_reused() {
+    let key: [u8; 32] = std::array::from_fn(|index| index as u8);
+    assert!(
+        BackendConfig::new(
+            &NativeSource::new().with(backend::DEV_CLI_KEY, URL_SAFE_NO_PAD.encode(key))
+        )
+        .is_err()
+    );
+}
+
 fn assert_redacted(error: ConfigError) {
     assert!(!format!("{error:?} {error}").contains("PRIVATE_VALUE_MARKER"));
     assert!(std::error::Error::source(&error).is_none());

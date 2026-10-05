@@ -32,3 +32,7 @@ target
 .env.*
 .dev.vars
 .dev.vars.*
+
+# Local Graphify caches (not graph evidence)
+**/graphify-out/cache/
+/graphify-out/code/cache/

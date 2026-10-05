@@ -1,5 +1,7 @@
 //! Safe public account/session projections; no transport credentials.
 #![forbid(unsafe_code)]
+#[cfg(feature = "management")]
+pub mod management;
 use brews_domain::{
     accounts::{AccountRole, AccountStatus, SessionScope},
     ids::AccountId,

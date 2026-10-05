@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
+[features]
+default = []
+management = []
+
 [dependencies]
 brews-domain = { path = "../domain" }
 serde.workspace = true

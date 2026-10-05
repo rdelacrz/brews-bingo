@@ -873,10 +873,17 @@ struct AdminAuditRecord {
     audit_id: AuditId,
     actor: AdminActorRef, // Account(AccountId) or DeveloperCli
     operation_name: String,
-    target: TargetRef,
+    target: AuditTargetRef, // Account(AccountId), AccountsOwner or other approved owner-local targets
     outcome: AuditOutcome,
     occurred_at: Timestamp,
     expires_at: Timestamp,
+}
+
+enum AuditTargetRef {
+    Account(AccountId),
+    AccountsOwner, // Privileged owner reads and rejected creation with no account target
+    Game(GameId),
+    Session(SessionId),
 }
 
 enum AdminActorRef {
@@ -892,6 +899,8 @@ enum AuditOutcome {
 ```
 
 DO-088 approves owner-local account/game AdminAuditRecord fields and Succeeded/Rejected/Failed outcomes. DO-089 revises `actor_account_id` to `actor: AdminActorRef::{Account(AccountId), DeveloperCli}` and durably records authenticated privileged-action success/rejection/failure; CLI identifies the privileged path, not the individual human. No anonymous abuse attempts or secrets. DO-090 approves 90-day retention from `occurred_at`, expiry denial and copy deletion/restore protection; no client audit API/UI, privileged developer-CLI read only. Never retain audit as hidden History.
+
+**CLI-slice audit clarification:** the user approved a required `AccountsOwner` target for privileged owner reads and rejected creation without an account; no submitted username is stored. Audit storage is fail-closed: roll back unaudited mutations and withhold unaudited reads. Success/rejection is atomic where possible; storage failures return a redacted unavailable result, with failed-action audit recorded only when storage can durably accept it. Committed command replay returns the original receipt without a second action record; each authenticated rejected attempt may produce a distinct rejection record.
 
 <a id="socket-metadata"></a>
 

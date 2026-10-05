@@ -48,10 +48,15 @@ pub struct AuthService<'a, D: Database, R: Runtime> {
     policy: AuthPolicy,
     rate_key: &'a [u8],
 }
+mod management;
 mod rate;
 mod receipts;
 mod records;
 mod service;
+pub use management::{
+    ManagementError, ManagementPrincipal, RemovalGateGrant, RemovalPhase, RemovalReleaseAck,
+    RemovalWork,
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AuthPolicy {

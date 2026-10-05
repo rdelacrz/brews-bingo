@@ -57,7 +57,7 @@ pub(super) fn fingerprint(
     Ok(Sha256::digest(canonical).into())
 }
 impl<D: Database, R: Runtime> AuthService<'_, D, R> {
-    fn admit_command(&self, command: CommandId, now: i64) -> Result<(), AuthError> {
+    pub(super) fn admit_command(&self, command: CommandId, now: i64) -> Result<(), AuthError> {
         let id =
             uuid::Uuid::parse_str(&command.to_string()).map_err(|_| AuthError::InvalidInput)?;
         let b = id.as_bytes();
@@ -82,6 +82,12 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         fp: [u8; DIGEST_BYTES],
         now: i64,
     ) -> Result<Option<AuthOutcome>, AuthError> {
+        if !self.db.query(
+            "SELECT 1 FROM management_receipts WHERE actor=?1 AND command_id=?2 UNION ALL SELECT 1 FROM pending_account_removals WHERE actor=?1 AND command_id=?2 LIMIT 1",
+            &[SqlValue::Text(account.to_string()), SqlValue::Text(command.to_string())],
+        )?.is_empty() {
+            return Err(AuthError::Conflict);
+        }
         let rows=self.db.query("SELECT request_fingerprint,outcome,completed_at,expires_at FROM command_receipts WHERE actor_account_id=? AND command_id=?",&[SqlValue::Text(account.to_string()),SqlValue::Text(command.to_string())])?;
         let Some(row) = rows.first() else {
             self.admit_command(command, now)?;

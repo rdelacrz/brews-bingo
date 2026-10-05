@@ -115,7 +115,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         }
         Ok(now)
     }
-    fn observe_clock(&self) -> Result<i64, AuthError> {
+    pub(super) fn observe_clock(&self) -> Result<i64, AuthError> {
         let now = self.now()?;
         self.db.execute("UPDATE storage_metadata SET last_observed_ms=?,command_floor_ms=max(command_floor_ms,?) WHERE singleton=1",&[SqlValue::Integer(now),SqlValue::Integer(now.saturating_sub(COMMAND_RECEIPT_RETENTION_MS).max(0))])?;
         Ok(now)
@@ -139,14 +139,14 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
             Err(_) => Err(fatal.get().unwrap_or(AuthError::Storage)),
         }
     }
-    fn account(&self, id: AccountId) -> Result<Option<Account>, AuthError> {
+    pub(super) fn account(&self, id: AccountId) -> Result<Option<Account>, AuthError> {
         self.db
             .query(ACCOUNT_SELECT, &[SqlValue::Text(id.to_string())])?
             .first()
             .map(Account::parse)
             .transpose()
     }
-    fn session(&self, token: &str) -> Result<Option<Session>, AuthError> {
+    pub(super) fn session(&self, token: &str) -> Result<Option<Session>, AuthError> {
         let digest = match token_digest(token) {
             Ok(d) => d,
             Err(AuthError::InvalidInput) => return Ok(None),
@@ -228,9 +228,19 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
             let s=self.session(token)?.ok_or(AuthError::Unauthorized)?;
             let mut a=self.account(s.account_id)?.ok_or(AuthError::Unauthorized)?;
             if s.id!=original.id || s.scope!=scope || !s.eligible(&a,now) {return Err(AuthError::Unauthorized);}
+            if let Some(receipt)=self.receipt(a.id,command,fp,now)? {return Ok(receipt);}
             a.epoch=a.epoch.checked_add(1).filter(|v|*v<=JS_SAFE_INTEGER_MAX).ok_or(AuthError::Conflict)?;
             self.enqueue_account_closes(a.id,now)?;
-            self.db.execute("UPDATE accounts SET verifier=?,status='verified',password_set_at=?,credential_epoch=? WHERE account_id=?",&[SqlValue::Text(phc.to_string()),SqlValue::Integer(now),SqlValue::Integer(a.epoch),SqlValue::Text(a.id.to_string())])?;
+            self.db.execute(
+                "UPDATE accounts SET verifier=?,status=?,password_set_at=?,credential_epoch=? WHERE account_id=?",
+                &[
+                    SqlValue::Text(phc.to_string()),
+                    SqlValue::Text(AccountStatus::Verified.to_string()),
+                    SqlValue::Integer(now),
+                    SqlValue::Integer(a.epoch),
+                    SqlValue::Text(a.id.to_string()),
+                ],
+            )?;
             self.db.execute("UPDATE account_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",&[SqlValue::Integer(now),SqlValue::Text(a.id.to_string())])?;
             self.db.execute("UPDATE access_links SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",&[SqlValue::Integer(now),SqlValue::Text(a.id.to_string())])?;
             a.status=AccountStatus::Verified;
@@ -353,7 +363,16 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
                 if a.epoch!=original.epoch || a.verifier!=original.verifier {return Ok(None);}
                 if let Some(receipt)=self.receipt(a.id,command,fp,now)? {self.clear_rate("account_login",&keys)?;return Ok(Some(receipt));}
                 if let Some(candidate)=&candidate {
-                    self.db.execute("UPDATE accounts SET verifier=? WHERE account_id=? AND credential_epoch=? AND verifier=? AND status='verified' AND disabled_at IS NULL",&[SqlValue::Text(candidate.to_string()),SqlValue::Text(a.id.to_string()),SqlValue::Integer(a.epoch),SqlValue::Text(phc.to_owned())])?;
+                    self.db.execute(
+                        "UPDATE accounts SET verifier=? WHERE account_id=? AND credential_epoch=? AND verifier=? AND status=? AND disabled_at IS NULL",
+                        &[
+                            SqlValue::Text(candidate.to_string()),
+                            SqlValue::Text(a.id.to_string()),
+                            SqlValue::Integer(a.epoch),
+                            SqlValue::Text(phc.to_owned()),
+                            SqlValue::Text(AccountStatus::Verified.to_string()),
+                        ],
+                    )?;
                 }
                 let deadline=add_deadline(now,SESSION_LIFETIME_MS)?;
                 let (s,token)=self.issue_session(&a,SessionScope::Normal,now,deadline)?;
@@ -406,7 +425,11 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         self.db.execute("INSERT INTO account_socket_close_work(connection_id,operation_id,account_id,session_id,game_id,credential_epoch,expires_at,created_at,next_attempt_at,attempt_count) SELECT connection_id,?,account_id,session_id,game_id,credential_epoch,expires_at,?,?,0 FROM account_socket_subscriptions WHERE session_id=? ON CONFLICT(connection_id) DO NOTHING",&[SqlValue::Text(operation.to_string()),SqlValue::Integer(now),SqlValue::Integer(add_deadline(now,SOCKET_CLOSE_INITIAL_DELAY_MS)?),SqlValue::Text(session.to_string())])?;
         Ok(())
     }
-    fn enqueue_account_closes(&self, account: AccountId, now: i64) -> Result<(), AuthError> {
+    pub(super) fn enqueue_account_closes(
+        &self,
+        account: AccountId,
+        now: i64,
+    ) -> Result<(), AuthError> {
         if self.db.query("SELECT connection_id FROM account_socket_subscriptions WHERE account_id=? AND connection_id NOT IN (SELECT connection_id FROM account_socket_close_work) LIMIT 1",&[SqlValue::Text(account.to_string())])?.is_empty() {return Ok(());}
         let operation: brews_domain::ids::OperationId = self
             .new_uuid(now)?
@@ -424,7 +447,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         self.db.execute("INSERT INTO account_socket_close_work(connection_id,operation_id,account_id,session_id,game_id,credential_epoch,expires_at,created_at,next_attempt_at,attempt_count) SELECT connection_id,?,account_id,session_id,game_id,credential_epoch,expires_at,?,?,0 FROM account_socket_subscriptions WHERE expires_at<=? AND connection_id NOT IN (SELECT connection_id FROM account_socket_close_work) LIMIT ?",&[SqlValue::Text(operation.to_string()),SqlValue::Integer(now),SqlValue::Integer(add_deadline(now,SOCKET_CLOSE_INITIAL_DELAY_MS)?),SqlValue::Integer(now),SqlValue::Integer(CLEANUP_BATCH_SIZE)])?;
         Ok(())
     }
-    fn new_uuid(&self, now: i64) -> Result<uuid::Uuid, AuthError> {
+    pub(super) fn new_uuid(&self, now: i64) -> Result<uuid::Uuid, AuthError> {
         let now = u64::try_from(now).map_err(|_| AuthError::Crypto)?;
         if now >= (1u64 << 48) {
             return Err(AuthError::Crypto);

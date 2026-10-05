@@ -21,7 +21,7 @@ impl EnvSource for Bindings<'_> {
         if !present {
             return Ok(None);
         }
-        let value = if key == RATE_LIMIT_KEY {
+        let value = if key == RATE_LIMIT_KEY || key == backend::DEV_CLI_KEY {
             self.0.secret(key).map(|secret| secret.to_string())
         } else {
             self.0.var(key).map(|value| value.to_string())

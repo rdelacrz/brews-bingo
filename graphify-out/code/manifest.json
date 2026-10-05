@@ -2,48 +2,92 @@
   "scope": "Rust/JavaScript code only",
   "source_hashes": {
     "backend/src/api/decode.rs": "88df4437da1bdd5107a25a527f5d21d14fd7e15decaf2f5148889f3b4aaf825e",
+    "backend/src/api/developer.rs": "fa73fde428bf8c5833e2d2dbd22a741cbc1ae65f1c3481b909e02a96538ee2aa",
     "backend/src/api/error.rs": "72fe28064f643c6c1a11202d39efca945abb7692f9eb31c4a57d34498cd64866",
-    "backend/src/api/mod.rs": "979783f030c3210a3aee253c4d678ce5a089d918d0ad9bdd4e142548ac96898a",
+    "backend/src/api/mod.rs": "61369443edbd8e020fbfd4f2073e94a79ce9db767bbaf3511335426fc730703d",
     "backend/src/auth/command.rs": "cf6ba53acbf7d3cdc00ce7945cfddc1c8c80c27991c4cab4694e7be740fd7554",
     "backend/src/auth/error.rs": "5ffa87b1670545988d0cb5e52b56779506b58787ba43044e1a8f858a7c4c1118",
-    "backend/src/auth/mod.rs": "1a5bcd5ae32e2ba990b935be8a5e26abd18f3210e16674b126337dae39da746a",
+    "backend/src/auth/management/audit.rs": "3daeb99f20b7b9ebc0b7f8297fc3454ebfdeba304b65c2c8d2739bce6f7c629e",
+    "backend/src/auth/management/enable.rs": "b08122506f1061d0fa5d99ef55fdcc913d3b48b0fb8a4326a114a3a3351846ec",
+    "backend/src/auth/management/links.rs": "49f7fc6f351687171ad254cd68107d0d9454f3b0931e7002e6aebf94ff314e6a",
+    "backend/src/auth/management/maintenance.rs": "d7ed239374f65d8eb4473bdb3b53be5c0002c491361afef65e8aaf9e1dcdae4e",
+    "backend/src/auth/management/mod.rs": "795cbf3fb9ea74e5bf9c5103ffb83cc9dd841b8cb87c26e3b8f42fc3df654520",
+    "backend/src/auth/management/reads.rs": "ab76b29a3b4e4ef7bf0fe098ba152c6094b24121cc7e8f5861f1319151c9a81c",
+    "backend/src/auth/management/receipts.rs": "3f42429802bf8475bc37d8dd422b9dcd179905c7f6988e3d4a5a3456db8ab945",
+    "backend/src/auth/management/recovery.rs": "f8526681f8728f8353a505af1454802886ee6e0f157fbf25f31c9f1e13e58a9a",
+    "backend/src/auth/management/removal.rs": "9e857ae980e76657c6118f16dec242ebeb0ac207def8cf3f8cc1bc576636c680",
+    "backend/src/auth/management/test_support.rs": "1364a63e8301c49cf56884e1ec8a77654870fa52a58cc9fab18d15cd084cd688",
+    "backend/src/auth/mod.rs": "2acbf63f5c8596f9c52b56466278efbb297aa8948de47548239ed46e7b1c837a",
     "backend/src/auth/rate.rs": "08ecd3556ee4891300abdba87fa142417d95a6969b83f4adc6e22e2cc75826f2",
-    "backend/src/auth/receipts.rs": "b7b920659d6d498da460f6d77cf20f757cc62e10d8605aa54cc8b717f5558813",
+    "backend/src/auth/receipts.rs": "6e456018478e88c94867424c13605f3fa1d085fc08589760c710bdd692c91712",
     "backend/src/auth/records.rs": "ec256fdd8a857b1954c12ca578360883fbe5746a6cfe25cf09b4f03623fa8483",
-    "backend/src/auth/service.rs": "ed95303ec59eaee553ef24c8dcfb3941229619ed9542b10974a5bfc3dde66358",
+    "backend/src/auth/service.rs": "0feee53bebd9f0621e9493913d56111c1a6cd8c375a44179fd33c675521a5081",
     "backend/src/auth/tests.rs": "a306753a698d289cbcd13f32a19a9959d97f89f28c11f41806d9398efd4ee465",
-    "backend/src/config/mod.rs": "d334858b10b21eb39c7c40fce896ef57056cf605e7c3b79e5428ed709da252d3",
-    "backend/src/lib.rs": "9f7fd8863428872b2aed50de0375ab6e65a3a9ae573a67c6e837b6cbdd56daa7",
-    "backend/src/limits.rs": "fe3840ac3d026e88c6dac697483410471b9394cd25630daf9318791b30025a61",
+    "backend/src/config/mod.rs": "8e3f8a4aca47046a2019cb69b94fa618bb3444dc3d7719512093817531a160a9",
+    "backend/src/directory/mod.rs": "63c5af40ff8712a4b7c7afade2b478a089b8bf199ba01ddf023025d290d20415",
+    "backend/src/directory/storage.rs": "19d7c0e5e82e163d58614f8f696041d12f5194bb2694c819a3e4245ed27ae076",
+    "backend/src/lib.rs": "6d753852068064e81581ec1a03d0d7f9fc95796fba897c95bea4381524a0beb2",
+    "backend/src/limits.rs": "fabe44711f0db3203f45bfb0927c3c523a768d9031223dd0323936a1690959c6",
+    "backend/src/observability.rs": "fffe647d1d498b1e7eba93477631f300050109a58bac7c86e45c74bb076edc96",
     "backend/src/security/mod.rs": "9f2e5725ebc10b3d4d68a89bf9147e243c1cba5eeeb0c9c50930a8e48b6e5a31",
     "backend/src/storage/error.rs": "67d21c7c7601ff43ad8e7e2d18a2621874c08a0622d8f951de55e554386f93e8",
-    "backend/src/storage/mod.rs": "1a48f6315752d43f47e83c846bec0ca10bcb9d5a3f79231e3432b20ba2aef521",
+    "backend/src/storage/management_schema.rs": "05a0ce5aad27a902cf8083fb4587bd839448c2795ede86d3ec441bc361fd4613",
+    "backend/src/storage/mod.rs": "89d29008b035a66132e7aadecd36af8e02d4fb21874417678aeb2022b3a20ba1",
     "backend/src/storage/schema.rs": "7fbd548bcadbb4cc57619521ea4fbf830103cc348e07d208ccddd515efdeef2f",
     "backend/src/worker_runtime/database.rs": "d90bdf9291ce8f5573d0cfd5a7511a514502013d50fdd2c8811b2d278945a3a3",
-    "backend/src/worker_runtime/edge.rs": "0f5078ef6ba0b15527ec46086bd0790be7894484036644be9daedd335384f0dc",
-    "backend/src/worker_runtime/mod.rs": "230d757c10f6dd3449f00f4427d0f03e774ad4de684147ec04fb09d29e8555ee",
+    "backend/src/worker_runtime/directory.rs": "4f5ff7243950ed37a4807bece3c92f29bb81c085d1c0588ce5564dd1b10f5b0f",
+    "backend/src/worker_runtime/edge.rs": "3daf09b7c9bde10b539929917aa8ea8a1a58c800042870e959b57a46f51acb77",
+    "backend/src/worker_runtime/management.rs": "acfc096ae71195ae41a1544dd1a82758de6551fa25f288ff32aa1f62062a933f",
+    "backend/src/worker_runtime/mod.rs": "a042607a2b7f47814364f7aa550ad10252d3e791beb2583259545037725724ba",
+    "backend/src/worker_runtime/removals.rs": "d1dad119102e9c0cf4b51ea2ea48c0afe1254db15e0f012cb66efe19a32e084a",
     "backend/src/worker_runtime/runtime.rs": "b686fcc87f8bf66f2a7118fde79a4602619f5990b0fb7167cd4de115cd24cc74",
     "backend/src/worker_runtime/wire.rs": "a92e3dc71550f45fc1c93ae071cc173c1b3a57334fc32d4b6b7d16795d5d77c0",
+    "backend/tests/account_management.rs": "005e68d30c62033da26f6f054bb873623ccd5ef7b55e12fad719b7e2473ac5c0",
+    "backend/tests/accounts_idempotency.rs": "7f1b66d13e2388dc99b0d8118cd7fdfdae317fb0be34668ba77797ffbe64e8c9",
     "backend/tests/auth_core.rs": "43be3e4a02387832c76a2d39b8ea3296fdce800a004dd1b4cc6728cb716c9387",
     "backend/tests/crypto_constraints.rs": "d5f38b0b5e04bd15f90a4f649e50321cb81699a655cf30b3082f7cb5dbf151ff",
+    "backend/tests/directory.rs": "1f7b448d746d1b0036ff6bd616d36d6a1a09632c35f8bc265b0e29c29b155620",
     "backend/tests/security.rs": "da89addcbbf151616feab7be4f7189e6e88f34b2b0f899e90b3525b7f69b4539",
-    "backend/tests/storage.rs": "c371f26760773da46f99285c899a4c7a3f0da7a7d797245de726e91576c0ab73",
+    "backend/tests/sql_policy_tags.rs": "1db5818e309cc13be2e2a70462b45da76dce5b9b9173c8ad0bc44607ff3c4db8",
+    "backend/tests/storage.rs": "d70e3e2cdf8c02e5e3e74456b8fac5da86b61cd73f3d82d8a6a40acc18648abd",
+    "backend/tests/storage_management.rs": "8346f32c76ce70b9ce7c89aa8892638d97ed8f64cec719a730d574f89c322777",
     "backend/tests/support/mod.rs": "96a57a0c39dc509a2f5501d54ebd48c7fd53c064ebd9c783ebc13b737b7ff7d7",
-    "backend/vitest.config.js": "a1eeec4e264526d897af283b5f49d86a3d3a31fa5c7568a70aa36917d2100be2",
+    "backend/vitest.config.js": "10124981c3751e2d2a8339585666854c60eb9a8cb2def7ffc48d66115ea6161c",
     "backend/worker-tests/alarms.test.js": "35e3471b8bcb4d637af5d121813455697fd97459d90ef559a2073c2e5e4347a2",
+    "backend/worker-tests/developer.test.js": "ae455553f7019b305ba0590db45ee42783dfb161b69a3b25982d0afb444b5d99",
     "backend/worker-tests/fixtures.js": "752cf7fa9ca6f2887c554d18463f8c3edb5b9bd5dd57a8a054b1e37bafdf397d",
     "backend/worker-tests/lifecycle.test.js": "066e74151dafbca6b0206c541757ec5cf2d80f5c53df2bbc532573d1e236c58e",
-    "backend/worker-tests/security.test.js": "f3c80c12e30a576b38185c5ee263e6a3bb41a2d43afae467509f5c28308cdaf1",
+    "backend/worker-tests/logging.test.js": "d64fe1af1515bab4ac0e64e38a482dd7e80524bf07f0226718e0f9d537f3fd8d",
+    "backend/worker-tests/removal-recovery.test.js": "26b8b135a8adefb8f1076b65832d833b182dd69f48cbe31b8d5a76e54e8d9015",
+    "backend/worker-tests/security.test.js": "d9e33b3027e948774b3efa18656fcb823453613828faf4ff9201dd0f0b23660d",
     "backend/worker-tests/transactions.test.js": "e8084290f07b9b4ee5b7ce17cede79b6275a781f78474c716955de65c5e32566",
     "backend/worker-tests/transport.test.js": "28d48f8287109ccb6c03904de7e6f942c6de7821c8f8927eccc658d676aa893c",
-    "shared/config/src/env/backend.rs": "996748b693fcfeb57141d1aa2f20287eefdf764d48992c023c58764eef942be6",
+    "cli/src/args.rs": "3dac319e00008f76de481889ab9ddf3c57d3b0c1412abcf1d3db4abb99717f46",
+    "cli/src/client.rs": "82a6ec9c3f01ee3183be3d997b649c6fab1bb603c5c4ca0000450c0796bfa0c1",
+    "cli/src/error.rs": "7ef0b5c901045a8e3574ad44acdafed69f3605a7edfb36b062a78c3eb85721a1",
+    "cli/src/link_file.rs": "5d78e3ac7767f7413a252cfee91606dda50ea03c25380dfda9c5667e9e579746",
+    "cli/src/main.rs": "57fb066a0210c2aa2a757b6c4ca95338a70fcad671ace798087dc0c41793474f",
+    "cli/src/operations/accounts.rs": "245ba331e7461e58965b91d579f57b8c73efad8fc29e3869fd80ad1bd16b53d6",
+    "cli/src/operations/audit.rs": "835c43995f704396bc185e3d057ba6f2aa5237a7be63bac00ca28285d842aefc",
+    "cli/src/operations/mod.rs": "4b5039fe3f54ee165ca8f20abeddce413c3959d26885254927e66cf3170611d9",
+    "cli/src/output.rs": "591bb374a85613aa4f178e4e214092a7692e0fade0934de816bd20c68b2cd90d",
+    "cli/src/protocol.rs": "adcb6549aae69d9f59323f33d754556ac8ec52692d6147c2f081d8a8e5b0690a",
+    "cli/tests/client/mod.rs": "5c403284cb7469d94679485bcb51900fbc91dad4552a91cae5d4ac9dfb10691e",
+    "cli/tests/fixtures/mod.rs": "fd81a5e940268ddbd4f3ef7d21691b736979f531aedf75f3263399effbbfd667",
+    "cli/tests/help.rs": "9de57e09d7a91d76275480cc2262ba7f4191631d20b1c5dd313dbc84065150a7",
+    "shared/config/src/env/backend.rs": "3abc9856467e9217b4da7a1c0ad52a65fa543fd7b91a6946d50f4c2e36255950",
+    "shared/config/src/env/cli.rs": "0deccac66a81606d65299510c9b8ed85a1d0dbcee226666f26e8623e4eeff2c2",
     "shared/config/src/env/error.rs": "5efdac5abc4a0b9ec65b5eb10a85345ce2de9ac79ee06e8bae4782fac12d7021",
     "shared/config/src/env/frontend.rs": "f17f72fe307afea80fe96717e3c4f761b78e7876989cd7c84f331f45ff7ad405",
-    "shared/config/src/env/mod.rs": "154078dd54b45e9159ba752f94ceff9b139636fc33279f0c89b1fe2293a834fe",
+    "shared/config/src/env/mod.rs": "f208f7718eea7d67d6df295ed24766924fb08556426c101519dc8bd86d5846bb",
+    "shared/config/src/env/utility/mod.rs": "b3e9278c8f5c3cce7f56521cb30b688f4548dc1d03d42b95745f6e05c8894528",
+    "shared/config/src/env/utility/origin.rs": "ef0324848553accf204d2ed021fa20eb2d082b729efc3b3aa854a113dc0142bc",
+    "shared/config/src/env/utility/secret.rs": "4f66da51ad9d15850901f7c820f0885405462614dcccd23aec90a262211bbbce",
     "shared/config/src/lib.rs": "bedecf61602b5a076c3af5c62f48fa812bd4cdef1eb38639718a27b1fda44b48",
-    "shared/config/tests/backend.rs": "868c4d210392f233449df4763a7ecbb78cc5a25f6866e31d8982382eb75ff0de",
+    "shared/config/tests/backend.rs": "2c8d45606ebaf7befaaf33ad475b90242f6ba2f66e8627ccde0f1b006c6503c0",
     "shared/config/tests/backend_once_error.rs": "9b9053389ab593d926f8cc8b2bc0847246bc120d055332f4984d209d7df81e73",
     "shared/config/tests/backend_once_success.rs": "7bcd6183ae581c0a77570f9e97e9f0c344756bdddbb163a1ea2638d3067cdbbc",
+    "shared/config/tests/cli.rs": "58c267132680ede1658836f48486929d34d60d42b9c65fb38faaefda529274f1",
     "shared/config/tests/frontend.rs": "b844433bf96510aa1fcf00ca89b614a29f65f2b804d8be3f261e9b652ffce11e",
     "shared/config/tests/frontend_once_error.rs": "71a094f1306d9fbefb8b7966d8dc296cecd662f5f3634c417a31bcccda8bcbc2",
     "shared/config/tests/frontend_once_success.rs": "323e92dec8e46af68b786457b15c9d1022357bc18093e6d0d3e0da3744c7e577",
@@ -52,40 +96,42 @@
     "shared/config/tests/once_scopes.rs": "8457fc01f3332f3b713e185318df0b983fab699e8adb043733f4c222a1170485",
     "shared/config/tests/support/mod.rs": "9004b8e4ee0c3faf14a6e5d429eeae1b43861c6d7b860f45e9eba5ba29ac2e6d",
     "shared/config/tests/typed_struct.rs": "42357ed95d606ad0a6f4039afae39a03c9f8a6b358c87574370eeca651af0d3f",
-    "shared/contracts/src/lib.rs": "92c6a8ea08aa0f8737468198cefd7f80868d801adbaab10fef5adace338e85eb",
+    "shared/contracts/src/lib.rs": "82faed345031294204f34db47989ccc30f9149a47a236bcadff3fd02ddb32e81",
+    "shared/contracts/src/management.rs": "b93a967c2db17b0abc09205b21338cfd7c1dba2aa55b923a4dc7b0912b41a707",
+    "shared/contracts/tests/management.rs": "b9fc56aa202ac910a1bccc026b8ef4dcac5157ed21a1facb779aeaa5bec94f28",
     "shared/domain/src/accounts/error.rs": "98d768d1154ebed51b8bb1ca3e0333d4f1a0918d4f414c16832049da0a7c23a5",
     "shared/domain/src/accounts.rs": "283d06d0b0662f61efd2c372714baeae6429875bb4fedfeaf1526de238040e34",
     "shared/domain/src/ids/error.rs": "6471d183fbfe3b86e1ef914243751c27c7fb50df7e6f299ade1ddb213e2c0e11",
-    "shared/domain/src/ids.rs": "3519f4b7ecf39ac03de16eb983b58cb569f4a9f9ce8050fa41f977d35324bfa3",
+    "shared/domain/src/ids.rs": "bda010eba1c51c193db53cd0ccf7b5f5acd77b91096c68fd822835cba8f712fd",
     "shared/domain/src/lib.rs": "83c51778244e929ae67c40fb59f0b2614a5794b6cf04d8a785070d6ac2b113c0",
     "shared/domain/tests/account_constraints.rs": "9c0143bf597f8aa5575381bb735917bf57bf9730603624e90de636092bb18ffc"
   },
-  "nodes": 606,
-  "edges": 1223,
-  "communities": 32,
+  "nodes": 1428,
+  "edges": 3295,
+  "communities": 87,
   "health": {
-    "node_count": 562,
+    "node_count": 1359,
     "unverified_node_count": 0,
-    "raw_edge_count": 1249,
+    "raw_edge_count": 3392,
     "non_object_edges": 0,
     "missing_endpoint_edges": 0,
-    "dangling_endpoint_edges": 123,
-    "external_reference_edges": 14,
+    "dangling_endpoint_edges": 266,
+    "external_reference_edges": 23,
     "self_loop_edges": 0,
-    "valid_candidate_edges": 1112,
-    "exact_duplicate_edges": 10,
-    "directed_unique_endpoint_pairs": 1090,
-    "directed_same_endpoint_collapsed_edges": 22,
-    "undirected_unique_endpoint_pairs": 1086,
-    "undirected_same_endpoint_collapsed_edges": 26,
-    "same_endpoint_group_count": 20,
-    "relation_variant_groups": 5,
+    "valid_candidate_edges": 3103,
+    "exact_duplicate_edges": 26,
+    "directed_unique_endpoint_pairs": 3015,
+    "directed_same_endpoint_collapsed_edges": 88,
+    "undirected_unique_endpoint_pairs": 3010,
+    "undirected_same_endpoint_collapsed_edges": 93,
+    "same_endpoint_group_count": 73,
+    "relation_variant_groups": 22,
     "source_file_variant_groups": 0,
-    "source_location_variant_groups": 3,
-    "context_variant_groups": 2,
+    "source_location_variant_groups": 20,
+    "context_variant_groups": 9,
     "post_build_graph_type": "DiGraph",
-    "post_build_node_count": 606,
-    "post_build_edge_count": 1223,
+    "post_build_node_count": 1428,
+    "post_build_edge_count": 3295,
     "post_build_error": "",
     "producer_suppression": {
       "path": "/root/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
@@ -168,6 +214,52 @@
     },
     "examples": [
       {
+        "source": "shared_contracts_src_management_managementcommand",
+        "target": "shared_contracts_src_management_rs_accountid",
+        "edge_count": 7,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "shared/contracts/src/management.rs"
+        ],
+        "source_locations": [
+          "L20",
+          "L24",
+          "L32",
+          "L35",
+          "L38",
+          "L41",
+          "L44"
+        ],
+        "contexts": [
+          "field",
+          "generic_arg"
+        ]
+      },
+      {
+        "source": "cli_src_args_accountcommand",
+        "target": "cli_src_args_rs_accountid",
+        "edge_count": 6,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "cli/src/args.rs"
+        ],
+        "source_locations": [
+          "L104",
+          "L110",
+          "L118",
+          "L126",
+          "L86",
+          "L98"
+        ],
+        "contexts": [
+          "field"
+        ]
+      },
+      {
         "source": "backend_src_auth_receipts_commandoutcome",
         "target": "backend_src_auth_receipts_rs_accountid",
         "edge_count": 4,
@@ -188,17 +280,18 @@
         ]
       },
       {
-        "source": "backend_src_auth_receipts_commandoutcome",
-        "target": "backend_src_auth_receipts_rs_sessionid",
-        "edge_count": 2,
+        "source": "backend_src_worker_runtime_directory_directoryrequest",
+        "target": "backend_src_worker_runtime_directory_rs_operationid",
+        "edge_count": 3,
         "relations": [
           "references"
         ],
         "source_files": [
-          "backend/src/auth/receipts.rs"
+          "backend/src/worker_runtime/directory.rs"
         ],
         "source_locations": [
-          "L20",
+          "L18",
+          "L22",
           "L26"
         ],
         "contexts": [
@@ -206,54 +299,22 @@
         ]
       },
       {
-        "source": "backend_src_auth_service_authservice_a_d_r_transaction",
-        "target": "backend_src_auth_service_rs_t",
-        "edge_count": 2,
+        "source": "backend_src_worker_runtime_directory_directoryrequest",
+        "target": "backend_src_worker_runtime_directory_rs_accountid",
+        "edge_count": 3,
         "relations": [
           "references"
         ],
         "source_files": [
-          "backend/src/auth/service.rs"
+          "backend/src/worker_runtime/directory.rs"
         ],
         "source_locations": [
-          "L123"
+          "L19",
+          "L23",
+          "L27"
         ],
         "contexts": [
-          "generic_arg"
-        ]
-      },
-      {
-        "source": "backend_src_auth_service_authservice_a_d_r_transaction",
-        "target": "backend_src_auth_error_autherror",
-        "edge_count": 2,
-        "relations": [
-          "references"
-        ],
-        "source_files": [
-          "backend/src/auth/service.rs"
-        ],
-        "source_locations": [
-          "L123"
-        ],
-        "contexts": [
-          "generic_arg"
-        ]
-      },
-      {
-        "source": "backend_src_auth_tests_sqlite_transaction",
-        "target": "backend_src_auth_tests_rs_t",
-        "edge_count": 2,
-        "relations": [
-          "references"
-        ],
-        "source_files": [
-          "backend/src/auth/tests.rs"
-        ],
-        "source_locations": [
-          "L64"
-        ],
-        "contexts": [
-          "generic_arg"
+          "field"
         ]
       }
     ]
