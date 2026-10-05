@@ -1,0 +1,15 @@
+[package]
+name = "brews-domain"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+strum.workspace = true
+
+[lints]
+workspace = true

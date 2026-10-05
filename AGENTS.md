@@ -2,16 +2,49 @@
 
 ## Project state and planning sources
 
-Brews Bingo is still in planning. Do not implement the application, run application tests, create accounts/tokens, provision infrastructure, or deploy without explicit authorization. Do not commit or push later planning edits unless explicitly asked for them.
+The user has approved all planning proposals and authorized the initial Cloudflare backend workspace and account-auth API slice (A1–A7). Implement and test this slice locally; do not implement gameplay, frontend screens or account-management APIs in this iteration. Ask only about genuine gaps/contradictions. Production deployment, infrastructure/accounts and secret provisioning remain unauthorized. The user has authorized committing and pushing the reviewed initial backend/auth slice and its documentation. Later implementation changes still require separate review and commit/push authorization. Auth password maximum is 50 ASCII characters (minimum 10); login, link redemption and setup/reset completion require a UUID-v7 Idempotency-Key header with secret-free receipts/no cookie replay. Logout is independently idempotent.
 
 Use these documents as the planning sources of truth:
-- `plans/requirements.md` — business requirements and scope.
-- `plans/hld.md` — architecture and high-level policies.
-- `plans/lld.md` — domain rules, workflows, and implementation planning.
-- `plans/api-design.md` — API operations and request/response contracts.
-- `plans/durable-object-design.md` — storage schemas and the sequential decision ledger.
-- `plans/research.md` — hosting/provider evidence and caveats.
+- `docs/plans/requirements.md` — business requirements and scope.
+- `docs/plans/hld.md` — architecture and high-level policies.
+- `docs/plans/lld.md` — domain rules, workflows, and implementation planning.
+- `docs/plans/api-design.md` — API operations and request/response contracts.
+- `docs/plans/durable-object-design.md` — storage schemas and the sequential decision ledger.
+- `docs/plans/research.md` — hosting/provider evidence and caveats.
 
 The schema review proceeds in ledger order. Batch as many independent pending approvals as possible in one `clarify` call, including across categories; ask dependent decisions separately, track each response independently, and reconcile revisions before marking downstream items approved. All 107 DO ledger items are approved; no pending schema decisions remain. DO-021 username and DO-045 per-game alias case-sensitive comparisons are approved. DO-032–107 decisions and cross-document summaries have been reconciled; implementation-only items remain unverified (production KDF costs/caps, exact Unicode/runtime support, SDK/SQL/outbox/alarm wiring, quota measurements and actual release-gate test results). Do not claim these as completed or tested. If a future `clarify` call times out, is cancelled, skipped, or otherwise returns no answer for an item, do not infer or supply an answer; leave it pending and wait for the user to return. Account lifecycle is `PendingEnrollment`, `Verified`, `ResetRequired`; `disabled_at` alone represents disablement, with no redundant stored boolean.
+
+## Graphify
+
+- Load the `graphify` skill and run it whenever code changes; refresh after each cohesive edit batch.
+- Prefer incremental extraction. Verify source hashes before claiming the graph is current.
+- Use `graphify-out/code/` for the current structural code graph. The older documentation graph remains stale until separately refreshed.
+- Exclude dependencies, build outputs and secrets. Graph artifacts do not authorize commits or pushes.
+
+## Environment variables
+
+- Keep backend/private and frontend/public structs in `shared/config/src/env/`.
+- Use `new` with envy/Serde: required values error, optional fields use `None` or explicit defaults.
+- Initialize each singleton once; use `get_backend_config` and `get_frontend_config`, then read fields.
+- No custom `from_iter`, raw mirror structs or separate initialization API. Keep Wasm input adapters thin and errors redacted.
+
+## Testing
+
+Prefer nextest for native tests; run doctests separately. From the workspace root:
+
+```sh
+cargo nextest run --workspace --all-features
+cargo test --workspace --all-features --doc
+```
+
+Also run nextest with `--cargo-profile release-assertions` for optimized validation. Worker/Wasm tests remain separate.
+
+## Rust code
+
+- Follow `docs/rust-best-practices.md`; keep modules private unless callers need them.
+- Use specific names and component-local typed errors; do not expose raw error chains.
+- Replace repeated policy literals with named constants at their owning boundary. Include units and share constraints across validation/storage; unrelated rules remain separate.
+- Keep comments concise: explain non-obvious constraints, not obvious code.
+- Test boundaries and failure paths; verify native and Worker/Wasm behavior before reporting completion.
 
 Never expose or persist passwords, bearer tokens, or other secrets in docs, graph labels, logs, or examples.

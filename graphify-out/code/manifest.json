@@ -1,0 +1,264 @@
+{
+  "scope": "Rust/JavaScript code only",
+  "source_hashes": {
+    "backend/src/api/decode.rs": "88df4437da1bdd5107a25a527f5d21d14fd7e15decaf2f5148889f3b4aaf825e",
+    "backend/src/api/error.rs": "72fe28064f643c6c1a11202d39efca945abb7692f9eb31c4a57d34498cd64866",
+    "backend/src/api/mod.rs": "979783f030c3210a3aee253c4d678ce5a089d918d0ad9bdd4e142548ac96898a",
+    "backend/src/auth/command.rs": "cf6ba53acbf7d3cdc00ce7945cfddc1c8c80c27991c4cab4694e7be740fd7554",
+    "backend/src/auth/error.rs": "5ffa87b1670545988d0cb5e52b56779506b58787ba43044e1a8f858a7c4c1118",
+    "backend/src/auth/mod.rs": "1a5bcd5ae32e2ba990b935be8a5e26abd18f3210e16674b126337dae39da746a",
+    "backend/src/auth/rate.rs": "08ecd3556ee4891300abdba87fa142417d95a6969b83f4adc6e22e2cc75826f2",
+    "backend/src/auth/receipts.rs": "b7b920659d6d498da460f6d77cf20f757cc62e10d8605aa54cc8b717f5558813",
+    "backend/src/auth/records.rs": "ec256fdd8a857b1954c12ca578360883fbe5746a6cfe25cf09b4f03623fa8483",
+    "backend/src/auth/service.rs": "ed95303ec59eaee553ef24c8dcfb3941229619ed9542b10974a5bfc3dde66358",
+    "backend/src/auth/tests.rs": "a306753a698d289cbcd13f32a19a9959d97f89f28c11f41806d9398efd4ee465",
+    "backend/src/config/mod.rs": "d334858b10b21eb39c7c40fce896ef57056cf605e7c3b79e5428ed709da252d3",
+    "backend/src/lib.rs": "9f7fd8863428872b2aed50de0375ab6e65a3a9ae573a67c6e837b6cbdd56daa7",
+    "backend/src/limits.rs": "fe3840ac3d026e88c6dac697483410471b9394cd25630daf9318791b30025a61",
+    "backend/src/security/mod.rs": "9f2e5725ebc10b3d4d68a89bf9147e243c1cba5eeeb0c9c50930a8e48b6e5a31",
+    "backend/src/storage/error.rs": "67d21c7c7601ff43ad8e7e2d18a2621874c08a0622d8f951de55e554386f93e8",
+    "backend/src/storage/mod.rs": "1a48f6315752d43f47e83c846bec0ca10bcb9d5a3f79231e3432b20ba2aef521",
+    "backend/src/storage/schema.rs": "7fbd548bcadbb4cc57619521ea4fbf830103cc348e07d208ccddd515efdeef2f",
+    "backend/src/worker_runtime/database.rs": "d90bdf9291ce8f5573d0cfd5a7511a514502013d50fdd2c8811b2d278945a3a3",
+    "backend/src/worker_runtime/edge.rs": "0f5078ef6ba0b15527ec46086bd0790be7894484036644be9daedd335384f0dc",
+    "backend/src/worker_runtime/mod.rs": "230d757c10f6dd3449f00f4427d0f03e774ad4de684147ec04fb09d29e8555ee",
+    "backend/src/worker_runtime/runtime.rs": "b686fcc87f8bf66f2a7118fde79a4602619f5990b0fb7167cd4de115cd24cc74",
+    "backend/src/worker_runtime/wire.rs": "a92e3dc71550f45fc1c93ae071cc173c1b3a57334fc32d4b6b7d16795d5d77c0",
+    "backend/tests/auth_core.rs": "43be3e4a02387832c76a2d39b8ea3296fdce800a004dd1b4cc6728cb716c9387",
+    "backend/tests/crypto_constraints.rs": "d5f38b0b5e04bd15f90a4f649e50321cb81699a655cf30b3082f7cb5dbf151ff",
+    "backend/tests/security.rs": "da89addcbbf151616feab7be4f7189e6e88f34b2b0f899e90b3525b7f69b4539",
+    "backend/tests/storage.rs": "c371f26760773da46f99285c899a4c7a3f0da7a7d797245de726e91576c0ab73",
+    "backend/tests/support/mod.rs": "96a57a0c39dc509a2f5501d54ebd48c7fd53c064ebd9c783ebc13b737b7ff7d7",
+    "backend/vitest.config.js": "a1eeec4e264526d897af283b5f49d86a3d3a31fa5c7568a70aa36917d2100be2",
+    "backend/worker-tests/alarms.test.js": "35e3471b8bcb4d637af5d121813455697fd97459d90ef559a2073c2e5e4347a2",
+    "backend/worker-tests/fixtures.js": "752cf7fa9ca6f2887c554d18463f8c3edb5b9bd5dd57a8a054b1e37bafdf397d",
+    "backend/worker-tests/lifecycle.test.js": "066e74151dafbca6b0206c541757ec5cf2d80f5c53df2bbc532573d1e236c58e",
+    "backend/worker-tests/security.test.js": "f3c80c12e30a576b38185c5ee263e6a3bb41a2d43afae467509f5c28308cdaf1",
+    "backend/worker-tests/transactions.test.js": "e8084290f07b9b4ee5b7ce17cede79b6275a781f78474c716955de65c5e32566",
+    "backend/worker-tests/transport.test.js": "28d48f8287109ccb6c03904de7e6f942c6de7821c8f8927eccc658d676aa893c",
+    "shared/config/src/env/backend.rs": "996748b693fcfeb57141d1aa2f20287eefdf764d48992c023c58764eef942be6",
+    "shared/config/src/env/error.rs": "5efdac5abc4a0b9ec65b5eb10a85345ce2de9ac79ee06e8bae4782fac12d7021",
+    "shared/config/src/env/frontend.rs": "f17f72fe307afea80fe96717e3c4f761b78e7876989cd7c84f331f45ff7ad405",
+    "shared/config/src/env/mod.rs": "154078dd54b45e9159ba752f94ceff9b139636fc33279f0c89b1fe2293a834fe",
+    "shared/config/src/lib.rs": "bedecf61602b5a076c3af5c62f48fa812bd4cdef1eb38639718a27b1fda44b48",
+    "shared/config/tests/backend.rs": "868c4d210392f233449df4763a7ecbb78cc5a25f6866e31d8982382eb75ff0de",
+    "shared/config/tests/backend_once_error.rs": "9b9053389ab593d926f8cc8b2bc0847246bc120d055332f4984d209d7df81e73",
+    "shared/config/tests/backend_once_success.rs": "7bcd6183ae581c0a77570f9e97e9f0c344756bdddbb163a1ea2638d3067cdbbc",
+    "shared/config/tests/frontend.rs": "b844433bf96510aa1fcf00ca89b614a29f65f2b804d8be3f261e9b652ffce11e",
+    "shared/config/tests/frontend_once_error.rs": "71a094f1306d9fbefb8b7966d8dc296cecd662f5f3634c417a31bcccda8bcbc2",
+    "shared/config/tests/frontend_once_success.rs": "323e92dec8e46af68b786457b15c9d1022357bc18093e6d0d3e0da3744c7e577",
+    "shared/config/tests/once_concurrent_error.rs": "a7065a4d27faddab53a3f9844982e78973e8695de91c26f6a47b699a02bbe008",
+    "shared/config/tests/once_concurrent_success.rs": "e2105810a8ace16335ebc736e38e25b56d7d873dff506cc05865bf9844f5369b",
+    "shared/config/tests/once_scopes.rs": "8457fc01f3332f3b713e185318df0b983fab699e8adb043733f4c222a1170485",
+    "shared/config/tests/support/mod.rs": "9004b8e4ee0c3faf14a6e5d429eeae1b43861c6d7b860f45e9eba5ba29ac2e6d",
+    "shared/config/tests/typed_struct.rs": "42357ed95d606ad0a6f4039afae39a03c9f8a6b358c87574370eeca651af0d3f",
+    "shared/contracts/src/lib.rs": "92c6a8ea08aa0f8737468198cefd7f80868d801adbaab10fef5adace338e85eb",
+    "shared/domain/src/accounts/error.rs": "98d768d1154ebed51b8bb1ca3e0333d4f1a0918d4f414c16832049da0a7c23a5",
+    "shared/domain/src/accounts.rs": "283d06d0b0662f61efd2c372714baeae6429875bb4fedfeaf1526de238040e34",
+    "shared/domain/src/ids/error.rs": "6471d183fbfe3b86e1ef914243751c27c7fb50df7e6f299ade1ddb213e2c0e11",
+    "shared/domain/src/ids.rs": "3519f4b7ecf39ac03de16eb983b58cb569f4a9f9ce8050fa41f977d35324bfa3",
+    "shared/domain/src/lib.rs": "83c51778244e929ae67c40fb59f0b2614a5794b6cf04d8a785070d6ac2b113c0",
+    "shared/domain/tests/account_constraints.rs": "9c0143bf597f8aa5575381bb735917bf57bf9730603624e90de636092bb18ffc"
+  },
+  "nodes": 606,
+  "edges": 1223,
+  "communities": 32,
+  "health": {
+    "node_count": 562,
+    "unverified_node_count": 0,
+    "raw_edge_count": 1249,
+    "non_object_edges": 0,
+    "missing_endpoint_edges": 0,
+    "dangling_endpoint_edges": 123,
+    "external_reference_edges": 14,
+    "self_loop_edges": 0,
+    "valid_candidate_edges": 1112,
+    "exact_duplicate_edges": 10,
+    "directed_unique_endpoint_pairs": 1090,
+    "directed_same_endpoint_collapsed_edges": 22,
+    "undirected_unique_endpoint_pairs": 1086,
+    "undirected_same_endpoint_collapsed_edges": 26,
+    "same_endpoint_group_count": 20,
+    "relation_variant_groups": 5,
+    "source_file_variant_groups": 0,
+    "source_location_variant_groups": 3,
+    "context_variant_groups": 2,
+    "post_build_graph_type": "DiGraph",
+    "post_build_node_count": 606,
+    "post_build_edge_count": 1223,
+    "post_build_error": "",
+    "producer_suppression": {
+      "path": "/root/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
+      "total_sites": 12,
+      "sites": [
+        {
+          "line": 1676,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+        },
+        {
+          "line": 2209,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+        },
+        {
+          "line": 2211,
+          "name": "seen_doc_refs",
+          "tuple_arity": 0,
+          "sample": "seen_doc_refs: set[str] = set()"
+        },
+        {
+          "line": 2628,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+        },
+        {
+          "line": 2775,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids = {n.get(\"id\") for n in nodes}"
+        },
+        {
+          "line": 3501,
+          "name": "seen_keys",
+          "tuple_arity": 0,
+          "sample": "seen_keys: set[tuple] = set()"
+        },
+        {
+          "line": 3670,
+          "name": "seen_keys",
+          "tuple_arity": 0,
+          "sample": "seen_keys: set[tuple] = set()"
+        },
+        {
+          "line": 5777,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 5885,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 5964,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 6479,
+          "name": "seen_ids",
+          "tuple_arity": 0,
+          "sample": "seen_ids: set[str] = set()"
+        },
+        {
+          "line": 6480,
+          "name": "seen_edges",
+          "tuple_arity": 4,
+          "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+        }
+      ],
+      "error": ""
+    },
+    "examples": [
+      {
+        "source": "backend_src_auth_receipts_commandoutcome",
+        "target": "backend_src_auth_receipts_rs_accountid",
+        "edge_count": 4,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "backend/src/auth/receipts.rs"
+        ],
+        "source_locations": [
+          "L19",
+          "L24",
+          "L30",
+          "L33"
+        ],
+        "contexts": [
+          "field"
+        ]
+      },
+      {
+        "source": "backend_src_auth_receipts_commandoutcome",
+        "target": "backend_src_auth_receipts_rs_sessionid",
+        "edge_count": 2,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "backend/src/auth/receipts.rs"
+        ],
+        "source_locations": [
+          "L20",
+          "L26"
+        ],
+        "contexts": [
+          "field"
+        ]
+      },
+      {
+        "source": "backend_src_auth_service_authservice_a_d_r_transaction",
+        "target": "backend_src_auth_service_rs_t",
+        "edge_count": 2,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "backend/src/auth/service.rs"
+        ],
+        "source_locations": [
+          "L123"
+        ],
+        "contexts": [
+          "generic_arg"
+        ]
+      },
+      {
+        "source": "backend_src_auth_service_authservice_a_d_r_transaction",
+        "target": "backend_src_auth_error_autherror",
+        "edge_count": 2,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "backend/src/auth/service.rs"
+        ],
+        "source_locations": [
+          "L123"
+        ],
+        "contexts": [
+          "generic_arg"
+        ]
+      },
+      {
+        "source": "backend_src_auth_tests_sqlite_transaction",
+        "target": "backend_src_auth_tests_rs_t",
+        "edge_count": 2,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "backend/src/auth/tests.rs"
+        ],
+        "source_locations": [
+          "L64"
+        ],
+        "contexts": [
+          "generic_arg"
+        ]
+      }
+    ]
+  },
+  "semantic_documentation_refreshed": false,
+  "input_tokens": 0,
+  "output_tokens": 0
+}

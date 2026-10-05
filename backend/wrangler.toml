@@ -1,0 +1,19 @@
+name = "brews-bingo-api"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-10-05"
+workers_dev = false
+
+[build]
+command = "worker-build --release"
+
+[vars]
+APP_ORIGIN = "https://localhost:8787"
+# RATE_LIMIT_KEY is a required secret, supplied only in ephemeral tests here.
+# Production KDF cost/capacity measurement and secret provisioning are not done.
+
+[durable_objects]
+bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AccountsObject"]

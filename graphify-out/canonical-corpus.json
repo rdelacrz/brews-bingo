@@ -2,12 +2,12 @@
   "root": "/root/workspace/brews-bingo",
   "sources": [
     "AGENTS.md",
-    "plans/requirements.md",
-    "plans/hld.md",
-    "plans/lld.md",
-    "plans/api-design.md",
-    "plans/durable-object-design.md",
-    "plans/research.md"
+    "docs/plans/requirements.md",
+    "docs/plans/hld.md",
+    "docs/plans/lld.md",
+    "docs/plans/api-design.md",
+    "docs/plans/durable-object-design.md",
+    "docs/plans/research.md"
   ],
   "exclude_generated": true,
   "semantic_prompt": "/root/.hermes/skills/graphify/references/extraction-spec.md",

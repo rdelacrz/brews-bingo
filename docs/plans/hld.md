@@ -141,7 +141,7 @@ Dioxus documents a shared Rust codebase across web and mobile and allows platfor
 
 ```text
 brews-bingo/
-├── plans/                 # Requirements, research, HLD; future LLD
+├── docs/plans/            # Requirements, research and design
 ├── shared/                # Reusable code, independent of platform entrypoints
 │   ├── domain/            # Pure Rust game rules and types
 │   ├── contracts/         # Shared app/backend contract types

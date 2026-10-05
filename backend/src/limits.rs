@@ -1,0 +1,29 @@
+//! Backend policy limits shared by handlers and storage.
+
+pub(crate) const MILLISECONDS_PER_SECOND: i64 = 1_000;
+pub(crate) const MILLISECONDS_PER_DAY: i64 = 24 * 60 * 60 * MILLISECONDS_PER_SECOND;
+pub(crate) const SESSION_LIFETIME_MS: i64 = MILLISECONDS_PER_DAY;
+pub(crate) const ACCESS_LINK_LIFETIME_MS: i64 = MILLISECONDS_PER_DAY;
+pub(crate) const COMMAND_RECEIPT_RETENTION_MS: i64 = MILLISECONDS_PER_DAY;
+pub(crate) const ACCESS_LINK_METADATA_RETENTION_MS: i64 = 30 * MILLISECONDS_PER_DAY;
+pub(crate) const COMMAND_RECEIPT_MAX_BYTES: usize = 4_096;
+pub(crate) const RATE_LIMIT_WINDOW_MS: i64 = 900_000;
+pub(crate) const RATE_LIMIT_BLOCK_MS: i64 = 900_000;
+pub(crate) const RATE_LIMIT_MAX_FAILURES: i64 = 5;
+pub(crate) const RATE_LIMIT_KEY_MIN_BYTES: usize = brews_config::env::backend::RATE_LIMIT_KEY_BYTES;
+pub(crate) const RATE_LIMIT_KEY_MAX_BYTES: usize = 64;
+pub(crate) const CALLER_IDENTITY_MAX_BYTES: usize = 256;
+#[cfg(target_arch = "wasm32")]
+pub(crate) const OWNER_CALLER_IDENTITY_MAX_BYTES: usize = 128;
+pub(crate) const REDEMPTION_SUBJECT_MAX_BYTES: usize = 64;
+pub(crate) const LOGIN_VERIFICATION_MAX_ATTEMPTS: usize = 2;
+pub(crate) const TOKEN_GENERATION_MAX_ATTEMPTS: usize = 3;
+pub(crate) const CLEANUP_BATCH_SIZE: i64 = 100;
+pub(crate) const SOCKET_CLOSE_INITIAL_DELAY_MS: i64 = 1_000;
+#[cfg(target_arch = "wasm32")]
+pub(crate) const OWNER_REQUEST_MAX_BYTES: usize = 8_192;
+#[cfg(target_arch = "wasm32")]
+pub(crate) const OWNER_RESPONSE_MAX_BYTES: usize = 8_192;
+#[cfg(target_arch = "wasm32")]
+pub(crate) const SQL_QUERY_MAX_ROWS: usize = 512;
+pub(crate) const JS_SAFE_INTEGER_MAX: i64 = 9_007_199_254_740_991;
