@@ -4,7 +4,7 @@
     reason = "Test fixtures fail fast."
 )]
 mod support;
-use brews_backend::storage::{CURRENT_SCHEMA_VERSION, Database, SqlValue, StorageError, migrate};
+use brews_backend::db::{CURRENT_SCHEMA_VERSION, Database, SqlValue, StorageError, migrate};
 use support::Sqlite;
 
 #[test]
@@ -29,7 +29,7 @@ fn migration_is_atomic_idempotent_and_refuses_newer_versions() {
 }
 
 #[test]
-fn migration_preserves_initialized_version_one_ddl_and_clock_metadata() {
+fn migration_preserves_initialized_ddl_and_clock_metadata() {
     let db = Sqlite::new();
     migrate(&db).unwrap();
     db.execute(
@@ -57,7 +57,7 @@ fn migration_preserves_initialized_version_one_ddl_and_clock_metadata() {
 }
 
 #[test]
-fn failed_version_one_initialization_rolls_back_metadata_and_partial_ddl() {
+fn failed_auth_initialization_rolls_back_metadata_and_partial_ddl() {
     let db = Sqlite::new();
     db.execute("CREATE TABLE accounts(existing INTEGER)", &[])
         .unwrap();

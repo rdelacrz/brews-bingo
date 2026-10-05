@@ -3,12 +3,12 @@ use super::{
     records::{integer, optional_integer},
 };
 use crate::{
+    db::{Database, SqlValue},
     limits::{
         CALLER_IDENTITY_MAX_BYTES, RATE_LIMIT_BLOCK_MS, RATE_LIMIT_MAX_FAILURES,
         RATE_LIMIT_WINDOW_MS,
     },
     security::DIGEST_BYTES,
-    storage::{Database, SqlValue},
 };
 use hmac::{Hmac, Mac};
 use sha2::Sha256;

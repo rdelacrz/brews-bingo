@@ -7,7 +7,7 @@
     clippy::expect_used,
     reason = "Test fixtures fail fast."
 )]
-use brews_backend::storage::{Database, Row, SqlValue, StorageError};
+use brews_backend::db::{Database, Row, SqlValue, StorageError};
 use rusqlite::{
     Connection,
     types::{Value, ValueRef},

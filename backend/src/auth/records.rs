@@ -1,7 +1,7 @@
 use crate::{
     auth::AuthError,
+    db::{Row, SqlValue},
     limits::JS_SAFE_INTEGER_MAX,
-    storage::{Row, SqlValue},
 };
 use brews_domain::{
     accounts::{AccountRole, AccountStatus, SessionScope, validate_username},

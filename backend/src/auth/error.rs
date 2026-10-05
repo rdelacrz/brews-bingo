@@ -20,8 +20,8 @@ pub enum AuthError {
     Crypto,
 }
 
-impl From<crate::storage::StorageError> for AuthError {
-    fn from(_: crate::storage::StorageError) -> Self {
+impl From<crate::db::StorageError> for AuthError {
+    fn from(_: crate::db::StorageError) -> Self {
         Self::Storage
     }
 }

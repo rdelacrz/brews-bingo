@@ -1,9 +1,9 @@
 use super::{ManagementError, RemovalPhase, RemovalReleaseAck, RemovalWork, deadline};
 use crate::{
     auth::{AuthService, Runtime},
-    storage::{
+    db::{
         Database, SqlValue,
-        management_schema::{REMOVAL_INITIAL_DELAY_MS, REMOVAL_MAX_DELAY_MS},
+        schema::management_schema::{REMOVAL_INITIAL_DELAY_MS, REMOVAL_MAX_DELAY_MS},
     },
 };
 use brews_contracts::management::AuditOutcome;

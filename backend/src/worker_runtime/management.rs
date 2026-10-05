@@ -4,9 +4,9 @@ use crate::{
     api::{ApiError, BODY_LIMIT, authenticate_cli, decode_cli},
     auth::{ManagementError, ManagementPrincipal},
     config::get_backend_config,
+    db,
     limits::{MANAGEMENT_RESPONSE_MAX_BYTES, OWNER_REQUEST_MAX_BYTES},
     observability::{self, Boundary, Delivery, Failure},
-    storage,
 };
 use axum::{
     body::{Body, to_bytes},
@@ -160,7 +160,7 @@ impl AccountsObject {
         let message: OwnerManagementRequest =
             super::decode_private_json(&bytes).map_err(|_| ManagementError::InvalidInput)?;
         let db = OwnerDatabase::new(self.state.storage());
-        storage::migrate(&db)?;
+        db::migrate(&db)?;
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
         let cfg = get_backend_config(&self.env).map_err(|_| ManagementError::Crypto)?;
@@ -181,6 +181,7 @@ impl AccountsObject {
                     operation_id,
                     &message.command,
                     message.command_id.ok_or(ManagementError::InvalidInput)?,
+                    &ManagementPrincipal::DeveloperCli,
                 )
                 .await
             }

@@ -9,7 +9,7 @@ use brews_backend::{
         AuthCommand, AuthPolicy, AuthService, CookieEffect, ManagementPrincipal, RemovalPhase,
         RequestContext,
     },
-    storage::{Database, Row, SqlValue, StorageError, migrate},
+    db::{Database, Row, SqlValue, StorageError, migrate},
 };
 use brews_contracts::management::{ManagementCommand, ManagementResponse};
 use brews_domain::{

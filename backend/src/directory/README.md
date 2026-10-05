@@ -5,9 +5,15 @@ discovery, lifecycle, host-management or browser APIs. Bind its database to the
 isolated environment's `GAME_DIRECTORY` object named `directory`; do not run the
 Accounts migration against this database.
 
+Directory errors and coordination types live in `mod.rs`. Import the service and
+migration entry point directly from `crate::db::directory`; their implementation
+lives in `../db/directory.rs`.
+
 ## Integration
 
 ```rust,ignore
+use crate::db::directory::{DirectoryService, migrate_directory};
+
 migrate_directory(db)?;
 let directory = DirectoryService::new(db, runtime)?;
 let grant = directory.acquire_removal(operation_id, account_id)?;

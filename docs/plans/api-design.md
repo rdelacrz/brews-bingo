@@ -409,6 +409,14 @@ Partial revocation/failure reporting and exact response status remain **TBD**.
 
 The scopes below describe the app-facing endpoints. The developer CLI retains its separately authorized management and bootstrap capabilities.
 
+**Current B1–B9 implementation contract:** These admin APIs are now authorized for local implementation through the Worker and AccountsObject, reusing the CLI's management/audit/receipt rules. All require a live enabled Verified admin with a Normal session; the HTTP transport uses only the session cookie, never the CLI key or a client actor/role claim. POST/DELETE require the exact configured Origin and one canonical UUID-v7 `Idempotency-Key`; reads reject retry headers and any supplied mismatched Origin. Account IDs and cursors preserve canonical UUID-v7 spelling. All responses are JSON with `no-store`, `no-referrer` and `nosniff`, without `Set-Cookie`.
+
+B1 accepts only `cursor` and `limit`: ascending account ID, default 50, maximum 100, `limit` in 1–100; unsupported filters and duplicate/unknown query fields are rejected. B2 has no query/body. B3/B4 accept only the strict object `{username}` and derive the role from the endpoint. B5–B9 have no body; no general username/role edit or admin audit route is added.
+
+The selected response uses a `result` discriminator. First successes retain the fields in the operation's table below and add a secret-free `receipt`: `created`, `enrollment_link`, `password_reset`, `disabled`, `deleted` or `enabled`. B1 uses `users` and B2 `account`. Committed retries return only `{result: "committed", receipt}`, never a URL; unfinished removal returns `{result: "pending", operation_id}` with HTTP 202. Other successes are HTTP 200. Errors use the shared redacted `{error: {code, message}}` contract with HTTP 400/401/403/404/409/503. Existing SafeAccount enum serialization is preserved. The detailed proposal notes below remain historical where this explicit contract resolves a TBD.
+
+Mutations and safe first-result projections remain inside the owning serialized transaction, with fail-closed audit storage. A raw bearer handoff is emitted only after the final storage output gate. Disable/delete reprove issuer authority after the Directory await; loss of authority cannot commit a prepared removal. Unfinished coordination is retained for alarm recovery, without persisting issuer credentials. No gameplay/socket sender or production deployment is implied. Protected result release revalidates current admin authority after the final scheduling/storage awaits. An admin self-reset commits its reset and revocation but then fails this release guard with HTTP 401: no URL/receipt is handed to the revoked session. Another authorized admin or the CLI must explicitly reissue the reset link; retries never mint or replay the lost secret.
+
 #### B1: `list_users` (Non-mutating)
 
 Path: `GET /api/users`

@@ -4,7 +4,7 @@
     reason = "Test fixtures fail fast."
 )]
 mod support;
-use brews_backend::storage::{Database, SqlValue, migrate};
+use brews_backend::db::{Database, SqlValue, migrate};
 use support::Sqlite;
 
 #[test]
@@ -25,7 +25,7 @@ fn migration_installs_management_tables_atomically() {
     }
 }
 
-fn version_one_database() -> Sqlite {
+fn auth_only_database() -> Sqlite {
     let db = Sqlite::new();
     migrate(&db).unwrap();
     for table in [
@@ -43,8 +43,8 @@ fn version_one_database() -> Sqlite {
     db
 }
 #[test]
-fn forward_v1_migration_preserves_all_existing_ddl_data_and_clock_metadata() {
-    let db = version_one_database();
+fn management_initialization_preserves_auth_ddl_data_and_clock_metadata() {
+    let db = auth_only_database();
     db.execute("INSERT INTO accounts(account_id,username,role,status,credential_epoch,created_at) VALUES('01890f3e-53b7-7d28-9b05-4f65092d5711','HostPerson01','host','pending_enrollment',0,0)",&[]).unwrap();
     let before = db
         .query("SELECT name,sql FROM sqlite_master ORDER BY name", &[])
@@ -72,8 +72,8 @@ fn forward_v1_migration_preserves_all_existing_ddl_data_and_clock_metadata() {
     );
 }
 #[test]
-fn failed_v2_forward_migration_rolls_back_all_partial_ddl() {
-    let db = version_one_database();
+fn failed_management_initialization_rolls_back_all_partial_ddl() {
+    let db = auth_only_database();
     db.execute("CREATE TABLE admin_audit(existing INTEGER)", &[])
         .unwrap();
     let before = db

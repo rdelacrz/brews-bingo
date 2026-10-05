@@ -24,17 +24,30 @@ impl AccountsObject {
         operation_id: OperationId,
         command: &ManagementCommand,
         command_id: CommandId,
+        principal: &ManagementPrincipal,
     ) -> std::result::Result<ManagementResponse, ManagementError> {
         let result = self
-            .progress_work(service, operation_id, command, command_id)
+            .progress_work(service, operation_id, command, command_id, principal)
             .await;
         // A concurrent handler may have finished while this handler awaited a peer.
-        let resolution = service.removal_resolution(
-            operation_id,
-            command,
-            &ManagementPrincipal::DeveloperCli,
-            command_id,
-        );
+        let resolution = service.removal_resolution(operation_id, command, principal, command_id);
+        if matches!(principal, ManagementPrincipal::AdminSession(_))
+            && let Err(error @ (ManagementError::Unauthorized | ManagementError::Forbidden)) =
+                &resolution
+        {
+            // Cleanup uses the already-authorized intent, never the denied issuer's bearer.
+            if let Some(work) = service.removal_operation(operation_id)? {
+                let cleanup = self.recover_session_removal(service, &work).await;
+                if let Err(failure @ (ManagementError::Storage | ManagementError::Crypto)) = cleanup
+                {
+                    observability::management_failure(Boundary::AccountsManagement, failure);
+                    if service.removal_operation(operation_id)?.is_some() {
+                        service.retry_removal(operation_id)?;
+                    }
+                }
+            }
+            return Err(*error);
+        }
         if !matches!(resolution, Ok(ManagementResponse::Pending { .. })) {
             if resolution.is_err()
                 && matches!(
@@ -69,15 +82,12 @@ impl AccountsObject {
         operation_id: OperationId,
         command: &ManagementCommand,
         command_id: CommandId,
+        principal: &ManagementPrincipal,
     ) -> std::result::Result<ManagementResponse, ManagementError> {
         let mut rejection = ManagementError::Conflict;
         loop {
-            let resolution = service.removal_resolution(
-                operation_id,
-                command,
-                &ManagementPrincipal::DeveloperCli,
-                command_id,
-            )?;
+            let resolution =
+                service.removal_resolution(operation_id, command, principal, command_id)?;
             let Some(work) = service.removal_operation(operation_id)? else {
                 return Ok(resolution);
             };
@@ -94,12 +104,8 @@ impl AccountsObject {
             };
             let reply = self.call_directory(service, request).await;
             // No snapshot or late grant may outlive a phase transition or completion.
-            let resolution = service.removal_resolution(
-                operation_id,
-                command,
-                &ManagementPrincipal::DeveloperCli,
-                command_id,
-            )?;
+            let resolution =
+                service.removal_resolution(operation_id, command, principal, command_id)?;
             let Some(current) = service.removal_operation(operation_id)? else {
                 return Ok(resolution);
             };
@@ -116,11 +122,9 @@ impl AccountsObject {
                     },
                 ) if found == operation_id && account_id == current.target_account_id => {
                     let grant = RemovalGateGrant::verified(operation_id, account_id);
-                    if let Err(error) = service.commit_removal(
-                        operation_id,
-                        ManagementPrincipal::DeveloperCli,
-                        &grant,
-                    ) {
+                    if let Err(error) =
+                        service.commit_removal_with_principal(operation_id, principal, &grant)
+                    {
                         if matches!(error, ManagementError::Storage | ManagementError::Crypto) {
                             return Err(error);
                         }
@@ -260,8 +264,14 @@ impl AccountsObject {
                 _ => return Err(ManagementError::Storage),
             };
             let result = if work.actor == AuditActor::DeveloperCli {
-                self.progress_removal(service, work.operation_id, &command, work.command_id)
-                    .await
+                self.progress_removal(
+                    service,
+                    work.operation_id,
+                    &command,
+                    work.command_id,
+                    &ManagementPrincipal::DeveloperCli,
+                )
+                .await
             } else {
                 self.recover_session_removal(service, &work).await
             };

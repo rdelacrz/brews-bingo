@@ -6,8 +6,8 @@
 mod support;
 use brews_backend::{
     auth::{AuthCommand, AuthError, AuthPolicy, AuthService, CookieEffect, RequestContext},
+    db::{Database, SqlValue, migrate},
     security::hash_password,
-    storage::{Database, SqlValue, migrate},
 };
 use support::{Sqlite, TestRuntime};
 

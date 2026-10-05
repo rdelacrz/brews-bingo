@@ -1,6 +1,6 @@
 //! Durable Object SQLite adapter.
+use crate::db::{Database, Row, SqlValue, StorageError};
 use crate::limits::SQL_QUERY_MAX_ROWS;
-use crate::storage::{Database, Row, SqlValue, StorageError};
 use js_sys::{Function, Reflect};
 use wasm_bindgen::{JsCast, JsValue, closure::ScopedClosure};
 use worker::{SqlStorageValue, Storage};

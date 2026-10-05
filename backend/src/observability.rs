@@ -8,6 +8,7 @@ const TARGET: &str = "brews.security";
 pub(crate) enum Boundary {
     AuthIngress,
     CliIngress,
+    UsersIngress,
     AccountsAuth,
     AccountsManagement,
     AccountsAlarm,
@@ -23,6 +24,7 @@ impl Boundary {
         match self {
             Self::AuthIngress => "auth_ingress",
             Self::CliIngress => "cli_ingress",
+            Self::UsersIngress => "users_ingress",
             Self::AccountsAuth => "accounts_auth",
             Self::AccountsManagement => "accounts_management",
             Self::AccountsAlarm => "accounts_alarm",
@@ -544,6 +546,7 @@ mod tests {
         let boundaries = [
             (Boundary::AuthIngress, "auth_ingress"),
             (Boundary::CliIngress, "cli_ingress"),
+            (Boundary::UsersIngress, "users_ingress"),
             (Boundary::AccountsAuth, "accounts_auth"),
             (Boundary::AccountsManagement, "accounts_management"),
             (Boundary::AccountsAlarm, "accounts_alarm"),

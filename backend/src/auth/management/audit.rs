@@ -1,7 +1,7 @@
 use super::{ManagementError, ManagementPrincipal};
 use crate::{
     auth::{AuthService, Runtime},
-    storage::Database,
+    db::Database,
 };
 use brews_contracts::management::{
     AuditActor, AuditOperation, AuditOutcome, AuditTarget, ManagementCommand,

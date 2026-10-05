@@ -418,14 +418,14 @@ backend/src/objects/game/
 ├── commands.rs           # Mutations and commit-time checks
 ├── queries.rs            # Authorized, role-filtered reads
 ├── model.rs              # Private persisted records
-├── storage/              # Owner-local SQL, transactions and migrations
+├── db/                   # Owner-local SQL, transactions and migrations
 ├── sockets.rs            # Hibernation, attachment recovery, delivery
 ├── alarms.rs             # Earliest-deadline scheduling and cleanup
 ├── outbox.rs             # Durable cross-Object work and retries
 └── error.rs              # GameObject-specific thiserror errors
 ```
 
-Use this pattern **where needed**, not mechanically for every folder. Accounts and Directory own their corresponding records, storage/migrations, deadlines and pending work; there is no shared cross-Object transaction or universal repository implied by `storage/`. Small components may remain single files. Each folder module needs an appropriate Rust module declaration (`mod.rs` or a sibling module file) during implementation; the overview omits that boilerplate rather than proposing unconnected source folders.
+Use this pattern **where needed**, not mechanically for every folder. Accounts and Directory own their corresponding records, storage/migrations, deadlines and pending work; there is no shared cross-Object transaction or universal repository implied by `db/`. Small components may remain single files. Each folder module needs an appropriate Rust module declaration (`mod.rs` or a sibling module file) during implementation; the overview omits that boilerplate rather than proposing unconnected source folders.
 
 Start modules/types private; expand to `pub(crate)` or an intentional public API only for a real consumer. Keep module roots and re-exports small. Follow LLD-021: typed errors belong in the owning component's adjacent `error.rs`, including nested auth/security/storage components where appropriate. Do not expose private SQL records, SDK handles or raw internal errors just to simplify API handlers. Clock/randomness integration and security helpers are backend implementation concerns; `security/` is not a new credential store or permission to move authoritative records out of their approved Objects.
 
@@ -591,7 +591,13 @@ The operational protocol uses `POST /_dev/commands`, typed management-only DTOs 
 
 Audit records keep a required target: `Account` for known targets and `AccountsOwner` for owner reads/rejected creation. Audit writes fail closed: roll back unaudited mutations and withhold unaudited read results. Committed command retries do not duplicate successful action audit; authenticated rejected attempts remain distinct records. No submitted username or credential is retained.
 
-The reviewed CLI/management/logging iteration is authorized for commit and push. Production secret provisioning, infrastructure/account creation and deployment remain unauthorized.
+The reviewed CLI/management/logging iteration was committed and pushed. Production secret provisioning, infrastructure/account creation and deployment remain unauthorized.
+
+### 3.10 Admin Users API implementation slice
+
+The next authorized local slice adds app-facing B1–B9 through the existing Worker and AccountsObject. Reuse shared account-management rules rather than creating a second credential/admin policy implementation. The browser cookie is transported privately; only AccountsObject derives the live AdminSession authority. The developer bearer interface remains separate. No gameplay, frontend screens, admin audit route, role-edit endpoint, production deployment or commit/push is authorized by this implementation request.
+
+The user selected cursor/limit-only account listing with default 50, maximum 100 and ascending account IDs. First mutation successes retain the planned account/link fields and add a secret-free receipt. Every mutation requires the existing UUID-v7 Idempotency-Key header; committed retries return only receipts and unresolved removals return HTTP 202 with an operation ID. The finalized boundary contract is in [API design, category B](api-design.md#b-users-and-privileged-account-management).
 
 ## 4. Views and frontend contracts
 

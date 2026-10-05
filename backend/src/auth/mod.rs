@@ -1,5 +1,5 @@
 //! Account auth authority (allocation-conscious, bounded KDF/SQL work).
-use crate::storage::Database;
+use crate::db::Database;
 use brews_config::env::backend::{
     ARGON2_DEFAULT_ITERATIONS, ARGON2_DEFAULT_MEMORY_KIB, ARGON2_PARALLELISM,
 };

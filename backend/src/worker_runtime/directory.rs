@@ -2,7 +2,8 @@
 use super::{OwnerDatabase, WorkerRuntime};
 use crate::{
     auth::Runtime,
-    directory::{DirectoryError, DirectoryService, migrate_directory},
+    db::directory::{DirectoryService, migrate_directory},
+    directory::DirectoryError,
     limits::OWNER_REQUEST_MAX_BYTES,
     observability::{self, Boundary, Failure},
 };

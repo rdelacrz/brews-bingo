@@ -4,8 +4,8 @@ use crate::{
         AuthService, Runtime,
         records::{Account, integer, text},
     },
+    db::{Database, SqlValue, schema::management_schema::REMOVAL_INITIAL_DELAY_MS},
     limits::JS_SAFE_INTEGER_MAX,
-    storage::{Database, SqlValue, management_schema::REMOVAL_INITIAL_DELAY_MS},
 };
 use brews_contracts::management::{
     AuditActor, AuditOutcome, ManagementCommand, ManagementReceipt, ManagementResponse,
@@ -309,11 +309,20 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         principal: ManagementPrincipal,
         grant: &RemovalGateGrant,
     ) -> Result<ManagementResponse, ManagementError> {
+        self.commit_removal_with_principal(operation_id, &principal, grant)
+    }
+    /// Borrow session authority so the Worker can reprove delivery after awaits.
+    pub(crate) fn commit_removal_with_principal(
+        &self,
+        operation_id: OperationId,
+        principal: &ManagementPrincipal,
+        grant: &RemovalGateGrant,
+    ) -> Result<ManagementResponse, ManagementError> {
         let work = self
             .removal_operation(operation_id)?
             .ok_or(ManagementError::NotFound)?;
         let command = work.command()?;
-        self.management_attempt(&principal, &command, |actor| {
+        self.management_attempt(principal, &command, |actor| {
             if actor != work.actor {
                 return Err(ManagementError::Forbidden);
             }
@@ -481,7 +490,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         Ok(Some(receipt))
     }
 }
-pub(super) fn parse_work(row: &crate::storage::Row) -> Result<RemovalWork, ManagementError> {
+pub(super) fn parse_work(row: &crate::db::Row) -> Result<RemovalWork, ManagementError> {
     if row.len() != 9 {
         return Err(ManagementError::Storage);
     }
@@ -531,7 +540,7 @@ mod tests {
     )]
     use super::super::test_support::{Sqlite, TestRuntime};
     use super::super::*;
-    use crate::{auth::AuthPolicy, storage::migrate};
+    use crate::{auth::AuthPolicy, db::migrate};
     use brews_domain::ids::OperationId;
     const ORIGIN: &str = "https://app.example.test";
     fn command_id(rt: &TestRuntime, n: u8) -> CommandId {
@@ -593,7 +602,7 @@ mod tests {
                 &self,
                 sql: &str,
                 params: &[SqlValue],
-            ) -> Result<Vec<crate::storage::Row>, StorageError> {
+            ) -> Result<Vec<crate::db::Row>, StorageError> {
                 self.sqlite.query(sql, params)
             }
             fn execute(&self, sql: &str, params: &[SqlValue]) -> Result<(), StorageError> {

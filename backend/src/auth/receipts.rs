@@ -4,9 +4,9 @@ use super::{
     records::{integer, text},
 };
 use crate::{
+    db::{Database, SqlValue},
     limits::{COMMAND_RECEIPT_MAX_BYTES, COMMAND_RECEIPT_RETENTION_MS, JS_SAFE_INTEGER_MAX},
     security::DIGEST_BYTES,
-    storage::{Database, SqlValue},
 };
 use brews_domain::ids::{AccountId, CommandId, LinkId, SessionId};
 use serde::{Deserialize, Serialize};

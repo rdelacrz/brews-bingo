@@ -1,5 +1,209 @@
 {
-  "reason": "Old synthetic unresolved/import reference nodes are not current source declarations",
-  "removed_reference_nodes": 32,
+  "reason": "Explicit file/DirectoryService relocation preserves each declaration; obsolete unresolved reference nodes changed",
+  "prior_node_count": 1623,
+  "current_node_count": 1622,
+  "relocated_source_entities": [
+    {
+      "prior": "backend_src_directory_mod_directoryservice",
+      "current": "backend_src_db_directory_directoryservice"
+    },
+    {
+      "prior": "backend_src_directory_storage_migrate_directory",
+      "current": "backend_src_db_directory_migrate_directory"
+    },
+    {
+      "prior": "backend_src_db_management_schema",
+      "current": "backend_src_db_schema_management_schema"
+    },
+    {
+      "prior": "backend_src_db_management_schema_audit_retention_ms",
+      "current": "backend_src_db_schema_management_schema_audit_retention_ms"
+    },
+    {
+      "prior": "backend_src_db_management_schema_id_check",
+      "current": "backend_src_db_schema_management_schema_id_check"
+    },
+    {
+      "prior": "backend_src_db_management_schema_link_receipt_retention_ms",
+      "current": "backend_src_db_schema_management_schema_link_receipt_retention_ms"
+    },
+    {
+      "prior": "backend_src_db_management_schema_management_schema_statements",
+      "current": "backend_src_db_schema_management_schema_management_schema_statements"
+    },
+    {
+      "prior": "backend_src_db_management_schema_removal_initial_delay_ms",
+      "current": "backend_src_db_schema_management_schema_removal_initial_delay_ms"
+    },
+    {
+      "prior": "backend_src_db_management_schema_removal_max_delay_ms",
+      "current": "backend_src_db_schema_management_schema_removal_max_delay_ms"
+    },
+    {
+      "prior": "backend_src_directory_storage",
+      "current": "backend_src_db_directory"
+    },
+    {
+      "prior": "backend_src_directory_storage_directory_schema_version",
+      "current": "backend_src_db_directory_directory_schema_version"
+    },
+    {
+      "prior": "backend_src_directory_storage_directory_tables",
+      "current": "backend_src_db_directory_directory_tables"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r",
+      "current": "backend_src_db_directory_directoryservice_a_d_r"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_acquire_removal",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_acquire_removal"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_admit_operation",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_admit_operation"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_cleanup",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_cleanup"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_clear_pending_gate",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_clear_pending_gate"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_command_floor",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_command_floor"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_compact_completions",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_compact_completions"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_new",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_new"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_next_deadline",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_next_deadline"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_observe_clock",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_observe_clock"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_pending",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_pending"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_prior_rejection",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_prior_rejection"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_receipt",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_receipt"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_reconcile_removal",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_reconcile_removal"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_record_release",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_record_release"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_release_removal",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_release_removal"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_require_gate",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_require_gate"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_seed_nonterminal_assignment",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_seed_nonterminal_assignment"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_transaction",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_transaction"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_transaction_before_compaction",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_transaction_before_compaction"
+    },
+    {
+      "prior": "backend_src_directory_storage_directoryservice_a_d_r_validate_account_gate",
+      "current": "backend_src_db_directory_directoryservice_a_d_r_validate_account_gate"
+    },
+    {
+      "prior": "backend_src_directory_storage_miniflare_metadata_table",
+      "current": "backend_src_db_directory_miniflare_metadata_table"
+    },
+    {
+      "prior": "backend_src_directory_storage_operation_timestamp",
+      "current": "backend_src_db_directory_operation_timestamp"
+    },
+    {
+      "prior": "backend_src_directory_storage_parse_completion_row",
+      "current": "backend_src_db_directory_parse_completion_row"
+    },
+    {
+      "prior": "backend_src_directory_storage_parse_operation_row",
+      "current": "backend_src_db_directory_parse_operation_row"
+    },
+    {
+      "prior": "backend_src_directory_storage_validate_schema",
+      "current": "backend_src_db_directory_validate_schema"
+    },
+    {
+      "prior": "backend_src_directory_storage_workerd_metadata_table",
+      "current": "backend_src_db_directory_workerd_metadata_table"
+    },
+    {
+      "prior": "backend_src_db_auth_schema",
+      "current": "backend_src_db_schema_auth_schema"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_account_id",
+      "current": "backend_src_db_schema_auth_schema_account_id"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_auth_schema_ddl_matches_the_pre_refactor_snapshot",
+      "current": "backend_src_db_schema_auth_schema_auth_schema_ddl_matches_the_pre_refactor_snapshot"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_auth_schema_statements",
+      "current": "backend_src_db_schema_auth_schema_auth_schema_statements"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_connection",
+      "current": "backend_src_db_schema_auth_schema_connection"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_entity_id",
+      "current": "backend_src_db_schema_auth_schema_entity_id"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_sqlite_account_caps_match_verifier_and_safe_integer_limits",
+      "current": "backend_src_db_schema_auth_schema_sqlite_account_caps_match_verifier_and_safe_integer_limits"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_sqlite_rate_buckets_match_failure_count_and_digest_limits",
+      "current": "backend_src_db_schema_auth_schema_sqlite_rate_buckets_match_failure_count_and_digest_limits"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_sqlite_receipts_match_payload_digest_and_retention_limits",
+      "current": "backend_src_db_schema_auth_schema_sqlite_receipts_match_payload_digest_and_retention_limits"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_sqlite_session_and_link_deadlines_use_their_own_policy_limits",
+      "current": "backend_src_db_schema_auth_schema_sqlite_session_and_link_deadlines_use_their_own_policy_limits"
+    },
+    {
+      "prior": "backend_src_db_auth_schema_sqlite_username_boundaries_match_domain_validation_on_insert_and_update",
+      "current": "backend_src_db_schema_auth_schema_sqlite_username_boundaries_match_domain_validation_on_insert_and_update"
+    }
+  ],
+  "removed_reference_nodes": 10,
   "declared_source_entities_lost": 0
 }

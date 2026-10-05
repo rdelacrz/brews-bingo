@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 brews-domain = { path = "../shared/domain" }
-brews-contracts = { path = "../shared/contracts", features = ["management"] }
+brews-contracts = { path = "../shared/contracts", features = ["management", "users"] }
 brews-config = { path = "../shared/config", features = ["backend"] }
 serde.workspace = true
 serde_json.workspace = true

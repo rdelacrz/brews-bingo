@@ -1,10 +1,11 @@
 # Brews Bingo
 
-Brews Bingo is a bingo app for Rockville Brews. This repository currently contains the Cloudflare authentication backend and a Rust developer CLI for account administration. Gameplay and the browser interface are not implemented yet.
+Brews Bingo is a bingo app for Rockville Brews. This repository currently contains the Cloudflare authentication backend and a Rust developer CLI for account administration. Admin Users APIs B1–B9 are implemented through the Worker. Gameplay and the browser interface are not implemented yet.
 
 ## Repository map
 
 - `backend/` — Worker routes, AccountsObject, shared account-management rules and minimal Directory coordination.
+- `backend/src/db/` — SQL port and Directory database operations; auth/management DDL lives in `schema/`.
 - `cli/src/operations/` — concrete developer CLI commands; `main.rs` is the entry point.
 - `cli/tests/` — HTTPS client and binary integration test suites.
 - `shared/domain/` — account rules and typed identifiers.
@@ -12,7 +13,7 @@ Brews Bingo is a bingo app for Rockville Brews. This repository currently contai
 - `shared/config/src/env/` — typed environment settings; parsing helpers live in `utility/`.
 - `docs/plans/` — requirements, architecture, API and storage plans.
 
-The CLI calls the restricted Worker interface. It does **not** open SQLite directly. Future admin APIs reuse the backend's account-management service rather than duplicate its rules.
+The CLI calls the restricted Worker interface. It does **not** open SQLite directly. The admin Users APIs reuse that same account-management service rather than duplicate its rules.
 
 ## Tools and builds
 
@@ -107,6 +108,28 @@ Link files must be new and are created with owner-only permissions (0600). The C
 Mutations print their command ID before sending. For an uncertain response, repeat the **same** operation with `--command-id "$COMMAND_ID"`; do not invent a new ID to retry. Link commands must use a **new output path** on every retry: a failed attempt or receipt replay may leave an empty private reservation. Committed retries return a secret-free receipt, not another URL. The CLI does not automatically retry or follow redirects. Pending coordination is not completed deletion/revocation; unresolved work is retained for recovery.
 
 Usernames are case-sensitive, 10–50 ASCII characters after boundary whitespace trimming, with no internal whitespace. Account roles are set at creation, not edited later. The CLI enforces the hosted-game and last-enabled-verified-admin removal guards too.
+
+## Admin Users APIs
+
+These use an enabled, fully enrolled admin's normal session cookie, not the developer CLI key. They reuse the AccountsObject management service and Directory removal coordination; there is no public bootstrap, audit-list or role-edit route.
+
+| Operation | Method and path |
+| --- | --- |
+| List users | `GET /api/users?limit=50&cursor=<account-id>` |
+| Read user | `GET /api/users/{account_id}` |
+| Create host | `POST /api/users/hosts` |
+| Create admin | `POST /api/users/admins` |
+| Reissue enrollment | `POST /api/users/{account_id}/enrollment-links` |
+| Issue/reissue reset | `POST /api/users/{account_id}/password-reset-links` |
+| Disable | `POST /api/users/{account_id}/disable` |
+| Delete | `DELETE /api/users/{account_id}` |
+| Enable | `POST /api/users/{account_id}/enable` |
+
+Creation accepts only a JSON object with `username`; all other actions and reads have no body. Mutations require the exact application `Origin` and one canonical UUID-v7 `Idempotency-Key`. Listing is ordered by account ID with default 50 and maximum 100; other filters are not supported. All responses are non-cacheable and no operation issues a session cookie.
+
+First issuance includes the planned protected enrollment/reset URL and a secret-free receipt. Retrying the same command returns only the receipt; a lost URL requires explicit reissue. Unfinished disable/delete returns HTTP 202 and an operation ID rather than claiming completion. Last-admin, self-removal and hosted-game guards still apply. Admin authority is revalidated after peer/storage awaits. A self-reset revokes the requester too, so its committed URL is withheld with HTTP 401 and recovery requires another admin or the CLI.
+
+These endpoints are local implementation work; no production deployment or frontend screen is included. See [API plans](docs/plans/api-design.md#b-users-and-privileged-account-management) for response shapes and boundary rules.
 
 ## Tests and checks
 

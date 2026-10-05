@@ -7,7 +7,7 @@
     clippy::expect_used,
     reason = "Test fixtures fail fast."
 )]
-use crate::storage::{Database, Row, SqlValue, StorageError};
+use crate::db::{Database, Row, SqlValue, StorageError};
 use rusqlite::{
     Connection,
     types::{Value, ValueRef},

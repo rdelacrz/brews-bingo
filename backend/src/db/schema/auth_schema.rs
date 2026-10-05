@@ -1,4 +1,4 @@
-//! Version-1 AccountsObject schema. Each item is one fixed DDL statement.
+//! Accounts authentication schema. Each item is one fixed DDL statement.
 use crate::{
     limits::{
         ACCESS_LINK_LIFETIME_MS, COMMAND_RECEIPT_MAX_BYTES, COMMAND_RECEIPT_RETENTION_MS,
@@ -8,8 +8,8 @@ use crate::{
 };
 use brews_domain::accounts::{USERNAME_MAX_LEN, USERNAME_MIN_LEN};
 
-// V1 is unreleased; deployed constraint changes require a versioned migration.
-pub(super) fn v1_statements() -> Vec<String> {
+// Change deployed constraints only through explicit migrations.
+pub(in crate::db) fn auth_schema_statements() -> Vec<String> {
     let username_last_high_nibble = USERNAME_MAX_LEN * 2 - 1;
     vec![
         format!(
@@ -76,7 +76,7 @@ mod tests {
 
     fn connection() -> Connection {
         let db = Connection::open_in_memory().unwrap();
-        for sql in v1_statements() {
+        for sql in auth_schema_statements() {
             db.execute_batch(&sql).unwrap();
         }
         db.execute(
@@ -88,10 +88,10 @@ mod tests {
     }
 
     #[test]
-    fn version_one_ddl_matches_the_pre_refactor_snapshot() {
+    fn auth_schema_ddl_matches_the_pre_refactor_snapshot() {
         // Length framing checks every byte and statement boundary, including order.
         let mut digest = Sha256::new();
-        let statements = v1_statements();
+        let statements = auth_schema_statements();
         assert_eq!(statements.len(), 19);
         for sql in statements {
             digest.update((sql.len() as u64).to_be_bytes());

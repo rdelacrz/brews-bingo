@@ -15,9 +15,9 @@ APP_ORIGIN = "https://localhost:8787"
 bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }, { name = "GAME_DIRECTORY", class_name = "GameDirectoryObject" }]
 
 [[migrations]]
-tag = "v1"
+tag = "accounts"
 new_sqlite_classes = ["AccountsObject"]
 
 [[migrations]]
-tag = "v2"
+tag = "directory"
 new_sqlite_classes = ["GameDirectoryObject"]

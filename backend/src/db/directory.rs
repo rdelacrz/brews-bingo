@@ -1,11 +1,18 @@
 //! Owner-local fixed SQL. No browser commands, peer database or game ingress.
-use super::{DirectoryError, DirectoryService, RemovalGrant, RemovalReleaseAck};
+use crate::directory::{DirectoryError, RemovalGrant, RemovalReleaseAck};
 use crate::{
     auth::Runtime,
+    db::{Database, SqlValue, StorageError},
     limits::{CLEANUP_BATCH_SIZE, COMMAND_RECEIPT_RETENTION_MS, JS_SAFE_INTEGER_MAX},
-    storage::{Database, SqlValue, StorageError},
 };
 use brews_domain::ids::{AccountId, OperationId};
+/// Bind only to the environment's private `GAME_DIRECTORY` singleton `directory`.
+/// Accounts must persist an authorized removal intent before invoking this service.
+pub struct DirectoryService<'a, D: Database, R: Runtime> {
+    db: &'a D,
+    runtime: &'a R,
+}
+
 const DIRECTORY_SCHEMA_VERSION: i64 = 1;
 // Verified runtime metadata is not application state: DO names and alarm storage.
 const MINIFLARE_METADATA_TABLE: &str = "__miniflare_do_name";
@@ -67,7 +74,7 @@ fn operation_timestamp(operation: OperationId) -> Result<i64, DirectoryError> {
     ]))
 }
 fn parse_operation_row(
-    rows: &[crate::storage::Row],
+    rows: &[crate::db::Row],
     operation: OperationId,
     now: i64,
 ) -> Result<Option<AccountId>, DirectoryError> {
@@ -91,7 +98,7 @@ fn parse_operation_row(
 }
 
 fn parse_completion_row(
-    row: &crate::storage::Row,
+    row: &crate::db::Row,
     now: i64,
 ) -> Result<(OperationId, i64), DirectoryError> {
     let [SqlValue::Text(operation), account, SqlValue::Integer(at)] = row.as_slice() else {

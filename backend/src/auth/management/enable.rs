@@ -1,8 +1,8 @@
 use super::{ManagementError, deadline};
 use crate::{
     auth::{AuthService, Runtime},
+    db::{Database, SqlValue},
     limits::COMMAND_RECEIPT_RETENTION_MS,
-    storage::{Database, SqlValue},
 };
 use brews_contracts::management::{
     AuditActor, AuditOutcome, ManagementCommand, ManagementReceipt, ManagementResponse,

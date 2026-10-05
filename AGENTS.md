@@ -2,7 +2,7 @@
 
 ## Project state and planning sources
 
-The user has approved all planning proposals and authorized the initial Cloudflare backend workspace and account-auth API slice (A1–A7). The initial auth slice is implemented and committed. The reviewed Rust developer CLI, shared account-management logic, restricted Worker interface, minimal Directory removal coordination and selective logging are implemented. Do not implement gameplay, frontend screens or public admin-account API routes. Ask only about genuine gaps/contradictions. Production deployment, infrastructure/accounts and secret provisioning remain unauthorized. The user has authorized committing and pushing the reviewed CLI/management/logging changes and documentation. Future implementation changes require separate review and commit/push authorization. Auth password maximum is 50 ASCII characters (minimum 10); login, link redemption and setup/reset completion require a UUID-v7 Idempotency-Key header with secret-free receipts/no cookie replay. Logout is independently idempotent.
+The user has approved all planning proposals and authorized the initial Cloudflare backend workspace and account-auth API slice (A1–A7). The initial auth slice is implemented and committed. The reviewed Rust developer CLI, shared account-management logic, restricted Worker interface, minimal Directory removal coordination and selective logging are implemented. Do not implement gameplay or frontend screens. The admin Users APIs B1–B9 are implemented and independently reviewed locally, wired through the Worker to shared account-management rules. The user has authorized committing and pushing the reviewed Users APIs and DB layout cleanup. Ask only about genuine gaps/contradictions. Production deployment, infrastructure/accounts and secret provisioning remain unauthorized. The user has authorized committing and pushing the reviewed CLI/management/logging changes and documentation. Future implementation changes require separate review and commit/push authorization. Auth password maximum is 50 ASCII characters (minimum 10); login, link redemption and setup/reset completion require a UUID-v7 Idempotency-Key header with secret-free receipts/no cookie replay. Logout is independently idempotent.
 
 Use these documents as the planning sources of truth:
 - `docs/plans/requirements.md` — business requirements and scope.
@@ -45,6 +45,9 @@ Also run nextest with `--cargo-profile release-assertions` for optimized validat
 - Follow `docs/rust-best-practices.md`; keep modules private unless callers need them.
 - Run `cargo fmt --all` after code writing is finished, then `cargo fmt --all --check`.
 - Use specific names and component-local typed errors; do not expose raw error chains.
+- Name schema helpers and unreleased migration tags by purpose, not app-release labels such as `v2`. Persisted schema counters are storage metadata, not application releases.
+- Keep the backend SQL port and Directory database operations in `backend/src/db/`; schemas belong in `db/schema/`, with authentication DDL in `auth_schema.rs`.
+- Import DB services and functions directly from their `db` modules; domain module roots must not re-export DB entities.
 - Replace repeated policy literals with named constants at their owning boundary. Include units and share constraints across validation/storage; unrelated rules remain separate.
 - Bind SQL domain/state values from Rust enum tags or constants; do not duplicate quoted policy values or interpolate untrusted values into SQL.
 - Keep comments concise: explain non-obvious constraints, not obvious code.

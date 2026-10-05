@@ -1,6 +1,6 @@
 # Account auth backend
 
-Local review slice: A1–A7 auth plus the restricted developer CLI account-management interface. No deployment, gameplay, UI or public admin-account routes. See the [repository README](../README.md) for CLI commands and local HTTPS setup.
+Implemented locally: A1–A7 auth, the restricted developer CLI account-management interface and app-admin Users APIs B1–B9. No deployment, gameplay or UI. See the [repository README](../README.md) for CLI commands and local HTTPS setup.
 
 ## Read the code
 
@@ -9,10 +9,14 @@ Local review slice: A1–A7 auth plus the restricted developer CLI account-manag
 - `src/auth/`: account/session workflows, receipts, throttles and cleanup.
 - `src/auth/management/`: shared management policy, audit, issuance and durable removal work.
 - `src/worker_runtime/management.rs`: dedicated CLI authentication/transport.
+- `src/worker_runtime/users.rs`: public admin Users routes and separate private AdminSession envelope.
+- `src/api/users.rs`: strict method/path/query/header/body validation for B1–B9.
+- `src/auth/management/users.rs`: audited Users projections and final read-only authority guard.
 - `src/worker_runtime/removals.rs`: Accounts-owned Directory reconciliation and recovery.
-- `src/directory/`: minimal assignment gate and hosted-account guard; no gameplay ingress. Existing databases require the exact approved application-table inventory.
+- `src/directory/`: Directory errors and coordination types; import database operations directly from `db::directory`, with no gameplay ingress. Existing databases require the exact approved application-table inventory.
 - `src/security/`: bounded Argon2id and bearer primitives.
-- `src/storage/`: SQL port, preserved version-1 auth schema and additive version-2 management migration.
+- `src/db/`: SQL port and Directory database operations in `directory.rs`.
+- `src/db/schema/`: authentication DDL in `auth_schema.rs` and account-management DDL in `management_schema.rs`.
 - `src/limits.rs`: backend timing, retention, throttling and transport limits.
 - `../shared/domain/src/accounts.rs`: username/password length constraints.
 - `../shared/domain`: typed IDs and pure account rules.

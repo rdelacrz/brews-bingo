@@ -1,4 +1,4 @@
-//! Additive v2 management storage; v1 DDL is deliberately unchanged.
+//! Account-management tables, audit records and removal coordination.
 use crate::limits::{
     COMMAND_RECEIPT_MAX_BYTES, COMMAND_RECEIPT_RETENTION_MS, JS_SAFE_INTEGER_MAX,
     MILLISECONDS_PER_DAY,
@@ -14,7 +14,7 @@ fn id_check(name: &str) -> String {
         "length(CAST({name} AS BLOB))=36 AND {name}=lower({name}) AND substr({name},9,1)='-' AND substr({name},14,1)='-' AND substr({name},19,1)='-' AND substr({name},24,1)='-' AND substr({name},15,1)='7' AND substr({name},20,1) IN ('8','9','a','b') AND length(replace({name},'-',''))=32 AND replace({name},'-','') NOT GLOB '*[^0-9a-f]*'"
     )
 }
-pub(super) fn v2_statements() -> Vec<String> {
+pub(in crate::db) fn management_schema_statements() -> Vec<String> {
     let command = id_check("command_id");
     let target = id_check("target_account_id");
     let actor = id_check("actor");

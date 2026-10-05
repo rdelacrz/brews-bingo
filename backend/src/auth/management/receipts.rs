@@ -4,8 +4,8 @@ use crate::{
         AuthService, Runtime,
         records::{integer, text},
     },
+    db::{Database, SqlValue},
     limits::COMMAND_RECEIPT_MAX_BYTES,
-    storage::{Database, SqlValue},
 };
 use brews_contracts::management::{AuditActor, ManagementCommand, ManagementReceipt};
 use brews_domain::ids::CommandId;
@@ -108,7 +108,7 @@ pub(super) fn validate_receipt(receipt: &ManagementReceipt) -> Result<(), Manage
         | ReceiptOperation::EnableAccount => None,
     };
     let period = if purpose.is_some() {
-        crate::storage::management_schema::LINK_RECEIPT_RETENTION_MS
+        crate::db::schema::management_schema::LINK_RECEIPT_RETENTION_MS
     } else {
         crate::limits::COMMAND_RECEIPT_RETENTION_MS
     };

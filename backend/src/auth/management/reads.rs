@@ -1,7 +1,7 @@
 use super::ManagementError;
 use crate::{
     auth::{AuthService, Runtime, records::Account},
-    storage::{Database, SqlValue},
+    db::{Database, SqlValue},
 };
 use brews_contracts::{SafeAccount, management::ManagementResponse};
 use brews_domain::ids::AccountId;

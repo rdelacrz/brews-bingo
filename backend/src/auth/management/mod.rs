@@ -9,19 +9,20 @@ mod reads;
 mod receipts;
 mod recovery;
 mod removal;
+mod users;
 pub use removal::{RemovalGateGrant, RemovalPhase, RemovalReleaseAck, RemovalWork};
 #[cfg(test)]
 mod test_support;
 use crate::{
+    db::{
+        Database, SqlValue, StorageError,
+        schema::management_schema::{AUDIT_RETENTION_MS, LINK_RECEIPT_RETENTION_MS},
+    },
     limits::{
         ACCESS_LINK_LIFETIME_MS, COMMAND_RECEIPT_MAX_BYTES, JS_SAFE_INTEGER_MAX,
         TOKEN_GENERATION_MAX_ATTEMPTS,
     },
     security::{new_token, token_digest},
-    storage::{
-        Database, SqlValue, StorageError,
-        management_schema::{AUDIT_RETENTION_MS, LINK_RECEIPT_RETENTION_MS},
-    },
 };
 use brews_contracts::management::{
     AuditActor, AuditOperation, AuditOutcome, AuditTarget, ManagementCommand, ManagementReceipt,
@@ -37,6 +38,19 @@ use zeroize::Zeroizing;
 pub enum ManagementPrincipal {
     DeveloperCli,
     AdminSession(String),
+}
+impl zeroize::Zeroize for ManagementPrincipal {
+    fn zeroize(&mut self) {
+        if let Self::AdminSession(token) = self {
+            token.zeroize();
+        }
+    }
+}
+impl zeroize::ZeroizeOnDrop for ManagementPrincipal {}
+impl Drop for ManagementPrincipal {
+    fn drop(&mut self) {
+        zeroize::Zeroize::zeroize(self);
+    }
 }
 impl fmt::Debug for ManagementPrincipal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -186,22 +200,60 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         canonical_origin: &str,
     ) -> Result<ManagementResponse, ManagementError> {
         self.management_attempt(&principal, &command, |actor| {
-            if command.is_mutating() {
-                let id=command_id.ok_or(ManagementError::InvalidInput)?;
-                if let Some(pending)=self.pending_removal_response(actor,id,&command)? {return Ok(pending);}
-                if let Some(receipt)=self.management_receipt(actor,id,&command,self.now()?)? {return Ok(ManagementResponse::Committed{receipt});}
+            self.execute_management_checked(&command, actor, command_id, canonical_origin)
+        })
+    }
+    fn execute_management_checked(
+        &self,
+        command: &ManagementCommand,
+        actor: AuditActor,
+        command_id: Option<CommandId>,
+        canonical_origin: &str,
+    ) -> Result<ManagementResponse, ManagementError> {
+        if command.is_mutating() {
+            let id = command_id.ok_or(ManagementError::InvalidInput)?;
+            if let Some(pending) = self.pending_removal_response(actor, id, command)? {
+                return Ok(pending);
             }
-            if matches!(command,ManagementCommand::CreateAccount{..}|ManagementCommand::ReissueEnrollment{..}|ManagementCommand::ResetPassword{..}) {validate_origin(canonical_origin)?;}
-            if !command.is_mutating() && command_id.is_some() {return Err(ManagementError::InvalidInput);}
-            match &command {
-                ManagementCommand::ListAccounts{after,limit}=>self.management_accounts(*after,*limit),
-                ManagementCommand::CreateAccount{username,role}=> {
-                    let command_id=command_id.ok_or(ManagementError::InvalidInput)?;
-                    let username=validate_username(username).map_err(|_|ManagementError::InvalidInput)?;
-                    if !self.db.query("SELECT account_id FROM accounts WHERE username=? COLLATE BINARY",&[SqlValue::Text(username.into())])?.is_empty() { return Err(ManagementError::Conflict); }
-                    let now=self.now()?;
-                    let account_id:AccountId=self.new_uuid(now)?.try_into().map_err(|_|ManagementError::Crypto)?;
-                    self.db.execute(
+            if let Some(receipt) = self.management_receipt(actor, id, command, self.now()?)? {
+                return Ok(ManagementResponse::Committed { receipt });
+            }
+        }
+        if matches!(
+            command,
+            ManagementCommand::CreateAccount { .. }
+                | ManagementCommand::ReissueEnrollment { .. }
+                | ManagementCommand::ResetPassword { .. }
+        ) {
+            validate_origin(canonical_origin)?;
+        }
+        if !command.is_mutating() && command_id.is_some() {
+            return Err(ManagementError::InvalidInput);
+        }
+        match command {
+            ManagementCommand::ListAccounts { after, limit } => {
+                self.management_accounts(*after, *limit)
+            }
+            ManagementCommand::CreateAccount { username, role } => {
+                let command_id = command_id.ok_or(ManagementError::InvalidInput)?;
+                let username =
+                    validate_username(username).map_err(|_| ManagementError::InvalidInput)?;
+                if !self
+                    .db
+                    .query(
+                        "SELECT account_id FROM accounts WHERE username=? COLLATE BINARY",
+                        &[SqlValue::Text(username.into())],
+                    )?
+                    .is_empty()
+                {
+                    return Err(ManagementError::Conflict);
+                }
+                let now = self.now()?;
+                let account_id: AccountId = self
+                    .new_uuid(now)?
+                    .try_into()
+                    .map_err(|_| ManagementError::Crypto)?;
+                self.db.execute(
                         "INSERT INTO accounts(account_id,username,role,status,verifier,credential_epoch,created_at,password_set_at,disabled_at) VALUES(?,?,?,?,NULL,0,?,NULL,NULL)",
                         &[
                             SqlValue::Text(account_id.to_string()),
@@ -211,20 +263,72 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                             SqlValue::Integer(now),
                         ],
                     )?;
-                    let (link_id,token)=self.management_link(account_id,AccessLinkPurpose::Enrollment,0,now)?;
-                    let receipt=ManagementReceipt { version:1,command_id,operation:ReceiptOperation::CreateAccount,account_id,link_id:Some(link_id),purpose:Some(AccessLinkPurpose::Enrollment),link_expires_at:Some(deadline(now,ACCESS_LINK_LIFETIME_MS)?),completed_at:now,expires_at:deadline(now,LINK_RECEIPT_RETENTION_MS)? };
-                    self.store_management_receipt(actor,&command,&receipt)?;
-                    self.management_audit(actor,receipt.operation,AuditTarget::Account(account_id),AuditOutcome::Succeeded,now)?;
-                    Ok(ManagementResponse::Issued{receipt,url:format!("{canonical_origin}/enroll#{}",token.as_str())})
-                },
-                ManagementCommand::ReissueEnrollment{account_id}=>self.replace_link(*account_id,actor,&command,command_id.ok_or(ManagementError::InvalidInput)?,canonical_origin),
-                ManagementCommand::ResetPassword{account_id}=>self.replace_link(*account_id,actor,&command,command_id.ok_or(ManagementError::InvalidInput)?,canonical_origin),
-                ManagementCommand::EnableAccount{account_id}=>self.enable_account(*account_id,actor,&command,command_id.ok_or(ManagementError::InvalidInput)?),
-                ManagementCommand::GetAccount{account_id}=>Ok(ManagementResponse::Account{account:reads::safe(self.account(*account_id)?.ok_or(ManagementError::NotFound)?)}),
-                ManagementCommand::ListAudit{after,limit}=>{if actor!=AuditActor::DeveloperCli {return Err(ManagementError::Forbidden);} self.management_audit_page(*after,*limit)},
-                ManagementCommand::DisableAccount{..}|ManagementCommand::DeleteAccount{..}=>self.prepare_removal_checked(&command,actor,command_id.ok_or(ManagementError::InvalidInput)?),
+                let (link_id, token) =
+                    self.management_link(account_id, AccessLinkPurpose::Enrollment, 0, now)?;
+                let receipt = ManagementReceipt {
+                    version: 1,
+                    command_id,
+                    operation: ReceiptOperation::CreateAccount,
+                    account_id,
+                    link_id: Some(link_id),
+                    purpose: Some(AccessLinkPurpose::Enrollment),
+                    link_expires_at: Some(deadline(now, ACCESS_LINK_LIFETIME_MS)?),
+                    completed_at: now,
+                    expires_at: deadline(now, LINK_RECEIPT_RETENTION_MS)?,
+                };
+                self.store_management_receipt(actor, command, &receipt)?;
+                self.management_audit(
+                    actor,
+                    receipt.operation,
+                    AuditTarget::Account(account_id),
+                    AuditOutcome::Succeeded,
+                    now,
+                )?;
+                Ok(ManagementResponse::Issued {
+                    receipt,
+                    url: format!("{canonical_origin}/enroll#{}", token.as_str()),
+                })
             }
-        })
+            ManagementCommand::ReissueEnrollment { account_id } => self.replace_link(
+                *account_id,
+                actor,
+                command,
+                command_id.ok_or(ManagementError::InvalidInput)?,
+                canonical_origin,
+            ),
+            ManagementCommand::ResetPassword { account_id } => self.replace_link(
+                *account_id,
+                actor,
+                command,
+                command_id.ok_or(ManagementError::InvalidInput)?,
+                canonical_origin,
+            ),
+            ManagementCommand::EnableAccount { account_id } => self.enable_account(
+                *account_id,
+                actor,
+                command,
+                command_id.ok_or(ManagementError::InvalidInput)?,
+            ),
+            ManagementCommand::GetAccount { account_id } => Ok(ManagementResponse::Account {
+                account: reads::safe(
+                    self.account(*account_id)?
+                        .ok_or(ManagementError::NotFound)?,
+                ),
+            }),
+            ManagementCommand::ListAudit { after, limit } => {
+                if actor != AuditActor::DeveloperCli {
+                    return Err(ManagementError::Forbidden);
+                }
+                self.management_audit_page(*after, *limit)
+            }
+            ManagementCommand::DisableAccount { .. } | ManagementCommand::DeleteAccount { .. } => {
+                self.prepare_removal_checked(
+                    command,
+                    actor,
+                    command_id.ok_or(ManagementError::InvalidInput)?,
+                )
+            }
+        }
     }
     fn management_link(
         &self,

@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, reason = "Tests fail fast.")]
 
 use super::*;
-use crate::storage::{Row, SqlValue, StorageError};
-use crate::{limits::*, security::DIGEST_BYTES, storage::migrate};
+use crate::db::{Row, SqlValue, StorageError};
+use crate::{db::migrate, limits::*, security::DIGEST_BYTES};
 use brews_config::env::backend::{
     ARGON2_DEFAULT_ITERATIONS, ARGON2_DEFAULT_MEMORY_KIB, ARGON2_PARALLELISM,
 };

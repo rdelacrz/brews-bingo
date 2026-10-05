@@ -6,7 +6,7 @@
 mod support;
 use brews_backend::{
     auth::{AuthPolicy, AuthService, ManagementPrincipal, Runtime},
-    storage::{Database, SqlValue, migrate},
+    db::{Database, SqlValue, migrate},
 };
 use brews_contracts::management::{ManagementCommand, ManagementResponse};
 use brews_domain::{

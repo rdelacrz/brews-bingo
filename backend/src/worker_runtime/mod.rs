@@ -5,6 +5,7 @@ mod edge;
 mod management;
 mod removals;
 mod runtime;
+mod users;
 mod wire;
 
 use crate::config::get_backend_config;
@@ -12,7 +13,7 @@ use crate::limits::{OWNER_CALLER_IDENTITY_MAX_BYTES, OWNER_REQUEST_MAX_BYTES};
 use crate::observability::{self, Boundary, Failure};
 use crate::{
     auth::{AuthError, AuthPolicy, AuthService, RequestContext, Runtime},
-    storage,
+    db,
 };
 use axum::{Router, body::Body, routing::any};
 use database::OwnerDatabase;
@@ -50,6 +51,8 @@ pub async fn fetch(
         .route("/api/auth/password-reset/complete", any(edge::handle))
         .route("/api/auth/logout", any(edge::handle))
         .route("/_dev/commands", any(management::handle))
+        .route("/api/users", any(users::handle))
+        .route("/api/users/{*path}", any(users::handle))
         .fallback(edge::handle)
         .with_state(SendWrapper::new(env));
     router
@@ -67,7 +70,7 @@ pub struct AccountsObject {
 impl AccountsObject {
     async fn cleanup_alarm(&self) -> Result<Response> {
         let db = OwnerDatabase::new(self.state.storage());
-        storage::migrate(&db)
+        db::migrate(&db)
             .map_err(|_| worker::Error::RustError("storage initialization failed".to_owned()))?;
         let rt = WorkerRuntime;
         let service = self
@@ -133,7 +136,7 @@ impl AccountsObject {
             return Err(AuthError::InvalidInput);
         }
         let db = OwnerDatabase::new(self.state.storage());
-        storage::migrate(&db)?;
+        db::migrate(&db)?;
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
         let is_completion = matches!(&message.command, crate::auth::AuthCommand::Complete { .. });
@@ -198,6 +201,9 @@ impl DurableObject for AccountsObject {
     }
     async fn fetch(&self, request: Request) -> Result<Response> {
         crate::observability::init();
+        if request.path() == "/users" {
+            return self.execute_users_request(request).await;
+        }
         if request.path() == "/management" {
             return self.execute_management_request(request).await;
         }

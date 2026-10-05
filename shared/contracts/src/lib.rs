@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 #[cfg(feature = "management")]
 pub mod management;
+#[cfg(feature = "users")]
+pub mod users;
 use brews_domain::{
     accounts::{AccountRole, AccountStatus, SessionScope},
     ids::AccountId,

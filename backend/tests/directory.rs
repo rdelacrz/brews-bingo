@@ -6,6 +6,8 @@
 // Compile the owned module directly so this target needs no sibling lib.rs edit.
 #[path = "../src/directory/mod.rs"]
 mod directory;
+#[path = "../src/db/directory.rs"]
+mod directory_db;
 #[path = "../src/limits.rs"]
 #[allow(
     dead_code,
@@ -13,10 +15,11 @@ mod directory;
 )]
 mod limits;
 mod support;
-use brews_backend::{auth, storage};
+use brews_backend::{auth, db};
 use brews_domain::ids::{AccountId, OperationId};
-use directory::{DirectoryService, RemovalGrant, migrate_directory};
-use storage::{Database, SqlValue};
+use db::{Database, SqlValue};
+use directory::RemovalGrant;
+use directory_db::{DirectoryService, migrate_directory};
 use support::{Sqlite, TestRuntime};
 
 #[test]
@@ -911,11 +914,7 @@ struct InspectHostedRead {
     held: std::cell::Cell<bool>,
 }
 impl Database for InspectHostedRead {
-    fn query(
-        &self,
-        sql: &str,
-        values: &[SqlValue],
-    ) -> Result<Vec<storage::Row>, storage::StorageError> {
+    fn query(&self, sql: &str, values: &[SqlValue]) -> Result<Vec<db::Row>, db::StorageError> {
         if sql.starts_with("SELECT game_id FROM directory_hosted_nonterminal_games WHERE") {
             assert_eq!(
                 self.db
@@ -923,17 +922,17 @@ impl Database for InspectHostedRead {
                 vec![vec![SqlValue::Text(account().to_string())]]
             );
             self.held.set(true);
-            return Err(storage::StorageError);
+            return Err(db::StorageError);
         }
         self.db.query(sql, values)
     }
-    fn execute(&self, sql: &str, values: &[SqlValue]) -> Result<(), storage::StorageError> {
+    fn execute(&self, sql: &str, values: &[SqlValue]) -> Result<(), db::StorageError> {
         self.db.execute(sql, values)
     }
     fn transaction<T>(
         &self,
-        f: impl FnOnce() -> Result<T, storage::StorageError>,
-    ) -> Result<T, storage::StorageError> {
+        f: impl FnOnce() -> Result<T, db::StorageError>,
+    ) -> Result<T, db::StorageError> {
         self.db.transaction(f)
     }
 }

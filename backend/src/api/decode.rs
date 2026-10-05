@@ -167,7 +167,7 @@ pub fn decode(
     })
 }
 
-fn session_cookie(headers: &HeaderMap) -> Result<Option<String>, ApiError> {
+pub(super) fn session_cookie(headers: &HeaderMap) -> Result<Option<String>, ApiError> {
     if headers.get_all("cookie").iter().count() > 1 {
         return Err(ApiError::InvalidInput);
     }
