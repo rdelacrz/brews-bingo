@@ -7,7 +7,7 @@
 - **Primary source:** [High-level design](hld.md), including decisions HLD-001–HLD-078, and the approved DO-001–DO-107 ledger for subsequent detailed policies.
 - **Supporting sources:** [Business requirements](requirements.md) and [hosting research](research.md).
 - **Companion designs:** [API design](api-design.md) is the single home for API organization, operations, requests/responses and WSS contracts. [Durable Object design](durable-object-design.md) is the single home for storage ownership, schema proposals, records/fields/types and schema worksheets. This LLD links to both rather than duplicating those specifications.
-- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 3.5 / LLD-027 selects Dioxus Router, Axum inside the single Rust Worker, selective API-first asset routing and native Durable Object state/socket handlers. Section 3.6 / LLD-028 selects Dioxus-integrated Tailwind styling; Section 3.7 / LLD-029 records the proposed Cargo workspace, folder/module tree and dependency boundaries. Section 11.1 / LLD-030 selects the build/test tooling baseline, including native Linux mold. Section 3.8 / LLD-031 selects envy-based typed configuration for the Cloudflare backend and Dioxus frontend, with separate private/public inputs. Section 4 retains the requested screen/component/navigation proposals (LLD-026). Native Android/iOS implementation remains deferred.
+- **Scope:** Structure the detailed design for the initial desktop/mobile web release on Cloudflare. Section 3.5 / LLD-027 selects Dioxus Router, Axum inside the single Rust Worker, selective API-first asset routing and native Durable Object state/socket handlers. Section 3.6 / LLD-028 selects Dioxus-integrated Tailwind styling; Section 3.7 / LLD-029 records the proposed Cargo workspace, folder/module tree and dependency boundaries. Section 11.1 / LLD-030 selects the build/test tooling baseline, including native Linux mold. Section 3.8 / LLD-031 selects envy-based typed configuration for the Cloudflare backend and Dioxus frontend; LLD-032 centralizes its Rust definitions/parsers in `shared/config/src/env/`, with separate backend/frontend modules. Section 4 retains the requested screen/component/navigation proposals (LLD-026). Native Android/iOS implementation remains deferred.
 - **Approval boundary:** Capturing this LLD and its UI proposals does not approve the overall HLD, finalize new UI/contract choices, authorize implementation, or authorize infrastructure/account creation.
 - **Reviewer / approval / revision:** TBD.
 
@@ -100,8 +100,9 @@ Sources: HLD-020–HLD-022, HLD-032, HLD-036–HLD-045, HLD-061, HLD-064–HLD-0
 | --- | --- | --- |
 | Shared Rust domain | Pure rules, board feasibility/generation/matching and pattern-specific trait boundaries. | Sections 3.3–3.4 define UUID-v7 typed IDs/local `thiserror` errors; Section 3.7 proposes a provider-independent `shared/domain` crate and game/board/pattern submodules. Approved DO algorithm contracts remain authoritative; exact package/interfaces and implementation remain unverified. |
 | Shared contracts | Shared safe app/backend contract types without provider/UI dependencies. | Section 3.7 proposes `shared/contracts` with feature-grouped safe DTOs, separate from private storage/internal Object messages. Serialization, versioning and exact interfaces remain TBD in the API companion. |
-| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | LLD-027/028 select Dioxus Router/Tailwind; LLD-031 selects envy parsing of allowlisted public configuration through a platform adapter, not browser OS-env access. Section 3.7 proposes shared feature/component/client modules; Section 4 supplies view proposals. Exact interfaces, screen paths and visual tokens remain review/implementation work. |
-| Rust API Worker | One initial deployable API service; LLD-027 selects Axum HTTP dispatch through the Worker fetch entrypoint. | Sections 3.5/3.7 define dispatch and proposed backend modules; LLD-031 selects envy configuration via explicit worker::Env text/secret adapters, keeping resource handles typed and separate. Endpoint/DTO/error contracts remain in [api-design.md](api-design.md); SDK/middleware/configuration wiring remains unverified. |
+| Shared configuration | Central Rust inventory and typed envy parsing, independent of provider/UI APIs. | LLD-032 selects shared/config/src/env/ with backend/frontend modules and explicit feature selection. Platform adapters acquire values; no separate per-crate env schemas. Exact helpers/fields and feature/target validation remain unverified. |
+| Shared Dioxus UI / `platform/web` | Web views, nonauthoritative presentation, browser adapters and protected-cookie interactions. | LLD-027/028 select Dioxus Router/Tailwind; LLD-031/032 select the central shared/config frontend envy parser, with platform-supplied public input rather than browser OS-env access. Section 3.7 proposes shared feature/component/client modules; Section 4 supplies view proposals. Exact interfaces, screen paths and visual tokens remain review/implementation work. |
+| Rust API Worker | One initial deployable API service; LLD-027 selects Axum HTTP dispatch through the Worker fetch entrypoint. | Sections 3.5/3.7 define dispatch and proposed backend modules; LLD-031/032 select the central shared/config backend envy parser fed by worker::Env text/secret adapters, with resource handles typed and separate. Endpoint/DTO/error contracts remain in [api-design.md](api-design.md); SDK/middleware/configuration wiring remains unverified. |
 | Game Directory Durable Object | Issued-code lookup and application-wide lifecycle coordination. | Approved Directory ownership and private GAME_DIRECTORY binding; [record/protocol decisions](durable-object-design.md#directory-records) remain authoritative. Concrete SDK dispatch, SQL and concurrency integration remain implementation work. |
 | Per-game Durable Object | Authoritative game/board/membership state, SQLite writes and role-filtered hibernating sockets. | DO-096/100 approve GameObject per stable game_id, normalized local schema and private binding; DO-091–095 approve logical attachment/reconstruction/fencing/alarm/backpressure policies. Exact DDL, SDK handlers and deployment config remain implementation work. |
 | Account/session authority | Strongly consistent credential lifecycle and server-owned account permissions. | DO-001/100 approve AccountsObject per environment and private ACCOUNTS binding. Axum session resolution uses this authority; no positive cross-request authorization cache. Exact [account protocol](durable-object-design.md#account-records) and SDK integration remain implementation work. |
@@ -334,6 +335,15 @@ brews-bingo/
 │   │       ├── history/             # Historical game projections
 │   │       └── stream/              # WebSocket snapshots/events
 │   │
+│   ├── config/                      # [crate] Central Rust env definitions/parsers
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       └── env/                 # All app-owned env declarations live here
+│   │           ├── mod.rs           # Entry point / scoped module exports
+│   │           ├── backend.rs       # Private/backend schema and envy parser
+│   │           ├── frontend.rs      # Public schema, allowlist and envy parser
+│   │           └── error.rs         # Redacted configuration errors
+│   │
 │   └── ui/                          # [crate] Shared Dioxus application
 │       ├── assets/                  # Shared branding, icons, images
 │       └── src/
@@ -349,7 +359,6 @@ brews-bingo/
 │           │   ├── play/            # Host/player/spectator presentations
 │           │   └── history/
 │           ├── client/              # Typed API calls, stream reconciliation
-│           ├── config/              # Public envy types/parser/validation
 │           └── platform.rs          # Narrow platform-service interfaces
 │
 ├── platform/
@@ -358,7 +367,7 @@ brews-bingo/
 │   │   ├── tailwind.css             # Build input; scans shared UI too
 │   │   └── src/
 │   │       ├── main.rs              # Compose adapters and launch shared UI
-│   │       ├── config/              # Allowlisted public build-value adapter
+│   │       ├── config/              # Wire shared/config public capture/parser
 │   │       └── adapters/            # Browser HTTP/WS, speech, URL handling
 │   ├── android/                     # Future: launcher, adapters, packaging
 │   └── ios/                         # Future: launcher, adapters, packaging
@@ -376,7 +385,7 @@ brews-bingo/
 │   │   │   ├── participants/
 │   │   │   ├── history/
 │   │   │   └── stream/              # Native DO upgrade forwarding
-│   │   ├── config/                 # Private envy config / Env adapter
+│   │   ├── config/                 # Env acquisition adapter for shared/config
 │   │   ├── security/               # Passwords, session proofs, redaction
 │   │   ├── internal/               # Server-only typed Object calls
 │   │   └── objects/                # Authoritative state owners
@@ -429,6 +438,9 @@ platform/ios ────┘
 
 backend ────────────────────────▶ shared/contracts + shared/domain
 cli ───────────────────────────▶ shared/contracts
+
+backend ───────────────────────▶ shared/config (backend feature)
+shared/ui + platform/web ───────▶ shared/config (frontend feature)
 ```
 
 Arrows mean **Rust dependencies**, not network calls. Platform adapters may depend directly on safe contracts where required, and shared UI may use pure domain types/rules when needed; no reverse dependency is permitted. Frontend and CLI reach the backend over their separately authorized transport interfaces, not by importing the backend crate.
@@ -451,7 +463,7 @@ Arrows mean **Rust dependencies**, not network calls. Platform adapters may depe
 <a id="environment-configuration"></a>
 ### 3.8 Typed environment configuration — `envy`
 
-**Confirmed user direction (LLD-031):** Use the Rust **`envy`** crate for typed environment-variable configuration on **both the Cloudflare backend and Dioxus frontend**. Keep separate backend/private and frontend/public configuration types. `envy` deserializes into Serde types and offers `from_iter` for explicit `(String, String)` pairs; it does not supply Cloudflare bindings or browser environment access.[32][33] Library selection is settled. Exact configuration fields/names/prefixes, crate versions and build/runtime integration remain to be finalized and tested.
+**Confirmed user direction (LLD-031):** Use the Rust **`envy`** crate for typed environment-variable configuration on **both the Cloudflare backend and Dioxus frontend**. Keep separate backend/private and frontend/public configuration types. `envy` deserializes into Serde types and offers `from_iter` for explicit `(String, String)` pairs; it does not supply Cloudflare bindings or browser environment access.[32][33] Library selection is settled. LLD-032 / Section 3.8.4 selects `shared/config/src/env/` as the single Rust inventory/parser location, with separate backend/frontend modules and platform-specific acquisition adapters. Exact fields/names/prefixes, crate versions and build/runtime integration remain to be finalized and tested.
 
 **Runtime boundary:** Do not call `envy::from_env()` as the default loader inside either planned `wasm32-unknown-unknown` runtime. It reads `std::env::vars()`; the checked Rust target dispatch has no browser/Worker process-environment implementation and its unsupported environment enumeration panics.[37][38][39] Cloudflare's JavaScript `process.env` compatibility does not make that Rust API work automatically. Use platform adapters to supply a bounded, explicit set of string pairs to `envy::from_iter`, followed by semantic validation. Native build tooling can read its process environment, but that is distinct from runtime configuration in the shipped Wasm.
 
@@ -459,21 +471,23 @@ Arrows mean **Rust dependencies**, not network calls. Platform adapters may depe
 
 | Consumer | Source / adapter | Typed consumption and boundary |
 | --- | --- | --- |
-| Cloudflare Worker and Durable Object code | Read explicitly named text variables and server-only secrets from the appropriate `worker::Env` supplied to the Worker/Object. Use SDK accessors such as `var` and `secret`, not process-global environment mutation. | Convert only declared string settings to pairs, deserialize with `envy::from_iter` into a backend-owned configuration type, then validate before the affected handler/service uses it. |
-| Dioxus web frontend | Capture an explicit allowlist of public variables from the frontend build environment, then embed only those values in the frontend artifact. `option_env!` is one possible capture adapter; its values are resolved at compile time, not at browser startup.[36] | At frontend initialization, supply the captured public pairs to `envy::from_iter`, validate the public configuration and inject the resulting typed value into the shared UI/client. Mirror validation in the build/release checks. No `std::env` reads in browser components. |
+| Cloudflare Worker and Durable Object code | Read only keys declared in shared/config/src/env/backend.rs from the supplied worker::Env via var/secret accessors; no process-global mutation. | Pass string pairs to the central backend envy parser/validator before dependent operations. Keep resource handles separate. |
+| Dioxus web frontend | Capture only public keys defined/allowlisted in shared/config/src/env/frontend.rs. option_env! is a possible capture helper; it resolves values at compile time, not browser startup.[36] | At startup pass public pairs to the central frontend envy parser/validator and inject typed config into shared UI/client. Mirror validation in build checks; no OS-env reads or independent component schemas. |
 | Future Android/iOS frontend | A platform adapter supplies the same public configuration contract from the approved packaging/platform source when that phase is designed. | Reuse the frontend envy parser/validation where compatible; do not assume mobile apps inherit a desktop shell environment. Native secret/session storage remains a separate concern, not embedded application configuration. |
 
 ```text
 Cloudflare vars / secret bindings
-  -> backend adapter -> envy::from_iter -> validated BackendConfig
+  -> backend adapter -> shared/config::env::backend (envy::from_iter)
+  -> validated BackendConfig
   -> Worker / owning Durable Object services
 
 Allowlisted public frontend build variables
   -> build-time capture -> public values in frontend artifact
-  -> envy::from_iter -> validated PublicAppConfig -> Dioxus UI/client
+  -> shared/config::env::frontend (envy::from_iter)
+  -> validated PublicAppConfig -> Dioxus UI/client
 ```
 
-`BackendConfig` and `PublicAppConfig` are proposed type names, not implemented APIs. The two configurations do not share a struct with a runtime “hide secrets” switch. Backend types/credentials must not become dependencies of browser/mobile packages.
+`BackendConfig` and `PublicAppConfig` are proposed type names, not implemented APIs. The two configurations do not share a struct with a runtime “hide secrets” switch. The central crate keeps backend definitions behind an explicit backend feature; frontend packages use only its public frontend module. Backend application dependencies and credentials must never flow into browser/mobile packages.
 
 **Backend specifics:** Cloudflare variables are bindings; `[vars]` supports text/JSON values and secrets are supplied separately through the platform. Environment-specific `vars` are non-inheritable and must be configured for each deployment environment.[34] The Rust SDK distinguishes variable/secret access, JSON `object_var` decoding, Durable Object namespaces and asset/service bindings.[35]
 
@@ -485,17 +499,17 @@ Allowlisted public frontend build variables
 
 #### 3.8.2 Module ownership, validation and secrecy
 
-Extend the proposed Section 3.7 layout with configuration responsibilities; each module keeps its own adjacent `error.rs` under LLD-021:
+LLD-032 / Section 3.8.4 centralizes Rust env declarations and envy parsing in a narrow shared/config crate, superseding the earlier distributed schema/parser placement. Platform adapters remain responsible only for acquiring their declared inputs and wiring validated config into the app:
 
 ```text
-backend/src/config/          # Cloudflare adapter, private types, validation
-shared/ui/src/config/        # Public types, envy parser, validation only
-platform/web/src/config/     # Public build-value capture / startup adapter
+shared/config/src/env/       # Canonical Rust keys, scoped types/defaults/parsers
+backend/src/config/          # Cloudflare runtime input adapter, no second schema
+platform/web/src/config/     # Public build/startup adapter, no second allowlist
 ```
 
-Keep environment acquisition out of `shared/domain` and transport DTO definitions. Shared UI receives validated public values through its application/provider boundary; neither components nor domain rules scan env variables. No new shared backend/frontend configuration crate is required merely to use the same library.
+Keep environment acquisition out of shared/domain and transport DTOs. Shared UI consumes the central public config type through its provider boundary; components never scan env variables. Backend/frontend modules remain separate and explicitly feature-selected. Configuration-only errors belong in env/error.rs; platform errors remain local to their adapter under LLD-021.
 
-- Define an explicit settings schema: expected key mapping, required versus optional values, approved defaults, empty-value behavior, bounded input sizes and typed/range/cross-field validation. Envy parsing is not domain validation. Missing or invalid required configuration fails closed before dependent operations; do not substitute production credentials, weaken Origin/security checks or silently borrow another environment's settings.
+- Define each setting centrally in the appropriate `shared/config/src/env/` Rust module: external key mapping, type, required/optional status, approved defaults, empty-value behavior, bounded input sizes and typed/range/cross-field validation. Envy parsing is not domain validation. Missing or invalid required configuration fails closed before dependent operations; do not substitute production credentials, weaken Origin/security checks or silently borrow another environment's settings.
 - Collect only declared settings, reject duplicate/ambiguous mapped keys and validate application-owned names so misspellings are not silently interpreted as defaults. Prefix filtering may organize input, but **a public-looking prefix is not a secret classifier**: frontend export uses an explicit field allowlist. Envy key conversion belongs to configuration parsing and does not change the approved case-sensitive username/alias rules.
 - Backend secrets stay in Cloudflare secret bindings and controlled developer environments, never committed `[vars]`, public frontend variables, generated client artifacts, test snapshots or build logs. User passwords, session bearers and recovery answers are runtime credentials, not deployment configuration. Future mobile packaging is public too; it must not embed backend credentials.
 - Envy error messages can include the failing input value.[37] Map parsing/validation failures to component-owned, value-redacted configuration errors; do not log raw `envy::Error`, configuration `Debug`, input pairs or unredacted error source chains. Safe diagnostics can identify an approved key/category without exposing its value. No configuration dump endpoint or debug logging of secrets is introduced.
@@ -511,8 +525,59 @@ Keep environment acquisition out of `shared/domain` and transport DTO definition
 | CONFIG-AC-03 | Verify the public build allowlist, frontend startup validation and artifact/config matching; inspect bundles/assets/source maps/logs for backend-secret leakage using safe test fixtures. |
 | CONFIG-AC-04 | Check required/optional/default/empty values, key mapping, duplicates, numeric/range/cross-field bounds and redacted parse errors; reject invalid configuration without unsafe defaults. |
 | CONFIG-AC-05 | Change a public build variable and backend runtime binding separately; prove correct rebuild/cache invalidation and backend reload behavior without claiming Dioxus hot-patching updates compile-time values. |
+| CONFIG-AC-06 | Verify all app-owned env names, Serde mappings, defaults, validation and public capture/export allowlists are defined in shared/config/src/env/ and used by adapters without scattered duplicate schemas or unregistered reads. |
+| CONFIG-AC-07 | Inspect per-target config-crate feature resolution and build dependencies; ensure frontend consumers expose only public settings, no backend application dependency or credential value reaches client artifacts, and shared/domain remains independent of environment configuration. |
 
 No environment variables, secret values, configuration files, dependencies, code or tests are created by this design update. The field inventory, exact adapters/pins and measured target behavior remain unverified.
+
+<a id="central-environment-module"></a>
+#### 3.8.4 Central Rust environment module
+
+**Confirmed user preference and selected Rust location (LLD-032):** Keep all application-owned environment-variable definitions in **`shared/config/src/env/`**, inside a small provider/UI-independent `shared/config` workspace crate. The user clarified that the desired single location is Rust code such as `env.rs` or an `env/` module—not a root configuration-data directory. Use an `env/` module with separate backend/frontend files so the complete inventory is easy to find without mixing private and public configuration.
+
+```text
+shared/config/                     # [crate] Central typed configuration contract
+├── Cargo.toml                     # envy/Serde; explicit backend/frontend features
+└── src/
+    ├── lib.rs                     # Narrow exports; no Cloudflare or Dioxus dependency
+    └── env/
+        ├── mod.rs                 # Entry point: documents and exposes the scoped modules
+        ├── backend.rs             # Backend keys, types, defaults, validation, envy parser
+        ├── frontend.rs            # Public keys, types, defaults, allowlist, envy parser
+        └── error.rs               # Configuration-only, value-redacted thiserror errors
+```
+
+**This Rust module is the canonical env inventory.** Each variable's external name, Rust field/type, purpose, owning audience, required/optional status, approved default, validation rules, secret classification and build-time/runtime source belong beside its definition in `backend.rs` or `frontend.rs`. `mod.rs` is the human-readable entry point. Do not introduce an independently maintained TOML registry, Markdown key catalog or per-crate duplicate list. If more subdivisions become necessary, add concern-based Rust modules under this same `env/` directory. Any optional generated documentation/examples must derive from these definitions and contain no real secrets.
+
+- Define key-name constants or equivalent declarative metadata alongside the typed structs and envy parsing/validation functions. Keep literal environment names, prefix mapping, defaults and frontend export allowlists here—not scattered among handlers, components, platform launchers or build scripts. Exact Rust helper/macro signatures remain implementation work; verify metadata-to-Serde field mapping rather than assuming one list cannot drift.
+- Keep backend and frontend types distinct. The frontend module contains **only public settings** and the exact export allowlist; it must not derive public configuration by filtering a populated backend struct. A public-looking prefix alone is not authorization to export a setting. Secret definitions identify the expected source but never embed a secret value, credential default or usable example.
+- Expose `backend` and `frontend` modules through explicitly selected crate features, with neither enabled by default. Backend packages select the backend feature; frontend packages select the frontend feature. Check the resolved dependency/features of each shipped target, including Cargo feature unification and host build dependencies, rather than assuming feature flags themselves are a security boundary. No secret values enter client compilation/artifacts even if a mistaken build includes extra schema code.
+- Keep this crate free of Cloudflare/Dioxus/browser/mobile APIs, persistence and application credentials. It owns typed configuration and envy deserialization, not platform environment access. `shared/domain` and API DTOs do not acquire environment dependencies; callers pass any validated values genuinely needed by pure rules.
+
+**Platform adapters remain, but are no longer independent definitions/parsers:**
+
+| Location | Responsibility |
+| --- | --- |
+| `shared/config/src/env/backend.rs` | Own backend variable names/schema/defaults, the backend envy parser and semantic validation. |
+| `shared/config/src/env/frontend.rs` | Own public variable names/schema/defaults, public capture/export contract, frontend envy parser and semantic validation. |
+| `backend/src/config/` | Acquire declared runtime text/secret values from the supplied `worker::Env` using the central definitions; pass pairs to the central backend parser. Resolve typed resource bindings separately. |
+| `platform/web/src/config/` | Wire the centrally defined public build-value capture and startup parsing into the Dioxus launcher. Build capture helpers/macros own literal names centrally too; no second allowlist in a build script. |
+| `shared/ui` | Receive/use the validated public config type from shared/config; components do not read env variables or own another configuration schema. |
+
+Use `envy::from_iter` in the central scoped parsers. The backend adapter passes only its declared Worker binding values; the frontend startup adapter passes only its centrally allowlisted, captured public build values. Envy remains the deserializer rather than an automatic file loader.[32][33] Runtime Worker values still come from Cloudflare bindings, and browser Wasm still cannot enumerate a native process environment. Actual value delivery/local secret-file conventions remain a separate operational concern under LLD-031; no new root `config/` data directory or file-overlay precedence is selected here.
+
+```text
+backend/src/config/ -> shared/config::env::backend -> validated BackendConfig
+                       (key definitions + envy)
+
+public build capture / platform/web/src/config/
+  -> shared/config::env::frontend -> validated PublicAppConfig -> shared/ui
+     (key definitions + allowlist + envy)
+```
+
+These are logical path/type labels, not finalized Cargo package identifiers or implemented signatures. Sharing this narrow configuration crate does **not** create a frontend dependency on the backend application crate. Platform-specific acquisition errors remain in their adapter's local `error.rs`; `env/error.rs` owns only common, value-redacted configuration errors. Preserve LLD-031's refusal to log raw envy errors/input pairs and its ban on embedding backend secrets in frontend or mobile packages.
+
+**Implementation gates:** Verify that every app-owned env read, Serde mapping, default and export references the central Rust definitions; reject duplicate/ambiguous keys and unregistered reads. Test missing/invalid values, correct platform acquisition, backend/frontend feature isolation, public capture and secret redaction. Deliberately used application CLI/build settings must also be declared here when introduced; this does not require cataloging every third-party Cargo/tool environment variable. Exact keys, helper APIs, package name/version/features and target behavior remain unverified. No crate, Rust file, env file or build script is created by this LLD update.
 
 ## 4. Views and frontend contracts
 
@@ -1033,7 +1098,7 @@ No application tests have been implemented or run by this template. Section 3.7 
 | Domain and schema | Pool/string rules, every supported board size, free cells, distinct-board feasibility, Single Line, unique calls and data constraints. | TBD |
 | Identifier convention | UUID v7 generation/parse validation across selected targets, distinct newtypes, stable retry IDs and no ID-as-credential assumptions. | **TBD** — no target build/runtime evidence yet. |
 | Component errors | `thiserror` derives, local `error.rs` ownership, typed conversion/source chains, secret redaction and deliberate transport mappings. | **TBD** — concrete error/contract tests not implemented. |
-| Environment configuration | Envy from explicit backend/public-frontend pairs, typed binding separation, public build export, semantic validation, environment isolation and value-redacted errors. | CONFIG-AC-01–CONFIG-AC-05 in Section 3.8 are future checks, not executed tests; exact fields and pins remain TBD. |
+| Environment configuration | Central Rust env declarations/parsers, explicit platform acquisition, typed bindings, public build capture, semantic validation, per-target feature isolation and redacted errors. | CONFIG-AC-01–CONFIG-AC-07 in Section 3.8 are future checks, not executed tests; exact fields and pins remain TBD. |
 | Views and permissions | Home entry, host/admin controls, Users frontend/backend denial, private-board projection, missing/expired sessions and restricted enrollment. | UI-AC-01–UI-AC-17 in Section 4.5 specify screen/role/lifecycle scenarios; no UI implementation or application tests have been run. |
 | Worker routing and Object isolation | Dioxus/SPA paths are separate from Axum API dispatch and native DO upgrade/handler paths; unknown codes do not create games, and bindings/IDs never replace authorization. | ROUTE-AC-01–ROUTE-AC-08 in Section 3.5 specify future compatibility, fallback, auth/cookie, upgrade and retry checks; none have been executed. |
 | Account lifecycle | Concurrent redemption, reissue/reset revocation, first-admin creation, non-owner overrides, removal blocked by hosted nonterminal game. | TBD |
@@ -1058,7 +1123,7 @@ Latency, concurrency/load targets, measurable accessibility criteria and failure
 | Password-hashing library/runtime | Salted Argon2 via RustCrypto `argon2` selected for account passwords; DO-051 separately approves Argon2id v19/PHC for recovery answers. **TBD** — pinned compatible version/features, secure WASM randomness, hashing placement, production costs/caps, CPU/memory/concurrency benchmarks and failure handling. |
 | Single API Worker entrypoint/module routing, Object classes, bindings and deployment configuration | LLD-027 selects Axum via the workers-rs HTTP fetch service and native DO socket/alarm handlers; preserve LLD-016 and DO-100 private bindings. Concrete entrypoint build output, SDK/feature pins, middleware and deployment configuration remain unverified. |
 | Static asset build, routing, caching and private-route separation | LLD-027 selects Dioxus Router, same-origin Static Assets SPA fallback and Worker-first `/api` plus `/api/*`; reserve API errors/upgrades from HTML fallback. ASSETS is an asset binding, not a state store. Actual build directory, compatibility date and response/cache header wiring remain validation work. |
-| Local / test / production environments and isolated resources | LLD-031 / Section 3.8 selects envy on backend/frontend, explicit Cloudflare binding adapters and allowlisted public frontend build inputs. Private/public configs remain separate; environment field inventory, prefixes, local precedence and target validation remain TBD. |
+| Local / test / production environments and isolated resources | LLD-031/032 select envy with central Rust definitions in shared/config/src/env/{backend,frontend}.rs and explicit platform acquisition adapters. Private/public scopes stay separate; no new root config-data directory is selected. Actual fields, value delivery/local precedence and target validation remain TBD. |
 | SQLite schema/Object migrations and version compatibility | DO-099 approves owner-local versioned forward-only transactional migration with fail-closed startup and compatible-backout/forward-fix policy; DO-075 restore expiry enforcement. Exact DDL/runtime hooks remain TBD. |
 | Secrets, developer CLI setup and initial-admin bootstrap procedure | HLD-075/DO-101 preserve restricted CLI bootstrap/management. LLD-031 keeps backend secrets in private bindings and excludes them from frontend artifacts and raw config/error logging. Exact secret names/scopes/operations and CLI setup remain TBD. |
 | Durable deadlines/alarms or equivalent expiry/cleanup scheduling | TBD |
@@ -1172,7 +1237,8 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 | LLD-028 | Dioxus-integrated Tailwind styling | **Confirmed user direction:** Use Tailwind CSS in Dioxus RSX/shared UI components, compile through the Dioxus-compatible build workflow and serve generated CSS as a static asset. Section 3.6 records source coverage, conditional styles and future production/accessibility checks. Exact toolchain pins, visual tokens and component-library choices remain open; no implementation or tests performed. |
 | LLD-029 | Proposed Cargo workspace, folder layout and module encapsulation | **Requested design proposal — not scaffolded:** Section 3.7 records one Cargo workspace with shared domain/contracts/Dioxus UI, web and deferred Android/iOS platform boundaries, one Cloudflare backend crate and a proposed Rust developer CLI. Includes the visual tree, owner-local GameObject submodules, private-by-default/component-local errors, safe DTO/internal storage separation, dependency direction, platform adapters, build isolation and test placement. Existing approved domain/security rules remain unchanged; exact package names/manifests/interfaces and native/runtime validation remain pending. |
 | LLD-030 | Build/test tooling and native Linux linker selection | **Selected direction:** Stable Cargo incremental local builds/fast development profiles, Dioxus dx serve --hotpatch with Rust hot-patching/Subsecond and RSX/assets/Tailwind reload, cargo-nextest for host-testable Rust packages plus separate doctests, mold for supported native Linux builds, Cargo timings and periodic cargo-machete reviews. Swatinem/rust-cache is selected if GitHub Actions is chosen; sccache remains optional. Dioxus Rust hot-patching is explicitly selected by subsequent user direction, with documented limitations and full-rebuild fallback retained. Section 11.1 preserves Wasm/mobile linker boundaries and documents BUILD-AC-01–06. Mold adoption is settled, not benchmark-gated; compatible pins/configuration, runtime correctness and measured gains remain unverified. No installs, implementation or tests authorized. |
-| LLD-031 | Typed environment configuration on backend and frontend | **Confirmed user direction:** Use envy with separate backend/private and Dioxus/public configuration types. Section 3.8 uses explicit Cloudflare Env adapters and allowlisted public build-value adapters feeding envy::from_iter; no browser/Worker process-env assumption or frontend secret export. Resource bindings stay typed; local config/error modules own validation and redaction. CONFIG-AC-01–05 are unexecuted checks. Exact fields, prefixes, versions and runtime/build wiring remain TBD; no implementation or provisioning authorized. |
+| LLD-031 | Typed environment configuration on backend and frontend | **Confirmed user direction:** Use envy with separate backend/private and Dioxus/public configuration types. Section 3.8 uses explicit Cloudflare Env adapters and allowlisted public build-value adapters feeding envy::from_iter; no browser/Worker process-env assumption or frontend secret export. Resource bindings stay typed; LLD-032 centralizes Rust definitions/parsers in shared/config/src/env/ while platform adapters retain acquisition only. CONFIG-AC-01–07 are unexecuted checks. Exact fields, prefixes, versions and runtime/build wiring remain TBD; no implementation or provisioning authorized. |
+| LLD-032 | Central Rust environment-variable definitions | **Confirmed user preference; location selected as requested:** Use shared/config/src/env/ in a small shared/config crate: mod.rs as the entry point, backend.rs and frontend.rs for scoped variable names/types/defaults/validation/allowlists/ envy parsers, and error.rs for redacted configuration errors. Platform adapters consume these definitions; no scattered env catalogs, independent per-crate schemas or root configuration-data directory. Explicit backend/frontend features preserve dependency boundaries; actual values/secrets remain in their approved sources. Exact keys/helper APIs and target validation remain unverified; no Rust/config files or dependencies created. |
 
 ### 12.2 Product/source questions — do not silently decide in implementation
 
@@ -1185,7 +1251,7 @@ Detailed specifications in LLD-001–LLD-015 remain **TBD** where indicated; aff
 
 Coverage means a place to complete the design, not that every design choice or requirement is fulfilled. LLD Section 5 references [Durable Object design](durable-object-design.md), and Sections 6–7 reference API/WSS content in [api-design.md](api-design.md), so coverage ranges containing those sections include their companion documents. Ranges identify source decision rows; superseded rows are carried only as qualified in Section 1.2.
 
-**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work. LLD-027 selects the routing library/integration split in Section 3.5 without finalizing individual UI paths, API contracts or runtime compatibility. LLD-028 records the user-selected Dioxus-integrated Tailwind styling foundation; visual design tokens and build validation remain separate. LLD-029 captures the proposed workspace/module visualization in Section 3.7, preserving the HLD top-level boundaries and native-platform deferral; no source scaffold, dependency installation or application test is authorized. LLD-030 records the selected build/test baseline, native Linux mold and, by subsequent explicit user direction, Dioxus Rust hot-patching/Subsecond in Section 11.1. Hot-patching is selected for supported local development, with full rebuild/restart for unsupported edits; sccache stays optional, CI-cache adoption is conditional on GitHub Actions, and no target validation or performance gain is claimed. LLD-031 selects envy on both backend and frontend in Section 3.8, distinguishing runtime Cloudflare bindings from public frontend build input; configuration types/validation remain isolated and no secrets enter client artifacts.
+**Subsequent user direction:** LLD-016 records the single-Worker/multiple-endpoint approach and Worker/endpoint/Object distinction. LLD-017 captures the requested A1–H12 proposed operation catalog and scopes in [API design Section 6](api-design.md#operation-catalog), mapped from [API design Section 4](api-design.md#operation-index). LLD-018 captures the structure/field proposal in [Durable Object design Section 6](durable-object-design.md#schema-proposal), mapped from DATA-01–DATA-13 in [Durable Object design Section 3](durable-object-design.md#record-inventory), with explicit outstanding TBDs. LLD-019 adds potential Request/Response inputs/outputs to all [API design Section 6](api-design.md#operation-catalog) operations and links the [API design Section 4](api-design.md#operation-index) coverage rows. LLD-020/LLD-021 add confirmed ID/error conventions; LLD-022 moves detailed API material to the linked companion. LLD-023 settles password minimum length and ASCII/composition rules; LLD-024 subsequently confirms salted Argon2 via RustCrypto `argon2` while leaving profile/runtime details TBD. LLD-025 moves the existing storage/schema proposal and worksheets into the linked Durable Object design document without changing fields/types. These scoped updates do not rewrite the HLD or complete detailed API/storage design. LLD-026 captures the requested concrete UI proposals in Section 4 without changing approved DO decisions or authorizing application work. LLD-027 selects the routing library/integration split in Section 3.5 without finalizing individual UI paths, API contracts or runtime compatibility. LLD-028 records the user-selected Dioxus-integrated Tailwind styling foundation; visual design tokens and build validation remain separate. LLD-029 captures the proposed workspace/module visualization in Section 3.7, preserving the HLD top-level boundaries and native-platform deferral; no source scaffold, dependency installation or application test is authorized. LLD-030 records the selected build/test baseline, native Linux mold and, by subsequent explicit user direction, Dioxus Rust hot-patching/Subsecond in Section 11.1. Hot-patching is selected for supported local development, with full rebuild/restart for unsupported edits; sccache stays optional, CI-cache adoption is conditional on GitHub Actions, and no target validation or performance gain is claimed. LLD-031 selects envy on both backend and frontend in Section 3.8, distinguishing runtime Cloudflare bindings from public frontend build input; configuration types/validation remain isolated and no secrets enter client artifacts. LLD-032 records the clarified preference for a single Rust env-definition location at shared/config/src/env/, replacing distributed schema/parser ownership without centralizing secret values or moving platform acquisition into domain/UI code.
 
 | HLD decisions | Template coverage |
 | --- | --- |
@@ -1225,7 +1291,7 @@ Coverage means a place to complete the design, not that every design choice or r
 - [ ] Exercise ROUTE-AC-01–ROUTE-AC-08 on the pinned Worker/Wasm stack; verify API/SPA separation, typed/auth/cookie handling, native upgrades and committed-command recovery.
 - [ ] Review Section 3.7 / LLD-029 package/module proposals and define the per-target dependency/feature/test matrix; verify privacy and adapter boundaries after implementation authorization.
 - [ ] Pin/configure the LLD-030 tools and execute BUILD-AC-01–BUILD-AC-06 after implementation authorization; verify selected mold use, Wasm isolation, test coverage and actual build/cache timings.
-- [ ] Finalize LLD-031 settings/adapters and execute CONFIG-AC-01–CONFIG-AC-05 after implementation authorization; validate both Wasm targets and the private/public/redacted-error boundaries.
+- [ ] Finalize LLD-031/032 centralized Rust definitions and platform adapters; execute CONFIG-AC-01–CONFIG-AC-07 after implementation authorization, including both Wasm targets, metadata/Serde parity, resolved features and private/public/redacted-error boundaries.
 - [ ] Detailed design approval is recorded; implementation receives its own explicit authorization.
 
 ## Sources
