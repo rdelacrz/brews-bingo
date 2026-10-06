@@ -1,5 +1,7 @@
 //! Safe public account/session projections; no transport credentials.
 #![forbid(unsafe_code)]
+#[cfg(feature = "games")]
+pub mod games;
 #[cfg(feature = "management")]
 pub mod management;
 #[cfg(feature = "users")]

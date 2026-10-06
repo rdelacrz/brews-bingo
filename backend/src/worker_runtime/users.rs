@@ -243,6 +243,9 @@ impl AccountsObject {
             }
             result => result,
         };
+        self.dispatch_game_socket_closes(&service)
+            .await
+            .map_err(|_| ManagementError::Storage)?;
         self.schedule(Self::combined_deadline(&service)?)
             .await
             .map_err(|_| ManagementError::Storage)?;

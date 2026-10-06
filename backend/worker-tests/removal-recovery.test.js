@@ -174,7 +174,7 @@ test("old known Directory pending grant remains eligible for legitimate completi
   const createdAt = Date.now() - 86400001;
   const { operationId, id, body } = await seedPrepared(accountId, createdAt);
   expect((await peer("reconcile")).result).toBe("released");
-  expect(await runInDurableObject(directoryStub(), (_instance, state) => state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'__miniflare_do_name' ORDER BY name").toArray().map(row => row.name))).toEqual(["_cf_METADATA", "account_assignment_gates", "directory_hosted_nonterminal_games", "directory_metadata", "directory_removal_pending", "directory_removal_receipts", "directory_removal_rejections"]);
+  expect(await runInDurableObject(directoryStub(), (_instance, state) => state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'__miniflare_do_name' ORDER BY name").toArray().map(row => row.name))).toEqual(["_cf_METADATA", "account_assignment_gates", "directory_game_creations", "directory_game_index", "directory_global_reservation", "directory_hosted_nonterminal_games", "directory_metadata", "directory_removal_pending", "directory_removal_receipts", "directory_removal_rejections", "directory_retired_creations"]);
   await runInDurableObject(directoryStub(), (_instance, state) => {
     state.storage.sql.exec("INSERT INTO account_assignment_gates(account_id) VALUES(?)", accountId);
     state.storage.sql.exec("INSERT INTO directory_removal_pending(operation_id,account_id,created_at) VALUES(?,?,?)", operationId, accountId, createdAt);

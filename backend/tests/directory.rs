@@ -445,7 +445,7 @@ fn lost_gate_metadata_cannot_produce_a_grant_or_completion_ack() {
 
 #[test]
 fn unsupported_schema_versions_fail_closed_even_for_an_existing_service_handle() {
-    for version in [0, 2] {
+    for version in [0, 3] {
         let db = Sqlite::new();
         let rt = TestRuntime::new();
         migrate_directory(&db).unwrap();
@@ -1926,7 +1926,7 @@ fn fresh_directory_migration_ignores_only_verified_miniflare_name_metadata() {
     assert_eq!(
         db.query("SELECT schema_version FROM directory_metadata", &[])
             .unwrap(),
-        vec![vec![SqlValue::Integer(1)]]
+        vec![vec![SqlValue::Integer(2)]]
     );
 }
 
@@ -2349,7 +2349,7 @@ fn retention_methods_fail_closed_for_invalid_clocks_and_owner_metadata() {
                 let update = match corrupt {
                     "missing" => "DELETE FROM directory_metadata".to_owned(),
                     "older_schema" => "UPDATE directory_metadata SET schema_version=0".to_owned(),
-                    "higher_schema" => "UPDATE directory_metadata SET schema_version=2".to_owned(),
+                    "higher_schema" => "UPDATE directory_metadata SET schema_version=3".to_owned(),
                     "negative_last" => {
                         "UPDATE directory_metadata SET last_observed_ms=-1".to_owned()
                     }

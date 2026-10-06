@@ -48,7 +48,11 @@ pub struct AuthService<'a, D: Database, R: Runtime> {
     policy: AuthPolicy,
     rate_key: &'a [u8],
 }
+mod game_authority;
+pub use game_authority::{GameAccountAuthority, GameSocketCloseWork};
 mod management;
+#[cfg(test)]
+pub(crate) use management::test_support;
 mod rate;
 mod receipts;
 mod records;

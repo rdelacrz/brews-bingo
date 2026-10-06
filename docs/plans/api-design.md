@@ -187,6 +187,21 @@ Failure conditions, status/error-code mapping, durable effects and retry safety 
 
 **Derived state is not stored twice:** Boolean response properties that correspond to authoritative timestamps are computed projections, not extra database columns. In particular, account `disabled` is derived only from `disabled_at` population; enable/disable writes that timestamp, not a client-provided flag. Derive expiry/blocking from deadline comparisons rather than timestamp presence where appropriate. See [the cross-record storage rule](durable-object-design.md#timestamp-state). This does not add response fields or finalize their visibility.
 
+### Game creation/Start implementation contract decisions
+
+These decisions finalize only this local implementation slice; unrelated catalog contracts remain proposals/TBD. The 107 approved Durable Object rules remain unchanged. This slice is implemented and independently reviewed locally; its execution gates pass. The user has subsequently authorized commit/push; production deployment remains unauthorized.
+
+**Local verification:** 563 workspace tests pass in each native profile, 12 doctests pass, and all 127 fresh-built Worker tests pass, including 42 game cases. A separate local HTTPS/WSS check passes 30 assertions with two real connected players and three retained boards. Native/Wasm strict Clippy and `cargo fmt --all`/`--check` pass. Independent runtime review also executes all 127 Worker tests and three additional ingress probes successfully. Source hashes match the reviewed code. Production KDF/capacity/provider measurements remain release gates; this is not production approval.
+
+| Decision | Status | Approved contract / scope |
+| --- | --- | --- |
+| GAME-SLICE-01 | Approved | C6 accepts an optional configuration object. Omitted settings use approved defaults; supplied settings undergo approved validation. C7 configuration updates are deferred from this slice. |
+| GAME-SLICE-02 | Approved | C6/C8/E6 use their proposed POST paths, the existing account cookie, exact Origin and UUID-v7 `Idempotency-Key`. C8/E6 require `expected_revision` in the JSON body. Fresh success is HTTP 200 with documented safe fields plus a secret-free receipt; exact retries return only the receipt and never regenerate boards. Unfinished coordination is HTTP 202 with an operation ID and no unpublished code. Reuse existing no-store JSON/error envelopes; lifecycle/reservation/revision/insufficient-player conflicts are 409 and unavailable dependencies are 503. |
+| GAME-SLICE-03 | Approved | Implement C6/C8/E6 plus the minimum D5/G1/G2/G3 admission/session/presence/synchronization foundation so Start can succeed through public APIs. Include required Directory/Game/Accounts coordination and pre-start timeout cleanup. Exclude frontend screens, number calls, winner awards, deployment and another Git push. |
+| GAME-SLICE-04 | Approved | A code-validated `POST /api/games/{game_id}/admission-context` preflight establishes a 15-minute game-scoped HttpOnly admission cookie without taking a seat. D5 requires that cookie, exact Origin, UUID-v7 `Idempotency-Key` and JSON `game_code`, `alias`, optional `recovery_answer`. Bind commands to the server-reserved player identity. Fresh 200 returns player ID/alias, fixed one-day expiry, view revision and secret-free receipt, and sets a separate Secure/HttpOnly/SameSite=Strict game-scoped player cookie. Exact retries return only the receipt, never a cookie. Existing valid players reconnect without another seat. Enroll approved normalized Argon2 answer verifiers, but defer the recovery endpoint; lost player-cookie delivery cannot be restored from a receipt. |
+| GAME-SLICE-05 | Approved | G1 uses its proposed upgrade path, valid cookies and exact Origin. Version-1 JSON snapshot frames carry `kind`, `game_id`, `view_revision`, `connection_id`, `session_expires_at` and role-filtered `view`; committed updates use full replacement snapshots. Player views expose only the caller's board, host/admin views follow DO-067. When account and player cookies coexist, require nonsecret `view=account\|player` and validate the selected authority. G3 accepts that selector and optional `known_revision`, returning `up_to_date`, `view_revision`, `snapshot` (null only when unchanged). No URL credentials, credential renewal, gameplay-command frames or chunking. Keep approved frame/queue caps and close/resync behavior; close codes are 1008 denied authority, 1009 oversized frame and 1013 unavailable/overloaded service. |
+| GAME-SLICE-06 | Approved | Actual local Workerd exposes no `bufferedAmount` queued-byte counter. Extend each version-1 snapshot with an unpredictable server-generated `delivery_id` at the end; accept transport-only `snapshot_ack` with connection ID, delivery ID and view revision. Validate current session/connection and known outstanding delivery before freeing the durable byte budget. Outstanding-delivery metadata survives hibernation; exceeding 1 MiB or a bounded backlog closes/resyncs. ACKs never authorize gameplay, renew credentials or determine whether Start committed. The user approved continuing the full authorized creation/Start slice. |
+
 **Reusable proposed safe response shapes:** These are DTO/projection descriptions, **not direct serialization of the storage records in [Durable Object design Section 6](durable-object-design.md#schema-proposal)**. Final nested schemas, field visibility and optionality remain **TBD**.
 
 | Shape | Potential fields / visibility |
@@ -809,13 +824,13 @@ Create a distinct New game, assign its creator as designated host and establish 
 
 ##### Request
 
-**Potential inputs (proposal):** An enrolled host/admin session is supplied by cookie. Creation-time configuration overrides versus defaults-only creation remain **TBD**.
+**Approved GAME-SLICE-01/02:** An enabled Verified host/admin Normal session is supplied by the existing account cookie. Require exact application Origin and a canonical UUID-v7 `Idempotency-Key`. The optional creation-time configuration object supplies overrides; omitted settings use approved defaults. Validate the complete effective configuration before claiming the global slot. No caller-selected designated host or game ID.
 
-Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned here to the body. The authenticated creator determines the designated host; do not accept an arbitrary host assignment.
+The `command_id: CommandId` comes only from `Idempotency-Key`, not the JSON body. The authenticated creator determines the designated host.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `configuration` | `Option<GameConfiguration>` | N | Possible creation-time configuration; overrides versus defaults-only creation remain TBD. |
+| `configuration` | `GameConfiguration` overrides | N | Optional object. Omitted settings use approved defaults; supplied fields must satisfy DO-042–044. C7 updates are deferred from this slice. |
 
 ##### Response
 
@@ -823,7 +838,7 @@ Proposed command metadata: `command_id: CommandId`; transport/placement remains 
 
 Failure candidates: occupied global nonterminal-game reservation, invalid configuration or unavailable coordination.
 
-Creation response grouping and retry metadata remain **TBD**. If Directory has already claimed a `game_id` but GameObject creation failed, a later attempt must check that existing ID and recreate the same GameObject; preserve any game code already associated with it, and never allocate a second game ID or replacement code as recovery.
+**Approved GAME-SLICE-02:** Fresh committed success is HTTP 200 with the documented safe fields and a secret-free receipt. Exact authorized actor/command/fingerprint retries return only the receipt. Unfinished coordination is HTTP 202 with an operation ID and no unpublished code. If Directory has already claimed a `game_id` but GameObject initialization failed, retry under that same ID with the same configuration fingerprint; preserve any existing code association and never allocate a replacement game. Use the existing no-store JSON/error envelope; reservation conflicts are 409 and unavailable coordination is 503.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -882,18 +897,17 @@ The designated host or an authorized admin freezes validated configuration, tran
 
 **Potential inputs (proposal):** Path parameter: `game_id: GameId`. A designated host/admin session is supplied by cookie.
 
-The table shows candidate body fields; body versus other command-metadata transport remains **TBD**, so their placement is not finalized. No client-supplied code or replacement configuration.
+**Approved GAME-SLICE-02:** Require the existing account cookie, exact application Origin and canonical UUID-v7 `Idempotency-Key`. The JSON body requires `expected_revision` for the currently authorized host projection. No client-supplied code or replacement configuration; command ID belongs only in the header.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `command_id` | `CommandId` | N | Proposed; requiredness/placement TBD. Command identifier described as body/metadata, with transport unresolved. |
-| `expected_revision` | `Revision` | N | Possible expected revision. Proposed; requiredness/placement TBD. Body/metadata transport remains unresolved. |
+| `expected_revision` | `Revision` | Y | Expected current host-projection revision, checked before a fresh lobby transition. Exact receipt retries do not repeat the transition. |
 
 ##### Response
 
 **Potential outputs (proposal):** Only return successful publication when Directory/Game state is consistent; no boards assigned yet.
 
-Failure candidates: invalid state/configuration, authorization or publication conflict; in-progress/retry status representation remains **TBD**.
+Fresh matching publication success is HTTP 200 with the documented safe fields plus a secret-free receipt; exact authorized retries return only the receipt. Unfinished publication is HTTP 202 with an operation ID and no unpublished code. Lifecycle/reservation/revision conflicts are 409; unavailable dependencies are 503. Reuse the existing no-store JSON/error envelope.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1096,11 +1110,9 @@ In Awaiting Players, validate the code-based admission context, alias and capaci
 
 ##### Request
 
-Path: `game_id: GameId`. Code-based admission requires `game_code` or equivalent verified code-entry context; the alternative context is **TBD**. No prior player session is required. Admission must not silently replace another member or bypass existing-session rules.
+**Approved GAME-SLICE-04:** Before D5, a code-validated `POST /api/games/{game_id}/admission-context` establishes a 15-minute game-scoped HttpOnly retry-context cookie, reserving a stable server-chosen player identity but no seat. D5 requires that cookie plus exact application Origin, UUID-v7 `Idempotency-Key`, `game_code`, `alias` and optional `recovery_answer` in JSON. No caller-supplied player ID. A valid existing player session reconnects rather than allocating another membership.
 
-Proposed command metadata: `command_id: CommandId`; transport/placement remains **TBD**, not assigned to the body here.
-
-A recovery answer is sensitive and may be submitted in the HTTPS body only. A blank or omitted answer means no enrolled proof, not an empty credential. Exact input handling and initial-admission retry identity **TBD**.
+Canonicalize/enroll an optional answer under DO-050/051; blank/omitted means no verifier, never an empty credential. The recovery endpoint itself remains deferred from this slice.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1112,7 +1124,7 @@ A recovery answer is sensitive and may be submitted in the HTTPS body only. A bl
 
 Cookie effect: issue a fixed-one-day HttpOnly player session bound to the stable game/member and current alias. No token or answer in JSON. No board is generated yet.
 
-Failure candidates: wrong lifecycle/code context, alias conflict/invalid alias, capacity, throttling or repeat-admission conflict. No partial seat/alias/verifier on failure; lost-cookie response handling **TBD**.
+Fresh HTTP 200 sets the fixed-one-day Secure/HttpOnly/SameSite=Strict game-scoped player cookie and returns only player ID, accepted alias, expiry, view revision and secret-free receipt. Exact context-bound command/fingerprint retries return only the receipt, never a cookie or full snapshot. Admission conflicts/invalid authority do not partially allocate a seat/alias/verifier. A lost player-cookie response cannot be recovered from the command receipt; answer recovery is required and its endpoint remains deferred from this slice.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1558,16 +1570,17 @@ The designated host or an authorized admin validates the connected-player minimu
 
 ##### Request
 
-Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here. No named request-body fields are specified.
+**Approved GAME-SLICE-02:** Path `game_id: GameId`; existing account cookie carrying a current enabled Verified Normal designated-host/admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. The JSON body requires `expected_revision` for the authorized host projection. The command ID belongs only in the header. No other request-body fields.
 
 No caller-supplied roster, boards, random seed or claimed connection count. The backend chooses the retained start roster and checks currently connected eligible players, this game’s ownership of the same global reservation and board feasibility.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
+| `expected_revision` | `Revision` | Y | Expected current host-projection revision, checked for a fresh Start. Exact receipt retries do not regenerate boards or repeat Start. |
 
 ##### Response
 
-Proposed accepted-Start response. Failure candidates: insufficient connected players, another live game, infeasible distinct boards, wrong lifecycle or authority. Exact body/error variants are **TBD**.
+**Approved GAME-SLICE-02:** Fresh accepted Start is HTTP 200 with the documented game ID/state/start time/view revision and a secret-free receipt; optional full game view is omitted in this slice because authorized WSS/sync snapshots deliver boards. Exact authorized retries return only the receipt, without board regeneration. Lifecycle/reservation/revision/insufficient-player conflicts are 409 and unavailable dependencies are 503. Reuse the existing no-store JSON/error envelope.
 
 Committed retries return the original start/assignments. No boards before accepted Start, and no automatic winner for free-cell qualification.
 

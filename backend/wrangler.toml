@@ -12,7 +12,7 @@ APP_ORIGIN = "https://localhost:8787"
 # Production KDF cost/capacity measurement and secret provisioning are not done.
 
 [durable_objects]
-bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }, { name = "GAME_DIRECTORY", class_name = "GameDirectoryObject" }]
+bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }, { name = "GAME_DIRECTORY", class_name = "GameDirectoryObject" }, { name = "GAMES", class_name = "GameObject" }]
 
 [[migrations]]
 tag = "accounts"
@@ -21,3 +21,7 @@ new_sqlite_classes = ["AccountsObject"]
 [[migrations]]
 tag = "directory"
 new_sqlite_classes = ["GameDirectoryObject"]
+
+[[migrations]]
+tag = "games"
+new_sqlite_classes = ["GameObject"]

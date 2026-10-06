@@ -2,6 +2,15 @@
 mod database;
 pub(super) mod directory;
 mod edge;
+mod game_accounts;
+mod game_directory;
+mod game_object;
+mod game_peers;
+mod game_recovery;
+mod game_recovery_wire;
+mod game_sockets;
+mod game_wire;
+mod games;
 mod management;
 mod removals;
 mod runtime;
@@ -53,6 +62,8 @@ pub async fn fetch(
         .route("/_dev/commands", any(management::handle))
         .route("/api/users", any(users::handle))
         .route("/api/users/{*path}", any(users::handle))
+        .route("/api/games", any(games::handle))
+        .route("/api/games/{*path}", any(games::handle))
         .fallback(edge::handle)
         .with_state(SendWrapper::new(env));
     router
@@ -76,6 +87,9 @@ impl AccountsObject {
         let service = self
             .service(&db, &rt)
             .map_err(|_| worker::Error::RustError("configuration unavailable".to_owned()))?;
+        self.dispatch_game_socket_closes(&service)
+            .await
+            .map_err(|_| worker::Error::RustError("game socket close dispatch failed".into()))?;
         self.recover_removals(&service)
             .await
             .map_err(|_| worker::Error::RustError("removal recovery failed".to_owned()))?;
@@ -155,6 +169,7 @@ impl AccountsObject {
             }
         }
         let outcome = OwnerResponse::outcome(result);
+        self.dispatch_game_socket_closes(&service).await?;
         self.schedule(Self::combined_deadline(&service)?)
             .await
             .map_err(|_| AuthError::Storage)?;
@@ -201,6 +216,9 @@ impl DurableObject for AccountsObject {
     }
     async fn fetch(&self, request: Request) -> Result<Response> {
         crate::observability::init();
+        if request.path() == "/game-authority" {
+            return self.execute_game_authority_request(request).await;
+        }
         if request.path() == "/users" {
             return self.execute_users_request(request).await;
         }

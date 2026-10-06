@@ -1,4 +1,13 @@
 //! Owner-local fixed SQL. No browser commands, peer database or game ingress.
+#![cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "Exact-source integration targets exercise different owner surfaces."
+    )
+)]
+#[path = "directory_games.rs"]
+mod game_sql;
 use crate::directory::{DirectoryError, RemovalGrant, RemovalReleaseAck};
 use crate::{
     auth::Runtime,
@@ -13,54 +22,64 @@ pub struct DirectoryService<'a, D: Database, R: Runtime> {
     runtime: &'a R,
 }
 
-const DIRECTORY_SCHEMA_VERSION: i64 = 1;
+use crate::db::schema::directory_schema::{
+    self, DIRECTORY_SCHEMA_VERSION, DIRECTORY_TABLES, REMOVAL_SCHEMA_VERSION, REMOVAL_TABLES,
+};
 // Verified runtime metadata is not application state: DO names and alarm storage.
 const MINIFLARE_METADATA_TABLE: &str = "__miniflare_do_name";
 const WORKERD_METADATA_TABLE: &str = "_cf_METADATA";
-const DIRECTORY_TABLES: [&str; 6] = [
-    "account_assignment_gates",
-    "directory_hosted_nonterminal_games",
-    "directory_metadata",
-    "directory_removal_pending",
-    "directory_removal_receipts",
-    "directory_removal_rejections",
-];
 
 /// Initialize only this isolated Directory owner's versioned schema.
 pub fn migrate_directory<D: Database>(db: &D) -> Result<(), DirectoryError> {
     db.transaction(|| {
-        if !db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' AND name NOT IN (?,?) LIMIT 1", &[SqlValue::Text(MINIFLARE_METADATA_TABLE.into()), SqlValue::Text(WORKERD_METADATA_TABLE.into())])?.is_empty() {
-            validate_schema(db).map_err(|_| StorageError)?;
-            return Ok(());
-        }
-        db.execute("CREATE TABLE IF NOT EXISTS directory_metadata(singleton INTEGER PRIMARY KEY CHECK(singleton=1),schema_version INTEGER NOT NULL,last_observed_ms INTEGER NOT NULL,command_floor_ms INTEGER NOT NULL) STRICT", &[])?;
-        if db.query("SELECT schema_version FROM directory_metadata WHERE singleton=1", &[])?.is_empty() {
-            db.execute("CREATE TABLE account_assignment_gates(account_id TEXT PRIMARY KEY) STRICT", &[])?;
-            db.execute("CREATE TABLE directory_removal_rejections(operation_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,completed_at INTEGER NOT NULL) STRICT", &[])?;
-            db.execute("CREATE TABLE directory_removal_receipts(operation_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,completed_at INTEGER NOT NULL) STRICT", &[])?;
-            db.execute("CREATE TABLE directory_hosted_nonterminal_games(game_id TEXT PRIMARY KEY,designated_host_id TEXT NOT NULL) STRICT", &[])?;
-            db.execute("CREATE INDEX directory_hosted_nonterminal_by_host ON directory_hosted_nonterminal_games(designated_host_id)", &[])?;
-            db.execute("CREATE TABLE directory_removal_pending(operation_id TEXT PRIMARY KEY,account_id TEXT NOT NULL UNIQUE REFERENCES account_assignment_gates(account_id),created_at INTEGER NOT NULL) STRICT", &[])?;
-            db.execute("INSERT INTO directory_metadata(singleton,schema_version,last_observed_ms,command_floor_ms) VALUES(1,?,0,0)", &[SqlValue::Integer(DIRECTORY_SCHEMA_VERSION)])?;
-        }
+        let tables = application_tables(db, DIRECTORY_TABLES.len() + 1)?;
+        let version = if tables.is_empty() {
+            directory_schema::initialize_removal(db)?;
+            db.execute("INSERT INTO directory_metadata(singleton,schema_version,last_observed_ms,command_floor_ms) VALUES(1,?,0,0)", &[SqlValue::Integer(REMOVAL_SCHEMA_VERSION)])?;
+            REMOVAL_SCHEMA_VERSION
+        } else { schema_version(db)? };
+        if version == REMOVAL_SCHEMA_VERSION {
+            validate_inventory(db, &REMOVAL_TABLES)?;
+            directory_schema::add_game_coordination(db)?;
+            db.execute("UPDATE directory_metadata SET schema_version=? WHERE singleton=1 AND schema_version=?", &[SqlValue::Integer(DIRECTORY_SCHEMA_VERSION), SqlValue::Integer(REMOVAL_SCHEMA_VERSION)])?;
+        } else if version != DIRECTORY_SCHEMA_VERSION { return Err(StorageError); }
         validate_schema(db).map_err(|_| StorageError)?;
         Ok(())
     }).map_err(DirectoryError::from)
 }
-fn validate_schema<D: Database>(db: &D) -> Result<(), DirectoryError> {
-    let tables = db.query(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' AND name NOT IN (?,?) ORDER BY name LIMIT ?",
-        &[SqlValue::Text(MINIFLARE_METADATA_TABLE.into()), SqlValue::Text(WORKERD_METADATA_TABLE.into()), SqlValue::Integer((DIRECTORY_TABLES.len() + 1) as i64)],
-    )?;
-    if tables.len() != DIRECTORY_TABLES.len()
-        || !tables.iter().zip(DIRECTORY_TABLES).all(|(row, expected)| matches!(row.as_slice(), [SqlValue::Text(actual)] if actual == expected)) {
-        return Err(DirectoryError::Storage);
-    }
-    if db.query(
+fn application_tables<D: Database>(
+    db: &D,
+    limit: usize,
+) -> Result<Vec<crate::db::Row>, StorageError> {
+    db.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' AND name NOT IN (?,?) ORDER BY name LIMIT ?", &[SqlValue::Text(MINIFLARE_METADATA_TABLE.into()), SqlValue::Text(WORKERD_METADATA_TABLE.into()), SqlValue::Integer(limit as i64)])
+}
+fn schema_version<D: Database>(db: &D) -> Result<i64, StorageError> {
+    let rows = db.query(
         "SELECT schema_version FROM directory_metadata WHERE singleton=1",
         &[],
-    )? != vec![vec![SqlValue::Integer(DIRECTORY_SCHEMA_VERSION)]]
-    {
+    )?;
+    match rows.as_slice() {
+        [row] => match row.as_slice() {
+            [SqlValue::Integer(version)] => Ok(*version),
+            _ => Err(StorageError),
+        },
+        _ => Err(StorageError),
+    }
+}
+fn validate_inventory<D: Database>(db: &D, expected: &[&str]) -> Result<(), StorageError> {
+    let tables = db.query(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' AND name NOT IN (?,?) ORDER BY name LIMIT ?",
+        &[SqlValue::Text(MINIFLARE_METADATA_TABLE.into()), SqlValue::Text(WORKERD_METADATA_TABLE.into()), SqlValue::Integer((expected.len() + 1) as i64)],
+    )?;
+    if tables.len() != expected.len()
+        || !tables.iter().zip(expected).all(|(row, expected)| matches!(row.as_slice(), [SqlValue::Text(actual)] if actual == expected)) {
+        return Err(StorageError);
+    }
+    Ok(())
+}
+fn validate_schema<D: Database>(db: &D) -> Result<(), DirectoryError> {
+    validate_inventory(db, &DIRECTORY_TABLES)?;
+    if schema_version(db)? != DIRECTORY_SCHEMA_VERSION {
         return Err(DirectoryError::Storage);
     }
     Ok(())
@@ -122,15 +141,15 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
         validate_schema(db)?;
         Ok(Self { db, runtime })
     }
-    /// Earliest receipt/rejection expiry in trusted epoch milliseconds.
+    /// Earliest creation retry or completion expiry in trusted epoch milliseconds.
     /// Does not compact rows; an expired backlog stays due until cleanup drains it.
-    /// Pending intents and assignment gates have no retention deadline.
+    /// Pending creation has retry/deadline work, never TTL deletion; removal gates do not expire.
     ///
     /// # Errors
     /// Fails closed for invalid clocks, metadata, or earliest completion evidence.
     pub fn next_deadline(&self) -> Result<Option<i64>, DirectoryError> {
         self.transaction_before_compaction(|now| {
-            let mut deadline = None;
+            let mut deadline = self.next_creation_deadline(now)?;
             for select in [
                 "SELECT operation_id,account_id,completed_at FROM directory_removal_receipts ORDER BY completed_at,operation_id LIMIT 1",
                 "SELECT operation_id,account_id,completed_at FROM directory_removal_rejections ORDER BY completed_at,operation_id LIMIT 1",
@@ -147,7 +166,7 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
             Ok(deadline.map(|at| at.max(now)))
         })
     }
-    /// Compact at most CLEANUP_BATCH_SIZE receipts and rejections each, atomically.
+    /// Compact at most CLEANUP_BATCH_SIZE completions per table, atomically.
     /// Advances the durable admission floor but never purges pending work or gates.
     /// Call next_deadline afterwards to reschedule any remaining bounded backlog.
     ///
@@ -460,6 +479,7 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
         Ok(now)
     }
     fn compact_completions(&self, now: i64) -> Result<(), DirectoryError> {
+        self.compact_creations(now)?;
         // Never delete unvalidated tombstones: malformed time could otherwise
         // remove a fresh operation fence and allow its resurrection.
         for (select, delete) in [
@@ -500,7 +520,12 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
         let result = self
             .db
             .transaction(|| match self.observe_clock().and_then(operation) {
-                Err(error @ (DirectoryError::Storage | DirectoryError::Clock)) => {
+                Err(
+                    error @ (DirectoryError::Storage
+                    | DirectoryError::Clock
+                    | DirectoryError::Entropy
+                    | DirectoryError::CodeExhausted),
+                ) => {
                     fatal.set(Some(error));
                     Err(StorageError)
                 }

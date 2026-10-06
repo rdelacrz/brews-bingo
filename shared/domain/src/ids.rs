@@ -47,6 +47,7 @@ typed_id!(
     LinkId,
     CommandId,
     GameId,
+    PlayerId,
     ConnectionId,
     OperationId,
     AuditId
@@ -56,6 +57,21 @@ typed_id!(
 #[allow(clippy::unwrap_used, clippy::expect_used, reason = "Tests fail fast.")]
 mod tests {
     use super::*;
+    #[test]
+    fn player_id_preserves_canonical_uuid_v7_and_distinct_identity() {
+        let text = "01890f3e-53b7-7d28-9b05-4f65092d5711";
+        assert_eq!(text.parse::<PlayerId>().unwrap().to_string(), text);
+        assert!(text.to_uppercase().parse::<PlayerId>().is_err());
+        assert!(
+            "01890f3e-53b7-4d28-9b05-4f65092d5711"
+                .parse::<PlayerId>()
+                .is_err()
+        );
+        assert_ne!(
+            std::any::TypeId::of::<PlayerId>(),
+            std::any::TypeId::of::<AccountId>()
+        );
+    }
     #[test]
     fn audit_identifiers_are_distinct_and_reject_noncanonical_values() {
         let text = "01890f3e-53b7-7d28-9b05-4f65092d5711";

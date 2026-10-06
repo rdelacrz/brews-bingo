@@ -57,14 +57,18 @@ pub(super) enum DirectoryRejection {
 
 #[durable_object]
 pub struct GameDirectoryObject {
-    state: State,
+    pub(super) state: State,
+    pub(super) env: Env,
 }
 impl DurableObject for GameDirectoryObject {
-    fn new(state: State, _env: Env) -> Self {
-        Self { state }
+    fn new(state: State, env: Env) -> Self {
+        Self { state, env }
     }
     async fn fetch(&self, request: Request) -> Result<Response> {
         observability::init();
+        if request.path() == "/games" {
+            return self.execute_games_request(request).await;
+        }
         let result = self.execute(request).await.unwrap_or_else(|_| {
             observability::failure(Boundary::DirectoryRequest, Failure::Unavailable);
             DirectoryResponse::Rejected {
@@ -99,12 +103,13 @@ impl GameDirectoryObject {
         service
             .cleanup()
             .map_err(|_| worker::Error::RustError("Directory cleanup failed".into()))?;
+        self.recover_game_creations(&service).await?;
         self.schedule_cleanup().await?;
         self.state.storage().sync().await?;
         Response::empty()
     }
 
-    async fn schedule_cleanup(&self) -> Result<()> {
+    pub(super) async fn schedule_cleanup(&self) -> Result<()> {
         let storage = self.state.storage();
         let db = OwnerDatabase::new(self.state.storage());
         migrate_directory(&db)

@@ -1,5 +1,13 @@
 //! Private Directory coordination authority, not an app or gameplay API.
 //! Allocation-conscious: bounded SQL result sets own values at the database port.
+#![cfg_attr(
+    test,
+    allow(
+        dead_code,
+        reason = "Exact-source integration targets exercise different owner surfaces."
+    )
+)]
+pub mod games;
 use crate::db::StorageError;
 use brews_domain::ids::{AccountId, OperationId};
 
@@ -21,7 +29,18 @@ pub enum DirectoryError {
     Clock,
     #[error("Removal operation is outside the admission window")]
     StaleOperation,
-    #[cfg(test)]
+    #[error("Game reservation is occupied")]
+    ReservationOccupied,
+    #[error("Creation command fingerprint conflicts")]
+    CommandConflict,
+    #[error("Game coordination proof does not match")]
+    ProofMismatch,
+    #[error("Game coordination is unknown")]
+    UnknownGame,
+    #[error("Game code allocation candidates exhausted")]
+    CodeExhausted,
+    #[error("Trusted Directory entropy unavailable")]
+    Entropy,
     #[error("Account assignment is blocked")]
     AssignmentBlocked,
 }

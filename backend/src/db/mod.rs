@@ -6,6 +6,8 @@ use std::fmt;
 pub const CURRENT_SCHEMA_VERSION: i64 = 2;
 const AUTH_SCHEMA_VERSION: i64 = 1;
 pub mod directory;
+pub mod game;
+pub mod game_delivery;
 
 #[derive(Clone, PartialEq)]
 pub enum SqlValue {

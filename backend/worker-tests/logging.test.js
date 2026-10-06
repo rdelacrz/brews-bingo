@@ -271,7 +271,7 @@ test("removal completion is not logged before the final owner output gate", asyn
     const original = state.storage.sync;
     let calls = 0;
     state.storage.sync = async function () {
-      if (++calls === 3) throw new Error("test-only final logging output gate failure");
+      if (++calls === 4) throw new Error("test-only final logging output gate failure");
       return original.call(this);
     };
     try {
@@ -282,7 +282,7 @@ test("removal completion is not logged before the final owner output gate", asyn
       return { status: response.status, calls };
     } finally { state.storage.sync = original; }
   });
-  expect(result.calls).toBe(3);
+  expect(result.calls).toBe(4);
   expect(result.status).toBe(503);
   expect(event("durability", "storage")).toBe(true);
   expect(records.some(record => record.fields.action === "completed")).toBe(false);

@@ -12,7 +12,7 @@ mod removal;
 mod users;
 pub use removal::{RemovalGateGrant, RemovalPhase, RemovalReleaseAck, RemovalWork};
 #[cfg(test)]
-mod test_support;
+pub(crate) mod test_support;
 use crate::{
     db::{
         Database, SqlValue, StorageError,

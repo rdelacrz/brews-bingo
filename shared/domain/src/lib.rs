@@ -1,7 +1,8 @@
-//! Provider-independent account domain; allocation-conscious at text boundaries.
+//! Provider-independent account and game domain; allocation-conscious at text boundaries.
 #![forbid(unsafe_code)]
 
 pub mod accounts;
+pub mod games;
 pub mod ids;
 
 #[cfg(test)]
