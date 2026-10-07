@@ -4,12 +4,13 @@
 mod game_wire;
 
 pub use brews_backend::security;
-#[path = "../src/api/game_body.rs"]
-mod game_body;
-mod api {
-    pub(crate) use crate::game_body::decode_empty_game_body;
-    pub use brews_backend::api::*;
-}
+#[path = "../src/api/mod.rs"]
+#[allow(
+    dead_code,
+    unused_imports,
+    reason = "Exact-source API module is wider than this transport harness."
+)]
+mod api;
 #[path = "../src/limits.rs"]
 #[allow(
     dead_code,

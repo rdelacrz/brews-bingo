@@ -1,5 +1,5 @@
 //! Bounded public game transport; grammar is not authentication or authorization.
-use super::ApiError;
+use super::{ApiError, BODY_LIMIT};
 use brews_contracts::games::{
     AdmissionContextInput, CallManualInput, CancelGameInput, CreateGame, GAME_QUERY_KNOWN_REVISION,
     GAME_QUERY_VIEW, GAME_VIEW_ACCOUNT, GAME_VIEW_PLAYER, JoinPlayer, RevisionCommand, WinnerInput,
@@ -146,7 +146,7 @@ pub fn decode_games(
             CancelGameInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
         GameOperation::Exit => {
-            super::game_body::decode_empty_game_body(body)?;
+            decode_empty_game_body(body)?;
             GamePayload::Empty
         }
         GameOperation::Sync | GameOperation::Stream => GamePayload::Empty,
@@ -182,6 +182,21 @@ pub fn decode_games(
         session_token,
         admission_token,
     })
+}
+pub(crate) fn decode_empty_game_body(body: &[u8]) -> Result<(), ApiError> {
+    #[derive(serde::Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct EmptyGameCommand {}
+    if body.len() > BODY_LIMIT
+        || body
+            .iter()
+            .find(|byte| !matches!(byte, b' ' | b'\t' | b'\r' | b'\n'))
+            != Some(&b'{')
+    {
+        return Err(ApiError::InvalidInput);
+    }
+    serde_json::from_slice::<EmptyGameCommand>(body).map_err(|_| ApiError::InvalidInput)?;
+    Ok(())
 }
 fn require_upgrade(headers: &HeaderMap) -> Result<(), ApiError> {
     if headers.get_all("upgrade").iter().count() != 1
