@@ -21,6 +21,15 @@ pub enum GameState {
 pub enum WinningPattern {
     SingleLine,
 }
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, strum::Display, strum::EnumString,
+)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
+pub enum CallMode {
+    Random,
+    Manual,
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 #[error("Invalid game input.")]
@@ -177,6 +186,8 @@ pub struct BoardCell {
     pub kind: BoardCellKind,
     pub is_matched: bool,
 }
+pub const BOARD_CELL_KIND_FREE: &str = "free";
+pub const BOARD_CELL_KIND_VALUE: &str = "value";
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(
     tag = "kind",
@@ -260,6 +271,26 @@ impl SingleLinePattern for SingleLine {
         }
         Ok(lines)
     }
+}
+/// Apply one accepted value to every matching ordinary cell without toggling prior matches.
+pub fn apply_called_value(
+    side_length: u8,
+    cells: &mut [BoardCell],
+    value: &str,
+) -> Result<(Vec<CompletedLine>, bool), PatternEvaluationError> {
+    SingleLine::evaluate(side_length, cells)?;
+    let mut changed = false;
+    for cell in cells.iter_mut() {
+        if let BoardCellKind::Value(cell_value) = &cell.kind
+            && cell_value == value
+            && !cell.is_matched
+        {
+            cell.is_matched = true;
+            changed = true;
+        }
+    }
+    let lines = SingleLine::evaluate(side_length, cells)?;
+    Ok((lines, changed))
 }
 
 pub const START_CANDIDATE_BUDGET: usize = 1_024;
@@ -544,6 +575,76 @@ mod tests {
                 CompletedLine::AntiDiagonal
             ])
         );
+    }
+    #[test]
+    fn accepted_value_matches_all_cells_once_and_recomputes_single_line() {
+        let mut cells = vec![
+            BoardCell {
+                position: CellPosition { row: 1, column: 1 },
+                kind: BoardCellKind::Value("7".into()),
+                is_matched: false,
+            },
+            BoardCell {
+                position: CellPosition { row: 1, column: 2 },
+                kind: BoardCellKind::Value("8".into()),
+                is_matched: true,
+            },
+            BoardCell {
+                position: CellPosition { row: 2, column: 1 },
+                kind: BoardCellKind::Free,
+                is_matched: true,
+            },
+            BoardCell {
+                position: CellPosition { row: 2, column: 2 },
+                kind: BoardCellKind::Value("7".into()),
+                is_matched: false,
+            },
+        ];
+
+        let (lines, changed) = apply_called_value(2, &mut cells, "7").unwrap();
+        assert!(changed);
+        assert_eq!(
+            cells.iter().map(|cell| cell.is_matched).collect::<Vec<_>>(),
+            [true, true, true, true]
+        );
+        assert_eq!(
+            lines,
+            vec![
+                CompletedLine::Row(1),
+                CompletedLine::Row(2),
+                CompletedLine::Column(1),
+                CompletedLine::Column(2),
+                CompletedLine::MainDiagonal,
+                CompletedLine::AntiDiagonal,
+            ]
+        );
+
+        let (retry_lines, changed) = apply_called_value(2, &mut cells, "7").unwrap();
+        assert!(!changed);
+        assert_eq!(retry_lines, lines);
+        assert_eq!(
+            cells.iter().map(|cell| cell.is_matched).collect::<Vec<_>>(),
+            [true; 4]
+        );
+    }
+    #[test]
+    fn invalid_board_is_unchanged_when_progression_fails() {
+        let mut cells = vec![BoardCell {
+            position: CellPosition { row: 1, column: 1 },
+            kind: BoardCellKind::Value("7".into()),
+            is_matched: false,
+        }];
+        let before = cells.clone();
+        assert!(apply_called_value(2, &mut cells, "7").is_err());
+        assert_eq!(cells, before);
+    }
+    #[test]
+    fn call_mode_storage_tags_are_stable_snake_case() {
+        assert_eq!(CallMode::Random.to_string(), "random");
+        assert_eq!(CallMode::Manual.to_string(), "manual");
+        assert_eq!("random".parse::<CallMode>(), Ok(CallMode::Random));
+        assert_eq!("manual".parse::<CallMode>(), Ok(CallMode::Manual));
+        assert!("other".parse::<CallMode>().is_err());
     }
     #[test]
     fn feasibility_counts_entire_roster_with_capped_falling_factorial() {

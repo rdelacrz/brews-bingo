@@ -1436,3 +1436,679 @@ fn migration_installs_minimal_single_reservation() {
     migrate_directory(&db).unwrap();
     DirectoryService::new(&db, &TestRuntime::new()).unwrap();
 }
+
+// 2027-01-15T08:00Z + three UTC calendar months.
+const HISTORY_EXPIRY: i64 = 1_807_776_000_000;
+
+fn started_terminal<R: auth::Runtime>(
+    svc: &DirectoryService<'_, Sqlite, R>,
+    rt: &R,
+    cmd: CommandId,
+    outcome: GameState,
+) -> GameProjection {
+    let work = svc.claim_game(account(1), cmd, fingerprint()).unwrap();
+    let ack = svc
+        .acknowledge_creation(creation_proof(
+            work.game_id(),
+            work.account_id(),
+            work.command_id(),
+            work.fingerprint(),
+            work.created_at(),
+            0,
+        ))
+        .unwrap();
+    let code = svc.allocate_game_code(ack).unwrap();
+    svc.publish_game(projection(
+        work.game_id(),
+        account(1),
+        fingerprint(),
+        GameState::AwaitingPlayers,
+        1,
+        Some(code.game_code().clone()),
+        work.created_at(),
+        None,
+        None,
+        None,
+    ))
+    .unwrap();
+    svc.publish_game(projection(
+        work.game_id(),
+        account(1),
+        fingerprint(),
+        GameState::InProgress,
+        2,
+        Some(code.game_code().clone()),
+        work.created_at(),
+        Some(rt.now_ms()),
+        None,
+        None,
+    ))
+    .unwrap();
+    projection(
+        work.game_id(),
+        account(1),
+        fingerprint(),
+        outcome,
+        3,
+        Some(code.game_code().clone()),
+        work.created_at(),
+        Some(rt.now_ms()),
+        Some(rt.now_ms()),
+        Some(HISTORY_EXPIRY),
+    )
+}
+
+fn index_row(db: &Sqlite, game: brews_domain::ids::GameId) -> Vec<db::Row> {
+    db.query("SELECT game_id,game_code,designated_host_id,state,source_revision,publication_state,created_at,started_at,ended_at,history_expires_at,fingerprint FROM directory_game_index WHERE game_id=?", &[sql_text(game)]).unwrap()
+}
+
+#[test]
+fn accepted_started_terminal_proof_cannot_rewrite_original_expiry_with_newer_revision() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Resolved);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    let before = index_row(&db, terminal.game_id());
+    let altered = projection(
+        terminal.game_id(),
+        terminal.designated_host_id(),
+        terminal.fingerprint(),
+        terminal.state(),
+        terminal.source_revision() + 1,
+        terminal.game_code().cloned(),
+        terminal.created_at(),
+        terminal.started_at(),
+        terminal.ended_at(),
+        Some(HISTORY_EXPIRY + 1),
+    );
+    assert_eq!(
+        svc.release_game(TerminalProof::new(altered)),
+        Err(directory::DirectoryError::ProofMismatch)
+    );
+    assert_eq!(index_row(&db, terminal.game_id()), before);
+    assert_eq!(
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap()
+            .game_id(),
+        terminal.game_id()
+    );
+}
+
+fn seed_history_backlog(db: &Sqlite, terminal: &GameProjection, clock: &TestRuntime, count: u8) {
+    for n in 1..=count {
+        let game: brews_domain::ids::GameId = command(clock, n).to_string().parse().unwrap();
+        db.execute("INSERT INTO directory_game_index(game_id,game_code,designated_host_id,state,source_revision,publication_state,created_at,started_at,ended_at,history_expires_at,fingerprint) SELECT ?,?,designated_host_id,state,source_revision,publication_state,created_at,started_at,ended_at,history_expires_at,fingerprint FROM directory_game_index WHERE game_id=?", &[sql_text(game), sql_text(format!("HIS{n:05}")), sql_text(terminal.game_id())]).unwrap();
+    }
+}
+
+fn coordination_snapshot(db: &Sqlite) -> Vec<Vec<db::Row>> {
+    [
+        "SELECT game_id,game_code,state,source_revision,history_expires_at FROM directory_game_index ORDER BY game_id",
+        "SELECT game_id FROM directory_global_reservation",
+        "SELECT game_id,designated_host_id FROM directory_hosted_nonterminal_games ORDER BY game_id",
+        "SELECT game_id,next_retry_at,ready_revision FROM directory_game_creations ORDER BY game_id",
+        "SELECT account_id,command_id,completed_at FROM directory_retired_creations ORDER BY account_id,command_id",
+        "SELECT last_observed_ms,command_floor_ms FROM directory_metadata",
+    ].map(|sql| db.query(sql, &[]).unwrap()).into()
+}
+
+#[test]
+fn terminal_release_sqlite_faults_rollback_every_required_write_without_false_ack() {
+    for target in [
+        "INSERT ON directory_retired_creations",
+        "DELETE ON directory_game_creations",
+        "UPDATE OF state ON directory_game_index",
+        "DELETE ON directory_hosted_nonterminal_games",
+        "UPDATE OF game_id ON directory_global_reservation",
+    ] {
+        for fault in ["IGNORE", "ABORT,'fixture terminal write'"] {
+            let db = Sqlite::new();
+            let rt = TestRuntime::new();
+            migrate_directory(&db).unwrap();
+            let svc = DirectoryService::new(&db, &rt).unwrap();
+            let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Resolved);
+            let before = coordination_snapshot(&db);
+            db.execute(
+                &format!(
+                    "CREATE TRIGGER terminal_fault BEFORE {target} BEGIN SELECT RAISE({fault}); END"
+                ),
+                &[],
+            )
+            .unwrap();
+            rt.now.set(rt.now.get() + 1);
+            assert_eq!(
+                svc.release_game(TerminalProof::new(terminal.clone())),
+                Err(directory::DirectoryError::Storage),
+                "{target} {fault}"
+            );
+            assert_eq!(coordination_snapshot(&db), before, "{target} {fault}");
+            db.execute("DROP TRIGGER terminal_fault", &[]).unwrap();
+            svc.release_game(TerminalProof::new(terminal.clone()))
+                .unwrap();
+            assert_eq!(
+                index_row(&db, terminal.game_id())[0][9],
+                SqlValue::Integer(HISTORY_EXPIRY)
+            );
+        }
+    }
+}
+
+#[test]
+fn history_expiry_cleanup_sqlite_faults_rollback_index_retirement_and_clock() {
+    for fault in ["IGNORE", "ABORT,'fixture history purge'"] {
+        let db = Sqlite::new();
+        let rt = TestRuntime::new();
+        migrate_directory(&db).unwrap();
+        let svc = DirectoryService::new(&db, &rt).unwrap();
+        let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Cancelled);
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap();
+        let before = coordination_snapshot(&db);
+        db.execute(&format!("CREATE TRIGGER history_fault BEFORE DELETE ON directory_game_index BEGIN SELECT RAISE({fault}); END"), &[]).unwrap();
+        rt.now.set(HISTORY_EXPIRY);
+        assert_eq!(svc.cleanup(), Err(directory::DirectoryError::Storage));
+        assert_eq!(coordination_snapshot(&db), before);
+        db.execute("DROP TRIGGER history_fault", &[]).unwrap();
+        svc.cleanup().unwrap();
+        assert!(index_row(&db, terminal.game_id()).is_empty());
+    }
+}
+
+#[test]
+fn history_expiry_boundary_survives_actual_reopen_without_clock_or_code_resurrection() {
+    let path = scratch_db("history-expiry");
+    let clock = TestRuntime::new();
+    let rt = ByteRuntime {
+        now: std::cell::Cell::new(clock.now.get()),
+        byte: std::cell::Cell::new(251),
+        calls: std::cell::Cell::new(0),
+    };
+    let terminal = {
+        let db = open_sqlite(&path);
+        migrate_directory(&db).unwrap();
+        let svc = DirectoryService::new(&db, &rt).unwrap();
+        let terminal = started_terminal(&svc, &rt, command(&clock, 1), GameState::Resolved);
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap();
+        seed_history_backlog(&db, &terminal, &clock, 101);
+        rt.now.set(HISTORY_EXPIRY - 1);
+        assert_eq!(
+            svc.game_code(terminal.game_id()).unwrap(),
+            terminal.game_code().cloned()
+        );
+        terminal
+    };
+    {
+        let db = open_sqlite(&path);
+        migrate_directory(&db).unwrap();
+        let svc = DirectoryService::new(&db, &rt).unwrap();
+        rt.now.set(HISTORY_EXPIRY);
+        assert_eq!(svc.game_code(terminal.game_id()).unwrap(), None);
+        assert_eq!(index_row(&db, terminal.game_id()).len(), 1);
+        // Expiry denial committed a durable clock floor even though target purge lagged.
+    }
+    let db = open_sqlite(&path);
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    rt.now.set(HISTORY_EXPIRY - 1);
+    assert_eq!(
+        svc.game_code(terminal.game_id()),
+        Err(directory::DirectoryError::Clock)
+    );
+    assert_eq!(
+        svc.release_game(TerminalProof::new(terminal.clone())),
+        Err(directory::DirectoryError::Clock)
+    );
+    rt.now.set(HISTORY_EXPIRY);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    assert!(index_row(&db, terminal.game_id()).is_empty());
+    clock.now.set(HISTORY_EXPIRY);
+    let newer = svc
+        .claim_game(account(2), command(&clock, 2), fingerprint())
+        .unwrap();
+    let ack = svc
+        .acknowledge_creation(creation_proof(
+            newer.game_id(),
+            newer.account_id(),
+            newer.command_id(),
+            newer.fingerprint(),
+            newer.created_at(),
+            0,
+        ))
+        .unwrap();
+    let code = svc.allocate_game_code(ack).unwrap();
+    assert_eq!(code.game_code(), terminal.game_code().unwrap());
+    let before = coordination_snapshot(&db);
+    svc.release_game(TerminalProof::new(terminal)).unwrap();
+    assert_eq!(coordination_snapshot(&db), before);
+    drop(db);
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn ignored_expiry_release_delete_beyond_compaction_batch_never_acknowledges_purge() {
+    let db = Sqlite::new();
+    let clock = TestRuntime::new();
+    let rt = ByteRuntime {
+        now: std::cell::Cell::new(clock.now.get()),
+        byte: std::cell::Cell::new(251),
+        calls: std::cell::Cell::new(0),
+    };
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&clock, 1), GameState::Resolved);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    seed_history_backlog(&db, &terminal, &clock, 201);
+    let before = index_row(&db, terminal.game_id());
+    db.execute("CREATE TRIGGER suppress_target_purge BEFORE DELETE ON directory_game_index WHEN OLD.game_code='99999999' BEGIN SELECT RAISE(IGNORE); END", &[]).unwrap();
+    rt.now.set(HISTORY_EXPIRY);
+    assert_eq!(
+        svc.release_game(TerminalProof::new(terminal.clone())),
+        Err(directory::DirectoryError::Storage)
+    );
+    assert_eq!(index_row(&db, terminal.game_id()), before);
+    assert_eq!(
+        db.query("SELECT count(*) FROM directory_game_index", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(202)]]
+    );
+    db.execute("DROP TRIGGER suppress_target_purge", &[])
+        .unwrap();
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    assert!(index_row(&db, terminal.game_id()).is_empty());
+}
+
+#[test]
+fn ignored_code_allocation_never_returns_an_uncommitted_grant() {
+    for trigger in [
+        "CREATE TRIGGER suppress_allocation BEFORE UPDATE OF game_code ON directory_game_index BEGIN SELECT RAISE(IGNORE); END",
+        "CREATE TRIGGER suppress_allocation BEFORE UPDATE OF next_retry_at ON directory_game_creations BEGIN SELECT RAISE(IGNORE); END",
+    ] {
+        let db = Sqlite::new();
+        let rt = TestRuntime::new();
+        migrate_directory(&db).unwrap();
+        let svc = DirectoryService::new(&db, &rt).unwrap();
+        let ready = ready(&svc, &rt);
+        let before = index_row(&db, ready.game_id());
+        let creation = svc.creation_work(ready.game_id()).unwrap();
+        db.execute(trigger, &[]).unwrap();
+        assert_eq!(
+            svc.allocate_game_code(ready),
+            Err(directory::DirectoryError::Storage)
+        );
+        assert_eq!(index_row(&db, ready.game_id()), before);
+        assert_eq!(svc.creation_work(ready.game_id()).unwrap(), creation);
+        db.execute("DROP TRIGGER suppress_allocation", &[]).unwrap();
+        let grant = svc.allocate_game_code(ready).unwrap();
+        assert_eq!(
+            svc.game_code(ready.game_id()).unwrap().as_ref(),
+            Some(grant.game_code())
+        );
+        assert_eq!(svc.allocate_game_code(ready).unwrap(), grant);
+    }
+}
+
+#[test]
+fn ignored_clock_observation_cannot_acknowledge_history_expiry() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Cancelled);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    let before = index_row(&db, terminal.game_id());
+    let metadata = db
+        .query(
+            "SELECT last_observed_ms,command_floor_ms FROM directory_metadata",
+            &[],
+        )
+        .unwrap();
+    db.execute("CREATE TRIGGER suppress_clock BEFORE UPDATE OF last_observed_ms ON directory_metadata BEGIN SELECT RAISE(IGNORE); END", &[]).unwrap();
+    rt.now.set(HISTORY_EXPIRY);
+    assert_eq!(svc.cleanup(), Err(directory::DirectoryError::Storage));
+    assert_eq!(index_row(&db, terminal.game_id()), before);
+    assert_eq!(
+        db.query(
+            "SELECT last_observed_ms,command_floor_ms FROM directory_metadata",
+            &[]
+        )
+        .unwrap(),
+        metadata
+    );
+    db.execute("DROP TRIGGER suppress_clock", &[]).unwrap();
+    svc.cleanup().unwrap();
+    assert!(index_row(&db, terminal.game_id()).is_empty());
+}
+
+#[test]
+fn expired_terminal_publication_can_finish_matching_release_before_compaction() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Resolved);
+    svc.publish_game(terminal.clone()).unwrap();
+    rt.now.set(HISTORY_EXPIRY);
+    assert_eq!(
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap()
+            .game_id(),
+        terminal.game_id()
+    );
+    assert!(index_row(&db, terminal.game_id()).is_empty());
+    assert_eq!(
+        db.query("SELECT game_id FROM directory_global_reservation", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Null]]
+    );
+    assert!(
+        db.query(
+            "SELECT game_id FROM directory_hosted_nonterminal_games",
+            &[]
+        )
+        .unwrap()
+        .is_empty()
+    );
+}
+
+#[test]
+fn exact_terminal_release_retry_does_not_rewrite_index_or_touch_new_game() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Cancelled);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    let before = index_row(&db, terminal.game_id());
+    let newer = svc
+        .claim_game(account(2), command(&rt, 2), fingerprint())
+        .unwrap();
+    db.execute("CREATE TRIGGER prevent_terminal_rewrite BEFORE UPDATE ON directory_game_index BEGIN SELECT RAISE(ABORT,'fixture immutable index'); END", &[]).unwrap();
+    assert_eq!(
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap()
+            .game_id(),
+        terminal.game_id()
+    );
+    assert_eq!(index_row(&db, terminal.game_id()), before);
+    assert_eq!(
+        svc.confirm_reservation(newer.game_id()).unwrap().game_id(),
+        newer.game_id()
+    );
+}
+
+#[test]
+fn terminal_publication_cannot_regress_to_newer_in_progress_revision() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&rt, 1), GameState::Resolved);
+    svc.publish_game(terminal.clone()).unwrap();
+    let before = index_row(&db, terminal.game_id());
+    let delayed = projection(
+        terminal.game_id(),
+        terminal.designated_host_id(),
+        terminal.fingerprint(),
+        GameState::InProgress,
+        terminal.source_revision() + 1,
+        terminal.game_code().cloned(),
+        terminal.created_at(),
+        terminal.started_at(),
+        None,
+        None,
+    );
+    assert_eq!(
+        svc.publish_game(delayed),
+        Err(directory::DirectoryError::ProofMismatch)
+    );
+    assert_eq!(index_row(&db, terminal.game_id()), before);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    assert_eq!(index_row(&db, terminal.game_id()), before);
+}
+
+#[test]
+fn ignored_publication_writes_never_acknowledge_uncommitted_metadata() {
+    for trigger in [
+        "CREATE TRIGGER suppress_publication BEFORE UPDATE OF publication_state ON directory_game_index BEGIN SELECT RAISE(IGNORE); END",
+        "CREATE TRIGGER suppress_publication BEFORE UPDATE OF designated_host_id ON directory_hosted_nonterminal_games BEGIN SELECT RAISE(IGNORE); END",
+        "CREATE TRIGGER suppress_publication BEFORE UPDATE OF next_retry_at ON directory_game_creations BEGIN SELECT RAISE(IGNORE); END",
+    ] {
+        let db = Sqlite::new();
+        let rt = TestRuntime::new();
+        migrate_directory(&db).unwrap();
+        let svc = DirectoryService::new(&db, &rt).unwrap();
+        let ack = ready(&svc, &rt);
+        let code = svc.allocate_game_code(ack).unwrap();
+        let before = index_row(&db, ack.game_id());
+        let pending = svc.creation_work(ack.game_id()).unwrap();
+        db.execute(trigger, &[]).unwrap();
+        let lobby = projection(
+            ack.game_id(),
+            account(2),
+            fingerprint(),
+            GameState::AwaitingPlayers,
+            1,
+            Some(code.game_code().clone()),
+            ack.proof().created_at(),
+            None,
+            None,
+            None,
+        );
+        assert_eq!(
+            svc.publish_game(lobby.clone()),
+            Err(directory::DirectoryError::Storage)
+        );
+        assert_eq!(index_row(&db, ack.game_id()), before);
+        assert_eq!(svc.creation_work(ack.game_id()).unwrap(), pending);
+        assert_eq!(svc.lookup_game_code(code.game_code()).unwrap(), None);
+        assert_eq!(
+            db.query(
+                "SELECT designated_host_id FROM directory_hosted_nonterminal_games",
+                &[]
+            )
+            .unwrap(),
+            vec![vec![sql_text(account(1))]]
+        );
+        db.execute("DROP TRIGGER suppress_publication", &[])
+            .unwrap();
+        assert!(svc.publish_game(lobby).unwrap().published());
+    }
+}
+
+#[test]
+fn owner_code_lookup_denies_expired_terminal_index_remaining_beyond_cleanup_batch() {
+    let db = Sqlite::new();
+    let clock = TestRuntime::new();
+    let rt = ByteRuntime {
+        now: std::cell::Cell::new(clock.now.get()),
+        byte: std::cell::Cell::new(251),
+        calls: std::cell::Cell::new(0),
+    };
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&clock, 1), GameState::Cancelled);
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    seed_history_backlog(&db, &terminal, &clock, 101);
+    rt.now.set(HISTORY_EXPIRY - 1);
+    assert_eq!(
+        svc.game_code(terminal.game_id()).unwrap(),
+        terminal.game_code().cloned()
+    );
+    rt.now.set(HISTORY_EXPIRY);
+    assert_eq!(svc.game_code(terminal.game_id()).unwrap(), None);
+    // Read denial is independent of physical deletion of the target.
+    assert_eq!(index_row(&db, terminal.game_id()).len(), 1);
+    assert_eq!(
+        svc.lookup_game_code(terminal.game_code().unwrap()).unwrap(),
+        None
+    );
+}
+
+#[test]
+fn expired_history_code_is_reusable_despite_bounded_backlog_and_delayed_primary_purge() {
+    let db = Sqlite::new();
+    let clock = TestRuntime::new();
+    let rt = ByteRuntime {
+        now: std::cell::Cell::new(clock.now.get()),
+        byte: std::cell::Cell::new(251),
+        calls: std::cell::Cell::new(0),
+    };
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    let terminal = started_terminal(&svc, &rt, command(&clock, 1), GameState::Resolved);
+    assert_eq!(terminal.game_code().unwrap().as_str(), "99999999");
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    seed_history_backlog(&db, &terminal, &clock, 201);
+    clock.now.set(HISTORY_EXPIRY - 1);
+    rt.now.set(clock.now.get());
+    let next = svc
+        .claim_game(account(2), command(&clock, 2), fingerprint())
+        .unwrap();
+    let ready = svc
+        .acknowledge_creation(creation_proof(
+            next.game_id(),
+            next.account_id(),
+            next.command_id(),
+            next.fingerprint(),
+            next.created_at(),
+            0,
+        ))
+        .unwrap();
+    rt.now.set(HISTORY_EXPIRY);
+    clock.now.set(HISTORY_EXPIRY);
+    let allocated = svc.allocate_game_code(ready).unwrap();
+    assert_eq!(allocated.game_code(), terminal.game_code().unwrap());
+    assert!(index_row(&db, terminal.game_id()).is_empty());
+    let lobby = projection(
+        next.game_id(),
+        next.account_id(),
+        next.fingerprint(),
+        GameState::AwaitingPlayers,
+        1,
+        Some(allocated.game_code().clone()),
+        next.created_at(),
+        None,
+        None,
+        None,
+    );
+    svc.publish_game(lobby).unwrap();
+    let newer_index = index_row(&db, next.game_id());
+    svc.release_game(TerminalProof::new(terminal.clone()))
+        .unwrap();
+    assert_eq!(index_row(&db, next.game_id()), newer_index);
+    assert_eq!(
+        svc.lookup_game_code(allocated.game_code()).unwrap(),
+        Some(next.game_id())
+    );
+    assert_eq!(
+        svc.confirm_reservation(next.game_id()).unwrap().game_id(),
+        next.game_id()
+    );
+}
+
+#[test]
+fn terminal_index_expiry_alarm_drains_exactly_bounded_batches() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let svc = DirectoryService::new(&db, &rt).unwrap();
+    for n in 1..=101 {
+        let terminal = started_terminal(&svc, &rt, command(&rt, n), GameState::Cancelled);
+        svc.release_game(TerminalProof::new(terminal)).unwrap();
+    }
+    let count = || {
+        db.query("SELECT count(*) FROM directory_game_index", &[])
+            .unwrap()
+    };
+    rt.now.set(HISTORY_EXPIRY - 1);
+    svc.cleanup().unwrap();
+    svc.cleanup().unwrap();
+    assert_eq!(count(), vec![vec![SqlValue::Integer(101)]]);
+    assert_eq!(svc.next_deadline().unwrap(), Some(HISTORY_EXPIRY));
+    rt.now.set(HISTORY_EXPIRY);
+    svc.cleanup().unwrap();
+    assert_eq!(count(), vec![vec![SqlValue::Integer(1)]]);
+    assert_eq!(svc.next_deadline().unwrap(), Some(HISTORY_EXPIRY));
+    svc.cleanup().unwrap();
+    assert_eq!(count(), vec![vec![SqlValue::Integer(0)]]);
+    assert_eq!(svc.next_deadline().unwrap(), None);
+}
+
+#[test]
+fn terminal_release_at_history_expiry_purges_only_old_game_and_never_resurrects_it() {
+    for outcome in [GameState::Resolved, GameState::Cancelled] {
+        let db = Sqlite::new();
+        let rt = TestRuntime::new();
+        migrate_directory(&db).unwrap();
+        let svc = DirectoryService::new(&db, &rt).unwrap();
+        let terminal = started_terminal(&svc, &rt, command(&rt, 1), outcome);
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap();
+        let before = index_row(&db, terminal.game_id());
+        assert_eq!(before.len(), 1);
+        assert!(
+            db.query("SELECT game_id FROM directory_game_creations", &[])
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            db.query(
+                "SELECT game_id FROM directory_hosted_nonterminal_games",
+                &[]
+            )
+            .unwrap()
+            .is_empty()
+        );
+        rt.now.set(HISTORY_EXPIRY - 1);
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap();
+        assert_eq!(index_row(&db, terminal.game_id()), before);
+        let next = svc
+            .claim_game(account(2), command(&rt, 2), fingerprint())
+            .unwrap();
+        rt.now.set(HISTORY_EXPIRY);
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap();
+        assert!(index_row(&db, terminal.game_id()).is_empty());
+        assert_eq!(svc.game_code(terminal.game_id()).unwrap(), None);
+        assert_eq!(
+            svc.confirm_reservation(next.game_id()).unwrap().game_id(),
+            next.game_id()
+        );
+        let old_publication = projection(
+            terminal.game_id(),
+            terminal.designated_host_id(),
+            terminal.fingerprint(),
+            GameState::InProgress,
+            2,
+            terminal.game_code().cloned(),
+            terminal.created_at(),
+            terminal.started_at(),
+            None,
+            None,
+        );
+        assert_eq!(
+            svc.publish_game(old_publication),
+            Err(directory::DirectoryError::UnknownGame)
+        );
+        svc.release_game(TerminalProof::new(terminal.clone()))
+            .unwrap();
+        assert!(index_row(&db, terminal.game_id()).is_empty());
+        assert_eq!(
+            svc.confirm_reservation(next.game_id()).unwrap().game_id(),
+            next.game_id()
+        );
+    }
+}

@@ -1,8 +1,8 @@
 //! Bounded public game transport; grammar is not authentication or authorization.
 use super::ApiError;
 use brews_contracts::games::{
-    AdmissionContextInput, CreateGame, GAME_QUERY_KNOWN_REVISION, GAME_QUERY_VIEW,
-    GAME_VIEW_ACCOUNT, GAME_VIEW_PLAYER, JoinPlayer, RevisionCommand,
+    AdmissionContextInput, CallManualInput, CancelGameInput, CreateGame, GAME_QUERY_KNOWN_REVISION,
+    GAME_QUERY_VIEW, GAME_VIEW_ACCOUNT, GAME_VIEW_PLAYER, JoinPlayer, RevisionCommand, WinnerInput,
 };
 use brews_domain::ids::{CommandId, GameId};
 use http::{HeaderMap, Method};
@@ -19,6 +19,11 @@ pub enum GameOperation {
     Create,
     Lobby,
     Start,
+    CallRandom,
+    CallManual,
+    Winner,
+    Cancel,
+    Exit,
     AdmissionContext,
     JoinPlayer,
     Stream,
@@ -32,6 +37,9 @@ pub enum GameViewSelector {
 pub enum GamePayload {
     Create(CreateGame),
     Revision(RevisionCommand),
+    CallManual(CallManualInput),
+    Winner(WinnerInput),
+    Cancel(CancelGameInput),
     AdmissionContext(AdmissionContextInput),
     JoinPlayer(JoinPlayer),
     Empty,
@@ -92,7 +100,7 @@ pub fn decode_games(
     {
         return Err(ApiError::Forbidden);
     }
-    let (view, known_revision) = if read {
+    let (view, known_revision) = if read || operation == GameOperation::Exit {
         read_query(query, headers, operation == GameOperation::Sync)?
     } else {
         if query.is_some() {
@@ -117,15 +125,30 @@ pub fn decode_games(
         GameOperation::Create => {
             GamePayload::Create(CreateGame::decode_json(body).map_err(|_| ApiError::InvalidInput)?)
         }
-        GameOperation::Lobby | GameOperation::Start => GamePayload::Revision(
-            RevisionCommand::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
-        ),
+        GameOperation::Lobby | GameOperation::Start | GameOperation::CallRandom => {
+            GamePayload::Revision(
+                RevisionCommand::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
+            )
+        }
         GameOperation::AdmissionContext => GamePayload::AdmissionContext(
             AdmissionContextInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
         GameOperation::JoinPlayer => GamePayload::JoinPlayer(
             JoinPlayer::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
+        GameOperation::CallManual => GamePayload::CallManual(
+            CallManualInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
+        ),
+        GameOperation::Winner => {
+            GamePayload::Winner(WinnerInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?)
+        }
+        GameOperation::Cancel => GamePayload::Cancel(
+            CancelGameInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
+        ),
+        GameOperation::Exit => {
+            super::game_body::decode_empty_game_body(body)?;
+            GamePayload::Empty
+        }
         GameOperation::Sync | GameOperation::Stream => GamePayload::Empty,
     };
     let command_id = if operation == GameOperation::AdmissionContext || read {
@@ -292,6 +315,11 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
     let operation = match action {
         "lobby" => GameOperation::Lobby,
         "start" => GameOperation::Start,
+        "calls/random" => GameOperation::CallRandom,
+        "calls/manual" => GameOperation::CallManual,
+        "winner" => GameOperation::Winner,
+        "cancel" => GameOperation::Cancel,
+        "exit" => GameOperation::Exit,
         "admission-context" => GameOperation::AdmissionContext,
         "players" => GameOperation::JoinPlayer,
         "sync" => GameOperation::Sync,
@@ -379,6 +407,36 @@ mod tests {
             ),
             (
                 Method::POST,
+                format!("/api/games/{ID}/calls/random"),
+                br#"{"expected_revision":0}"#,
+                headers(),
+            ),
+            (
+                Method::POST,
+                format!("/api/games/{ID}/calls/manual"),
+                br#"{"value":"1","expected_revision":0}"#,
+                headers(),
+            ),
+            (
+                Method::POST,
+                format!("/api/games/{ID}/winner"),
+                br#"{"player_id":"01890f3e-53b7-7d28-9b05-4f65092d5711","expected_revision":0}"#,
+                headers(),
+            ),
+            (
+                Method::POST,
+                format!("/api/games/{ID}/cancel"),
+                br#"{"confirmed":true,"expected_state":"in_progress"}"#,
+                headers(),
+            ),
+            (
+                Method::POST,
+                format!("/api/games/{ID}/exit"),
+                b"{}",
+                headers(),
+            ),
+            (
+                Method::POST,
                 format!("/api/games/{ID}/admission-context"),
                 br#"{"game_code":"AB12CD34"}"#,
                 context,
@@ -440,7 +498,7 @@ mod tests {
     #[test]
     fn exact_routes_reject_other_methods_authorization_and_origin_ambiguity() {
         let routes = routes();
-        assert_eq!(routes.len(), 7);
+        assert_eq!(routes.len(), 12);
         for (method, path, body, h) in routes {
             assert!(decode_games(&method, &path, None, &h, body, ORIGIN).is_ok());
             for other in [
@@ -821,6 +879,181 @@ mod tests {
         ] {
             assert_eq!(
                 decode_games(&Method::POST, &join_path, None, &h, body, ORIGIN).err(),
+                Some(ApiError::InvalidInput)
+            );
+        }
+    }
+    #[test]
+    fn final_exit_selects_existing_cookie_without_accepting_a_target_or_revision() {
+        let path = format!("/api/games/{ID}/exit");
+        let mut h = headers();
+        h.insert(
+            "cookie",
+            format!("__Host-brews_session=account-value; {PLAYER_COOKIE_NAME}=player-value")
+                .parse()
+                .unwrap(),
+        );
+        for (selector, token) in [("account", "account-value"), ("player", "player-value")] {
+            let request = decode_games(
+                &Method::POST,
+                &path,
+                Some(&format!("view={selector}")),
+                &h,
+                b"{}",
+                ORIGIN,
+            )
+            .unwrap();
+            assert_eq!(request.session_token.as_deref(), Some(token));
+            assert!(request.known_revision.is_none());
+            for body in [
+                b"[]".as_slice(),
+                b"null",
+                br#"{"player_id":"untrusted"}"#,
+                br#"{"confirmed":true}"#,
+            ] {
+                assert!(
+                    decode_games(
+                        &Method::POST,
+                        &path,
+                        Some(&format!("view={selector}")),
+                        &h,
+                        body,
+                        ORIGIN
+                    )
+                    .is_err()
+                );
+            }
+            assert!(
+                decode_games(
+                    &Method::POST,
+                    &path,
+                    Some(&format!("view={selector}&known_revision=1")),
+                    &h,
+                    b"{}",
+                    ORIGIN
+                )
+                .is_err()
+            );
+        }
+        assert!(decode_games(&Method::POST, &path, None, &h, b"{}", ORIGIN).is_err());
+    }
+    #[test]
+    fn gameplay_payloads_preserve_exact_values_identity_and_confirmation() {
+        let mut h = headers();
+        h.insert(
+            "cookie",
+            format!("__Host-brews_session=account-value; {PLAYER_COOKIE_NAME}=player-value")
+                .parse()
+                .unwrap(),
+        );
+        for (action, body) in [
+            ("calls/random", r#"{"expected_revision":1}"#.to_owned()),
+            (
+                "calls/manual",
+                r#"{"value":"2","expected_revision":1}"#.to_owned(),
+            ),
+            (
+                "winner",
+                format!(r#"{{"player_id":"{ID}","expected_revision":1}}"#),
+            ),
+            (
+                "cancel",
+                r#"{"confirmed":true,"expected_state":"new"}"#.to_owned(),
+            ),
+            (
+                "cancel",
+                r#"{"confirmed":true,"expected_state":"awaiting_players"}"#.to_owned(),
+            ),
+            (
+                "cancel",
+                r#"{"confirmed":true,"expected_state":"in_progress"}"#.to_owned(),
+            ),
+        ] {
+            let path = format!("/api/games/{ID}/{action}");
+            let request =
+                decode_games(&Method::POST, &path, None, &h, body.as_bytes(), ORIGIN).unwrap();
+            assert_eq!(request.session_token.as_deref(), Some("account-value"));
+            assert!(request.admission_token.is_none());
+            assert_eq!(request.command_id.unwrap().to_string(), ID);
+            assert_eq!(request.game_id.unwrap().to_string(), ID);
+            assert!(request.view.is_none());
+            for invalid in [b"[]".as_slice(), b"{}", b"null"] {
+                assert_eq!(
+                    decode_games(&Method::POST, &path, None, &h, invalid, ORIGIN).err(),
+                    Some(ApiError::InvalidInput)
+                );
+            }
+            let injected = body.replace('}', &format!(",\"actor_id\":\"{ID}\"}}"));
+            assert_eq!(
+                decode_games(&Method::POST, &path, None, &h, injected.as_bytes(), ORIGIN).err(),
+                Some(ApiError::InvalidInput)
+            );
+            assert_eq!(
+                decode_games(
+                    &Method::POST,
+                    &path,
+                    Some("view=player"),
+                    &h,
+                    body.as_bytes(),
+                    ORIGIN
+                )
+                .err(),
+                Some(ApiError::InvalidInput)
+            );
+            for suffix in [
+                format!("{action}/"),
+                action.to_uppercase(),
+                format!("{action}/extra"),
+            ] {
+                assert_eq!(
+                    decode_games(
+                        &Method::POST,
+                        &format!("/api/games/{ID}/{suffix}"),
+                        None,
+                        &h,
+                        body.as_bytes(),
+                        ORIGIN
+                    )
+                    .err(),
+                    Some(ApiError::NotFound)
+                );
+            }
+        }
+        for body in [
+            r#"{"value":"02","expected_revision":1}"#,
+            r#"{"value":2,"expected_revision":1}"#,
+            r#"{"value":"2","expected_revision":1,"\u0076alue":"3"}"#,
+            r#"{"value":"2","expected_revision":1,"board":[]}"#,
+        ] {
+            assert_eq!(
+                decode_games(
+                    &Method::POST,
+                    &format!("/api/games/{ID}/calls/manual"),
+                    None,
+                    &h,
+                    body.as_bytes(),
+                    ORIGIN
+                )
+                .err(),
+                Some(ApiError::InvalidInput)
+            );
+        }
+        for body in [
+            r#"{"confirmed":false,"expected_state":"in_progress"}"#,
+            r#"{"confirmed":true,"expected_state":"resolved"}"#,
+            r#"{"confirmed":true,"expected_state":"new","\u0063onfirmed":true}"#,
+            r#"{"confirmed":true,"expected_state":"in_progress","winner":null}"#,
+        ] {
+            assert_eq!(
+                decode_games(
+                    &Method::POST,
+                    &format!("/api/games/{ID}/cancel"),
+                    None,
+                    &h,
+                    body.as_bytes(),
+                    ORIGIN
+                )
+                .err(),
                 Some(ApiError::InvalidInput)
             );
         }

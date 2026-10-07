@@ -27,12 +27,18 @@ use worker::{
 };
 use zeroize::Zeroizing;
 
+enum RegistryAvailability {
+    Available,
+    Unavailable,
+}
+
 #[durable_object]
 pub struct GameObject {
     pub(super) state: State,
     pub(super) env: Env,
     pub(super) sending:
         std::cell::RefCell<std::collections::BTreeSet<brews_domain::ids::ConnectionId>>,
+    pub(super) transport_retry: std::cell::Cell<bool>,
 }
 impl GameObject {
     pub(super) fn database(&self) -> Result<OwnerDatabase, GameError> {
@@ -63,22 +69,48 @@ impl GameObject {
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         db: &OwnerDatabase,
     ) -> Result<(), GameError> {
+        match self.persist_recovery(service, db).await? {
+            RegistryAvailability::Available => Ok(()),
+            RegistryAvailability::Unavailable => Err(GameError::Storage),
+        }
+    }
+    async fn persist_recovery(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+    ) -> Result<RegistryAvailability, GameError> {
         let delivery = DeliveryService::new(db, &WorkerRuntime).map_err(|_| GameError::Storage)?;
         let core_due = service.next_deadline()?;
         let ledger_due = delivery.next_deadline().map_err(|_| GameError::Storage)?;
         let now = WorkerRuntime.now_ms();
-        let mut socket_due = None;
-        for ws in self.sockets()? {
-            let due = match (ready_state(&ws)?, Attachment::read(&ws)) {
-                (1, Ok(hint)) => hint.session_expires_at,
-                _ => now.saturating_add(crate::game::RETRY_INITIAL_MS),
-            };
-            socket_due = Some(socket_due.map_or(due, |prior: i64| prior.min(due)));
-        }
+        let socket_deadline = (|| {
+            let mut socket_due = None;
+            for ws in self.sockets()? {
+                let due = match (ready_state(&ws)?, Attachment::read(&ws)) {
+                    (1, Ok(hint)) => hint.session_expires_at,
+                    _ => now.saturating_add(crate::game::RETRY_INITIAL_MS),
+                };
+                socket_due = Some(socket_due.map_or(due, |prior: i64| prior.min(due)));
+            }
+            Ok::<_, GameError>(socket_due)
+        })();
+        let (socket_due, registry) = match socket_deadline {
+            Ok(due) => (due, RegistryAvailability::Available),
+            // Uncertainty is not absence: persist a retry even after owner reconstruction.
+            Err(_) => (
+                Some(now.saturating_add(crate::game::RETRY_INITIAL_MS)),
+                RegistryAvailability::Unavailable,
+            ),
+        };
+        let retry_due = self
+            .transport_retry
+            .get()
+            .then(|| now.saturating_add(crate::game::RETRY_INITIAL_MS));
         let deadline = core_due
             .into_iter()
             .chain(ledger_due)
             .chain(socket_due)
+            .chain(retry_due)
             .min();
         let storage = self.state.storage();
         let alarm = storage.get_alarm().await.map_err(|_| GameError::Storage)?;
@@ -105,7 +137,8 @@ impl GameObject {
                 .map_err(|_| GameError::Storage)?,
             None => {}
         }
-        storage.sync().await.map_err(|_| GameError::Storage)
+        storage.sync().await.map_err(|_| GameError::Storage)?;
+        Ok(registry)
     }
     async fn recover(
         &self,
@@ -120,10 +153,8 @@ impl GameObject {
         let service = self.service(&db, &rt)?;
         let terminal = service.cleanup()?;
         if terminal.is_some() {
-            self.broadcast(&service, &db).await?;
-            for ws in self.sockets()? {
-                close_checked(&ws, CloseCode::Policy)?;
-            }
+            // Pre-start grants are gone; started grants receive their permitted final view.
+            let _ = self.broadcast(&service, &db).await;
         }
         let projection = match service.directory_projection() {
             Ok(projection) => projection,
@@ -242,6 +273,7 @@ impl GameObject {
     }
     async fn wake(&self) -> Result<(), GameError> {
         const RECOVERY_BATCH_LIMIT: u32 = 10;
+        self.transport_retry.set(false);
         let db = self.database()?;
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
@@ -250,7 +282,8 @@ impl GameObject {
             .map_err(|_| GameError::Storage)?
             .cleanup_expired()
             .map_err(|_| GameError::Storage)?;
-        self.persist(&service, &db).await?;
+        // Required SQL/peer recovery is independent of best-effort transport.
+        self.persist_recovery(&service, &db).await?;
         let socket_result = self.broadcast(&service, &db).await;
         let due = service.pending_work(RECOVERY_BATCH_LIMIT)?;
         for snapshot in due {
@@ -267,29 +300,7 @@ impl GameObject {
                 Err(error) => return Err(error),
             };
             if current.kind() == WorkKind::Release {
-                let result = async {
-                    socket_result.as_ref().map_err(|e| *e)?;
-                    for ws in self.sockets()? {
-                        close_checked(&ws, CloseCode::Policy)?;
-                    }
-                    let proof = service.cleanup()?.ok_or(GameError::Conflict)?;
-                    self.persist(&service, &db).await?;
-                    let before = reload(&service, &current)?;
-                    if before != current {
-                        return Err(GameError::Conflict);
-                    }
-                    let ack = game_peers::release_game(&self.env, &proof)
-                        .await
-                        .map_err(peer_error)?;
-                    let after = reload(&service, &before)?;
-                    if service.cleanup()?.as_ref().map(|p| p.projection())
-                        != Some(proof.projection())
-                    {
-                        return Err(GameError::Conflict);
-                    }
-                    service.acknowledge_release(&after, ack)
-                }
-                .await;
+                let result = self.release_terminal_work(&service, &db, &current).await;
                 if result.is_err()
                     && let Ok(current) = reload(&service, &current)
                 {
@@ -306,7 +317,7 @@ impl GameObject {
                     service.retry_work(&current)?;
                 }
             }
-            self.persist(&service, &db).await?;
+            self.persist_recovery(&service, &db).await?;
         }
         self.persist(&service, &db).await?;
         socket_result
@@ -509,6 +520,92 @@ impl GameObject {
                 response.encode_json().map_err(|_| GameError::Storage)?;
                 Ok(GameOwnerResponse::Synced { response })
             }
+            (GameAction::Exit, GamePayload::Empty) => {
+                let command = command.ok_or(GameError::InvalidInput)?;
+                self.persist(&service, &db).await?;
+                let (response, account) = match ingress.view {
+                    Some(super::game_wire::ViewSelector::Player) => {
+                        (service.exit_player(token, command)?, None)
+                    }
+                    Some(super::game_wire::ViewSelector::Account) => {
+                        let authority = game_peers::authorize_account(&self.env, token)
+                            .await
+                            .map_err(peer_error)?;
+                        let account = authority.account_id();
+                        (service.exit_account(authority, command)?, Some(account))
+                    }
+                    None => return Err(GameError::InvalidInput),
+                };
+                // The owner has revoked every same-principal binding before physical closure.
+                self.persist(&service, &db).await?;
+                let _ = self.broadcast(&service, &db).await;
+                self.persist(&service, &db).await?;
+                if let Some(account) = account {
+                    let current = game_peers::authorize_account(&self.env, token)
+                        .await
+                        .map_err(peer_error)?;
+                    if current.account_id() != account || current.expires_at() <= rt.now_ms() {
+                        return Err(GameError::Unauthorized);
+                    }
+                }
+                // A player Exit intentionally retires its token; no post-Exit private data is released.
+                Ok(success(response))
+            }
+            (GameAction::CallRandom, GamePayload::Revision(input)) => {
+                self.persist(&service, &db).await?;
+                let authority = game_peers::authorize_account(&self.env, token)
+                    .await
+                    .map_err(peer_error)?;
+                let response = service.call_random(
+                    authority,
+                    command.ok_or(GameError::InvalidInput)?,
+                    input.expected_revision,
+                )?;
+                self.complete_gameplay(&service, &db, token, response, false)
+                    .await
+            }
+            (GameAction::CallManual, GamePayload::CallManual(input)) => {
+                self.persist(&service, &db).await?;
+                let authority = game_peers::authorize_account(&self.env, token)
+                    .await
+                    .map_err(peer_error)?;
+                let response = service.call_manual_value(
+                    authority,
+                    command.ok_or(GameError::InvalidInput)?,
+                    &input.value,
+                    input.expected_revision,
+                )?;
+                self.complete_gameplay(&service, &db, token, response, false)
+                    .await
+            }
+            (GameAction::Winner, GamePayload::Winner(input)) => {
+                self.persist(&service, &db).await?;
+                let authority = game_peers::authorize_account(&self.env, token)
+                    .await
+                    .map_err(peer_error)?;
+                let response = service.submit_winner(
+                    authority,
+                    command.ok_or(GameError::InvalidInput)?,
+                    input.player_id,
+                    input.expected_revision,
+                )?;
+                self.complete_gameplay(&service, &db, token, response, true)
+                    .await
+            }
+            (GameAction::Cancel, GamePayload::Cancel(input)) => {
+                self.persist(&service, &db).await?;
+                let authority = game_peers::authorize_account(&self.env, token)
+                    .await
+                    .map_err(peer_error)?;
+                let response = service.cancel_game(
+                    authority,
+                    command.ok_or(GameError::InvalidInput)?,
+                    input.expected_state,
+                    input.confirmed,
+                )?;
+                self.complete_gameplay(&service, &db, token, response, true)
+                    .await
+            }
             (GameAction::Start, GamePayload::Revision(input)) => {
                 let command = command.ok_or(GameError::InvalidInput)?;
                 self.persist(&service, &db).await?;
@@ -550,6 +647,93 @@ impl GameObject {
             }
             _ => Err(GameError::InvalidInput),
         }
+    }
+    async fn complete_gameplay(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        token: &str,
+        response: GameResponse,
+        terminal: bool,
+    ) -> Result<GameOwnerResponse, GameError> {
+        // Schedule durable recovery before any post-commit peer/output await.
+        self.persist(service, db).await?;
+        let delivery = self.broadcast(service, db).await;
+        let response = if terminal {
+            // Final delivery is best-effort; viewer ACK/Exit never gates release.
+            self.finish_terminal_release(service, db, response).await?
+        } else {
+            delivery?;
+            response
+        };
+        self.persist(service, db).await?;
+        let authority = game_peers::authorize_account(&self.env, token)
+            .await
+            .map_err(peer_error)?;
+        service.authorize_gameplay_response(authority)?;
+        Ok(success(response))
+    }
+    async fn finish_terminal_release(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        response: GameResponse,
+    ) -> Result<GameResponse, GameError> {
+        let pending = service
+            .pending_work(100)?
+            .into_iter()
+            .find(|work| work.kind() == WorkKind::Release);
+        let Some(work) = pending else {
+            return Ok(response);
+        };
+        match self.release_terminal_work(service, db, &work).await {
+            Ok(()) => Ok(response),
+            Err(_) => {
+                if let Ok(current) = reload(service, &work) {
+                    service.retry_work(&current)?;
+                    self.persist(service, db).await?;
+                    Ok(GameResponse::Pending {
+                        operation_id: work.operation_id(),
+                    })
+                } else {
+                    // A concurrent exact ACK can already have completed the intent.
+                    if service
+                        .pending_work(100)?
+                        .iter()
+                        .any(|pending| pending.kind() == WorkKind::Release)
+                    {
+                        return Err(GameError::Conflict);
+                    }
+                    Ok(response)
+                }
+            }
+        }
+    }
+    async fn release_terminal_work(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        expected: &PendingWork,
+    ) -> Result<(), GameError> {
+        let proof = service.cleanup()?.ok_or(GameError::Conflict)?;
+        self.persist_recovery(service, db).await?;
+        let before = reload(service, expected)?;
+        if before != *expected || before.kind() != WorkKind::Release {
+            return Err(GameError::Conflict);
+        }
+        let ack = game_peers::release_game(&self.env, &proof)
+            .await
+            .map_err(peer_error)?;
+        let after = reload(service, &before)?;
+        if service
+            .cleanup()?
+            .as_ref()
+            .map(|current| current.projection())
+            != Some(proof.projection())
+        {
+            return Err(GameError::Conflict);
+        }
+        service.acknowledge_release(&after, ack)
     }
     pub(super) async fn publish(
         &self,
@@ -651,6 +835,7 @@ impl DurableObject for GameObject {
             state,
             env,
             sending: Default::default(),
+            transport_retry: Default::default(),
         }
     }
     async fn fetch(&self, request: Request) -> worker::Result<Response> {

@@ -773,6 +773,71 @@ mod tests {
         assert!(matches!(check(&due),DirectoryGameOutcome::Due{work} if work.is_empty()));
     }
     #[test]
+    fn terminal_release_original_bytes_are_closed_and_reply_binds_exact_expiry() {
+        let projection = ProjectionWire {
+            game_id: id(3),
+            designated_host_id: id(1),
+            fingerprint: [7; 32],
+            state: GameState::Resolved,
+            source_revision: 3,
+            game_code: Some("ABCD1234".parse().unwrap()),
+            created_at: 1000,
+            started_at: Some(1100),
+            ended_at: Some(1200),
+            history_expires_at: Some(9000),
+        };
+        let request = DirectoryGameRequest::Release { projection };
+        let original = serde_json::to_string(&request).unwrap();
+        assert_eq!(
+            decode::<DirectoryGameRequest>(original.as_bytes()).unwrap(),
+            request
+        );
+        for bad in [
+            original.replace(
+                "\"history_expires_at\":9000",
+                "\"history_expires_at\":9000,\"\\u0068istory_expires_at\":9000",
+            ),
+            original.replace(
+                "\"history_expires_at\":9000",
+                "\"history_expires_at\":9000.0",
+            ),
+            original.replace(
+                "\"history_expires_at\":9000",
+                "\"history_expires_at\":9007199254740992",
+            ),
+            original.replace(
+                "\"history_expires_at\":9000",
+                "\"history_expires_at\":9000,\"snapshot\":{}",
+            ),
+            original.replace("\"fingerprint\":[", "\"boards\":[],\"fingerprint\":["),
+            original.replace("\"ended_at\":1200,", ""),
+            original.replace(
+                "\"action\":\"release\"",
+                "\"action\":\"release\",\"\\u0061ction\":\"release\"",
+            ),
+            original.replace("ABCD1234", "abcd1234"),
+            format!("[{original}]"),
+        ] {
+            assert!(
+                decode::<DirectoryGameRequest>(bad.as_bytes()).is_err(),
+                "{bad}"
+            );
+        }
+        let reply = DirectoryGameReply {
+            request: request.clone(),
+            outcome: DirectoryGameOutcome::Released { game_id: id(3) },
+        };
+        assert!(verify_reply(&request, reply.clone()).is_ok());
+        let mut altered = reply.clone();
+        if let DirectoryGameRequest::Release { projection } = &mut altered.request {
+            projection.history_expires_at = Some(9001);
+        }
+        assert!(verify_reply(&request, altered).is_err());
+        let mut retargeted = reply;
+        retargeted.outcome = DirectoryGameOutcome::Released { game_id: id(8) };
+        assert!(verify_reply(&request, retargeted).is_err());
+    }
+    #[test]
     fn directory_claim_ack_and_code_use_real_owner_core_and_exact_binding() {
         let db = test_support::Sqlite::new();
         let rt = test_support::TestRuntime::new();

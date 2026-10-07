@@ -258,3 +258,6 @@ pub const PLAYER_KIND: &str = "player";
 pub const ACCOUNT_KIND: &str = "account";
 pub const LIVE_ACCESS: &str = "live";
 pub const HOST_IDLE_REASON: &str = "host_idle_timeout";
+pub const OPERATOR_CANCEL_REASON: &str = "operator_cancelled";
+pub const TERMINAL_ACTOR_ACCOUNT: &str = "account";
+pub const TERMINAL_ACTOR_SYSTEM: &str = "system";

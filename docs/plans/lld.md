@@ -609,6 +609,41 @@ Local gates pass: 563 tests in each native profile, 12 doctests, 127 fresh-built
 
 The local slice received separate user authorization for commit/push after review. Production KDF costs, Unicode/runtime consistency, provider capacity/quota measurements, infrastructure/secret provisioning and deployment are not certified by these local tests.
 
+### 3.12 Local Bingo gameplay and terminal-flow implementation slice
+
+The user has now authorized local implementation of the backend gameplay path from accepted calls through automatic card matching/qualification and host winner selection, plus the approved explicit terminal paths. The request-field decisions and branch-fencing contract are recorded under [GAMEPLAY-SLICE-01–03](api-design.md#game-creationstart-implementation-contract-decisions). This is implementation authorization for this slice only, not a new approval of unrelated proposal fields or a publication request.
+
+Follow HLD-037 and DO-063–075. The backend generates position-distinct cards for retained players at Start; players do not select, replace, mark or unmark cards. Random and manual values use the same atomic GameObject path: validate host/state/current host revision/idempotency/pool/nonduplication; persist the ordered call; mark every matching ordinary value on every board, including disconnected/departed retained players; recompute Single Line qualifications from authoritative board state; advance each affected authorized view revision once; commit the secret-free receipt; broadcast only after commit. Exhausting the pool does not resolve a game. Free-cell qualification may exist before the first call but never selects a winner automatically.
+
+Winner submission accepts a stable `player_id`, revalidates same-game retained membership and Single Line qualification inside the owner transaction, and commits exactly one winner, immutable Resolved History, final authorized-view revisions/receipt, and terminal cleanup/release work. Per the latest approved lifecycle, this submission is itself terminal; there is no later Close operation. Pre-start cancellation requires `confirmed: true` and exact `expected_state` (`New` or `AwaitingPlayers`), commits Cancelled, creates no History and purges participant/gameplay data before releasing the same global reservation. Confirmed InProgress end-without-winner uses the same `/cancel` path fenced by `expected_state: InProgress`, commits Cancelled with immutable three-month History, then safely releases the reservation. A rejected, stale, mismatched or dismissed command has no gameplay effect; lost cross-Object coordination remains durable/retryable and never releases a different game’s reservation.
+
+Local implementation and independent core/runtime review are complete at verified source hashes, with no remaining blocking security or logic findings. Eligible original host/player grants support fixed-expiry final sync/reconnect and principal-wide Exit without altering History. History expiry purges the primary final rows and coordinates matching Directory-index removal through the existing release intent; delayed acknowledgements never clear another game’s reservation. The gameplay slice remains local; the user has authorized committing and pushing this reviewed slice. Deployment remains unauthorized.
+
+#### Local gameplay verification checkpoint
+
+Commands below ran at the workspace root, except the npm rows, which ran in `backend/`.
+
+| Gate | Executed command | Verified result |
+| --- | --- | --- |
+| Native workspace | `cargo nextest run --workspace --all-features --locked --no-fail-fast` | 639 passed, none skipped. |
+| Optimized assertions | `cargo nextest run --workspace --all-features --locked --cargo-profile release-assertions --no-fail-fast` | 639 passed, none skipped. |
+| Doctests | `cargo test --workspace --all-features --locked --doc` | 12 passed. |
+| Native strict lint | `cargo clippy --workspace --all-features --all-targets --locked -- -D warnings` | Passed. |
+| Wasm strict lint | `cargo clippy -p brews-backend --all-features --locked --target wasm32-unknown-unknown -- -D warnings` | Passed. |
+| Formatting/whitespace | `cargo fmt --all`, then `cargo fmt --all --check` and `git diff --check` | Passed. |
+| CLI compatibility build | `cargo build -p brews-cli --locked` | Passed. |
+| Fresh release Worker | `npm run build` | Passed. |
+| Complete local Workerd suite | `npm run test:worker` with JSON/verbose reporting | 141 passed, including 14 gameplay cases. |
+| Real local HTTPS/WSS | `python3 backend/tests/gameplay_https_wss.py` | 63 checks passed; two genuine connected players, three retained boards, no board/cookie replay. |
+
+Independent native review freshly compiled the actual owner against frozen Cargo-JSON-selected dependencies. The original ten-case and expanded eleven-case publication receipt fault matrices pass; required INSERT/UPDATE readbacks return fatal Storage and roll back every Game row, including clock/floor metadata. All 72 INSERT fault cells pass in both profiles, with original-command recovery and fixed receipt retention. Pending Start publication now advances only its source fence atomically with accepted calls; stale work/ACKs cannot clear the successor. Migrated pre-start terminal counters retire without losing release/routing proof. These repairs and the original independent probes have no remaining core findings.
+
+Independent Workerd review passes five targeted cases, with twelve nonselected cases explicitly skipped. Genuine enumeration and throwing/nonnumeric native `readyState` faults survive eviction/reconstruction: output remains 503, the durable retry is exactly one second, the same-game reservation releases under persistent uncertainty, and actual frame credit/History remain unchanged. No frame or false Closed acknowledgement is emitted. Lost genuine Start ACK plus an accepted first call recovers the current publication without changing calls, cells or receipts. The same five probes were rerun successfully against the final combined Worker after the publication repair; that parent rerun is distinct from independent review.
+
+The initial final combined Worker attempt passed 140 cases but hit an existing two-second close timeout in the backlog-credit case. Both focused backlog/byte cases and the complete 141-case rerun passed at identical source/artifact hashes without relaxing the test. This timing limitation remains visible; injected ACK-loss/transport exceptions in fault-test logs are expected and retained.
+
+The code-only structural graph verifies 153 source hashes, with 481 dangling-endpoint and 208 collapsed directed edges. These are navigation limitations, not correctness evidence; the documentation graph remains stale. Production KDF/runtime/Unicode consistency, provider capacity/quotas, deployment and infrastructure/secret provisioning are not certified by local gates. The separate proposed History listing/detail, participant recovery and spectator-admission APIs are not implemented by this slice. Frontend work and deployment remain unauthorized. The user has authorized committing and pushing this reviewed backend slice.
+
 ## 4. Views and frontend contracts
 
 **Design status:** Concrete UI design proposals captured at the user's request (LLD-026), not implemented screens or a new approval of the whole LLD. The requested public **Home**, privileged **Games**, admin-only **Users**, **Create game**, and active **Play** experiences are included, with enrollment, admission, lobby, recovery, results and History completing their flows. Approved domain/security rules remain mandatory. Suggested routes, component names, layout choices and interaction details below are reviewable UI proposals; they do not finalize API payloads, add backend permissions or authorize implementation.

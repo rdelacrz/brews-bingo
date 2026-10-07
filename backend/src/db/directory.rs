@@ -141,7 +141,7 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
         validate_schema(db)?;
         Ok(Self { db, runtime })
     }
-    /// Earliest creation retry or completion expiry in trusted epoch milliseconds.
+    /// Earliest creation retry, completion expiry or retained History index expiry.
     /// Does not compact rows; an expired backlog stays due until cleanup drains it.
     /// Pending creation has retry/deadline work, never TTL deletion; removal gates do not expire.
     ///
@@ -150,6 +150,9 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
     pub fn next_deadline(&self) -> Result<Option<i64>, DirectoryError> {
         self.transaction_before_compaction(|now| {
             let mut deadline = self.next_creation_deadline(now)?;
+            if let Some(expires) = self.next_history_deadline(now)? {
+                deadline = Some(deadline.map_or(expires, |earliest| earliest.min(expires)));
+            }
             for select in [
                 "SELECT operation_id,account_id,completed_at FROM directory_removal_receipts ORDER BY completed_at,operation_id LIMIT 1",
                 "SELECT operation_id,account_id,completed_at FROM directory_removal_rejections ORDER BY completed_at,operation_id LIMIT 1",
@@ -476,10 +479,21 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
             return Err(DirectoryError::Clock);
         }
         self.db.execute("UPDATE directory_metadata SET last_observed_ms=?,command_floor_ms=max(command_floor_ms,?) WHERE singleton=1", &[SqlValue::Integer(now),SqlValue::Integer(now.saturating_sub(COMMAND_RECEIPT_RETENTION_MS).max(0))])?;
+        let expected_floor = (*floor).max(now.saturating_sub(COMMAND_RECEIPT_RETENTION_MS).max(0));
+        if self.db.query(
+            "SELECT last_observed_ms,command_floor_ms FROM directory_metadata WHERE singleton=1",
+            &[],
+        )? != vec![vec![
+            SqlValue::Integer(now),
+            SqlValue::Integer(expected_floor),
+        ]] {
+            return Err(DirectoryError::Storage);
+        }
         Ok(now)
     }
     fn compact_completions(&self, now: i64) -> Result<(), DirectoryError> {
         self.compact_creations(now)?;
+        self.compact_history_indexes(now)?;
         // Never delete unvalidated tombstones: malformed time could otherwise
         // remove a fresh operation fence and allow its resurrection.
         for (select, delete) in [

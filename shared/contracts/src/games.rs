@@ -1,6 +1,7 @@
 //! Allocation-conscious game wire boundary; request secrets are never response fields.
 use brews_domain::games::{
-    BOARD_CELLS_MAX, CellPosition, GameConfiguration, WinningPattern, validate_alias,
+    BOARD_CELLS_MAX, CellPosition, GameConfiguration, NUMERIC_UPPER_BOUND_MAX, WinningPattern,
+    validate_alias,
 };
 use serde::{Deserialize, Serialize};
 
@@ -227,6 +228,59 @@ impl RevisionCommand {
         decode(bytes, GAME_BODY_MAX_BYTES)
     }
 }
+fn call_value<'de, D: serde::Deserializer<'de>>(d: D) -> Result<String, D::Error> {
+    let value = String::deserialize(d)?;
+    let valid_digits = !value.is_empty()
+        && value.len() <= 4
+        && value.bytes().all(|byte| byte.is_ascii_digit())
+        && value.as_bytes()[0] != b'0';
+    let valid_value = value.parse::<u32>().ok().is_some_and(|number| {
+        (1..=NUMERIC_UPPER_BOUND_MAX).contains(&number) && number.to_string() == value
+    });
+    if !valid_digits || !valid_value {
+        return Err(serde::de::Error::custom("Invalid call value."));
+    }
+    Ok(value)
+}
+map_struct!(pub CallManualInput {
+    #[serde(deserialize_with = "call_value")]
+    value: String,
+    #[serde(deserialize_with = "safe_revision")]
+    expected_revision: u64
+});
+impl CallManualInput {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        decode(bytes, GAME_BODY_MAX_BYTES)
+    }
+}
+map_struct!(pub WinnerInput {
+    player_id: PlayerId,
+    #[serde(deserialize_with = "safe_revision")]
+    expected_revision: u64
+});
+impl WinnerInput {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        decode(bytes, GAME_BODY_MAX_BYTES)
+    }
+}
+map_struct!(pub CancelGameInput {
+    confirmed: bool,
+    expected_state: GameState
+});
+impl CancelGameInput {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        let input: Self = decode(bytes, GAME_BODY_MAX_BYTES)?;
+        if !input.confirmed
+            || !matches!(
+                input.expected_state,
+                GameState::New | GameState::AwaitingPlayers | GameState::InProgress
+            )
+        {
+            return Err(GameDecodeError);
+        }
+        Ok(input)
+    }
+}
 fn lookup_code<'de, D: serde::Deserializer<'de>>(
     d: D,
 ) -> Result<brews_domain::games::GameCode, D::Error> {
@@ -333,7 +387,95 @@ fn checked_deadline(completed_at: i64, duration_ms: i64) -> Result<i64, GameDeco
     Ok(deadline)
 }
 pub const GAME_FRAME_MAX_BYTES: usize = 256 * 1_024;
+fn valid_call_value(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 4
+        && value.bytes().all(|byte| byte.is_ascii_digit())
+        && value.as_bytes()[0] != b'0'
+        && value.parse::<u32>().ok().is_some_and(|number| {
+            (1..=NUMERIC_UPPER_BOUND_MAX).contains(&number) && number.to_string() == value
+        })
+}
+fn call_sequence<'de, D: serde::Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
+    let sequence = u32::deserialize(d)?;
+    if !(1..=NUMERIC_UPPER_BOUND_MAX).contains(&sequence) {
+        return Err(serde::de::Error::custom("Call sequence out of range."));
+    }
+    Ok(sequence)
+}
+map_struct!(pub CallView {
+    #[serde(deserialize_with = "call_sequence")]
+    sequence_no: u32,
+    #[serde(deserialize_with = "call_value")]
+    value: String
+});
+impl CallView {
+    pub fn validate(&self) -> Result<(), GameDecodeError> {
+        if !(1..=NUMERIC_UPPER_BOUND_MAX).contains(&self.sequence_no)
+            || !valid_call_value(&self.value)
+        {
+            return Err(GameDecodeError);
+        }
+        Ok(())
+    }
+}
+map_struct!(pub WinnerView {
+    player_id: PlayerId,
+    #[serde(deserialize_with = "canonical_alias")]
+    alias: String
+});
+impl WinnerView {
+    pub fn validate(&self) -> Result<(), GameDecodeError> {
+        if validate_alias(&self.alias).map_err(|_| GameDecodeError)? != self.alias {
+            return Err(GameDecodeError);
+        }
+        Ok(())
+    }
+}
+fn valid_terminal_shape(
+    expected_state: GameState,
+    state: GameState,
+    history_available: bool,
+    history_expires_at: Option<i64>,
+    winner: Option<&WinnerView>,
+    ended_at: i64,
+) -> Result<(), GameDecodeError> {
+    validate_timestamp(ended_at)?;
+    if let Some(expires_at) = history_expires_at {
+        validate_timestamp(expires_at)?;
+        if expires_at <= ended_at {
+            return Err(GameDecodeError);
+        }
+    }
+    let valid = match (expected_state, state) {
+        (GameState::New | GameState::AwaitingPlayers, GameState::Cancelled) => {
+            !history_available && history_expires_at.is_none() && winner.is_none()
+        }
+        (GameState::InProgress, GameState::Cancelled) => {
+            history_available && history_expires_at.is_some() && winner.is_none()
+        }
+        (GameState::InProgress, GameState::Resolved) => {
+            history_available && history_expires_at.is_some() && winner.is_some()
+        }
+        _ => false,
+    };
+    if !valid {
+        return Err(GameDecodeError);
+    }
+    if let Some(winner) = winner {
+        winner.validate()?;
+    }
+    Ok(())
+}
+fn same_winner(left: &Option<WinnerView>, right: &Option<WinnerView>) -> bool {
+    match (left, right) {
+        (None, None) => true,
+        (Some(left), Some(right)) => left.player_id == right.player_id && left.alias == right.alias,
+        _ => false,
+    }
+}
 map_enum!(pub GameOutcome, "operation", {
+    Exited {},
     Created {
         #[serde(deserialize_with = "safe_revision")]
         view_revision: u64,
@@ -356,6 +498,25 @@ map_enum!(pub GameOutcome, "operation", {
         view_revision: u64,
         #[serde(deserialize_with = "safe_timestamp")]
         session_expires_at: i64,
+    },
+    CallAccepted {
+        call: CallView,
+        remaining_count: u32,
+        exhausted: bool,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+    },
+    Terminalized {
+        expected_state: GameState,
+        state: GameState,
+        ended_at: i64,
+        history_available: bool,
+        #[serde(deserialize_with = "nullable_value")]
+        history_expires_at: Option<i64>,
+        #[serde(deserialize_with = "nullable_value")]
+        winner: Option<WinnerView>,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
     },
 });
 fn version_one<'de, D: serde::Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
@@ -382,6 +543,7 @@ impl GameReceipt {
             return Err(GameDecodeError);
         }
         let revision = match &self.outcome {
+            GameOutcome::Exited {} => 0,
             GameOutcome::Created {
                 view_revision,
                 idle_cancel_due_at,
@@ -415,6 +577,43 @@ impl GameReceipt {
                 if *session_expires_at
                     != checked_deadline(self.completed_at, PLAYER_SESSION_LIFETIME_MS)?
                 {
+                    return Err(GameDecodeError);
+                }
+                *view_revision
+            }
+            GameOutcome::CallAccepted {
+                call,
+                remaining_count,
+                exhausted,
+                view_revision,
+            } => {
+                call.validate()?;
+                if *remaining_count >= NUMERIC_UPPER_BOUND_MAX
+                    || *exhausted != (*remaining_count == 0)
+                    || call.sequence_no + remaining_count > NUMERIC_UPPER_BOUND_MAX
+                {
+                    return Err(GameDecodeError);
+                }
+                *view_revision
+            }
+            GameOutcome::Terminalized {
+                expected_state,
+                state,
+                ended_at,
+                history_available,
+                history_expires_at,
+                winner,
+                view_revision,
+            } => {
+                valid_terminal_shape(
+                    *expected_state,
+                    *state,
+                    *history_available,
+                    *history_expires_at,
+                    winner.as_ref(),
+                    *ended_at,
+                )?;
+                if *ended_at > self.completed_at {
                     return Err(GameDecodeError);
                 }
                 *view_revision
@@ -475,6 +674,10 @@ map_struct!(pub GameSummary {
     view_revision: u64
 });
 map_enum!(pub GameResponse, "result", {
+    Exited {
+        game_id: GameId,
+        receipt: GameReceipt,
+    },
     Created {
         game: GameSummary,
         #[serde(deserialize_with = "configuration")]
@@ -518,11 +721,37 @@ map_enum!(pub GameResponse, "result", {
         view_revision: u64,
         receipt: GameReceipt,
     },
+    CallAccepted {
+        call: CallView,
+        remaining_count: u32,
+        exhausted: bool,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+        receipt: GameReceipt,
+    },
+    Terminalized {
+        game_id: GameId,
+        expected_state: GameState,
+        state: GameState,
+        ended_at: i64,
+        history_available: bool,
+        #[serde(deserialize_with = "nullable_value")]
+        history_expires_at: Option<i64>,
+        #[serde(deserialize_with = "nullable_value")]
+        winner: Option<WinnerView>,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+        receipt: GameReceipt,
+    },
 }; validate);
 impl GameResponse {
     /// Validates acknowledgement coherence, not actor authority or current owner state.
     pub fn validate(&self) -> Result<(), GameDecodeError> {
         let coherent = match self {
+            Self::Exited { game_id, receipt } => {
+                receipt.validate()?;
+                *game_id == receipt.game_id && matches!(receipt.outcome, GameOutcome::Exited {})
+            }
             Self::Created {
                 game,
                 configuration,
@@ -578,6 +807,67 @@ impl GameResponse {
                 validate_alias(alias).map_err(|_| GameDecodeError)? == alias
                     && matches!(&receipt.outcome, GameOutcome::PlayerJoined { player_id: player, view_revision: revision, session_expires_at: expiry }
                         if player == player_id && revision == view_revision && expiry == session_expires_at)
+            }
+            Self::CallAccepted {
+                call,
+                remaining_count,
+                exhausted,
+                view_revision,
+                receipt,
+            } => {
+                receipt.validate()?;
+                call.validate()?;
+                *remaining_count < NUMERIC_UPPER_BOUND_MAX
+                    && *exhausted == (*remaining_count == 0)
+                    && matches!(&receipt.outcome, GameOutcome::CallAccepted {
+                        call: saved_call,
+                        remaining_count: saved_remaining,
+                        exhausted: saved_exhausted,
+                        view_revision: saved_revision,
+                    } if saved_call.sequence_no == call.sequence_no
+                        && saved_call.value == call.value
+                        && saved_remaining == remaining_count
+                        && saved_exhausted == exhausted
+                        && saved_revision == view_revision)
+            }
+            Self::Terminalized {
+                game_id,
+                expected_state,
+                state,
+                ended_at,
+                history_available,
+                history_expires_at,
+                winner,
+                view_revision,
+                receipt,
+            } => {
+                receipt.validate()?;
+                valid_terminal_shape(
+                    *expected_state,
+                    *state,
+                    *history_available,
+                    *history_expires_at,
+                    winner.as_ref(),
+                    *ended_at,
+                )?;
+                if *game_id != receipt.game_id {
+                    return Err(GameDecodeError);
+                }
+                matches!(&receipt.outcome, GameOutcome::Terminalized {
+                    expected_state: saved_expected,
+                    state: saved_state,
+                    ended_at: saved_ended,
+                    history_available: saved_history,
+                    history_expires_at: saved_expires,
+                    winner: saved_winner,
+                    view_revision: saved_revision,
+                } if saved_expected == expected_state
+                    && saved_state == state
+                    && saved_ended == ended_at
+                    && saved_history == history_available
+                    && saved_expires == history_expires_at
+                    && same_winner(saved_winner, winner)
+                    && saved_revision == view_revision)
             }
             Self::Committed { receipt } => {
                 receipt.validate()?;
@@ -682,6 +972,28 @@ fn cells<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<BoardCell>, D::Er
 }
 map_struct!(pub BoardView {side_length:u8,#[serde(deserialize_with="cells")] cells:Vec<BoardCell>,qualified:bool,#[serde(deserialize_with="completed_lines")] qualifying_lines:Vec<CompletedLine>});
 map_struct!(pub HostPlayerView {player_id:PlayerId,#[serde(deserialize_with="canonical_alias")] alias:String,connected:bool,#[serde(default,deserialize_with="non_null_option",skip_serializing_if="Option::is_none")] board:Option<BoardView>});
+fn validate_call_ledger(calls: &[CallView], upper_bound: u32) -> Result<(), GameDecodeError> {
+    if calls.len() > upper_bound as usize {
+        return Err(GameDecodeError);
+    }
+    let mut seen = vec![false; (NUMERIC_UPPER_BOUND_MAX + 1) as usize];
+    for (index, call) in calls.iter().enumerate() {
+        call.validate()?;
+        let expected = u32::try_from(index + 1).map_err(|_| GameDecodeError)?;
+        let value = call.value.parse::<u32>().map_err(|_| GameDecodeError)?;
+        if call.sequence_no != expected || value > upper_bound || seen[value as usize] {
+            return Err(GameDecodeError);
+        }
+        seen[value as usize] = true;
+    }
+    Ok(())
+}
+map_struct!(pub FinalBoardView {
+    player_id: PlayerId,
+    #[serde(deserialize_with = "canonical_alias")]
+    alias: String,
+    board: BoardView
+});
 map_enum!(pub GameView, "role", {
     Host {
         game: GameSummary,
@@ -696,6 +1008,8 @@ map_enum!(pub GameView, "role", {
         #[serde(deserialize_with = "nullable_value")]
         idle_cancel_due_at: Option<i64>,
         players: Vec<HostPlayerView>,
+        #[serde(default)]
+        calls: Vec<CallView>,
         connected_player_count: u8,
         spectator_count: u8,
         connected_spectator_count: u8,
@@ -715,21 +1029,59 @@ map_enum!(pub GameView, "role", {
         view_revision: u64,
         player_id: PlayerId,
         alias: String,
+        #[serde(default)]
+        calls: Vec<CallView>,
         #[serde(default, deserialize_with = "non_null_option", skip_serializing_if = "Option::is_none")]
         board: Option<BoardView>,
+    },
+    FinalHost {
+        game_id: GameId,
+        game_code: brews_domain::games::GameCode,
+        designated_host_id: AccountId,
+        state: GameState,
+        started_at: i64,
+        ended_at: i64,
+        history_expires_at: i64,
+        #[serde(deserialize_with = "nullable_value")]
+        winner: Option<WinnerView>,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+        calls: Vec<CallView>,
+        players: Vec<FinalBoardView>,
+    },
+    FinalPlayer {
+        game_id: GameId,
+        game_code: brews_domain::games::GameCode,
+        state: GameState,
+        started_at: i64,
+        ended_at: i64,
+        history_expires_at: i64,
+        #[serde(deserialize_with = "nullable_value")]
+        winner: Option<WinnerView>,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+        calls: Vec<CallView>,
+        player_id: PlayerId,
+        #[serde(deserialize_with = "canonical_alias")]
+        alias: String,
+        board: BoardView,
     },
 }; validate);
 impl GameView {
     pub const fn game_id(&self) -> GameId {
         match self {
             Self::Host { game, .. } => game.game_id,
-            Self::Player { game_id, .. } => *game_id,
+            Self::Player { game_id, .. }
+            | Self::FinalHost { game_id, .. }
+            | Self::FinalPlayer { game_id, .. } => *game_id,
         }
     }
     pub const fn view_revision(&self) -> u64 {
         match self {
             Self::Host { game, .. } => game.view_revision,
-            Self::Player { view_revision, .. } => *view_revision,
+            Self::Player { view_revision, .. }
+            | Self::FinalHost { view_revision, .. }
+            | Self::FinalPlayer { view_revision, .. } => *view_revision,
         }
     }
     pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
@@ -751,9 +1103,14 @@ impl GameView {
                 started_at,
                 ended_at,
                 idle_cancel_due_at,
+                calls,
             } => {
                 configuration.validate().map_err(|_| GameDecodeError)?;
+                validate_call_ledger(calls, configuration.numeric_upper_bound)?;
                 validate_timestamp(game.created_at)?;
+                if matches!(game.state, GameState::Resolved | GameState::Cancelled) {
+                    return Err(GameDecodeError);
+                }
                 validate_lifecycle(game.state, game_code.is_some(), *started_at, *ended_at)?;
                 if started_at.is_some_and(|start| start < game.created_at)
                     || ended_at.is_some_and(|end| end < game.created_at)
@@ -803,9 +1160,14 @@ impl GameView {
                 game_code,
                 started_at,
                 ended_at,
+                calls,
                 ..
             } => {
                 configuration.validate().map_err(|_| GameDecodeError)?;
+                validate_call_ledger(calls, configuration.numeric_upper_bound)?;
+                if matches!(state, GameState::Resolved | GameState::Cancelled) {
+                    return Err(GameDecodeError);
+                }
                 validate_lifecycle(*state, game_code.is_some(), *started_at, *ended_at)?;
                 if *state == GameState::New
                     || (*state == GameState::AwaitingPlayers && game_code.is_none())
@@ -814,9 +1176,141 @@ impl GameView {
                 }
                 validate_projection_player(*state, configuration, alias, board.as_ref())?;
             }
+            Self::FinalHost {
+                state,
+                started_at,
+                ended_at,
+                history_expires_at,
+                winner,
+                calls,
+                players,
+                ..
+            } => {
+                validate_final_result(
+                    *state,
+                    *started_at,
+                    *ended_at,
+                    *history_expires_at,
+                    winner.as_ref(),
+                    calls,
+                )?;
+                if !(2..=usize::from(brews_domain::games::PLAYER_CAPACITY_MAX))
+                    .contains(&players.len())
+                {
+                    return Err(GameDecodeError);
+                }
+                for (index, player) in players.iter().enumerate() {
+                    if players[..index]
+                        .iter()
+                        .any(|other| other.alias == player.alias)
+                        || (index > 0 && players[index - 1].player_id >= player.player_id)
+                    {
+                        return Err(GameDecodeError);
+                    }
+                    validate_final_board(&player.alias, &player.board, calls)?;
+                }
+                if let Some(winner) = winner {
+                    let selected = players
+                        .iter()
+                        .find(|p| p.player_id == winner.player_id)
+                        .ok_or(GameDecodeError)?;
+                    if selected.alias != winner.alias || !selected.board.qualified {
+                        return Err(GameDecodeError);
+                    }
+                }
+            }
+            Self::FinalPlayer {
+                state,
+                started_at,
+                ended_at,
+                history_expires_at,
+                winner,
+                calls,
+                player_id,
+                alias,
+                board,
+                ..
+            } => {
+                validate_final_result(
+                    *state,
+                    *started_at,
+                    *ended_at,
+                    *history_expires_at,
+                    winner.as_ref(),
+                    calls,
+                )?;
+                validate_final_board(alias, board, calls)?;
+                if let Some(winner) = winner
+                    && winner.player_id == *player_id
+                    && (winner.alias != *alias || !board.qualified)
+                {
+                    return Err(GameDecodeError);
+                }
+            }
         }
         Ok(())
     }
+}
+fn validate_final_result(
+    state: GameState,
+    started_at: i64,
+    ended_at: i64,
+    expires_at: i64,
+    winner: Option<&WinnerView>,
+    calls: &[CallView],
+) -> Result<(), GameDecodeError> {
+    validate_timestamp(started_at)?;
+    if started_at > ended_at {
+        return Err(GameDecodeError);
+    }
+    valid_terminal_shape(
+        GameState::InProgress,
+        state,
+        true,
+        Some(expires_at),
+        winner,
+        ended_at,
+    )?;
+    validate_call_ledger(calls, NUMERIC_UPPER_BOUND_MAX)
+}
+fn validate_final_board(
+    alias: &str,
+    board: &BoardView,
+    calls: &[CallView],
+) -> Result<(), GameDecodeError> {
+    if validate_alias(alias).map_err(|_| GameDecodeError)? != alias {
+        return Err(GameDecodeError);
+    }
+    let lines =
+        <brews_domain::games::SingleLine as brews_domain::games::SingleLinePattern>::evaluate(
+            board.side_length,
+            &board.cells,
+        )
+        .map_err(|_| GameDecodeError)?;
+    if lines != board.qualifying_lines || board.qualified != !lines.is_empty() {
+        return Err(GameDecodeError);
+    }
+    for (index, cell) in board.cells.iter().enumerate() {
+        if usize::from(cell.position.row) != index / usize::from(board.side_length) + 1
+            || usize::from(cell.position.column) != index % usize::from(board.side_length) + 1
+        {
+            return Err(GameDecodeError);
+        }
+        if let BoardCellKind::Value(value) = &cell.kind {
+            let n = value.parse::<u32>().map_err(|_| GameDecodeError)?;
+            if n == 0
+                || n > NUMERIC_UPPER_BOUND_MAX
+                || *value != n.to_string()
+                || board.cells[..index]
+                    .iter()
+                    .any(|other| other.kind == cell.kind)
+                || cell.is_matched != calls.iter().any(|call| call.value == *value)
+            {
+                return Err(GameDecodeError);
+            }
+        }
+    }
+    Ok(())
 }
 fn validate_lifecycle(
     state: GameState,
@@ -1636,7 +2130,7 @@ mod tests {
         let config = serde_json::to_string(&GameConfiguration::default()).unwrap();
         let delivery = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
         let view = format!(
-            r#"{{"role":"player","game_id":"{ID}","state":"awaiting_players","configuration":{config},"game_code":"AB12CD34","started_at":null,"ended_at":null,"view_revision":1,"player_id":"{ID}","alias":"Alice"}}"#
+            r#"{{"role":"player","game_id":"{ID}","state":"awaiting_players","configuration":{config},"game_code":"AB12CD34","started_at":null,"ended_at":null,"view_revision":1,"player_id":"{ID}","alias":"Alice","calls":[]}}"#
         );
         let wire = format!(
             r#"{{"version":1,"kind":"snapshot","game_id":"{ID}","view_revision":1,"connection_id":"{ID}","session_expires_at":9,"view":{view},"delivery_id":"{delivery}"}}"#
@@ -1798,6 +2292,7 @@ mod tests {
             ended_at: None,
             idle_cancel_due_at: None,
             players,
+            calls: vec![],
             connected_player_count: 1,
             spectator_count: 0,
             connected_spectator_count: 0,
@@ -2074,6 +2569,88 @@ mod tests {
             br#"{"expected_revision":1,"roster":[]}"#,
         ] {
             assert!(RevisionCommand::decode_json(bytes).is_err());
+        }
+    }
+    #[test]
+    fn gameplay_command_inputs_are_closed_canonical_and_state_fenced() {
+        let manual =
+            CallManualInput::decode_json(br#"{"value":"75","expected_revision":0}"#).unwrap();
+        assert_eq!(manual.value, "75");
+        assert_eq!(manual.expected_revision, 0);
+        for bytes in [
+            br#"{"value":"0","expected_revision":0}"#.as_slice(),
+            br#"{"value":"01","expected_revision":0}"#,
+            br#"{"value":"1 ","expected_revision":0}"#,
+            br#"{"value":"1.0","expected_revision":0}"#,
+            br#"{"value":"1001","expected_revision":0}"#,
+            br#"{"value":"1","expected_revision":1,"value":"2"}"#,
+            br#"{"value":"1","expected_revision":0,"seed":2}"#,
+        ] {
+            assert!(CallManualInput::decode_json(bytes).is_err());
+        }
+
+        let player_id = "01890f3e-53b7-7d28-9b05-4f65092d5711";
+        let winner = WinnerInput::decode_json(
+            format!(r#"{{"player_id":"{player_id}","expected_revision":4}}"#).as_bytes(),
+        )
+        .unwrap();
+        assert_eq!(winner.player_id.to_string(), player_id);
+        assert_eq!(winner.expected_revision, 4);
+        assert!(WinnerInput::decode_json(br#"{"player_id":"bad","expected_revision":0}"#).is_err());
+
+        for (state, expected) in [
+            ("new", GameState::New),
+            ("awaiting_players", GameState::AwaitingPlayers),
+            ("in_progress", GameState::InProgress),
+        ] {
+            let input = CancelGameInput::decode_json(
+                format!(r#"{{"confirmed":true,"expected_state":"{state}"}}"#).as_bytes(),
+            )
+            .unwrap();
+            assert_eq!(input.expected_state, expected);
+        }
+        for bytes in [
+            br#"{"confirmed":false,"expected_state":"in_progress"}"#.as_slice(),
+            br#"{"confirmed":true,"expected_state":"resolved"}"#,
+            br#"{"confirmed":true,"expected_state":"in_progress","other":1}"#,
+        ] {
+            assert!(CancelGameInput::decode_json(bytes).is_err());
+        }
+    }
+    #[test]
+    fn terminal_response_decoder_rejects_history_deadline_different_from_receipt() {
+        let ack = operation_receipt(
+            r#"{"operation":"terminalized","expected_state":"in_progress","state":"cancelled","ended_at":2,"history_available":true,"history_expires_at":100,"winner":null,"view_revision":3}"#,
+            2,
+        );
+        let wire = format!(
+            r#"{{"result":"terminalized","game_id":"{ID}","expected_state":"in_progress","state":"cancelled","ended_at":2,"history_available":true,"history_expires_at":101,"winner":null,"view_revision":3,"receipt":{ack}}}"#
+        );
+        assert_response_rejected(&wire);
+    }
+    #[test]
+    fn terminal_receipt_decoder_rejects_end_after_commit_time() {
+        let outcome = r#"{"operation":"terminalized","expected_state":"in_progress","state":"cancelled","ended_at":3,"history_available":true,"history_expires_at":100,"winner":null,"view_revision":3}"#;
+        let wire = operation_receipt(outcome, 2);
+        assert!(
+            GameReceipt::decode_json(wire.as_bytes()).is_err(),
+            "A committed terminal result cannot end in the future"
+        );
+        assert!(serde_json::from_str::<GameReceipt>(&wire).is_err());
+    }
+    #[test]
+    fn terminal_views_cannot_use_live_role_shapes_with_mutable_configuration() {
+        let config = serde_json::to_string(&GameConfiguration::default()).unwrap();
+        for state in ["resolved", "cancelled"] {
+            let host = format!(
+                r#"{{"role":"host","game":{{"game_id":"{ID}","state":"{state}","designated_host_id":"{ID}","created_at":1,"view_revision":1}},"configuration":{config},"game_code":"AB12CD34","started_at":1,"ended_at":2,"idle_cancel_due_at":null,"players":[],"calls":[],"connected_player_count":0,"spectator_count":0,"connected_spectator_count":0}}"#
+            );
+            assert_view_rejected(&host);
+            let player = player_lobby_view()
+                .replace("awaiting_players", state)
+                .replace("\"started_at\":null", "\"started_at\":1")
+                .replace("\"ended_at\":null", "\"ended_at\":2");
+            assert_view_rejected(&player);
         }
     }
     #[test]

@@ -1,4 +1,5 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
+mod terminal;
 use super::{Database, SqlValue, StorageError};
 use crate::auth::{AuthPolicy, GameAccountAuthority, Runtime};
 use crate::directory::games::{CodeGrant, GameProjection, ProjectionAck};
@@ -15,13 +16,16 @@ use crate::game::{
 };
 use crate::limits::JS_SAFE_INTEGER_MAX;
 use crate::{
-    db::schema::game_schema::{self, DELIVERY_TABLES, GAME_SCHEMA_VERSION, GAME_TABLES},
+    db::schema::game_schema::{
+        self, DELIVERY_TABLES, GAME_SCHEMA_VERSION, GAME_TABLES, PREVIOUS_GAME_SCHEMA_VERSION,
+        PREVIOUS_GAME_TABLES,
+    },
     game::GameError,
 };
-use brews_contracts::games::{BoardView, GameView, HostPlayerView};
+use brews_contracts::games::{BoardView, CallView, GameView, HostPlayerView};
 use brews_contracts::games::{GameOutcome, GameReceipt, GameResponse, GameSummary};
 use brews_domain::games::GameConfiguration;
-use brews_domain::games::{BoardCell, BoardCellKind, CompletedLine, SingleLinePattern};
+use brews_domain::games::{BoardCell, BoardCellKind, CallMode, CompletedLine, SingleLinePattern};
 use brews_domain::ids::{ConnectionId, PlayerId, SessionId};
 use brews_domain::{
     accounts::AccountRole,
@@ -55,8 +59,7 @@ const SQL_DELETE_GAME_FREE_CELLS: &str = "DELETE FROM game_free_cells";
 const SQL_SELECT_ANY_FREE_CELL: &str = "SELECT 1 FROM game_free_cells LIMIT 1";
 const SQL_DELETE_GAME_CONFIGURATION: &str = "DELETE FROM game_configuration";
 const SQL_SELECT_ANY_GAME_CONFIGURATION: &str = "SELECT 1 FROM game_configuration LIMIT 1";
-const SQL_DELETE_GAME_VIEW_REVISIONS: &str = "DELETE FROM game_view_revisions";
-const SQL_SELECT_ANY_GAME_VIEW_REVISION: &str = "SELECT 1 FROM game_view_revisions LIMIT 1";
+
 const SQL_DELETE_GAME_RECEIPTS: &str = "DELETE FROM game_receipts";
 const SQL_SELECT_ANY_GAME_RECEIPT: &str = "SELECT 1 FROM game_receipts LIMIT 1";
 const SQL_DELETE_GAME_PENDING_WORK: &str = "DELETE FROM game_pending_work";
@@ -68,6 +71,7 @@ const SQL_INSERT_GAME_VIEW_REVISIONS: &str = "INSERT INTO game_view_revisions VA
 const SQL_UPDATE_GAME_RECORD: &str = "UPDATE game_record SET state=?,game_code=?,lobby_opened_at=?,revision=?,idle_due=?,last_host_activity=CASE WHEN host_id=? THEN ? ELSE last_host_activity END WHERE singleton=1";
 const SQL_UPDATE_GAME_PENDING_WORK: &str =
     "UPDATE game_pending_work SET phase=?,fence_revision=?,next_attempt_at=? WHERE operation_id=?";
+const SQL_ADVANCE_PENDING_START_PROJECTION: &str = "UPDATE game_pending_work SET fence_revision=? WHERE operation_id=? AND kind=? AND phase=? AND fence_revision=?";
 const SQL_SET_GAME_PUBLICATION_TIME_ONCE: &str =
     "UPDATE game_record SET published_at=COALESCE(published_at,?) WHERE singleton=1";
 const SQL_SELECT_GAME_VIEW_REVISIONS_REVISION: &str =
@@ -123,6 +127,18 @@ const SQL_SELECT_GAME_PLAYERS_PLAYER_ID: &str =
 const SQL_INSERT_GAME_BOARDS: &str = "INSERT INTO game_boards VALUES(?,?,?,0)";
 const SQL_INSERT_GAME_BOARD_CELLS: &str = "INSERT INTO game_board_cells VALUES(?,?,?,?,?,?)";
 const SQL_INSERT_GAME_COMPLETED_LINES: &str = "INSERT INTO game_completed_lines VALUES(?,?,?,?)";
+const SQL_SELECT_GAME_BOARD_PLAYER_IDS: &str =
+    "SELECT player_id FROM game_boards ORDER BY player_id LIMIT 21";
+const SQL_SELECT_GAME_CALLS_FOR_GAME: &str = "SELECT sequence_no,value,mode,called_by_account_id,command_id,called_at FROM game_calls WHERE game_id=? ORDER BY sequence_no LIMIT 1001";
+const SQL_INSERT_GAME_CALL: &str = "INSERT INTO game_calls VALUES(?,?,?,?,?,?,?)";
+const SQL_MARK_GAME_BOARD_CELLS_VALUE_MATCHED: &str =
+    "UPDATE game_board_cells SET is_matched=1 WHERE kind=? AND value=? AND is_matched=0";
+const SQL_UPDATE_GAME_BOARD_EVALUATED_THROUGH_CALL: &str =
+    "UPDATE game_boards SET evaluated_through_call=? WHERE player_id=?";
+const SQL_DELETE_GAME_COMPLETED_LINES_FOR_PLAYER: &str =
+    "DELETE FROM game_completed_lines WHERE player_id=?";
+const SQL_INSERT_GAME_CALL_REVISION: &str =
+    "UPDATE game_record SET revision=? WHERE singleton=1 AND state=? AND revision=?";
 const SQL_MARK_GAME_IN_PROGRESS: &str =
     "UPDATE game_record SET state=?,revision=?,started_at=?,idle_due=NULL WHERE singleton=1";
 const SQL_SELECT_GAME_BOARDS_SIDE_LENGTH_EVALUATED_THROUGH_CALL: &str =
@@ -130,7 +146,10 @@ const SQL_SELECT_GAME_BOARDS_SIDE_LENGTH_EVALUATED_THROUGH_CALL: &str =
 const SQL_SELECT_GAME_BOARD_CELLS_ROW_COLUMN_KIND: &str = "SELECT row,column,kind,value,is_matched FROM game_board_cells WHERE player_id=? ORDER BY row,column LIMIT 101";
 const SQL_SELECT_GAME_COMPLETED_LINES_KIND_LINE_INDEX: &str =
     "SELECT kind,line_index FROM game_completed_lines WHERE player_id=? ORDER BY sequence LIMIT 23";
-const SQL_CANCEL_UNSTARTED_GAME: &str = "UPDATE game_record SET state=?,revision=?,idle_due=NULL,ended_at=?,cancellation_reason=?,published_at=NULL,lobby_opened_at=NULL,last_host_activity=created_at WHERE singleton=1";
+const SQL_CANCEL_UNSTARTED_GAME: &str = "UPDATE game_record SET state=?,revision=?,idle_due=NULL,ended_at=?,cancellation_reason=?,terminal_actor_kind=?,terminal_actor_id=?,published_at=NULL,lobby_opened_at=NULL,last_host_activity=created_at WHERE singleton=1 AND state=? AND revision=?";
+const SQL_DELETE_PLAYER_VIEW_REVISIONS: &str = "DELETE FROM game_view_revisions WHERE view_key<>?";
+const SQL_SELECT_ANY_PLAYER_VIEW_REVISION: &str =
+    "SELECT 1 FROM game_view_revisions WHERE view_key<>? LIMIT 1";
 const SQL_SELECT_GAME_RECEIPTS_ACTOR_COMMAND_ID_FINGERPRINT: &str = "SELECT actor,command_id,fingerprint,outcome,completed_at,expires_at FROM game_receipts r WHERE expires_at<=? AND NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id) ORDER BY expires_at LIMIT ?";
 const SQL_DELETE_RECEIPT_BY_ACTOR_AND_COMMAND: &str =
     "DELETE FROM game_receipts WHERE actor=? AND command_id=?";
@@ -148,12 +167,12 @@ const SQL_SELECT_GAME_CONNECTION_GRANTS_GRANT_ID: &str =
     "SELECT grant_id FROM game_connection_grants WHERE expires_at<=? ORDER BY expires_at LIMIT ?";
 const SQL_CHECK_CONNECTION_GRANT_EXISTS_BY_ID: &str =
     "SELECT 1 FROM game_connection_grants WHERE grant_id=?";
-const GAME_DEADLINE_SOURCE_COUNT: usize = 7;
+const GAME_DEADLINE_SOURCE_COUNT: usize = 9;
 // Scalar aggregates avoid Workerd's bounded compound-SELECT terms.
-const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions)";
+const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record)";
 const SQL_UPDATE_PENDING_WORK_RETRY: &str =
     "UPDATE game_pending_work SET attempt_count=?,next_attempt_at=? WHERE operation_id=?";
-const SQL_INSERT_CANCELLED_GAME_RECORD: &str = "INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,ended_at,cancellation_reason) VALUES(1,?,?,?,?,?,0,?,1,?,?,?,?)";
+const SQL_INSERT_CANCELLED_GAME_RECORD: &str = "INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,ended_at,cancellation_reason,terminal_actor_kind,terminal_actor_id) VALUES(1,?,?,?,?,?,0,?,1,?,?,?,?,'system',NULL)";
 const SQL_SELECT_ACCOUNT_PREPARED_GRANT_DETAILS: &str = "SELECT principal_id,epoch,expires_at FROM game_connection_grants WHERE grant_id=? AND viewer_kind=? AND connection_id IS NULL";
 const SQL_DELETE_EXACT_ACCOUNT_CONNECTION_GRANT: &str = "DELETE FROM game_connection_grants WHERE grant_id=? AND viewer_kind=? AND session_id=? AND principal_id=? AND epoch=? AND expires_at=?";
 const SQL_SELECT_EXACT_ACCOUNT_CLOSE_PREPARATION: &str = "SELECT 1 FROM game_connection_grants WHERE grant_id=? AND viewer_kind=? AND session_id=? AND principal_id=? AND epoch=? AND expires_at=? LIMIT 1";
@@ -162,7 +181,7 @@ const SQL_SELECT_GAME_METADATA_LAST_OBSERVED_MS_COMMAND_FLOOR_MS: &str =
     "SELECT last_observed_ms,command_floor_ms FROM game_metadata WHERE singleton=1";
 const SQL_UPDATE_GAME_METADATA: &str =
     "UPDATE game_metadata SET last_observed_ms=?,command_floor_ms=? WHERE singleton=1";
-const SQL_SELECT_GAME_RECORD_GAME_ID_CREATOR_ID_CREATION_COMMAND: &str = "SELECT game_id,creator_id,creation_command,fingerprint,host_id,state,revision,created_at,idle_due,game_code,published_at,started_at,ended_at FROM game_record WHERE singleton=1";
+const SQL_SELECT_GAME_RECORD_GAME_ID_CREATOR_ID_CREATION_COMMAND: &str = "SELECT game_id,creator_id,creation_command,fingerprint,host_id,state,revision,created_at,idle_due,game_code,published_at,started_at,ended_at,cancellation_reason,winner_player_id,winner_alias,winner_awarded_by_account_id,terminal_actor_kind,terminal_actor_id,history_expires_at FROM game_record WHERE singleton=1";
 const SQL_SELECT_GAME_CONFIGURATION_NUMERIC_UPPER_BOUND_BOARD_SIDE_LENGTH_FREE_CELLS_ENABLED: &str = "SELECT numeric_upper_bound,board_side_length,free_cells_enabled,player_capacity,spectator_capacity,winning_pattern FROM game_configuration WHERE singleton=1";
 const SQL_SELECT_GAME_FREE_CELLS_ROW_COLUMN: &str =
     "SELECT row,column FROM game_free_cells ORDER BY row,column LIMIT 101";
@@ -170,6 +189,7 @@ const SQL_SELECT_GAME_METADATA_COMMAND_FLOOR_MS: &str =
     "SELECT command_floor_ms FROM game_metadata WHERE singleton=1";
 const SQL_SELECT_GAME_RECEIPTS_FINGERPRINT_OUTCOME_EXPIRES_AT: &str =
     "SELECT fingerprint,outcome,expires_at FROM game_receipts WHERE actor=? AND command_id=?";
+const SQL_SELECT_REQUIRED_GAME_RECEIPT: &str = "SELECT actor,command_id,fingerprint,outcome,completed_at,expires_at FROM game_receipts WHERE actor=? AND command_id=?";
 const SQL_INSERT_GAME_RECEIPTS: &str = "INSERT INTO game_receipts VALUES(?,?,?,?,?,?)";
 const SQL_UPDATE_GAME_RECEIPT_OUTCOME: &str =
     "UPDATE game_receipts SET outcome=? WHERE actor=? AND command_id=? AND fingerprint=?";
@@ -177,6 +197,73 @@ const SQL_SELECT_SQLITE_MASTER_NAME: &str = "SELECT name FROM sqlite_master WHER
 const SQL_SELECT_GAME_METADATA_SCHEMA_VERSION: &str =
     "SELECT schema_version FROM game_metadata WHERE singleton=1";
 const SQL_INSERT_GAME_METADATA: &str = "INSERT INTO game_metadata VALUES(1,?,0,0)";
+const SQL_SELECT_GAME_RECORD_FOR_SCHEMA_MIGRATION: &str = "SELECT singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,idle_due,lobby_opened_at,started_at,ended_at,game_code,published_at,cancellation_reason FROM game_record";
+const SQL_COPY_GAME_RECORD_TO_SCHEMA_MIGRATION: &str = "INSERT INTO game_record_schema_upgrade(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,idle_due,lobby_opened_at,started_at,ended_at,game_code,published_at,cancellation_reason,winner_player_id,winner_alias,winner_awarded_by_account_id,terminal_actor_kind,terminal_actor_id,history_expires_at) SELECT singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,idle_due,lobby_opened_at,started_at,ended_at,game_code,published_at,cancellation_reason,NULL,NULL,NULL,CASE WHEN state=? AND started_at IS NULL AND cancellation_reason=? THEN ? ELSE NULL END,NULL,NULL FROM game_record";
+const SQL_SELECT_GAME_RECORD_SCHEMA_UPGRADE: &str = "SELECT singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,idle_due,lobby_opened_at,started_at,ended_at,game_code,published_at,cancellation_reason,winner_player_id,winner_alias,winner_awarded_by_account_id,terminal_actor_kind,terminal_actor_id,history_expires_at FROM game_record_schema_upgrade";
+const SQL_DELETE_GAME_CONFIGURATION_FOR_SCHEMA_MIGRATION: &str = "DELETE FROM game_configuration";
+const SQL_SELECT_GAME_CONFIGURATION_AFTER_SCHEMA_MIGRATION: &str =
+    "SELECT * FROM game_configuration WHERE singleton=1";
+const SQL_DROP_PREVIOUS_GAME_RECORD_FOR_SCHEMA_MIGRATION: &str = "DROP TABLE game_record";
+const SQL_RENAME_GAME_RECORD_AFTER_SCHEMA_MIGRATION: &str =
+    "ALTER TABLE game_record_schema_upgrade RENAME TO game_record";
+const SQL_RENAME_GAME_BOARD_CELLS_FOR_SCHEMA_MIGRATION: &str =
+    "ALTER TABLE game_board_cells RENAME TO game_board_cells_previous";
+const SQL_COPY_GAME_BOARD_CELLS_TO_SCHEMA_MIGRATION: &str =
+    "INSERT INTO game_board_cells_schema_upgrade SELECT * FROM game_board_cells_previous";
+
+const SQL_SELECT_GAME_BOARDS_FOR_SCHEMA_MIGRATION: &str = "SELECT player_id,side_length,assigned_at,evaluated_through_call FROM game_boards ORDER BY player_id";
+const SQL_RENAME_GAME_BOARDS_FOR_SCHEMA_MIGRATION: &str =
+    "ALTER TABLE game_boards RENAME TO game_boards_previous";
+const SQL_COPY_GAME_BOARDS_TO_SCHEMA_MIGRATION: &str =
+    "INSERT INTO game_boards SELECT * FROM game_boards_previous";
+const SQL_SELECT_PREVIOUS_GAME_BOARDS: &str = "SELECT player_id,side_length,assigned_at,evaluated_through_call FROM game_boards_previous ORDER BY player_id";
+const SQL_DROP_PREVIOUS_GAME_BOARDS_FOR_SCHEMA_MIGRATION: &str = "DROP TABLE game_boards_previous";
+const SQL_DROP_PREVIOUS_GAME_BOARD_CELLS_FOR_SCHEMA_MIGRATION: &str =
+    "DROP TABLE game_board_cells_previous";
+const SQL_RENAME_GAME_BOARD_CELLS_AFTER_SCHEMA_MIGRATION: &str =
+    "ALTER TABLE game_board_cells_schema_upgrade RENAME TO game_board_cells";
+const SQL_UPDATE_GAME_SCHEMA_VERSION: &str =
+    "UPDATE game_metadata SET schema_version=? WHERE singleton=1 AND schema_version=?";
+const SQL_INSERT_HISTORY_CALLS: &str =
+    "INSERT INTO game_history_calls(game_id,sequence_no,value) VALUES(?,?,?)";
+const SQL_INSERT_HISTORY_PLAYERS: &str =
+    "INSERT INTO game_history_players(game_id,player_id,alias,side_length) VALUES(?,?,?,?)";
+const SQL_INSERT_HISTORY_BOARD_CELLS: &str = "INSERT INTO game_history_board_cells(game_id,player_id,row,column,kind,value,is_matched) VALUES(?,?,?,?,?,?,?)";
+const SQL_INSERT_GAME_HISTORY: &str = "INSERT INTO game_history(game_id,game_code,designated_host_id,started_at,ended_at,expires_at,outcome,winner_player_id,winner_alias) VALUES(?,?,?,?,?,?,?,?,?)";
+const SQL_UPDATE_GAME_RECORD_TERMINAL: &str = "UPDATE game_record SET state=?,revision=?,ended_at=?,cancellation_reason=?,winner_player_id=?,winner_alias=?,winner_awarded_by_account_id=?,terminal_actor_kind=?,terminal_actor_id=?,history_expires_at=?,idle_due=NULL WHERE singleton=1 AND state=? AND revision=?";
+const SQL_SELECT_GAME_RECORD_TERMINAL_FIELDS: &str = "SELECT state,revision,ended_at,cancellation_reason,winner_player_id,winner_alias,winner_awarded_by_account_id,terminal_actor_kind,terminal_actor_id,history_expires_at FROM game_record WHERE singleton=1";
+const SQL_SELECT_GAME_HISTORY_PARENT: &str = "SELECT game_code,designated_host_id,started_at,ended_at,expires_at,outcome,winner_player_id,winner_alias FROM game_history WHERE game_id=?";
+const SQL_SELECT_GAME_HISTORY_CALLS: &str =
+    "SELECT sequence_no,value FROM game_history_calls WHERE game_id=? ORDER BY sequence_no";
+const SQL_SELECT_GAME_HISTORY_PLAYERS: &str = "SELECT player_id,alias,side_length FROM game_history_players WHERE game_id=? ORDER BY player_id";
+const SQL_SELECT_GAME_HISTORY_CELLS: &str = "SELECT player_id,row,column,kind,value,is_matched FROM game_history_board_cells WHERE game_id=? ORDER BY player_id,row,column";
+const SQL_DELETE_GAME_CALLS: &str = "DELETE FROM game_calls";
+const SQL_SELECT_ANY_GAME_CALL: &str = "SELECT 1 FROM game_calls LIMIT 1";
+
+const SQL_DELETE_GAME_CONNECTIONS: &str = "DELETE FROM game_current_connections";
+const SQL_SELECT_ANY_GAME_CONNECTION: &str = "SELECT 1 FROM game_current_connections LIMIT 1";
+const SQL_DELETE_GAME_CONNECTION_GRANTS_ALL: &str = "DELETE FROM game_connection_grants";
+const SQL_SELECT_ANY_GAME_CONNECTION_GRANT: &str = "SELECT 1 FROM game_connection_grants LIMIT 1";
+const SQL_DELETE_GAME_SESSIONS_ALL: &str = "DELETE FROM game_sessions";
+const SQL_SELECT_ANY_GAME_SESSION: &str = "SELECT 1 FROM game_sessions LIMIT 1";
+const SQL_DELETE_GAME_RECOVERY_ALL: &str = "DELETE FROM game_recovery";
+const SQL_SELECT_ANY_GAME_RECOVERY: &str = "SELECT 1 FROM game_recovery LIMIT 1";
+const SQL_DELETE_GAME_PLAYERS_ALL: &str = "DELETE FROM game_players";
+const SQL_SELECT_ANY_GAME_PLAYER: &str = "SELECT 1 FROM game_players LIMIT 1";
+const SQL_DELETE_GAME_ADMISSION_CONTEXTS_ALL: &str = "DELETE FROM game_admission_contexts";
+const SQL_SELECT_ANY_GAME_ADMISSION_CONTEXT: &str = "SELECT 1 FROM game_admission_contexts LIMIT 1";
+const SQL_DELETE_GAME_BOARD_CELLS_ALL: &str = "DELETE FROM game_board_cells";
+const SQL_SELECT_ANY_GAME_BOARD_CELL: &str = "SELECT 1 FROM game_board_cells LIMIT 1";
+const SQL_DELETE_GAME_BOARDS_ALL: &str = "DELETE FROM game_boards";
+const SQL_SELECT_ANY_GAME_BOARD: &str = "SELECT 1 FROM game_boards LIMIT 1";
+const SQL_DELETE_GAME_COMPLETED_LINES_ALL: &str = "DELETE FROM game_completed_lines";
+const SQL_SELECT_ANY_GAME_COMPLETED_LINE: &str = "SELECT 1 FROM game_completed_lines LIMIT 1";
+const SQL_DELETE_GAME_CONFIGURATION_ALL: &str = "DELETE FROM game_configuration";
+const SQL_SELECT_ANY_GAME_CONFIGURATION_ROW: &str = "SELECT 1 FROM game_configuration LIMIT 1";
+const SQL_DELETE_GAME_FREE_CELLS_ALL: &str = "DELETE FROM game_free_cells";
+const SQL_SELECT_ANY_GAME_FREE_CELL: &str = "SELECT 1 FROM game_free_cells LIMIT 1";
+const SQL_DELETE_GAME_PENDING_WORK_ALL: &str = "DELETE FROM game_pending_work";
+const SQL_SELECT_ANY_GAME_PENDING_WORK: &str = "SELECT 1 FROM game_pending_work LIMIT 1";
 
 const SYSTEM_ACTOR: &str = "system";
 const OBSERVED_CONNECTION_LIMIT: usize = 100;
@@ -209,22 +296,65 @@ const PRESTART_PURGE: [(&str, &str); 14] = [
         SQL_DELETE_GAME_CONFIGURATION,
         SQL_SELECT_ANY_GAME_CONFIGURATION,
     ),
-    (
-        SQL_DELETE_GAME_VIEW_REVISIONS,
-        SQL_SELECT_ANY_GAME_VIEW_REVISION,
-    ),
+    (SQL_DELETE_GAME_CALLS, SQL_SELECT_ANY_GAME_CALL),
     (SQL_DELETE_GAME_RECEIPTS, SQL_SELECT_ANY_GAME_RECEIPT),
     (
         SQL_DELETE_GAME_PENDING_WORK,
         SQL_SELECT_ANY_PENDING_GAME_WORK,
     ),
 ];
-const CELL_FREE: &str = "free";
-const CELL_VALUE: &str = "value";
+const TERMINAL_LIVE_PURGE: [(&str, &str); 11] = [
+    (
+        SQL_DELETE_GAME_PENDING_WORK_ALL,
+        SQL_SELECT_ANY_GAME_PENDING_WORK,
+    ),
+    (SQL_DELETE_GAME_CALLS, SQL_SELECT_ANY_GAME_CALL),
+    (
+        SQL_DELETE_GAME_COMPLETED_LINES_ALL,
+        SQL_SELECT_ANY_GAME_COMPLETED_LINE,
+    ),
+    (
+        SQL_DELETE_GAME_BOARD_CELLS_ALL,
+        SQL_SELECT_ANY_GAME_BOARD_CELL,
+    ),
+    (SQL_DELETE_GAME_BOARDS_ALL, SQL_SELECT_ANY_GAME_BOARD),
+    (SQL_DELETE_GAME_RECOVERY_ALL, SQL_SELECT_ANY_GAME_RECOVERY),
+    (SQL_DELETE_GAME_SESSIONS_ALL, SQL_SELECT_ANY_GAME_SESSION),
+    (
+        SQL_DELETE_GAME_ADMISSION_CONTEXTS_ALL,
+        SQL_SELECT_ANY_GAME_ADMISSION_CONTEXT,
+    ),
+    (SQL_DELETE_GAME_PLAYERS_ALL, SQL_SELECT_ANY_GAME_PLAYER),
+    (
+        SQL_DELETE_GAME_CONFIGURATION_ALL,
+        SQL_SELECT_ANY_GAME_CONFIGURATION_ROW,
+    ),
+    (
+        SQL_DELETE_GAME_FREE_CELLS_ALL,
+        SQL_SELECT_ANY_GAME_FREE_CELL,
+    ),
+];
+const CELL_FREE: &str = brews_domain::games::BOARD_CELL_KIND_FREE;
+const CELL_VALUE: &str = brews_domain::games::BOARD_CELL_KIND_VALUE;
 const LINE_ROW: &str = "row";
 const LINE_COLUMN: &str = "column";
 const LINE_MAIN: &str = "main_diagonal";
 const LINE_ANTI: &str = "anti_diagonal";
+const MILLISECONDS_PER_UTC_DAY: i64 = 86_400_000;
+const HISTORY_RETENTION_CALENDAR_MONTHS: i64 = 3;
+
+struct TerminalCommit<'a> {
+    expected_host_revision: i64,
+    command: CommandId,
+    actor: &'a str,
+    fingerprint: [u8; 32],
+    expected_state: GameState,
+    state: GameState,
+    selected_winner: Option<(PlayerId, String)>,
+    initiated_by: AccountId,
+    now: i64,
+}
+
 pub struct GameService<'a, D: Database, R: Runtime> {
     db: &'a D,
     runtime: &'a R,
@@ -547,8 +677,11 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
     }
     pub fn directory_projection(&self) -> Result<GameProjection, GameError> {
         self.maintenance(|_| {
-            let r = self.record_optional()?.ok_or(GameError::NotFound)?;
-            r.projection()
+            if let Some(record) = self.record_optional()? {
+                return record.projection();
+            }
+            self.terminal_routing_projection()?
+                .ok_or(GameError::NotFound)
         })
     }
     pub fn pending_work(&self, limit: u32) -> Result<Vec<PendingWork>, GameError> {
@@ -603,22 +736,30 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                         view_revision: view as u64,
                     };
                     // Publication changes the outcome revision, not receipt retention.
-                    let raw = value.encode_json().map_err(|_| GameError::Storage)?;
+                    let raw =
+                        String::from_utf8(value.encode_json().map_err(|_| GameError::Storage)?)
+                            .map_err(|_| GameError::Storage)?;
                     self.db.execute(
                         SQL_UPDATE_GAME_RECEIPT_OUTCOME,
                         &[
-                            text(String::from_utf8(raw.clone()).map_err(|_| GameError::Storage)?),
+                            text(&raw),
                             text(&current.actor),
                             text(current.command),
                             SqlValue::Blob(current.fingerprint.to_vec()),
                         ],
                     )?;
-                    let actual = self
-                        .receipt(&current.actor, current.command, current.fingerprint, now)?
-                        .ok_or(GameError::Storage)?;
-                    if actual.encode_json().map_err(|_| GameError::Storage)? != raw {
-                        return Err(GameError::Storage);
-                    }
+                    self.verify_required_receipt(
+                        &current.actor,
+                        current.command,
+                        vec![
+                            text(&current.actor),
+                            text(current.command),
+                            SqlValue::Blob(current.fingerprint.to_vec()),
+                            text(raw),
+                            int(value.completed_at),
+                            int(value.expires_at),
+                        ],
+                    )?;
                 }
             }
             self.delete_work(current.operation)?;
@@ -1042,6 +1183,9 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         r: &Record,
         now: i64,
     ) -> Result<PlayerSession, GameError> {
+        if matches!(r.state, GameState::Resolved | GameState::Cancelled) {
+            return self.final_player_session(token, r, now);
+        }
         let digest = crate::security::token_digest(token).map_err(|_| GameError::Unauthorized)?;
         let rows = self.db.query(
             SQL_SELECT_GAME_SESSIONS_S_SESSION_ID_S_PLAYER_ID_S_SESSION_EPOCH,
@@ -1143,7 +1287,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             if self.has_prepared_connection(grant)? {
                 return Err(GameError::Storage);
             }
-            if old.is_none() {
+            if old.is_none() && !matches!(r.state, GameState::Resolved | GameState::Cancelled) {
                 self.set_view_revision(HOST_VIEW, advance(self.view_revision(HOST_VIEW)?)?)?;
             }
             Ok(())
@@ -1153,7 +1297,12 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         self.tx(|_| self.disconnect_inner(grant))
     }
     fn disconnect_inner(&self, grant: &ConnectionGrant) -> Result<(), GameError> {
-        if self.remove_player_connection(grant)? {
+        if self.remove_player_connection(grant)?
+            && !matches!(
+                self.record()?.state,
+                GameState::Resolved | GameState::Cancelled
+            )
+        {
             self.set_view_revision(HOST_VIEW, advance(self.view_revision(HOST_VIEW)?)?)?;
         }
         Ok(())
@@ -1222,6 +1371,9 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         r: &Record,
         now: i64,
     ) -> Result<(), GameError> {
+        if matches!(r.state, GameState::Resolved | GameState::Cancelled) {
+            return self.validate_final_player_connection(g, r, now);
+        }
         if g.game != r.id
             || g.expires <= now
             || r.published.is_none()
@@ -1273,7 +1425,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 Err(error) => return Err(error),
             }
         }
-        if changed {
+        if changed && !matches!(r.state, GameState::Resolved | GameState::Cancelled) {
             self.set_view_revision(HOST_VIEW, advance(self.view_revision(HOST_VIEW)?)?)?;
         }
         Ok(())
@@ -1286,9 +1438,6 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         self.tx(|now| {
             authorize(&authority, now)?;
             let r = self.record()?;
-            if r.state == GameState::Cancelled {
-                return Err(GameError::NotFound);
-            }
             ensure_before_idle(&r, now)?;
             self.enter_account(&authority, now)?;
             self.reconcile_presence(observed, &r, now)?;
@@ -1296,6 +1445,11 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         })
     }
     fn enter_account(&self, a: &GameAccountAuthority, now: i64) -> Result<(), GameError> {
+        let record = self.record()?;
+        let terminal = matches!(record.state, GameState::Resolved | GameState::Cancelled);
+        if terminal {
+            self.require_final_history(&record, now)?;
+        }
         let rows = self.db.query(
             SQL_SELECT_GAME_CONNECTION_GRANTS_PRINCIPAL_ID_EPOCH_EXPIRES_AT,
             &[text(a.session_id()), text(ACCOUNT_KIND)],
@@ -1308,6 +1462,9 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 return Err(GameError::Unauthorized);
             }
             return Ok(());
+        }
+        if terminal {
+            return Err(GameError::Unauthorized);
         }
         self.db.execute(
             SQL_INSERT_ACCOUNT_CONNECTION_GRANT,
@@ -1331,6 +1488,12 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         Ok(())
     }
     fn host_projection(&self, r: &Record, now: i64) -> Result<GameView, GameError> {
+        if matches!(r.state, GameState::Resolved | GameState::Cancelled) {
+            return self.final_host_projection(r, now);
+        }
+        let configuration = self.configuration()?;
+        let calls = self.call_history(r, configuration.numeric_upper_bound)?;
+        let call_views = calls.iter().map(|call| call.view.clone()).collect();
         let mut players = Vec::new();
         let rows = self
             .db
@@ -1352,13 +1515,13 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 player_id: player,
                 alias: string(&row, 1)?.to_owned(),
                 connected,
-                board: self.board_view(player, r)?,
+                board: self.board_view_at(player, r, calls.len() as u32)?,
             });
         }
         let count = players.iter().filter(|p| p.connected).count() as u8;
         Ok(GameView::Host {
             game: r.summary(self.view_revision(HOST_VIEW)? as u64),
-            configuration: self.configuration()?,
+            configuration,
             game_code: if r.published.is_some() {
                 r.code.clone()
             } else {
@@ -1368,6 +1531,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             ended_at: r.ended,
             idle_cancel_due_at: r.due,
             players,
+            calls: call_views,
             connected_player_count: count,
             spectator_count: 0,
             connected_spectator_count: 0,
@@ -1382,20 +1546,27 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         })
     }
     fn player_projection(&self, r: &Record, player: PlayerId) -> Result<GameView, GameError> {
-        let board = self.board_view(player, r)?;
+        if matches!(r.state, GameState::Resolved | GameState::Cancelled) {
+            return self.final_player_projection(r, player);
+        }
+        let configuration = self.configuration()?;
+        let calls = self.call_history(r, configuration.numeric_upper_bound)?;
+        let call_views = calls.iter().map(|call| call.view.clone()).collect();
+        let board = self.board_view_at(player, r, calls.len() as u32)?;
         let rows = self
             .db
             .query(SQL_SELECT_GAME_PLAYERS_ALIAS, &[text(player)])?;
         Ok(GameView::Player {
             game_id: r.id,
             state: r.state,
-            configuration: self.configuration()?,
+            configuration,
             game_code: r.code.clone(),
             started_at: r.started,
             ended_at: r.ended,
             view_revision: self.view_revision(&player.to_string())? as u64,
             player_id: player,
             alias: string(rows.first().ok_or(GameError::Storage)?, 0)?.to_owned(),
+            calls: call_views,
             board,
         })
     }
@@ -1575,7 +1746,828 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             })
         })
     }
+    pub fn call_random(
+        &self,
+        authority: GameAccountAuthority,
+        command: CommandId,
+        expected_revision: u64,
+    ) -> Result<GameResponse, GameError> {
+        self.commit_call(
+            authority,
+            command,
+            expected_revision,
+            CallMode::Random,
+            None,
+        )
+    }
+    pub fn call_manual_value(
+        &self,
+        authority: GameAccountAuthority,
+        command: CommandId,
+        value: &str,
+        expected_revision: u64,
+    ) -> Result<GameResponse, GameError> {
+        if !valid_pool_value(value, brews_domain::games::NUMERIC_UPPER_BOUND_MAX) {
+            return Err(GameError::InvalidInput);
+        }
+        self.commit_call(
+            authority,
+            command,
+            expected_revision,
+            CallMode::Manual,
+            Some(value),
+        )
+    }
+    fn commit_call(
+        &self,
+        authority: GameAccountAuthority,
+        command: CommandId,
+        expected_revision: u64,
+        mode: CallMode,
+        requested_value: Option<&str>,
+    ) -> Result<GameResponse, GameError> {
+        let expected = revision(expected_revision)?;
+        if matches!(
+            (mode, requested_value),
+            (CallMode::Random, Some(_)) | (CallMode::Manual, None)
+        ) {
+            return Err(GameError::InvalidInput);
+        }
+        let fingerprint = call_fingerprint(mode, expected, requested_value);
+        self.tx(|now| {
+            let record = self.record()?;
+            authorize_mutation(&authority, &record, now)?;
+            let actor = account_actor(authority.account_id());
+            if self.command_work(&actor, command)?.is_some() {
+                return Err(GameError::Conflict);
+            }
+            if let Some(receipt) = self.receipt(&actor, command, fingerprint, now)? {
+                return Ok(GameResponse::Committed { receipt });
+            }
+            self.admit(command, now)?;
+            if record.state != GameState::InProgress {
+                return Err(GameError::Conflict);
+            }
+            if self.view_revision(HOST_VIEW)? != expected {
+                return Err(GameError::StaleRevision);
+            }
+            let configuration = self.configuration()?;
+            let calls = self.call_history(&record, configuration.numeric_upper_bound)?;
+            if calls.len() >= configuration.numeric_upper_bound as usize {
+                return Err(GameError::Conflict);
+            }
+            let value = match requested_value {
+                Some(value) if valid_pool_value(value, configuration.numeric_upper_bound) => {
+                    value.to_owned()
+                }
+                Some(_) => return Err(GameError::InvalidInput),
+                None => {
+                    choose_remaining_value(self.runtime, configuration.numeric_upper_bound, &calls)?
+                }
+            };
+            // Entropy can cross an absolute credential deadline; use the final trusted cut.
+            let now = self.observe_clock()?;
+            authorize_mutation(&authority, &record, now)?;
+            self.admit(command, now)?;
+            if calls.iter().any(|call| call.view.value == value) {
+                return Err(GameError::Conflict);
+            }
+            let sequence_no = u32::try_from(calls.len() + 1).map_err(|_| GameError::Storage)?;
+            let next_game_revision = advance(record.revision)?;
+            let next_host_revision = advance(expected)?;
+            let player_rows = self.db.query(SQL_SELECT_GAME_PLAYERS_PLAYER_ID, &[])?;
+            let board_rows = self.db.query(SQL_SELECT_GAME_BOARD_PLAYER_IDS, &[])?;
+            if player_rows.len() < 2
+                || player_rows.len() > RETAINED_PLAYER_LIMIT
+                || player_rows.len() != board_rows.len()
+            {
+                return Err(GameError::Storage);
+            }
+            let players = player_rows
+                .iter()
+                .map(|row| string(row, 0)?.parse().map_err(|_| GameError::Storage))
+                .collect::<Result<Vec<PlayerId>, GameError>>()?;
+            let boards = board_rows
+                .iter()
+                .map(|row| string(row, 0)?.parse().map_err(|_| GameError::Storage))
+                .collect::<Result<Vec<PlayerId>, GameError>>()?;
+            if players != boards {
+                return Err(GameError::Storage);
+            }
+            let mut updated_boards = Vec::with_capacity(players.len());
+            for player in &players {
+                let current = self
+                    .board_view_at(*player, &record, calls.len() as u32)?
+                    .ok_or(GameError::Storage)?;
+                let mut cells = current.cells;
+                let (lines, _) = brews_domain::games::apply_called_value(
+                    current.side_length,
+                    &mut cells,
+                    &value,
+                )
+                .map_err(|_| GameError::Storage)?;
+                updated_boards.push((*player, current.side_length, cells, lines));
+            }
+            self.db.execute(
+                SQL_INSERT_GAME_CALL,
+                &[
+                    text(record.id),
+                    int(i64::from(sequence_no)),
+                    text(&value),
+                    text(mode),
+                    text(authority.account_id()),
+                    text(command),
+                    int(now),
+                ],
+            )?;
+            self.db.execute(
+                SQL_MARK_GAME_BOARD_CELLS_VALUE_MATCHED,
+                &[text(CELL_VALUE), text(&value)],
+            )?;
+            for (player, side_length, _cells, lines) in &updated_boards {
+                self.db.execute(
+                    SQL_UPDATE_GAME_BOARD_EVALUATED_THROUGH_CALL,
+                    &[int(i64::from(sequence_no)), text(player)],
+                )?;
+                if self.db.query(
+                    SQL_SELECT_GAME_BOARDS_SIDE_LENGTH_EVALUATED_THROUGH_CALL,
+                    &[text(player)],
+                )? != vec![vec![
+                    int(i64::from(*side_length)),
+                    int(i64::from(sequence_no)),
+                ]] {
+                    return Err(GameError::Storage);
+                }
+                self.db
+                    .execute(SQL_DELETE_GAME_COMPLETED_LINES_FOR_PLAYER, &[text(player)])?;
+                for (index, line) in lines.iter().enumerate() {
+                    let (kind, line_index) = line_parts(line);
+                    self.db.execute(
+                        SQL_INSERT_GAME_COMPLETED_LINES,
+                        &[
+                            text(player),
+                            int(i64::try_from(index).map_err(|_| GameError::Storage)?),
+                            text(kind),
+                            line_index.map_or(SqlValue::Null, int),
+                        ],
+                    )?;
+                }
+            }
+            for (player, side_length, cells, lines) in &updated_boards {
+                let stored = self
+                    .board_view_at(*player, &record, sequence_no)?
+                    .ok_or(GameError::Storage)?;
+                if stored.side_length != *side_length
+                    || stored.cells != *cells
+                    || stored.qualifying_lines != *lines
+                    || stored.qualified != !lines.is_empty()
+                {
+                    return Err(GameError::Storage);
+                }
+            }
+            self.db.execute(
+                SQL_INSERT_GAME_CALL_REVISION,
+                &[
+                    int(next_game_revision),
+                    text(GameState::InProgress),
+                    int(record.revision),
+                ],
+            )?;
+            if self.record()?.revision != next_game_revision {
+                return Err(GameError::Storage);
+            }
+            self.advance_pending_start_projection(record.revision, next_game_revision)?;
+            self.set_view_revision(HOST_VIEW, next_host_revision)?;
+            for player in &players {
+                let key = player.to_string();
+                let next = advance(self.view_revision(&key)?)?;
+                self.set_view_revision(&key, next)?;
+            }
+            let stored_calls = self.call_history(&record, configuration.numeric_upper_bound)?;
+            let stored_call = stored_calls.last().ok_or(GameError::Storage)?;
+            if stored_calls.len() != calls.len() + 1
+                || stored_call.view.sequence_no != sequence_no
+                || stored_call.view.value != value
+                || stored_call.mode != mode
+                || stored_call.called_by != authority.account_id()
+                || stored_call.command != command
+                || stored_call.called_at != now
+            {
+                return Err(GameError::Storage);
+            }
+            let remaining_count = configuration.numeric_upper_bound - sequence_no;
+            let exhausted = remaining_count == 0;
+            let view_revision = next_host_revision as u64;
+            let receipt = self.store_receipt(
+                &actor,
+                command,
+                fingerprint,
+                GameOutcome::CallAccepted {
+                    call: stored_call.view.clone(),
+                    remaining_count,
+                    exhausted,
+                    view_revision,
+                },
+                record.id,
+                now,
+            )?;
+            Ok(GameResponse::CallAccepted {
+                call: stored_call.view.clone(),
+                remaining_count,
+                exhausted,
+                view_revision,
+                receipt,
+            })
+        })
+    }
+    fn advance_pending_start_projection(&self, previous: i64, next: i64) -> Result<(), GameError> {
+        let work = self.all_work(2)?;
+        let mut current = match work.as_slice() {
+            [] => return Ok(()),
+            [work]
+                if work.kind == WorkKind::StartProjection
+                    && work.phase == WorkPhase::AwaitingAcknowledgement
+                    && work.fence == previous =>
+            {
+                work.clone()
+            }
+            _ => return Err(GameError::Storage),
+        };
+        // Retain the original Start intent/receipt; only its current publication fence advances.
+        self.db.execute(
+            SQL_ADVANCE_PENDING_START_PROJECTION,
+            &[
+                int(next),
+                text(current.operation),
+                text(current.kind.tag()),
+                text(current.phase.tag()),
+                int(previous),
+            ],
+        )?;
+        current.fence = next;
+        if self.operation_work(current.operation)?.as_ref() != Some(&current) {
+            return Err(GameError::Storage);
+        }
+        Ok(())
+    }
+    pub fn submit_winner(
+        &self,
+        authority: GameAccountAuthority,
+        command: CommandId,
+        player: PlayerId,
+        expected_revision: u64,
+    ) -> Result<GameResponse, GameError> {
+        let expected = revision(expected_revision)?;
+        let fingerprint =
+            terminal_fingerprint("winner", GameState::InProgress, Some(player), expected);
+        self.tx(|now| {
+            let record = self.record()?;
+            authorize_mutation(&authority, &record, now)?;
+            let actor = account_actor(authority.account_id());
+            if self.command_work(&actor, command)?.is_some() {
+                return Err(GameError::Conflict);
+            }
+            if let Some(receipt) = self.receipt(&actor, command, fingerprint, now)? {
+                return Ok(GameResponse::Committed { receipt });
+            }
+            self.admit(command, now)?;
+            if record.state != GameState::InProgress {
+                return Err(GameError::Conflict);
+            }
+            if self.view_revision(HOST_VIEW)? != expected {
+                return Err(GameError::StaleRevision);
+            }
+            let config = self.configuration()?;
+            let calls = self.call_history(&record, config.numeric_upper_bound)?;
+            let roster = self
+                .db
+                .query(SQL_SELECT_GAME_PLAYERS_ALIAS, &[text(player)])?;
+            let alias = string(roster.first().ok_or(GameError::NotFound)?, 0)?.to_owned();
+            let board = self
+                .board_view_at(player, &record, calls.len() as u32)?
+                .ok_or(GameError::Conflict)?;
+            if !board.qualified {
+                return Err(GameError::Conflict);
+            }
+            self.commit_terminal(
+                &record,
+                TerminalCommit {
+                    expected_host_revision: expected,
+                    command,
+                    actor: &actor,
+                    fingerprint,
+                    expected_state: GameState::InProgress,
+                    state: GameState::Resolved,
+                    selected_winner: Some((player, alias)),
+                    initiated_by: authority.account_id(),
+                    now,
+                },
+            )
+        })
+    }
+    pub fn cancel_game(
+        &self,
+        authority: GameAccountAuthority,
+        command: CommandId,
+        expected_state: GameState,
+        confirmed: bool,
+    ) -> Result<GameResponse, GameError> {
+        if !confirmed
+            || !matches!(
+                expected_state,
+                GameState::New | GameState::AwaitingPlayers | GameState::InProgress
+            )
+        {
+            return Err(GameError::InvalidInput);
+        }
+        let fingerprint = terminal_fingerprint("cancel", expected_state, None, 0);
+        if expected_state == GameState::InProgress {
+            return self.tx(|now| {
+                let record = self.record()?;
+                authorize_mutation(&authority, &record, now)?;
+                let actor = account_actor(authority.account_id());
+                if self.command_work(&actor, command)?.is_some() {
+                    return Err(GameError::Conflict);
+                }
+                if let Some(receipt) = self.receipt(&actor, command, fingerprint, now)? {
+                    return Ok(GameResponse::Committed { receipt });
+                }
+                self.admit(command, now)?;
+                if record.state != GameState::InProgress {
+                    return Err(GameError::Conflict);
+                }
+                self.commit_terminal(
+                    &record,
+                    TerminalCommit {
+                        expected_host_revision: self.view_revision(HOST_VIEW)?,
+                        command,
+                        actor: &actor,
+                        fingerprint,
+                        expected_state: GameState::InProgress,
+                        state: GameState::Cancelled,
+                        selected_winner: None,
+                        initiated_by: authority.account_id(),
+                        now,
+                    },
+                )
+            });
+        }
+        self.tx(|now| {
+            let record = self.record_optional()?.ok_or(GameError::NotFound)?;
+            authorize_mutation(&authority, &record, now)?;
+            let actor = account_actor(authority.account_id());
+            if self.command_work(&actor, command)?.is_some() {
+                return Err(GameError::Conflict);
+            }
+            if let Some(receipt) = self.receipt(&actor, command, fingerprint, now)? {
+                return Ok(GameResponse::Committed { receipt });
+            }
+            self.admit(command, now)?;
+            if record.state != expected_state
+                || !matches!(record.state, GameState::New | GameState::AwaitingPlayers)
+            {
+                return Err(GameError::Conflict);
+            }
+            let game_revision = advance(record.revision)?;
+            let host_revision = advance(self.view_revision(HOST_VIEW)?)?;
+            self.db.execute(
+                SQL_CANCEL_UNSTARTED_GAME,
+                &[
+                    text(GameState::Cancelled),
+                    int(game_revision),
+                    int(now),
+                    text(crate::game::OPERATOR_CANCEL_REASON),
+                    text(crate::game::TERMINAL_ACTOR_ACCOUNT),
+                    text(authority.account_id()),
+                    text(expected_state),
+                    int(record.revision),
+                ],
+            )?;
+            let after = self.record_optional()?.ok_or(GameError::Storage)?;
+            if after.state != GameState::Cancelled
+                || after.revision != game_revision
+                || after.ended != Some(now)
+                || after.cancellation_reason.as_deref() != Some(crate::game::OPERATOR_CANCEL_REASON)
+                || after.terminal_actor_id != Some(authority.account_id())
+            {
+                return Err(GameError::Storage);
+            }
+            for (delete, read) in PRESTART_PURGE {
+                self.db.execute(delete, &[])?;
+                if !self.db.query(read, &[])?.is_empty() {
+                    return Err(GameError::Storage);
+                }
+            }
+            self.db
+                .execute(SQL_DELETE_PLAYER_VIEW_REVISIONS, &[text(HOST_VIEW)])?;
+            if !self
+                .db
+                .query(SQL_SELECT_ANY_PLAYER_VIEW_REVISION, &[text(HOST_VIEW)])?
+                .is_empty()
+            {
+                return Err(GameError::Storage);
+            }
+            self.set_view_revision(HOST_VIEW, host_revision)?;
+            self.retire_prestart_counters()?;
+            let terminal = TerminalResult {
+                game_id: record.id,
+                expected_state,
+                state: GameState::Cancelled,
+                ended_at: now,
+                history_available: false,
+                history_expires_at: None,
+                winner: None,
+                view_revision: host_revision as u64,
+            };
+            let receipt = self.store_receipt(
+                &actor,
+                command,
+                fingerprint,
+                terminal_outcome(&terminal),
+                record.id,
+                now,
+            )?;
+            self.enqueue_terminal_release(&record, game_revision, now)?;
+            Ok(with_terminal_receipt(terminal, receipt))
+        })
+    }
+    fn commit_terminal(
+        &self,
+        record: &Record,
+        terminal: TerminalCommit<'_>,
+    ) -> Result<GameResponse, GameError> {
+        let TerminalCommit {
+            expected_host_revision,
+            command,
+            actor,
+            fingerprint,
+            expected_state,
+            state,
+            selected_winner,
+            initiated_by,
+            now,
+        } = terminal;
+        if record.state != GameState::InProgress || expected_state != GameState::InProgress {
+            return Err(GameError::Conflict);
+        }
+        if self.view_revision(HOST_VIEW)? != expected_host_revision {
+            return Err(GameError::StaleRevision);
+        }
+        let configuration = self.configuration()?;
+        let calls = self.call_history(record, configuration.numeric_upper_bound)?;
+        let player_rows = self
+            .db
+            .query(SQL_SELECT_GAME_PLAYERS_PLAYER_ID_ALIAS, &[])?;
+        let board_rows = self.db.query(SQL_SELECT_GAME_BOARD_PLAYER_IDS, &[])?;
+        if player_rows.len() < 2
+            || player_rows.len() > RETAINED_PLAYER_LIMIT
+            || player_rows.len() != board_rows.len()
+        {
+            return Err(GameError::Storage);
+        }
+        let mut history_players = Vec::with_capacity(player_rows.len());
+        let mut expected_cells = Vec::new();
+        for (player_row, board_row) in player_rows.iter().zip(&board_rows) {
+            let player: PlayerId = string(player_row, 0)?
+                .parse()
+                .map_err(|_| GameError::Storage)?;
+            if string(board_row, 0)? != player.to_string() {
+                return Err(GameError::Storage);
+            }
+            let alias = string(player_row, 1)?.to_owned();
+            let board = self
+                .board_view_at(player, record, calls.len() as u32)?
+                .ok_or(GameError::Storage)?;
+            if board.cells.len() != usize::from(board.side_length).pow(2) {
+                return Err(GameError::Storage);
+            }
+            for cell in &board.cells {
+                let (kind, value) = match &cell.kind {
+                    BoardCellKind::Free => (text(CELL_FREE), SqlValue::Null),
+                    BoardCellKind::Value(value) => (text(CELL_VALUE), text(value)),
+                };
+                expected_cells.push(vec![
+                    text(player),
+                    int(i64::from(cell.position.row)),
+                    int(i64::from(cell.position.column)),
+                    kind,
+                    value,
+                    int(i64::from(u8::from(cell.is_matched))),
+                ]);
+            }
+            history_players.push((player, alias, board));
+        }
+        let winner = match selected_winner {
+            Some((player, alias)) => {
+                let saved = history_players
+                    .iter()
+                    .find(|(member, _, _)| *member == player)
+                    .ok_or(GameError::Conflict)?;
+                if saved.1 != alias || !saved.2.qualified || state != GameState::Resolved {
+                    return Err(GameError::Conflict);
+                }
+                Some(brews_contracts::games::WinnerView {
+                    player_id: player,
+                    alias,
+                })
+            }
+            None if state == GameState::Cancelled => None,
+            None => return Err(GameError::InvalidInput),
+        };
+        let history_expires = add_three_calendar_months(now)?;
+        let game_revision = advance(record.revision)?;
+        let host_revision = advance(expected_host_revision)?;
+        self.db.execute(
+            SQL_UPDATE_GAME_RECORD_TERMINAL,
+            &[
+                text(state),
+                int(game_revision),
+                int(now),
+                if state == GameState::Cancelled {
+                    text(crate::game::OPERATOR_CANCEL_REASON)
+                } else {
+                    SqlValue::Null
+                },
+                winner
+                    .as_ref()
+                    .map_or(SqlValue::Null, |value| text(value.player_id)),
+                winner
+                    .as_ref()
+                    .map_or(SqlValue::Null, |value| text(&value.alias)),
+                winner
+                    .as_ref()
+                    .map_or(SqlValue::Null, |_| text(initiated_by)),
+                text(crate::game::TERMINAL_ACTOR_ACCOUNT),
+                text(initiated_by),
+                int(history_expires),
+                text(GameState::InProgress),
+                int(record.revision),
+            ],
+        )?;
+        let expected_terminal_fields = vec![vec![
+            text(state),
+            int(game_revision),
+            int(now),
+            if state == GameState::Cancelled {
+                text(crate::game::OPERATOR_CANCEL_REASON)
+            } else {
+                SqlValue::Null
+            },
+            winner
+                .as_ref()
+                .map_or(SqlValue::Null, |value| text(value.player_id)),
+            winner
+                .as_ref()
+                .map_or(SqlValue::Null, |value| text(&value.alias)),
+            winner
+                .as_ref()
+                .map_or(SqlValue::Null, |_| text(initiated_by)),
+            text(crate::game::TERMINAL_ACTOR_ACCOUNT),
+            text(initiated_by),
+            int(history_expires),
+        ]];
+        if self.db.query(SQL_SELECT_GAME_RECORD_TERMINAL_FIELDS, &[])? != expected_terminal_fields {
+            return Err(GameError::Storage);
+        }
+        let record_after = self.record()?;
+        if record_after.state != state
+            || record_after.revision != game_revision
+            || record_after.ended != Some(now)
+            || record_after.history_expires != Some(history_expires)
+            || record_after.terminal_actor_kind.as_deref()
+                != Some(crate::game::TERMINAL_ACTOR_ACCOUNT)
+            || record_after.terminal_actor_id != Some(initiated_by)
+            || record_after.winner_awarded_by != winner.as_ref().map(|_| initiated_by)
+            || record_after.cancellation_reason.as_deref()
+                != (state == GameState::Cancelled).then_some(crate::game::OPERATOR_CANCEL_REASON)
+        {
+            return Err(GameError::Storage);
+        }
+        self.db.execute(
+            SQL_INSERT_GAME_HISTORY,
+            &[
+                text(record.id),
+                text(record.code.as_ref().ok_or(GameError::Storage)?.as_str()),
+                text(record.host),
+                int(record.started.ok_or(GameError::Storage)?),
+                int(now),
+                int(history_expires),
+                text(state),
+                winner
+                    .as_ref()
+                    .map_or(SqlValue::Null, |value| text(value.player_id)),
+                winner
+                    .as_ref()
+                    .map_or(SqlValue::Null, |value| text(&value.alias)),
+            ],
+        )?;
+        for call in &calls {
+            self.db.execute(
+                SQL_INSERT_HISTORY_CALLS,
+                &[
+                    text(record.id),
+                    int(i64::from(call.view.sequence_no)),
+                    text(&call.view.value),
+                ],
+            )?;
+        }
+        for (player, alias, board) in &history_players {
+            self.db.execute(
+                SQL_INSERT_HISTORY_PLAYERS,
+                &[
+                    text(record.id),
+                    text(player),
+                    text(alias),
+                    int(i64::from(board.side_length)),
+                ],
+            )?;
+            for cell in &board.cells {
+                let (kind, value) = match &cell.kind {
+                    BoardCellKind::Free => (text(CELL_FREE), SqlValue::Null),
+                    BoardCellKind::Value(value) => (text(CELL_VALUE), text(value)),
+                };
+                self.db.execute(
+                    SQL_INSERT_HISTORY_BOARD_CELLS,
+                    &[
+                        text(record.id),
+                        text(player),
+                        int(i64::from(cell.position.row)),
+                        int(i64::from(cell.position.column)),
+                        kind,
+                        value,
+                        int(i64::from(u8::from(cell.is_matched))),
+                    ],
+                )?;
+            }
+        }
+        let expected_parent = vec![vec![
+            text(record.code.as_ref().ok_or(GameError::Storage)?.as_str()),
+            text(record.host),
+            int(record.started.ok_or(GameError::Storage)?),
+            int(now),
+            int(history_expires),
+            text(state),
+            winner
+                .as_ref()
+                .map_or(SqlValue::Null, |value| text(value.player_id)),
+            winner
+                .as_ref()
+                .map_or(SqlValue::Null, |value| text(&value.alias)),
+        ]];
+        if self
+            .db
+            .query(SQL_SELECT_GAME_HISTORY_PARENT, &[text(record.id)])?
+            != expected_parent
+        {
+            return Err(GameError::Storage);
+        }
+        let expected_calls = calls
+            .iter()
+            .map(|call| {
+                vec![
+                    int(i64::from(call.view.sequence_no)),
+                    text(&call.view.value),
+                ]
+            })
+            .collect::<Vec<_>>();
+        if self
+            .db
+            .query(SQL_SELECT_GAME_HISTORY_CALLS, &[text(record.id)])?
+            != expected_calls
+        {
+            return Err(GameError::Storage);
+        }
+        let expected_players = history_players
+            .iter()
+            .map(|(player, alias, board)| {
+                vec![
+                    text(*player),
+                    text(alias),
+                    int(i64::from(board.side_length)),
+                ]
+            })
+            .collect::<Vec<_>>();
+        if self
+            .db
+            .query(SQL_SELECT_GAME_HISTORY_PLAYERS, &[text(record.id)])?
+            != expected_players
+            || self
+                .db
+                .query(SQL_SELECT_GAME_HISTORY_CELLS, &[text(record.id)])?
+                != expected_cells
+        {
+            return Err(GameError::Storage);
+        }
+        self.validate_committed_history(&record_after)?;
+        self.set_view_revision(HOST_VIEW, host_revision)?;
+        for (player, _, _) in &history_players {
+            let key = player.to_string();
+            self.set_view_revision(&key, advance(self.view_revision(&key)?)?)?;
+        }
+        self.retain_final_grants(&record_after, now)?;
+        for (delete, read) in TERMINAL_LIVE_PURGE {
+            self.db.execute(delete, &[])?;
+            if !self.db.query(read, &[])?.is_empty() {
+                return Err(GameError::Storage);
+            }
+        }
+        let host_view_revision = host_revision as u64;
+        let terminal = TerminalResult {
+            game_id: record.id,
+            expected_state,
+            state,
+            ended_at: now,
+            history_available: true,
+            history_expires_at: Some(history_expires),
+            winner,
+            view_revision: host_view_revision,
+        };
+        let receipt = self.store_receipt(
+            actor,
+            command,
+            fingerprint,
+            terminal_outcome(&terminal),
+            record.id,
+            now,
+        )?;
+        self.enqueue_terminal_release(record, game_revision, now)?;
+        Ok(with_terminal_receipt(terminal, receipt))
+    }
+    fn enqueue_terminal_release(
+        &self,
+        record: &Record,
+        fence: i64,
+        now: i64,
+    ) -> Result<(), GameError> {
+        let work = PendingWork {
+            operation: record
+                .creation_command
+                .to_string()
+                .parse()
+                .map_err(|_| GameError::Storage)?,
+            kind: WorkKind::Release,
+            phase: WorkPhase::AwaitingAcknowledgement,
+            actor: SYSTEM_ACTOR.into(),
+            command: record.creation_command,
+            fingerprint: *record.fp.digest(),
+            expected: 0,
+            fence,
+            created: now,
+            next: now,
+            attempts: 0,
+        };
+        self.insert_work(&work)
+    }
+    fn call_history(
+        &self,
+        record: &Record,
+        upper_bound: u32,
+    ) -> Result<Vec<StoredGameCall>, GameError> {
+        let rows = self
+            .db
+            .query(SQL_SELECT_GAME_CALLS_FOR_GAME, &[text(record.id)])?;
+        if rows.len() > upper_bound as usize || rows.len() > 1_000 {
+            return Err(GameError::Storage);
+        }
+        let Some(started_at) = record.started else {
+            return if rows.is_empty() {
+                Ok(Vec::new())
+            } else {
+                Err(GameError::Storage)
+            };
+        };
+        let mut seen = vec![false; upper_bound as usize + 1];
+        let mut calls = Vec::with_capacity(rows.len());
+        for (index, row) in rows.iter().enumerate() {
+            let sequence_no = u32::try_from(index + 1).map_err(|_| GameError::Storage)?;
+            let stored = parse_game_call(row, sequence_no, upper_bound, started_at)?;
+            let value = stored
+                .view
+                .value
+                .parse::<u32>()
+                .map_err(|_| GameError::Storage)? as usize;
+            if seen[value] {
+                return Err(GameError::Storage);
+            }
+            seen[value] = true;
+            calls.push(stored);
+        }
+        Ok(calls)
+    }
     fn board_view(&self, player: PlayerId, r: &Record) -> Result<Option<BoardView>, GameError> {
+        if r.state != GameState::InProgress {
+            return Ok(None);
+        }
+        let configuration = self.configuration()?;
+        let calls = self.call_history(r, configuration.numeric_upper_bound)?;
+        self.board_view_at(player, r, calls.len() as u32)
+    }
+    fn board_view_at(
+        &self,
+        player: PlayerId,
+        r: &Record,
+        evaluated_through_call: u32,
+    ) -> Result<Option<BoardView>, GameError> {
         if r.state != GameState::InProgress {
             return Ok(None);
         }
@@ -1585,7 +2577,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         )?;
         let row = rows.first().ok_or(GameError::Storage)?;
         let side = u8::try_from(number(row, 0)?).map_err(|_| GameError::Storage)?;
-        if number(row, 1)? != 0 {
+        if number(row, 1)? != i64::from(evaluated_through_call) {
             return Err(GameError::Storage);
         }
         let cells = self
@@ -1636,8 +2628,11 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         })
     }
     fn terminal_inner(&self) -> Result<Option<TerminalProof>, GameError> {
+        if let Some(projection) = self.terminal_routing_projection()? {
+            return Ok(Some(TerminalProof::new(projection)));
+        }
         self.record_optional()?
-            .filter(|r| r.state == GameState::Cancelled)
+            .filter(|record| matches!(record.state, GameState::Cancelled | GameState::Resolved))
             .map(|r| r.projection().map(TerminalProof::new))
             .transpose()
     }
@@ -1651,6 +2646,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             return Ok(false);
         }
         let rev = advance(r.revision)?;
+        let host_view_revision = advance(self.view_revision(HOST_VIEW)?)?;
         self.db.execute(
             SQL_CANCEL_UNSTARTED_GAME,
             &[
@@ -1658,6 +2654,10 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 int(rev),
                 int(now),
                 text(crate::game::HOST_IDLE_REASON),
+                text(crate::game::TERMINAL_ACTOR_SYSTEM),
+                SqlValue::Null,
+                text(r.state),
+                int(r.revision),
             ],
         )?;
         for (delete, read) in PRESTART_PURGE {
@@ -1666,6 +2666,17 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 return Err(GameError::Storage);
             }
         }
+        self.db
+            .execute(SQL_DELETE_PLAYER_VIEW_REVISIONS, &[text(HOST_VIEW)])?;
+        if !self
+            .db
+            .query(SQL_SELECT_ANY_PLAYER_VIEW_REVISION, &[text(HOST_VIEW)])?
+            .is_empty()
+        {
+            return Err(GameError::Storage);
+        }
+        self.set_view_revision(HOST_VIEW, host_view_revision)?;
+        self.retire_prestart_counters()?;
         let w = PendingWork {
             operation: r
                 .creation_command
@@ -1691,10 +2702,14 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         Ok(true)
     }
     fn compact(&self, now: i64) -> Result<(), GameError> {
-        if let Some(r) = self
-            .record_optional()?
-            .filter(|r| r.state != GameState::Cancelled)
-        {
+        self.purge_expired_history(now)?;
+        self.cleanup_terminal_access(now)?;
+        if let Some(r) = self.record_optional()?.filter(|r| {
+            matches!(
+                r.state,
+                GameState::New | GameState::AwaitingPlayers | GameState::InProgress
+            )
+        }) {
             let rows = self.db.query(
                 SQL_SELECT_VIEWER_CONNECTIONS_FOR_RECONCILIATION,
                 &[text(PLAYER_KIND)],
@@ -1825,15 +2840,15 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         ack: ReleaseAck,
     ) -> Result<(), GameError> {
         self.maintenance(|_| {
-            let r = self.record_optional()?.ok_or(GameError::NotFound)?;
+            let proof = self.terminal_inner()?.ok_or(GameError::NotFound)?;
+            let projection = proof.projection();
             let current = self
                 .operation_work(work.operation)?
                 .ok_or(GameError::Conflict)?;
-            if r.state != GameState::Cancelled
-                || current != *work
+            if current != *work
                 || current.kind != WorkKind::Release
-                || current.fence != r.revision
-                || ack.game_id() != r.id
+                || current.fence != projection.source_revision()
+                || ack.game_id() != projection.game_id()
             {
                 return Err(GameError::Conflict);
             }
@@ -2284,7 +3299,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
     }
     fn record(&self) -> Result<Record, GameError> {
         self.record_optional()?
-            .filter(|r| r.state != GameState::Cancelled)
+            .filter(|r| r.state != GameState::Cancelled || r.started.is_some())
             .ok_or(GameError::NotFound)
     }
     fn configuration(&self) -> Result<GameConfiguration, GameError> {
@@ -2375,28 +3390,258 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         };
         let raw = String::from_utf8(receipt.encode_json().map_err(|_| GameError::Storage)?)
             .map_err(|_| GameError::Storage)?;
-        self.db.execute(
-            SQL_INSERT_GAME_RECEIPTS,
-            &[
-                text(actor),
-                text(command),
-                SqlValue::Blob(fp.to_vec()),
-                text(raw),
-                int(now),
-                int(receipt.expires_at),
-            ],
-        )?;
-        if self
-            .receipt(actor, command, fp, now)?
-            .ok_or(GameError::Storage)?
-            .encode_json()
-            .map_err(|_| GameError::Storage)?
-            != receipt.encode_json().map_err(|_| GameError::Storage)?
+        let persisted = vec![
+            text(actor),
+            text(command),
+            SqlValue::Blob(fp.to_vec()),
+            text(raw),
+            int(now),
+            int(receipt.expires_at),
+        ];
+        self.db.execute(SQL_INSERT_GAME_RECEIPTS, &persisted)?;
+        self.verify_required_receipt(actor, command, persisted)?;
+        Ok(receipt)
+    }
+    fn verify_required_receipt(
+        &self,
+        actor: &str,
+        command: CommandId,
+        expected: super::Row,
+    ) -> Result<(), GameError> {
+        // Required-write verification is not a business retry: any inconsistency rolls back.
+        if self.db.query(
+            SQL_SELECT_REQUIRED_GAME_RECEIPT,
+            &[text(actor), text(command)],
+        )? != vec![expected]
         {
             return Err(GameError::Storage);
         }
-        Ok(receipt)
+        Ok(())
     }
+}
+struct StoredGameCall {
+    view: CallView,
+    mode: CallMode,
+    called_by: AccountId,
+    command: CommandId,
+    called_at: i64,
+}
+fn parse_game_call(
+    row: &super::Row,
+    expected_sequence: u32,
+    upper_bound: u32,
+    started_at: i64,
+) -> Result<StoredGameCall, GameError> {
+    let sequence_no = u32::try_from(number(row, 0)?).map_err(|_| GameError::Storage)?;
+    let value = string(row, 1)?.to_owned();
+    let called_at = number(row, 5)?;
+    if sequence_no != expected_sequence
+        || !valid_pool_value(&value, upper_bound)
+        || called_at < started_at
+        || called_at > JS_SAFE_INTEGER_MAX
+    {
+        return Err(GameError::Storage);
+    }
+    Ok(StoredGameCall {
+        view: CallView { sequence_no, value },
+        mode: string(row, 2)?.parse().map_err(|_| GameError::Storage)?,
+        called_by: string(row, 3)?.parse().map_err(|_| GameError::Storage)?,
+        command: string(row, 4)?.parse().map_err(|_| GameError::Storage)?,
+        called_at,
+    })
+}
+fn valid_pool_value(value: &str, upper_bound: u32) -> bool {
+    !value.is_empty()
+        && value.len() <= 4
+        && value.bytes().all(|byte| byte.is_ascii_digit())
+        && value.as_bytes()[0] != b'0'
+        && value.parse::<u32>().ok().is_some_and(|number| {
+            (1..=upper_bound).contains(&number) && number.to_string() == value
+        })
+}
+fn choose_remaining_value(
+    runtime: &impl Runtime,
+    upper_bound: u32,
+    calls: &[StoredGameCall],
+) -> Result<String, GameError> {
+    let mut called = vec![false; upper_bound as usize + 1];
+    for call in calls {
+        let value = call
+            .view
+            .value
+            .parse::<u32>()
+            .map_err(|_| GameError::Storage)?;
+        let slot = called.get_mut(value as usize).ok_or(GameError::Storage)?;
+        if *slot {
+            return Err(GameError::Storage);
+        }
+        *slot = true;
+    }
+    let remaining = upper_bound
+        .checked_sub(u32::try_from(calls.len()).map_err(|_| GameError::Storage)?)
+        .filter(|count| *count > 0)
+        .ok_or(GameError::Conflict)?;
+    let target = bounded_random_index(remaining, runtime)?;
+    let mut offset = 0;
+    for value in 1..=upper_bound {
+        if !called[value as usize] {
+            if offset == target {
+                return Ok(value.to_string());
+            }
+            offset += 1;
+        }
+    }
+    Err(GameError::Storage)
+}
+fn bounded_random_index(bound: u32, runtime: &impl Runtime) -> Result<u32, GameError> {
+    if bound == 0 {
+        return Err(GameError::Conflict);
+    }
+    let threshold = bound.wrapping_neg() % bound;
+    for _ in 0..brews_domain::games::RANDOM_INDEX_REJECTION_BUDGET {
+        let mut bytes = [0; 4];
+        runtime
+            .fill_random(&mut bytes)
+            .map_err(|_| GameError::RandomUnavailable)?;
+        let value = u32::from_le_bytes(bytes);
+        if value >= threshold {
+            return Ok(value % bound);
+        }
+    }
+    Err(GameError::GenerationExhausted)
+}
+fn terminal_fingerprint(
+    operation: &str,
+    expected_state: GameState,
+    player: Option<PlayerId>,
+    expected_revision: i64,
+) -> [u8; 32] {
+    use sha2::{Digest, Sha256};
+    let mut hash = Sha256::new();
+    hash.update(b"brews-game-terminal-v1\0");
+    hash.update(operation.as_bytes());
+    hash.update([0]);
+    hash.update(expected_state.to_string().as_bytes());
+    hash.update([0]);
+    hash.update(expected_revision.to_be_bytes());
+    if let Some(player) = player {
+        hash.update([1]);
+        hash.update(player.to_string().as_bytes());
+    } else {
+        hash.update([0]);
+    }
+    hash.finalize().into()
+}
+fn add_three_calendar_months(timestamp: i64) -> Result<i64, GameError> {
+    if !(0..=JS_SAFE_INTEGER_MAX).contains(&timestamp) {
+        return Err(GameError::Storage);
+    }
+    let days = timestamp.div_euclid(MILLISECONDS_PER_UTC_DAY);
+    let time_of_day = timestamp.rem_euclid(MILLISECONDS_PER_UTC_DAY);
+    let (year, month, day) = civil_from_days(days);
+    let target_month_index = year
+        .checked_mul(12)
+        .and_then(|value| value.checked_add(i64::from(month - 1)))
+        .and_then(|value| value.checked_add(HISTORY_RETENTION_CALENDAR_MONTHS))
+        .ok_or(GameError::Storage)?;
+    let target_year = target_month_index.div_euclid(12);
+    let target_month = (target_month_index.rem_euclid(12) + 1) as u8;
+    let target_day = day.min(days_in_month(target_year, target_month));
+    let result = days_from_civil(target_year, target_month, target_day)
+        .checked_mul(MILLISECONDS_PER_UTC_DAY)
+        .and_then(|value| value.checked_add(time_of_day))
+        .filter(|value| *value <= JS_SAFE_INTEGER_MAX)
+        .ok_or(GameError::Storage)?;
+    Ok(result)
+}
+fn civil_from_days(days: i64) -> (i64, u8, u8) {
+    let shifted = days + 719_468;
+    let era = if shifted >= 0 {
+        shifted
+    } else {
+        shifted - 146_096
+    }
+    .div_euclid(146_097);
+    let day_of_era = shifted - era * 146_097;
+    let year_of_era =
+        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let mut year = year_of_era + era * 400;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_prime = (5 * day_of_year + 2) / 153;
+    let day = (day_of_year - (153 * month_prime + 2) / 5 + 1) as u8;
+    let month = (month_prime + if month_prime < 10 { 3 } else { -9 }) as u8;
+    year += i64::from(month <= 2);
+    (year, month, day)
+}
+fn days_from_civil(year: i64, month: u8, day: u8) -> i64 {
+    let year = year - i64::from(month <= 2);
+    let era = year.div_euclid(400);
+    let year_of_era = year - era * 400;
+    let month_prime = i64::from(month) + if month > 2 { -3 } else { 9 };
+    let day_of_year = (153 * month_prime + 2) / 5 + i64::from(day) - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    era * 146_097 + day_of_era - 719_468
+}
+fn days_in_month(year: i64, month: u8) -> u8 {
+    match month {
+        2 if year.rem_euclid(400) == 0
+            || (year.rem_euclid(4) == 0 && year.rem_euclid(100) != 0) =>
+        {
+            29
+        }
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
+    }
+}
+struct TerminalResult {
+    game_id: GameId,
+    expected_state: GameState,
+    state: GameState,
+    ended_at: i64,
+    history_available: bool,
+    history_expires_at: Option<i64>,
+    winner: Option<brews_contracts::games::WinnerView>,
+    view_revision: u64,
+}
+fn terminal_outcome(result: &TerminalResult) -> GameOutcome {
+    GameOutcome::Terminalized {
+        expected_state: result.expected_state,
+        state: result.state,
+        ended_at: result.ended_at,
+        history_available: result.history_available,
+        history_expires_at: result.history_expires_at,
+        winner: result.winner.clone(),
+        view_revision: result.view_revision,
+    }
+}
+fn with_terminal_receipt(result: TerminalResult, receipt: GameReceipt) -> GameResponse {
+    GameResponse::Terminalized {
+        game_id: result.game_id,
+        expected_state: result.expected_state,
+        state: result.state,
+        ended_at: result.ended_at,
+        history_available: result.history_available,
+        history_expires_at: result.history_expires_at,
+        winner: result.winner,
+        view_revision: result.view_revision,
+        receipt,
+    }
+}
+fn call_fingerprint(mode: CallMode, expected: i64, value: Option<&str>) -> [u8; 32] {
+    use sha2::{Digest, Sha256};
+    let mut hash = Sha256::new();
+    hash.update(b"brews-game-call-v1\\0");
+    hash.update(mode.to_string().as_bytes());
+    hash.update([0]);
+    hash.update(expected.to_be_bytes());
+    if let Some(value) = value {
+        hash.update((value.len() as u32).to_be_bytes());
+        hash.update(value.as_bytes());
+    } else {
+        hash.update(0u32.to_be_bytes());
+    }
+    hash.finalize().into()
 }
 fn account_actor(id: AccountId) -> String {
     format!("account:{id}")
@@ -2435,6 +3680,13 @@ fn optional_number(row: &super::Row, n: usize) -> Result<Option<i64>, GameError>
         number(row, n).map(Some)
     }
 }
+fn optional_text(row: &super::Row, n: usize) -> Result<Option<&str>, GameError> {
+    match row.get(n) {
+        Some(SqlValue::Null) => Ok(None),
+        Some(SqlValue::Text(value)) => Ok(Some(value)),
+        _ => Err(GameError::Storage),
+    }
+}
 fn add_time(now: i64, duration: i64) -> Result<i64, GameError> {
     now.checked_add(duration)
         .filter(|v| *v <= JS_SAFE_INTEGER_MAX)
@@ -2462,10 +3714,17 @@ struct Record {
     published: Option<i64>,
     started: Option<i64>,
     ended: Option<i64>,
+    cancellation_reason: Option<String>,
+    winner_player: Option<PlayerId>,
+    winner_alias: Option<String>,
+    winner_awarded_by: Option<AccountId>,
+    terminal_actor_kind: Option<String>,
+    terminal_actor_id: Option<AccountId>,
+    history_expires: Option<i64>,
 }
 impl Record {
     fn parse(r: &super::Row) -> Result<Self, GameError> {
-        Ok(Self {
+        let record = Self {
             id: string(r, 0)?.parse().map_err(|_| GameError::Storage)?,
             creator: string(r, 1)?.parse().map_err(|_| GameError::Storage)?,
             creation_command: string(r, 2)?.parse().map_err(|_| GameError::Storage)?,
@@ -2485,7 +3744,79 @@ impl Record {
             published: optional_number(r, 10)?,
             started: optional_number(r, 11)?,
             ended: optional_number(r, 12)?,
-        })
+            cancellation_reason: optional_text(r, 13)?.map(str::to_owned),
+            winner_player: optional_text(r, 14)?
+                .map(str::parse)
+                .transpose()
+                .map_err(|_| GameError::Storage)?,
+            winner_alias: optional_text(r, 15)?.map(str::to_owned),
+            winner_awarded_by: optional_text(r, 16)?
+                .map(str::parse)
+                .transpose()
+                .map_err(|_| GameError::Storage)?,
+            terminal_actor_kind: optional_text(r, 17)?.map(str::to_owned),
+            terminal_actor_id: optional_text(r, 18)?
+                .map(str::parse)
+                .transpose()
+                .map_err(|_| GameError::Storage)?,
+            history_expires: optional_number(r, 19)?,
+        };
+        record.validate_terminal()?;
+        Ok(record)
+    }
+    fn validate_terminal(&self) -> Result<(), GameError> {
+        let winner_fields = (
+            self.winner_player.is_some(),
+            self.winner_alias.is_some(),
+            self.winner_awarded_by.is_some(),
+        );
+        let valid = match self.state {
+            GameState::Resolved => {
+                winner_fields == (true, true, true)
+                    && self.started.is_some()
+                    && self.ended.is_some()
+                    && self
+                        .history_expires
+                        .is_some_and(|expires| self.ended.is_some_and(|end| expires > end))
+                    && self.cancellation_reason.is_none()
+                    && self.terminal_actor_kind.as_deref()
+                        == Some(crate::game::TERMINAL_ACTOR_ACCOUNT)
+                    && self.terminal_actor_id.is_some()
+                    && self.winner_awarded_by == self.terminal_actor_id
+            }
+            GameState::Cancelled => {
+                let no_winner = winner_fields == (false, false, false);
+                let operator = self.cancellation_reason.as_deref()
+                    == Some(crate::game::OPERATOR_CANCEL_REASON)
+                    && self.terminal_actor_kind.as_deref()
+                        == Some(crate::game::TERMINAL_ACTOR_ACCOUNT)
+                    && self.terminal_actor_id.is_some();
+                let idle = self.cancellation_reason.as_deref()
+                    == Some(crate::game::HOST_IDLE_REASON)
+                    && self.terminal_actor_kind.as_deref()
+                        == Some(crate::game::TERMINAL_ACTOR_SYSTEM)
+                    && self.terminal_actor_id.is_none();
+                let history_matches_start = match (self.started, self.ended, self.history_expires) {
+                    (None, Some(_), None) => true,
+                    (Some(start), Some(end), Some(expires)) => start <= end && expires > end,
+                    _ => false,
+                };
+                no_winner && (operator || idle) && history_matches_start
+            }
+            _ => {
+                winner_fields == (false, false, false)
+                    && self.cancellation_reason.is_none()
+                    && self.terminal_actor_kind.is_none()
+                    && self.terminal_actor_id.is_none()
+                    && self.history_expires.is_none()
+                    && self.ended.is_none()
+            }
+        };
+        if valid {
+            Ok(())
+        } else {
+            Err(GameError::Storage)
+        }
     }
     fn projection(&self) -> Result<GameProjection, GameError> {
         Ok(GameProjection::new(
@@ -2498,7 +3829,7 @@ impl Record {
             self.created,
             self.started,
             self.ended,
-            None,
+            self.history_expires,
         ))
     }
     fn summary(&self, revision: u64) -> GameSummary {
@@ -2693,9 +4024,196 @@ fn validate_schema<D: Database>(db: &D) -> Result<(), StorageError> {
     }
     Ok(())
 }
+fn schema_statement_for(table: &str) -> Result<String, StorageError> {
+    let prefix = format!("CREATE TABLE {table}(");
+    game_schema::statements()
+        .into_iter()
+        .find(|statement| statement.starts_with(&prefix))
+        .ok_or(StorageError)
+}
+fn migration_table_set(tables: &[&str], include_delivery: bool) -> Vec<String> {
+    let mut names = tables
+        .iter()
+        .map(|table| (*table).to_owned())
+        .collect::<Vec<_>>();
+    if include_delivery {
+        names.extend(DELIVERY_TABLES.map(str::to_owned));
+    }
+    names.sort();
+    names
+}
+fn migrate_previous_game_schema<D: Database>(db: &D) -> Result<(), StorageError> {
+    let previous_record = db.query(SQL_SELECT_GAME_RECORD_FOR_SCHEMA_MIGRATION, &[])?;
+    if previous_record.len() > 1 {
+        return Err(StorageError);
+    }
+    let configuration = db.query(
+        SQL_SELECT_GAME_CONFIGURATION_NUMERIC_UPPER_BOUND_BOARD_SIDE_LENGTH_FREE_CELLS_ENABLED,
+        &[],
+    )?;
+    if configuration.len() > 1 {
+        return Err(StorageError);
+    }
+    let free_cells = db.query(SQL_SELECT_GAME_FREE_CELLS_ROW_COLUMN, &[])?;
+    if configuration.is_empty() && !free_cells.is_empty() {
+        return Err(StorageError);
+    }
+
+    let ddl = schema_statement_for("game_record")?.replacen(
+        "CREATE TABLE game_record(",
+        "CREATE TABLE game_record_schema_upgrade(",
+        1,
+    );
+    db.execute(&ddl, &[])?;
+    db.execute(
+        SQL_COPY_GAME_RECORD_TO_SCHEMA_MIGRATION,
+        &[
+            text(GameState::Cancelled),
+            text(crate::game::HOST_IDLE_REASON),
+            text(crate::game::TERMINAL_ACTOR_SYSTEM),
+        ],
+    )?;
+    let copied_record = db.query(SQL_SELECT_GAME_RECORD_SCHEMA_UPGRADE, &[])?;
+    match previous_record.as_slice() {
+        [] if copied_record.is_empty() => {}
+        [old] => {
+            let mut expected = old.clone();
+            expected.extend([
+                SqlValue::Null,
+                SqlValue::Null,
+                SqlValue::Null,
+                if old.get(7) == Some(&text(GameState::Cancelled))
+                    && old.get(13) == Some(&SqlValue::Null)
+                    && old.get(17) == Some(&text(crate::game::HOST_IDLE_REASON))
+                {
+                    text(crate::game::TERMINAL_ACTOR_SYSTEM)
+                } else {
+                    SqlValue::Null
+                },
+                SqlValue::Null,
+                SqlValue::Null,
+            ]);
+            if copied_record != vec![expected] {
+                return Err(StorageError);
+            }
+        }
+        _ => return Err(StorageError),
+    }
+
+    db.execute(SQL_DELETE_GAME_CONFIGURATION_FOR_SCHEMA_MIGRATION, &[])?;
+    if !db
+        .query(SQL_SELECT_GAME_CONFIGURATION_AFTER_SCHEMA_MIGRATION, &[])?
+        .is_empty()
+    {
+        return Err(StorageError);
+    }
+    db.execute(SQL_DROP_PREVIOUS_GAME_RECORD_FOR_SCHEMA_MIGRATION, &[])?;
+    if !db
+        .query(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='game_record'",
+            &[],
+        )?
+        .is_empty()
+    {
+        return Err(StorageError);
+    }
+    db.execute(SQL_RENAME_GAME_RECORD_AFTER_SCHEMA_MIGRATION, &[])?;
+    if db.query(SQL_SELECT_GAME_RECORD_FOR_SCHEMA_MIGRATION, &[])? != previous_record {
+        return Err(StorageError);
+    }
+    if let [row] = configuration.as_slice() {
+        db.execute(SQL_INSERT_GAME_CONFIGURATION, row)?;
+        if db.query(SQL_SELECT_GAME_CONFIGURATION_AFTER_SCHEMA_MIGRATION, &[])?
+            != vec![
+                std::iter::once(SqlValue::Integer(1))
+                    .chain(row.iter().cloned())
+                    .collect::<Vec<_>>(),
+            ]
+        {
+            return Err(StorageError);
+        }
+        for cell in &free_cells {
+            db.execute(SQL_INSERT_GAME_FREE_CELLS, cell)?;
+        }
+        if db.query(SQL_SELECT_GAME_FREE_CELLS_ROW_COLUMN, &[])? != free_cells {
+            return Err(StorageError);
+        }
+    }
+
+    let old_boards = db.query(SQL_SELECT_GAME_BOARDS_FOR_SCHEMA_MIGRATION, &[])?;
+    let old_cells = db.query(
+        "SELECT player_id,row,column,kind,value,is_matched FROM game_board_cells ORDER BY player_id,row,column",
+        &[],
+    )?;
+    db.execute(SQL_RENAME_GAME_BOARD_CELLS_FOR_SCHEMA_MIGRATION, &[])?;
+    db.execute(SQL_RENAME_GAME_BOARDS_FOR_SCHEMA_MIGRATION, &[])?;
+    db.execute(&schema_statement_for("game_boards")?, &[])?;
+    db.execute(SQL_COPY_GAME_BOARDS_TO_SCHEMA_MIGRATION, &[])?;
+    if db.query(SQL_SELECT_GAME_BOARDS_FOR_SCHEMA_MIGRATION, &[])? != old_boards
+        || db.query(SQL_SELECT_PREVIOUS_GAME_BOARDS, &[])? != old_boards
+    {
+        return Err(StorageError);
+    }
+    let cells_ddl = schema_statement_for("game_board_cells")?.replacen(
+        "CREATE TABLE game_board_cells(",
+        "CREATE TABLE game_board_cells_schema_upgrade(",
+        1,
+    );
+    db.execute(&cells_ddl, &[])?;
+    db.execute(SQL_COPY_GAME_BOARD_CELLS_TO_SCHEMA_MIGRATION, &[])?;
+    let copied_cells = db.query(
+        "SELECT player_id,row,column,kind,value,is_matched FROM game_board_cells_schema_upgrade ORDER BY player_id,row,column",
+        &[],
+    )?;
+    if copied_cells != old_cells {
+        return Err(StorageError);
+    }
+    db.execute(SQL_DROP_PREVIOUS_GAME_BOARD_CELLS_FOR_SCHEMA_MIGRATION, &[])?;
+    db.execute(SQL_DROP_PREVIOUS_GAME_BOARDS_FOR_SCHEMA_MIGRATION, &[])?;
+    db.execute(SQL_RENAME_GAME_BOARD_CELLS_AFTER_SCHEMA_MIGRATION, &[])?;
+    if db.query(
+        "SELECT player_id,row,column,kind,value,is_matched FROM game_board_cells ORDER BY player_id,row,column",
+        &[],
+    )? != old_cells
+    {
+        return Err(StorageError);
+    }
+
+    let statements = game_schema::statements();
+    for statement in statements.iter().filter(|statement| {
+        GAME_TABLES.iter().any(|table| {
+            !PREVIOUS_GAME_TABLES.contains(table)
+                && statement.starts_with(&format!("CREATE TABLE {table}("))
+        })
+    }) {
+        db.execute(statement, &[])?;
+        let name = GAME_TABLES
+            .iter()
+            .find(|table| statement.starts_with(&format!("CREATE TABLE {table}(")))
+            .ok_or(StorageError)?;
+        if db.query(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+            &[text(name)],
+        )? != vec![vec![text(name)]]
+        {
+            return Err(StorageError);
+        }
+    }
+    db.execute(
+        SQL_UPDATE_GAME_SCHEMA_VERSION,
+        &[int(GAME_SCHEMA_VERSION), int(PREVIOUS_GAME_SCHEMA_VERSION)],
+    )?;
+    if db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])?
+        != vec![vec![int(GAME_SCHEMA_VERSION)]]
+    {
+        return Err(StorageError);
+    }
+    Ok(())
+}
 pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
     db.transaction(|| {
-        if inventory(db)?.is_empty() {
+        let actual = inventory(db)?;
+        if actual.is_empty() {
             for sql in game_schema::statements() {
                 db.execute(&sql, &[])?;
             }
@@ -2703,6 +4221,22 @@ pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
                 SQL_INSERT_GAME_METADATA,
                 &[SqlValue::Integer(GAME_SCHEMA_VERSION)],
             )?;
+        } else {
+            let version = db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])?;
+            let version = match version.as_slice() {
+                [row] => number(row, 0).map_err(|_| StorageError)?,
+                _ => return Err(StorageError),
+            };
+            if version == PREVIOUS_GAME_SCHEMA_VERSION {
+                let previous = migration_table_set(&PREVIOUS_GAME_TABLES, false);
+                let previous_with_delivery = migration_table_set(&PREVIOUS_GAME_TABLES, true);
+                if actual != previous && actual != previous_with_delivery {
+                    return Err(StorageError);
+                }
+                migrate_previous_game_schema(db)?;
+            } else if version != GAME_SCHEMA_VERSION {
+                return Err(StorageError);
+            }
         }
         validate_schema(db)
     })
@@ -2782,6 +4316,153 @@ mod tests {
                     .unwrap()
             })
             .collect()
+    }
+    #[test]
+    fn history_retention_preserves_utc_time_and_clamps_calendar_month_end() {
+        for (ended, expected) in [
+            (1_801_401_255_678, 1_809_090_855_678),
+            (1_827_619_199_999, 1_835_481_599_999),
+            (1_859_241_599_999, 1_867_017_599_999),
+            (1_835_395_200_001, 1_843_171_200_001),
+            (0, 7_776_000_000),
+        ] {
+            assert_eq!(add_three_calendar_months(ended), Ok(expected));
+        }
+        assert_eq!(
+            add_three_calendar_months(JS_SAFE_INTEGER_MAX),
+            Err(GameError::Storage)
+        );
+        assert_eq!(add_three_calendar_months(-1), Err(GameError::Storage));
+    }
+    #[test]
+    fn forward_schema_migration_accepts_legitimate_prestart_idle_cancellation_and_pending_release()
+    {
+        let db = Sqlite::new();
+        db.conn
+            .borrow()
+            .execute_batch(include_str!("../../tests/fixtures/game-schema-v1.sql"))
+            .unwrap();
+        db.conn.borrow().execute_batch("INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,ended_at,cancellation_reason) VALUES(1,'01890f3e-53b7-7d28-9b05-4f65092d5701','01890f3e-53b7-7d28-9b05-4f65092d5702','01890f3e-53b7-7d28-9b05-4f65092d5703',zeroblob(32),'01890f3e-53b7-7d28-9b05-4f65092d5702',0,'cancelled',1,1000,1000,86401000,'host_idle_timeout'); INSERT INTO game_view_revisions VALUES('host',1); INSERT INTO game_pending_work VALUES('01890f3e-53b7-7d28-9b05-4f65092d5703','release','awaiting_acknowledgement','system','01890f3e-53b7-7d28-9b05-4f65092d5703',zeroblob(32),0,1,86401000,86402000,0);").unwrap();
+        migrate_game(&db).unwrap();
+        let rt = TestRuntime::new();
+        let service = GameService::new(&db, &rt, AuthPolicy::default(), &[9; 32]).unwrap();
+        let record = service.record_optional().unwrap().unwrap();
+        assert_eq!(record.state, GameState::Cancelled);
+        assert_eq!(
+            record.terminal_actor_kind.as_deref(),
+            Some(crate::game::TERMINAL_ACTOR_SYSTEM)
+        );
+        assert!(record.terminal_actor_id.is_none());
+        assert!(record.history_expires.is_none());
+        assert_eq!(
+            service.pending_work(1).unwrap()[0].kind(),
+            WorkKind::Release
+        );
+        assert!(service.cleanup().unwrap().is_some());
+        assert!(
+            db.query("SELECT 1 FROM game_history", &[])
+                .unwrap()
+                .is_empty()
+        );
+    }
+    #[test]
+    fn forward_schema_migration_preserves_existing_game_configuration_and_board() {
+        let db = Sqlite::new();
+        db.conn
+            .borrow()
+            .execute_batch(include_str!("../../tests/fixtures/game-schema-v1.sql"))
+            .unwrap();
+        db.conn.borrow().execute_batch("INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,idle_due,lobby_opened_at,started_at,ended_at,game_code,published_at,cancellation_reason) VALUES(1,'01890f3e-53b7-7d28-9b05-4f65092d5701','01890f3e-53b7-7d28-9b05-4f65092d5702','01890f3e-53b7-7d28-9b05-4f65092d5703',zeroblob(32),'01890f3e-53b7-7d28-9b05-4f65092d5704',0,'in_progress',4,1000,2000,NULL,1001,1002,NULL,'ABCDEFGH',1001,NULL); INSERT INTO game_configuration VALUES(1,4,2,0,2,0,'single_line'); INSERT INTO game_players VALUES('01890f3e-53b7-7d28-9b05-4f65092d5705','Player',1002,0,NULL); INSERT INTO game_boards VALUES('01890f3e-53b7-7d28-9b05-4f65092d5705',2,1002,0); INSERT INTO game_board_cells VALUES('01890f3e-53b7-7d28-9b05-4f65092d5705',1,1,'value','1',1),('01890f3e-53b7-7d28-9b05-4f65092d5705',1,2,'value','2',0),('01890f3e-53b7-7d28-9b05-4f65092d5705',2,1,'value','3',0),('01890f3e-53b7-7d28-9b05-4f65092d5705',2,2,'value','4',0); INSERT INTO game_view_revisions VALUES('host',2),('01890f3e-53b7-7d28-9b05-4f65092d5705',1);").unwrap();
+
+        migrate_game(&db).unwrap();
+        assert_eq!(
+            db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])
+                .unwrap(),
+            vec![vec![int(GAME_SCHEMA_VERSION)]]
+        );
+        assert_eq!(
+            db.query(SQL_SELECT_GAME_CONFIGURATION_AFTER_SCHEMA_MIGRATION, &[])
+                .unwrap(),
+            vec![vec![
+                int(1),
+                int(4),
+                int(2),
+                int(0),
+                int(2),
+                int(0),
+                text("single_line")
+            ]]
+        );
+        assert_eq!(
+            db.query(
+                SQL_SELECT_GAME_BOARD_CELLS_ROW_COLUMN_KIND,
+                &[text("01890f3e-53b7-7d28-9b05-4f65092d5705")]
+            )
+            .unwrap(),
+            vec![
+                vec![int(1), int(1), text(CELL_VALUE), text("1"), int(1)],
+                vec![int(1), int(2), text(CELL_VALUE), text("2"), int(0)],
+                vec![int(2), int(1), text(CELL_VALUE), text("3"), int(0)],
+                vec![int(2), int(2), text(CELL_VALUE), text("4"), int(0)],
+            ]
+        );
+        let runtime = TestRuntime::new();
+        let service = GameService::new(&db, &runtime, AuthPolicy::default(), &[9; 32]).unwrap();
+        let record = service.record().unwrap();
+        let player = "01890f3e-53b7-7d28-9b05-4f65092d5705"
+            .parse::<PlayerId>()
+            .unwrap();
+        assert_eq!(record.state, GameState::InProgress);
+        assert_eq!(
+            service
+                .board_view(player, &record)
+                .unwrap()
+                .unwrap()
+                .cells
+                .len(),
+            4
+        );
+        assert_eq!(
+            db.query("SELECT count(*) FROM game_history", &[]).unwrap(),
+            vec![vec![int(0)]]
+        );
+    }
+    #[test]
+    fn gameplay_schema_supports_resolved_games_and_unique_ordered_calls() {
+        let db = Sqlite::new();
+        migrate_game(&db).unwrap();
+        let state_ddl = db
+            .query(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name='game_record'",
+                &[],
+            )
+            .unwrap();
+        let state_ddl = string(state_ddl.first().unwrap(), 0).unwrap();
+        assert!(state_ddl.contains("'resolved'"));
+
+        let call_ddl = db
+            .query(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name='game_calls'",
+                &[],
+            )
+            .unwrap();
+        assert_eq!(call_ddl.len(), 1);
+        assert!(
+            string(call_ddl.first().unwrap(), 0)
+                .unwrap()
+                .contains("UNIQUE(game_id,value)")
+        );
+        db.conn.borrow().execute_batch("INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity) VALUES(1,'game-test','creator','create',zeroblob(32),'host',0,'new',0,1,1); INSERT INTO game_calls(game_id,sequence_no,value,mode,called_by_account_id,command_id,called_at) VALUES('game-test',1,'1','manual','host','command-one',1); INSERT INTO game_calls(game_id,sequence_no,value,mode,called_by_account_id,command_id,called_at) VALUES('game-test',2,'1','random','host','command-two',2);").unwrap_err();
+        let ordered = db
+            .query(
+                "SELECT sequence_no,value FROM game_calls ORDER BY sequence_no",
+                &[],
+            )
+            .unwrap();
+        assert_eq!(
+            ordered,
+            vec![vec![SqlValue::Integer(1), SqlValue::Text("1".into())]]
+        );
     }
     #[test]
     fn prepared_account_close_requires_durable_deletion_before_success() {

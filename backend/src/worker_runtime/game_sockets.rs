@@ -499,6 +499,18 @@ impl GameObject {
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         db: &OwnerDatabase,
     ) -> Result<(), GameError> {
+        let result = self.broadcast_inner(service, db).await;
+        if result.is_err() {
+            // A revoked native endpoint can remain OPEN when close throws; retry promptly.
+            self.transport_retry.set(true);
+        }
+        result
+    }
+    async fn broadcast_inner(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+    ) -> Result<(), GameError> {
         service.reconcile_connections(&self.observed(service)?)?;
         self.persist(service, db).await?;
         for ws in self.sockets()? {

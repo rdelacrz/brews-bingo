@@ -7,6 +7,9 @@ use brews_domain::{
 };
 
 const CREATION_COLUMNS: &str = "account_id,command_id,game_id,fingerprint,created_at,deadline,next_retry_at,attempts,ready_revision,completed_at";
+const INDEX_COLUMNS: &str = "game_id,designated_host_id,fingerprint,state,source_revision,game_code,created_at,started_at,ended_at,history_expires_at,publication_state";
+const SQL_DELETE_EXPIRED_HISTORY_INDEX: &str =
+    "DELETE FROM directory_game_index WHERE game_id=? AND history_expires_at=?";
 fn text(value: impl ToString) -> SqlValue {
     SqlValue::Text(value.to_string())
 }
@@ -295,22 +298,50 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         }
         for _ in 0..GAME_CODE_MAX_CANDIDATES {
             let code = self.generate_code()?;
-            if !self
-                .db
-                .query(
-                    "SELECT game_id FROM directory_game_index WHERE game_code=? LIMIT 1",
-                    &[text(code.as_str())],
-                )?
-                .is_empty()
-            {
-                continue;
-            }
             let observed = self.observe_clock()?;
+            let collisions = self.db.query(
+                &format!(
+                    "SELECT {INDEX_COLUMNS} FROM directory_game_index WHERE game_code=? LIMIT 1"
+                ),
+                &[text(code.as_str())],
+            )?;
+            if let [row] = collisions.as_slice() {
+                let (collision, _) = parse_index(row, observed)?;
+                if collision
+                    .history_expires_at()
+                    .is_none_or(|expires| observed < expires)
+                {
+                    continue;
+                }
+                // Compare the old game identity, never delete by a now-reusable code.
+                self.purge_history_index(&collision, observed)?;
+            } else if !collisions.is_empty() {
+                return Err(DirectoryError::Storage);
+            }
             self.db.execute(
                 "UPDATE directory_game_index SET game_code=? WHERE game_id=? AND game_code IS NULL",
                 &[text(code.as_str()), text(ack.game_id())],
             )?;
             self.db.execute("UPDATE directory_game_creations SET next_retry_at=?,attempts=0 WHERE game_id=? AND ready_revision IS NOT NULL",&[integer(observed),text(ack.game_id())])?;
+            if self.db.query(
+                "SELECT game_code FROM directory_game_index WHERE game_id=?",
+                &[text(ack.game_id())],
+            )? != vec![vec![text(code.as_str())]]
+                || self.load_creation(ack.game_id(), observed)?
+                    != Some(CreationWork::new(
+                        work.account_id(),
+                        work.command_id(),
+                        work.game_id(),
+                        work.fingerprint(),
+                        work.created_at(),
+                        work.deadline(),
+                        Some(observed),
+                        0,
+                        work.ready_revision(),
+                    ))
+            {
+                return Err(DirectoryError::Storage);
+            }
             return Ok(CodeGrant::new(ack, code));
         }
         Err(DirectoryError::CodeExhausted)
@@ -353,6 +384,9 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
                 published,
             ));
         }
+        if matches!(stored.state(), GameState::Cancelled | GameState::Resolved) {
+            return Err(DirectoryError::ProofMismatch);
+        }
         self.require_reserved(projection.game_id())?;
         if stored.game_code() != projection.game_code() {
             return Err(DirectoryError::ProofMismatch);
@@ -389,6 +423,25 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             self.db.execute("UPDATE directory_hosted_nonterminal_games SET designated_host_id=? WHERE game_id=?", &[text(projection.designated_host_id()),text(projection.game_id())])?;
         }
         self.db.execute("UPDATE directory_game_creations SET next_retry_at=NULL WHERE game_id=? AND ready_revision IS NOT NULL",&[text(projection.game_id())])?;
+        if self.load_index(projection.game_id(), now)? != Some((projection.clone(), true))
+            || self
+                .load_creation(projection.game_id(), now)?
+                .is_some_and(|work| {
+                    work.ready_revision().is_some() && work.next_retry_at().is_some()
+                })
+        {
+            return Err(DirectoryError::Storage);
+        }
+        if matches!(
+            projection.state(),
+            GameState::New | GameState::AwaitingPlayers | GameState::InProgress
+        ) && self.db.query(
+            "SELECT designated_host_id FROM directory_hosted_nonterminal_games WHERE game_id=?",
+            &[text(projection.game_id())],
+        )? != vec![vec![text(projection.designated_host_id())]]
+        {
+            return Err(DirectoryError::Storage);
+        }
         Ok(ProjectionAck::new(
             projection.game_id(),
             projection.source_revision(),
@@ -400,6 +453,7 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         self.transaction(|now| {
             Ok(self
                 .load_index(game, now)?
+                .filter(|(p, _)| p.history_expires_at().is_none_or(|expires| now < expires))
                 .and_then(|(p, _)| p.game_code().cloned()))
         })
     }
@@ -461,7 +515,10 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         game: GameId,
         now: i64,
     ) -> Result<Option<(GameProjection, bool)>, DirectoryError> {
-        let rows=self.db.query("SELECT game_id,designated_host_id,fingerprint,state,source_revision,game_code,created_at,started_at,ended_at,history_expires_at,publication_state FROM directory_game_index WHERE game_id=?", &[text(game)])?;
+        let rows = self.db.query(
+            &format!("SELECT {INDEX_COLUMNS} FROM directory_game_index WHERE game_id=?"),
+            &[text(game)],
+        )?;
         match rows.as_slice() {
             [] => Ok(None),
             [row] => parse_index(row, now).map(Some),
@@ -484,9 +541,15 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         })
     }
     /// Requires trusted Game's committed terminal evidence, never a local timeout guess.
+    /// Reuse the original proof to purge at its fixed History expiry; absent indexes stay absent.
     /// A delayed old Game proof cannot clear a new reservation or code association.
     pub fn release_game(&self, proof: TerminalProof) -> Result<ReleaseAck, DirectoryError> {
-        self.transaction(|now| self.release_game_at(proof, now))
+        self.transaction_before_compaction(|now| {
+            // Validate the exact target before expiry compaction can erase its evidence.
+            let ack = self.release_game_at(proof, now)?;
+            self.compact_completions(now)?;
+            Ok(ack)
+        })
     }
     fn release_game_at(
         &self,
@@ -498,7 +561,11 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         if !matches!(p.state(), GameState::Cancelled | GameState::Resolved) {
             return Err(DirectoryError::ProofMismatch);
         }
-        if let Some((stored, published)) = self.load_index(p.game_id(), now)? {
+        let index_before = self.load_index(p.game_id(), now)?;
+        let retain_index = index_before.is_some()
+            && p.started_at().is_some()
+            && p.history_expires_at().is_some_and(|expires| now < expires);
+        if let Some((stored, published)) = index_before {
             let creation = self.load_creation(p.game_id(), now)?;
             // A hidden allocation may not have reached the Game before cancellation.
             let uncommitted_code = !published
@@ -510,6 +577,10 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
                 && p.started_at().is_none()
                 && p.history_expires_at().is_none()
                 && creation.is_some_and(|work| work.ready_revision() == Some(0));
+            if matches!(stored.state(), GameState::Cancelled | GameState::Resolved) && stored != *p
+            {
+                return Err(DirectoryError::ProofMismatch);
+            }
             if stored.fingerprint() != p.fingerprint()
                 || stored.created_at() != p.created_at()
                 || stored.designated_host_id() != p.designated_host_id()
@@ -535,12 +606,14 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
                     &[text(p.game_id())],
                 )?;
             }
-            if p.started_at().is_none() {
+            if p.started_at().is_none()
+                || p.history_expires_at().is_some_and(|expires| now >= expires)
+            {
                 self.db.execute(
                     "DELETE FROM directory_game_index WHERE game_id=?",
                     &[text(p.game_id())],
                 )?;
-            } else {
+            } else if stored != *p {
                 self.db.execute("UPDATE directory_game_index SET state=?,source_revision=?,publication_state=?,started_at=?,ended_at=?,history_expires_at=? WHERE game_id=?", &[text(p.state()),integer(p.source_revision()),text(if published {PUBLICATION_PUBLISHED}else{PUBLICATION_PENDING}),optional_integer(p.started_at()),optional_integer(p.ended_at()),optional_integer(p.history_expires_at()),text(p.game_id())])?;
             }
             self.db.execute(
@@ -567,9 +640,9 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             return Err(DirectoryError::Storage);
         }
         match self.load_index(p.game_id(), now)? {
-            None => {}
-            Some((stored, _)) if p.started_at().is_some() && stored == *p => {}
-            Some(_) => return Err(DirectoryError::Storage),
+            None if !retain_index => {}
+            Some((stored, _)) if retain_index && stored == *p => {}
+            _ => return Err(DirectoryError::Storage),
         }
         Ok(ReleaseAck::new(p.game_id()))
     }
@@ -670,6 +743,63 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             next=Some(next.map_or(at,|n:i64|n.min(at)));
         }
         Ok(next)
+    }
+    pub(super) fn next_history_deadline(&self, now: i64) -> Result<Option<i64>, DirectoryError> {
+        let rows = self.db.query(
+            &format!("SELECT {INDEX_COLUMNS} FROM directory_game_index WHERE history_expires_at IS NOT NULL ORDER BY history_expires_at,game_id LIMIT 1"),
+            &[],
+        )?;
+        match rows.as_slice() {
+            [] => Ok(None),
+            [row] => parse_index(row, now)?
+                .0
+                .history_expires_at()
+                .ok_or(DirectoryError::Storage)
+                .map(Some),
+            _ => Err(DirectoryError::Storage),
+        }
+    }
+    pub(super) fn compact_history_indexes(&self, now: i64) -> Result<(), DirectoryError> {
+        let rows = self.db.query(
+            &format!("SELECT {INDEX_COLUMNS} FROM directory_game_index WHERE history_expires_at<=? ORDER BY history_expires_at,game_id LIMIT ?"),
+            &[integer(now), integer(CLEANUP_BATCH_SIZE)],
+        )?;
+        for row in rows {
+            let (projection, _) = parse_index(&row, now)?;
+            self.purge_history_index(&projection, now)?;
+        }
+        Ok(())
+    }
+    fn purge_history_index(
+        &self,
+        projection: &GameProjection,
+        now: i64,
+    ) -> Result<(), DirectoryError> {
+        let expires = projection
+            .history_expires_at()
+            .filter(|expires| now >= *expires)
+            .ok_or(DirectoryError::Storage)?;
+        if self.reserved_game()? == Some(projection.game_id())
+            || self.load_creation(projection.game_id(), now)?.is_some()
+            || !self
+                .db
+                .query(
+                    "SELECT game_id FROM directory_hosted_nonterminal_games WHERE game_id=?",
+                    &[text(projection.game_id())],
+                )?
+                .is_empty()
+        {
+            // An unacknowledged terminal release is still required durable work.
+            return Err(DirectoryError::Storage);
+        }
+        self.db.execute(
+            SQL_DELETE_EXPIRED_HISTORY_INDEX,
+            &[text(projection.game_id()), integer(expires)],
+        )?;
+        if self.load_index(projection.game_id(), now)?.is_some() {
+            return Err(DirectoryError::Storage);
+        }
+        Ok(())
     }
     pub(super) fn compact_creations(&self, now: i64) -> Result<(), DirectoryError> {
         let floor = self.command_floor()?;

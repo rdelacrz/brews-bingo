@@ -7,7 +7,10 @@ mod developer;
 pub use developer::{CliRequest, authenticate_cli, decode_cli};
 mod users;
 pub use users::{UsersRequest, decode_users};
+mod game_body;
 mod games;
+#[cfg(any(test, target_arch = "wasm32"))]
+pub(crate) use game_body::decode_empty_game_body;
 pub use games::{
     ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameViewSelector, GamesRequest,
     PLAYER_COOKIE_NAME, decode_games, game_cookie_path,

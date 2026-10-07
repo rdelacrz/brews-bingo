@@ -27,4 +27,5 @@ mod worker_runtime {
     mod game_peers;
     mod game_recovery;
     mod game_recovery_wire;
+    mod game_wire;
 }

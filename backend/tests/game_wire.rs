@@ -3,7 +3,13 @@
 #[path = "../src/worker_runtime/game_wire.rs"]
 mod game_wire;
 
-pub use brews_backend::{api, security};
+pub use brews_backend::security;
+#[path = "../src/api/game_body.rs"]
+mod game_body;
+mod api {
+    pub(crate) use crate::game_body::decode_empty_game_body;
+    pub use brews_backend::api::*;
+}
 #[path = "../src/limits.rs"]
 #[allow(
     dead_code,
@@ -62,6 +68,36 @@ fn private_reply_rejects_a_positional_cookie_variant() {
 }
 
 #[test]
+fn private_reply_none_cookie_is_a_closed_object_in_original_bytes() {
+    use game_wire::GameOwnerResponse;
+    let id = "01890f3e-53b7-7d28-9b05-4f65092d5711";
+    let prefix = format!(
+        r#"{{"owner_result":"success","response":{{"result":"committed","receipt":{{"version":1,"command_id":"{id}","game_id":"{id}","outcome":{{"operation":"started","view_revision":1,"started_at":1}},"completed_at":1,"expires_at":86400001}}}},"cookie":"#
+    );
+    let valid = format!("{prefix}{{\"kind\":\"none\"}}}}");
+    assert!(GameOwnerResponse::decode_json(valid.as_bytes()).is_ok());
+    assert!(serde_json::from_slice::<GameOwnerResponse>(valid.as_bytes()).is_ok());
+    for cookie in [
+        r#"{"kind":"none","unknown":1}"#,
+        r#"{"kind":"none","\u0074oken":null}"#,
+        r#"{"kind":"none","expires_at":null}"#,
+        r#"{"kind":"none","kind":"none"}"#,
+        r#"{"kind":"none","\u006bind":"none"}"#,
+        r#"["none"]"#,
+    ] {
+        let invalid = format!("{prefix}{cookie}}}");
+        assert!(
+            GameOwnerResponse::decode_json(invalid.as_bytes()).is_err(),
+            "{cookie}"
+        );
+        assert!(
+            serde_json::from_slice::<GameOwnerResponse>(invalid.as_bytes()).is_err(),
+            "{cookie}"
+        );
+    }
+}
+
+#[test]
 fn private_reply_must_match_the_exact_command_operation_and_target() {
     use game_wire::{GameIngress, GameOwnerResponse};
     let id = "01890f3e-53b7-7d28-9b05-4f65092d5711";
@@ -91,6 +127,58 @@ fn private_reply_must_match_the_exact_command_operation_and_target() {
     ] {
         let reply = GameOwnerResponse::decode_json(encoded.as_bytes()).unwrap();
         assert!(reply.validate_for(&request).is_err());
+    }
+}
+
+#[test]
+fn private_up_to_date_sync_is_bound_to_the_exact_requested_known_revision() {
+    use game_wire::{GameIngress, GameOwnerResponse};
+    let id = "01890f3e-53b7-7d28-9b05-4f65092d5711";
+    let bytes = br#"{"owner_result":"synced","response":{"up_to_date":true,"view_revision":2,"snapshot":null}}"#;
+    let reply = GameOwnerResponse::decode_json(bytes).unwrap();
+    let request = |known: &str| {
+        let bytes = format!(
+            r#"{{"operation":"sync","game_id":"{id}","command_id":null,"view":"player","known_revision":{known},"session_token":null,"admission_token":null,"body":""}}"#
+        );
+        GameIngress::decode_json(bytes.as_bytes()).unwrap()
+    };
+    assert!(reply.validate_for(&request("2")).is_ok());
+    for known in ["null", "0", "1", "3"] {
+        assert!(
+            reply.validate_for(&request(known)).is_err(),
+            "known_revision={known}"
+        );
+    }
+    // The standalone public DTO has no request context and retains its existing meaning.
+    assert!(
+        brews_contracts::games::SyncResponse::decode_json(
+            br#"{"up_to_date":true,"view_revision":2,"snapshot":null}"#
+        )
+        .is_ok()
+    );
+}
+
+#[test]
+fn private_synced_reply_is_a_closed_map_in_original_bytes() {
+    use game_wire::GameOwnerResponse;
+    let valid = br#"{"owner_result":"synced","response":{"up_to_date":true,"view_revision":2,"snapshot":null}}"#;
+    assert!(GameOwnerResponse::decode_json(valid).is_ok());
+    for response in [
+        r#"{"up_to_date":true,"view_revision":2,"snapshot":null,"unknown":1}"#,
+        r#"{"up_to_date":true,"\u0075p_to_date":true,"view_revision":2,"snapshot":null}"#,
+        r#"{"up_to_date":true,"view_revision":2,"snapshot":null,"snapshot":null}"#,
+        r#"{"up_to_date":true,"view_revision":2}"#,
+        r#"[true,2,null]"#,
+    ] {
+        let bytes = format!(r#"{{"owner_result":"synced","response":{response}}}"#);
+        assert!(
+            GameOwnerResponse::decode_json(bytes.as_bytes()).is_err(),
+            "{response}"
+        );
+        assert!(
+            serde_json::from_slice::<GameOwnerResponse>(bytes.as_bytes()).is_err(),
+            "{response}"
+        );
     }
 }
 

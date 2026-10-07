@@ -201,6 +201,19 @@ These decisions finalize only this local implementation slice; unrelated catalog
 | GAME-SLICE-04 | Approved | A code-validated `POST /api/games/{game_id}/admission-context` preflight establishes a 15-minute game-scoped HttpOnly admission cookie without taking a seat. D5 requires that cookie, exact Origin, UUID-v7 `Idempotency-Key` and JSON `game_code`, `alias`, optional `recovery_answer`. Bind commands to the server-reserved player identity. Fresh 200 returns player ID/alias, fixed one-day expiry, view revision and secret-free receipt, and sets a separate Secure/HttpOnly/SameSite=Strict game-scoped player cookie. Exact retries return only the receipt, never a cookie. Existing valid players reconnect without another seat. Enroll approved normalized Argon2 answer verifiers, but defer the recovery endpoint; lost player-cookie delivery cannot be restored from a receipt. |
 | GAME-SLICE-05 | Approved | G1 uses its proposed upgrade path, valid cookies and exact Origin. Version-1 JSON snapshot frames carry `kind`, `game_id`, `view_revision`, `connection_id`, `session_expires_at` and role-filtered `view`; committed updates use full replacement snapshots. Player views expose only the caller's board, host/admin views follow DO-067. When account and player cookies coexist, require nonsecret `view=account\|player` and validate the selected authority. G3 accepts that selector and optional `known_revision`, returning `up_to_date`, `view_revision`, `snapshot` (null only when unchanged). No URL credentials, credential renewal, gameplay-command frames or chunking. Keep approved frame/queue caps and close/resync behavior; close codes are 1008 denied authority, 1009 oversized frame and 1013 unavailable/overloaded service. |
 | GAME-SLICE-06 | Approved | Actual local Workerd exposes no `bufferedAmount` queued-byte counter. Extend each version-1 snapshot with an unpredictable server-generated `delivery_id` at the end; accept transport-only `snapshot_ack` with connection ID, delivery ID and view revision. Validate current session/connection and known outstanding delivery before freeing the durable byte budget. Outstanding-delivery metadata survives hibernation; exceeding 1 MiB or a bounded backlog closes/resyncs. ACKs never authorize gameplay, renew credentials or determine whether Start committed. The user approved continuing the full authorized creation/Start slice. |
+| GAMEPLAY-SLICE-01 | Authorized locally | Implement the backend gameplay and terminal flows requested by the user: random/manual calls, server-side automatic matches and Single Line qualification, host winner submission, explicit New/AwaitingPlayers cancellation, and confirmed InProgress no-winner end. Keep the approved board-generation policy (server-generated at Start, no player card choice/edit). Follow latest HLD-037 and DO-065–075: winner submission commits Resolved directly and releases the reservation after durable terminal commit; no separate Close operation. Materialize started History atomically and exclude/purge pre-start cancellation without History. This authorizes local implementation only; frontend, deployment/provisioning and commit/push remain out of scope absent separate authorization. |
+| GAMEPLAY-SLICE-02 | Approved | E7/E8/E9 require the existing account cookie, exact application Origin and canonical UUID-v7 `Idempotency-Key`. E7 random-call JSON requires `expected_revision`; E8 manual-call JSON requires `value` and `expected_revision`; E9 winner JSON requires stable `player_id` and `expected_revision`. A fresh mutation must match the current authorized host-view revision. Exact authorized retries return only the stored secret-free receipt/result and perform no new writes/draw/award, even if that original revision is now stale. The backend resolves the selected member’s alias and revalidates qualification; alias is display data, not the request identity. |
+| GAMEPLAY-SLICE-03 | Approved | E10/E11 use the shared `POST /api/games/{game_id}/cancel` and the existing account cookie, exact application Origin and canonical UUID-v7 `Idempotency-Key`. JSON requires `confirmed: true` and `expected_state` exactly equal to the displayed branch state: `new` or `awaiting_players` for pre-start deletion, `in_progress` for confirmed no-winner ending. Any mismatch is a conflict; never infer a branch solely from current state, so a delayed pre-start confirmation cannot end a game after Start. Pre-start cancellation commits Cancelled and deletes game/participant data without History; InProgress manual ending commits Cancelled with a three-month History snapshot. |
+
+### Local gameplay wire implementation
+
+This records the completed local implementation, not additional business approvals. Final integrated local gates and independent core/runtime reviews pass at verified source hashes. The user has authorized committing and pushing this reviewed local slice; deployment remains unauthorized. See the [LLD verification checkpoint](lld.md#local-gameplay-verification-checkpoint) for execution evidence and limitations.
+
+- E7/E8 return `result: call_accepted`, public `call { sequence_no, value }`, `remaining_count`, `exhausted`, the committed host `view_revision` and a secret-free receipt. Calls appear in authorized sync/WSS views in accepted order; players receive only their own board. Exact retries return `result: committed` and the original receipt, with no cookie or second draw. Exhaustion is a conflict for another fresh call, not a terminal transition.
+- E9/E10/E11 return `result: terminalized`, `game_id`, the confirmed/requested `expected_state`, terminal `state`, fixed `ended_at`, `history_available`, nullable `history_expires_at`, nullable `winner { player_id, alias }`, the host `view_revision` and the receipt. Pre-start cancellation has no winner or History deadline; started cancellation has History with no winner; resolution has exactly the selected qualified winner. No separate Close operation exists.
+- A terminal commit schedules durable same-game Directory release before post-commit delivery. Pending release returns HTTP 202 with `result: pending` and `operation_id`; retry/alarm recovery never redraws, selects a different winner, extends History or clears a newer reservation. Viewer ACKs/Exit do not gate release.
+- Existing sync/stream routes use `final_host` / `final_player` projections after started termination. They read the immutable final rows under only eligible original grants; no mutable configuration, new participant credential or new terminal account-view grant is created. The player projection contains only that player's final board. Reconnect preserves the original session expiry.
+- The minimal F2 transport is `POST /api/games/{game_id}/exit` with exact `{}` JSON, application Origin, UUID-v7 `Idempotency-Key` and the same account/player cookie selection as sync. `view=account|player` disambiguates coexisting cookies; `known_revision` and target IDs are rejected. Fresh success returns `result: exited`, `game_id` and a secret-free receipt. Player Exit retires every final grant/connection for that player; account Exit retires every account/game-session grant for that account. History and other viewers remain unchanged. An authorized account retry returns only the retained receipt; a retired player token cannot authenticate a retry. Failed physical closure does not undo durable revocation and schedules recovery. This does not implement the separate proposed History listing/detail catalog or participant recovery/spectator-admission APIs.
 
 **Reusable proposed safe response shapes:** These are DTO/projection descriptions, **not direct serialization of the storage records in [Durable Object design Section 6](durable-object-design.md#schema-proposal)**. Final nested schemas, field visibility and optionality remain **TBD**.
 
@@ -1602,12 +1615,11 @@ The designated host or an authorized admin requests a random undrawn value. Pers
 
 ##### Request
 
-Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here. No named request-body fields are specified.
-
-No selected value, board changes or qualification supplied by the client.
+Require the existing account cookie with a current enabled Verified Normal designated-host or enrolled-admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. The JSON body requires the current authorized host-view `expected_revision`. The command ID is carried only in the header. The backend chooses and persists the random value; no value, board match or qualification is client-supplied.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
+| `expected_revision` | `Revision` | Y | Current authorized host-view revision; a stale fresh command conflicts. |
 
 ##### Response
 
@@ -1634,13 +1646,14 @@ The designated host or an authorized admin submits a string value. Validate pool
 
 ##### Request
 
-Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here.
+Require the existing account cookie with a current enabled Verified Normal designated-host or enrolled-admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. The JSON body requires `value` and the current authorized host-view `expected_revision`. The command ID is carried only in the header. `value` must be the exact canonical ASCII decimal string for an undrawn member of the game’s configured `1..=numeric_upper_bound` pool; do not trim, numerically normalize or accept alternate spellings.
 
-No client-authored board matches or qualification. The backend validates pool membership/nonduplication and performs the same durable progression as a random call.
+No client-authored board matches or qualification. The backend validates exact pool membership/nonduplication and performs the same durable progression as a random call.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `value` | `String` | Y | Required manual string value; must belong to the pool and not already have been drawn. Exact string validation TBD. |
+| `value` | `String` | Y | Exact canonical decimal string for an undrawn pool member. |
+| `expected_revision` | `Revision` | Y | Current authorized host-view revision; a stale fresh command conflicts. |
 
 ##### Response
 
@@ -1667,13 +1680,14 @@ For the designated host or an authorized admin, revalidate the selected member�
 
 ##### Request
 
-Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed metadata `command_id: CommandId` and optional `expected_revision: Revision`; transport/placement and precise requiredness are **TBD**, not assigned to the body here.
+Require the existing account cookie with a current enabled Verified Normal designated-host or enrolled-admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. The JSON body requires stable `player_id` and the current authorized host-view `expected_revision`. The command ID is carried only in the header; the submitted alias, board and qualification are never authoritative.
 
 The backend revalidates qualification; no client-asserted winner proof, board or timing priority. Retained disconnected/departed players remain eligible.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `player_id` | `PlayerId` | Y | Selected winner’s member identifier; backend revalidates qualification before committing one winner with Resolved. |
+| `player_id` | `PlayerId` | Y | Selected winner’s stable member identifier; backend resolves the stored alias and revalidates qualification before committing one winner with Resolved. |
+| `expected_revision` | `Revision` | Y | Current authorized host-view revision; a stale fresh command conflicts. |
 
 ##### Response
 
@@ -1696,13 +1710,12 @@ With designated-host/admin confirmation, commit Cancelled from New/Awaiting Play
 
 ##### Request
 
-Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed `command_id: CommandId`, `expected_state: GameState` (New/Awaiting Players) or equivalent revision/confirmation binding; precise contract is **TBD**. Their body/header transport remains **TBD**, so they are not listed as body fields.
-
-Confirmation must bind to the displayed game and pre-start lifecycle. A delayed pre-start confirmation must not silently select the In Progress cancellation branch after Start.
+Require the existing account cookie with a current enabled Verified Normal designated-host or enrolled-admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. JSON requires `confirmed: true` and `expected_state` equal to the exact pre-start state shown for confirmation (`new` or `awaiting_players`). The command ID is carried only in the header. At the commit boundary, reject if the current state differs; a delayed pre-start confirmation cannot enter the InProgress branch after Start.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `confirmed` | `bool` | N | Proposed body confirmation (`true`) bound to the displayed game and New/Awaiting Players lifecycle. Exact confirmation contract/field requiredness TBD; the confirmation obligation is not optional. |
+| `confirmed` | `bool` | Y | Must be `true`; confirmation is required for either pre-start state. |
+| `expected_state` | `GameState` | Y | Exact current pre-start state shown to the host: `new` or `awaiting_players`; mismatch conflicts. |
 
 ##### Response
 
@@ -1727,13 +1740,14 @@ With designated-host/admin confirmation, commit Cancelled from In Progress, reta
 
 ##### Request
 
-Proposed request: path `game_id: GameId`; cookie carrying a designated-host/admin session. Proposed `command_id: CommandId`, `expected_state: GameState` (InProgress) or equivalent version binding; encoding is **TBD**. Their body/header transport remains **TBD**, so they are not listed as body fields.
+Require the existing account cookie with a current enabled Verified Normal designated-host or enrolled-admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. JSON requires `confirmed: true` and `expected_state: in_progress`. The command ID is carried only in the header. At the commit boundary, reject unless the current state remains InProgress.
 
-No winner input. The current game state determines the In Progress cancellation branch rather than the pre-start cancellation branch; confirmation is bound to the In Progress game.
+No winner input. The request’s exact `expected_state: in_progress` fences the confirmed no-winner branch; the backend also requires the actual current state to remain InProgress.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `confirmed` | `bool` | N | Proposed body confirmation bound to the In Progress game. Exact encoding/field requiredness TBD; the confirmation obligation is not optional. |
+| `confirmed` | `bool` | Y | Must be `true`; confirmation is required to end an InProgress game without a winner. |
+| `expected_state` | `GameState` | Y | Must be `in_progress`; mismatch conflicts and cannot select a pre-start deletion branch. |
 
 ##### Response
 

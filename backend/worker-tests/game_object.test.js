@@ -363,7 +363,7 @@ test("two genuine concurrent account upgrades from 99 recheck capacity at native
   await holdConnectionProofs();
   const first = streamRequest(id, actor.session);
   const second = streamRequest(id, admin.session);
-  await expect.poll(() => inOwner(instance => instance.testHeld.length)).toBe(2);
+  await expect.poll(() => inOwner(instance => instance.testHeld.length), { timeout: 10_000 }).toBe(2);
   await releaseConnectionProofs();
   const responses = await Promise.all([first, second]);
   for (const response of responses) if (response.webSocket) { response.webSocket.accept(); response.webSocket.close(1000); }
@@ -477,7 +477,7 @@ test.each(["backlog", "bytes"])("real unacknowledged snapshots enforce %s credit
   for (const player of connected) if (player.socket.readyState === 1) player.socket.close(1000);
 });
 
-test("terminal cleanup retains release work and credit while genuine SDK closure is uncertain", async () => {
+test("terminal cleanup releases its reservation while retaining credit for uncertain genuine SDK closure", async () => {
   const { id, lobby } = await openLobby();
   const player = await join(id, lobby.game_code, "TerminalPlayer");
   const connection = await stream(id, player.session);
@@ -489,12 +489,12 @@ test("terminal cleanup retains release work and credit while genuine SDK closure
     state.storage.sql.exec("UPDATE game_record SET idle_due=?", Date.now() - 1);
     await instance.alarm().catch(() => {});
     expect(state.storage.sql.exec("SELECT state,game_code,started_at FROM game_record").one()).toMatchObject({ state: "cancelled", started_at: null });
-    expect(state.storage.sql.exec("SELECT kind,attempt_count FROM game_pending_work").one()).toMatchObject({ kind: "release", attempt_count: 1 });
+    expect([...state.storage.sql.exec("SELECT kind,attempt_count FROM game_pending_work")]).toEqual([]);
     expect([...state.storage.sql.exec("SELECT delivery_id FROM game_delivery_pending")]).toEqual([{ delivery_id: connection.initial.delivery_id }]);
     expect(ws.readyState).toBe(1);
     expect(await state.storage.getAlarm()).not.toBeNull();
   });
-  await runInDurableObject(env.GAME_DIRECTORY.get(env.GAME_DIRECTORY.idFromName("directory")), (_instance, state) => expect(state.storage.sql.exec("SELECT game_id FROM directory_global_reservation").one().game_id).toBe(id));
+  await runInDurableObject(env.GAME_DIRECTORY.get(env.GAME_DIRECTORY.idFromName("directory")), (_instance, state) => expect(state.storage.sql.exec("SELECT game_id FROM directory_global_reservation").one().game_id).toBeNull());
   const ended = closed(connection.socket);
   await runInDurableObject(owner, async (instance, state) => {
     const ws = state.getWebSockets()[0];

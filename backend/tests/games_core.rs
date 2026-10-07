@@ -3,7 +3,11 @@
     clippy::expect_used,
     reason = "Real SQLite tests fail fast."
 )]
+#[path = "games_core/publication_receipt.rs"]
+mod publication_receipt;
 mod support;
+#[path = "games_core/terminal.rs"]
+mod terminal;
 use brews_backend::db::{Database, SqlValue};
 use brews_backend::{
     auth::{
@@ -16,11 +20,12 @@ use brews_backend::{
     },
     game::{GameError, creation_fingerprint},
 };
+use brews_contracts::games::{GameResponse, GameView};
 use brews_contracts::management::{ManagementCommand, ManagementResponse};
 use brews_domain::{
     accounts::{AccessLinkPurpose, AccountRole, SessionScope},
-    games::GameConfiguration,
-    ids::{AccountId, CommandId},
+    games::{BOARD_CELL_KIND_VALUE, GameConfiguration},
+    ids::{AccountId, CommandId, ConnectionId},
 };
 use support::{Sqlite, TestRuntime};
 fn id(rt: &TestRuntime, n: u8) -> String {
@@ -44,6 +49,7 @@ struct Fixture {
     rt: TestRuntime,
     account: AccountId,
     token: String,
+    password: zeroize::Zeroizing<String>,
 }
 impl Fixture {
     fn new() -> Self {
@@ -93,7 +99,7 @@ impl Fixture {
                 AuthCommand::Complete {
                     scope: SessionScope::EnrollmentOnly,
                     token: restricted,
-                    new_password: password,
+                    new_password: password.clone(),
                 },
                 ctx(3),
             )
@@ -106,6 +112,7 @@ impl Fixture {
             rt,
             account,
             token,
+            password: zeroize::Zeroizing::new(password),
         }
     }
     fn service(&self) -> GameService<'_, Sqlite, TestRuntime> {
@@ -199,6 +206,61 @@ impl Fixture {
             .unwrap();
         code.game_code().clone()
     }
+    fn start_two_player_game(
+        &self,
+    ) -> (
+        brews_domain::games::GameCode,
+        brews_backend::game::SecretCookie,
+        brews_backend::game::SecretCookie,
+        [ConnectionId; 2],
+    ) {
+        let config = GameConfiguration {
+            numeric_upper_bound: 4,
+            board_side_length: 2,
+            free_cells_enabled: false,
+            free_cell_positions: vec![],
+            player_capacity: 2,
+            spectator_capacity: 0,
+            ..GameConfiguration::default()
+        };
+        let code = self.open(&config);
+        let first = self.player(&code, 20, "First");
+        let second = self.player(&code, 21, "Second");
+        let connections = [
+            id(&self.rt, 40).parse().unwrap(),
+            id(&self.rt, 41).parse().unwrap(),
+        ];
+        for (player, connection) in [(&first, connections[0]), (&second, connections[1])] {
+            let grant = self
+                .service()
+                .prepare_player_connection(player.token(), connection)
+                .unwrap();
+            self.service().accept_player_connection(&grant).unwrap();
+        }
+        let observed = connections;
+        let host_view = self
+            .service()
+            .account_view(
+                self.auth().authorize_game_account(&self.token).unwrap(),
+                &observed,
+            )
+            .unwrap();
+        let game_id = self.service().directory_projection().unwrap().game_id();
+        let reservation = self.directory().confirm_reservation(game_id).unwrap();
+        assert!(matches!(
+            self.service()
+                .start(
+                    self.auth().authorize_game_account(&self.token).unwrap(),
+                    self.command(30),
+                    host_view.view_revision(),
+                    &reservation,
+                    &observed,
+                )
+                .unwrap(),
+            GameResponse::Started { .. }
+        ));
+        (code, first, second, connections)
+    }
 }
 
 fn game_rows(f: &Fixture) -> Vec<Vec<brews_backend::db::Row>> {
@@ -227,6 +289,270 @@ fn game_rows(f: &Fixture) -> Vec<Vec<brews_backend::db::Row>> {
             .unwrap()
     })
     .collect()
+}
+
+#[test]
+fn manual_call_matches_every_card_and_exact_replay_does_not_advance_views() {
+    let f = Fixture::new();
+    let (_, first, second, connections) = f.start_two_player_game();
+    let first_id = f
+        .game
+        .query(
+            "SELECT player_id FROM game_boards ORDER BY player_id LIMIT 1",
+            &[],
+        )
+        .unwrap()[0][0]
+        .clone();
+    let value = f
+        .game
+        .query(
+            "SELECT value FROM game_board_cells WHERE player_id=? AND row=1 AND column=1",
+            &[first_id],
+        )
+        .unwrap()[0][0]
+        .clone();
+    let value = match value {
+        SqlValue::Text(value) => value,
+        _ => panic!("board value must be text"),
+    };
+    let host_before = f
+        .service()
+        .account_view(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            &connections,
+        )
+        .unwrap();
+    let expected_revision = host_before.view_revision();
+    let first_revision = f
+        .service()
+        .player_view(first.token())
+        .unwrap()
+        .view_revision();
+    let second_revision = f
+        .service()
+        .player_view(second.token())
+        .unwrap()
+        .view_revision();
+    let command = f.command(50);
+
+    let response = f
+        .service()
+        .call_manual_value(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            command,
+            &value,
+            expected_revision,
+        )
+        .unwrap();
+    let (receipt, sequence_no, returned_value, remaining_count, exhausted, view_revision) =
+        match response {
+            GameResponse::CallAccepted {
+                call,
+                remaining_count,
+                exhausted,
+                view_revision,
+                receipt,
+            } => (
+                receipt,
+                call.sequence_no,
+                call.value,
+                remaining_count,
+                exhausted,
+                view_revision,
+            ),
+            other => panic!("unexpected call response: {other:?}"),
+        };
+    assert_eq!(sequence_no, 1);
+    assert_eq!(returned_value, value);
+    assert_eq!(remaining_count, 3);
+    assert!(!exhausted);
+    assert_eq!(view_revision, expected_revision + 1);
+    assert_eq!(
+        f.game
+            .query(
+                "SELECT count(*) FROM game_board_cells WHERE kind=? AND value=? AND is_matched=1",
+                &[
+                    SqlValue::Text(BOARD_CELL_KIND_VALUE.into()),
+                    SqlValue::Text(value.clone()),
+                ],
+            )
+            .unwrap(),
+        vec![vec![SqlValue::Integer(2)]]
+    );
+    let first_view = f.service().player_view(first.token()).unwrap();
+    let second_view = f.service().player_view(second.token()).unwrap();
+    assert_eq!(first_view.view_revision(), first_revision + 1);
+    assert_eq!(second_view.view_revision(), second_revision + 1);
+    assert!(matches!(
+        first_view,
+        GameView::Player { board: Some(_), .. }
+    ));
+
+    let replay = f
+        .service()
+        .call_manual_value(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            command,
+            &value,
+            expected_revision,
+        )
+        .unwrap();
+    let replayed_receipt = match replay {
+        GameResponse::Committed { receipt } => receipt,
+        other => panic!("unexpected retry response: {other:?}"),
+    };
+    assert_eq!(
+        receipt.encode_json().unwrap(),
+        replayed_receipt.encode_json().unwrap()
+    );
+    assert_eq!(
+        f.game
+            .query("SELECT count(*) FROM game_calls", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(1)]]
+    );
+    assert!(matches!(
+        f.service().call_manual_value(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            f.command(51),
+            "1",
+            expected_revision,
+        ),
+        Err(GameError::StaleRevision)
+    ));
+    assert!(matches!(
+        f.service().call_manual_value(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            f.command(52),
+            &value,
+            expected_revision + 1,
+        ),
+        Err(GameError::Conflict)
+    ));
+    assert_eq!(
+        f.game
+            .query("SELECT count(*) FROM game_calls", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(1)]]
+    );
+}
+
+#[test]
+fn random_calls_draw_unique_remaining_values_and_exhaustion_does_not_end_game() {
+    let f = Fixture::new();
+    let (_, _, _, connections) = f.start_two_player_game();
+    let mut expected_revision = f
+        .service()
+        .account_view(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            &connections,
+        )
+        .unwrap()
+        .view_revision();
+    let mut values = Vec::new();
+    for index in 0..4 {
+        let response = f
+            .service()
+            .call_random(
+                f.auth().authorize_game_account(&f.token).unwrap(),
+                f.command(60 + index),
+                expected_revision,
+            )
+            .unwrap();
+        match response {
+            GameResponse::CallAccepted {
+                call,
+                remaining_count,
+                exhausted,
+                view_revision,
+                ..
+            } => {
+                assert_eq!(call.sequence_no, u32::from(index) + 1);
+                assert_eq!(remaining_count, 3 - u32::from(index));
+                assert_eq!(exhausted, index == 3);
+                expected_revision = view_revision;
+                values.push(call.value);
+            }
+            other => panic!("unexpected random call response: {other:?}"),
+        }
+    }
+    values.sort();
+    values.dedup();
+    assert_eq!(values.len(), 4);
+    assert!(matches!(
+        f.service().call_random(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            f.command(70),
+            expected_revision,
+        ),
+        Err(GameError::Conflict)
+    ));
+    assert_eq!(
+        f.game
+            .query("SELECT count(*) FROM game_calls", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(4)]]
+    );
+    assert_eq!(
+        f.game.query("SELECT state FROM game_record", &[]).unwrap(),
+        vec![vec![SqlValue::Text("in_progress".into())]]
+    );
+}
+
+#[test]
+fn random_entropy_or_board_write_failure_rolls_back_call_and_matches() {
+    let f = Fixture::new();
+    let (_, _, _, connections) = f.start_two_player_game();
+    let expected_revision = f
+        .service()
+        .account_view(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            &connections,
+        )
+        .unwrap()
+        .view_revision();
+    f.rt.fail.set(true);
+    assert!(matches!(
+        f.service().call_random(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            f.command(60),
+            expected_revision,
+        ),
+        Err(GameError::RandomUnavailable)
+    ));
+    f.rt.fail.set(false);
+    f.game.conn.borrow().execute_batch("CREATE TRIGGER reject_gameplay_cell_updates BEFORE UPDATE ON game_board_cells BEGIN SELECT RAISE(ABORT,'injected write fault'); END;").unwrap();
+    let value: String = f
+        .game
+        .conn
+        .borrow()
+        .query_row(
+            "SELECT value FROM game_board_cells ORDER BY player_id,row,column LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert!(matches!(
+        f.service().call_manual_value(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            f.command(61),
+            &value,
+            expected_revision,
+        ),
+        Err(GameError::Storage)
+    ));
+    assert_eq!(
+        f.game
+            .query("SELECT count(*) FROM game_calls", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(0)]]
+    );
+    assert_eq!(
+        f.game
+            .query("SELECT revision FROM game_record", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(2)]]
+    );
 }
 
 #[test]
@@ -1146,6 +1472,9 @@ fn exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack() 
     let f = Fixture::new();
     let code = f.open(&GameConfiguration::default());
     let player = f.player(&code, 20, "Alice");
+    f.service()
+        .account_view(f.auth().authorize_game_account(&f.token).unwrap(), &[])
+        .unwrap();
     let due = f.rt.now.get() + 86_400_000;
     f.rt.now.set(due);
     let terminal = f.service().cleanup().unwrap().unwrap();
@@ -1160,7 +1489,6 @@ fn exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack() 
         "game_configuration",
         "game_free_cells",
         "game_recovery",
-        "game_view_revisions",
         "game_connection_grants",
     ] {
         assert_eq!(
@@ -1170,6 +1498,12 @@ fn exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack() 
             vec![vec![SqlValue::Integer(0)]]
         );
     }
+    assert_eq!(
+        f.game
+            .query("SELECT view_key,revision FROM game_view_revisions", &[])
+            .unwrap(),
+        Vec::<brews_backend::db::Row>::new()
+    );
     assert_eq!(
         f.service().player_view(player.token()).err(),
         Some(GameError::NotFound)
@@ -2400,6 +2734,8 @@ fn other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_i
 
 #[test]
 fn fresh_game_schema_is_normalized_and_rejects_unrelated_owner_tables() {
+    use brews_backend::db::schema::game_schema::{GAME_SCHEMA_VERSION, GAME_TABLES};
+
     let db = Sqlite::new();
     brews_backend::db::game::migrate_game(&db).unwrap();
     let tables = db
@@ -2408,12 +2744,17 @@ fn fresh_game_schema_is_normalized_and_rejects_unrelated_owner_tables() {
             &[],
         )
         .unwrap();
-    assert_eq!(tables.len(), 16);
+    let expected_tables = GAME_TABLES
+        .iter()
+        .map(|name| vec![SqlValue::Text((*name).into())])
+        .collect::<Vec<_>>();
+    assert_eq!(tables, expected_tables);
     assert_eq!(
         db.query("SELECT schema_version FROM game_metadata", &[])
             .unwrap(),
-        vec![vec![SqlValue::Integer(1)]]
+        vec![vec![SqlValue::Integer(GAME_SCHEMA_VERSION)]]
     );
+    brews_backend::db::game::migrate_game(&db).unwrap();
     db.execute("CREATE TABLE sqliteXsecret(value TEXT)", &[])
         .unwrap();
     assert!(brews_backend::db::game::migrate_game(&db).is_err());
