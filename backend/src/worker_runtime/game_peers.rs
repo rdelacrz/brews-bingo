@@ -195,7 +195,7 @@ use crate::{
 use brews_domain::ids::{CommandId, ConnectionId, GameId};
 
 #[cfg(target_arch = "wasm32")]
-async fn call<T: serde::de::DeserializeOwned>(
+pub(super) async fn call<T: serde::de::DeserializeOwned>(
     env: &worker::Env,
     binding: &str,
     name: &str,
@@ -321,11 +321,14 @@ pub(super) async fn call_game_close(
     .await
 }
 #[cfg(target_arch = "wasm32")]
-async fn directory_reply(
+pub(super) async fn directory_reply(
     env: &worker::Env,
     request: DirectoryGameRequest,
 ) -> Result<DirectoryGameOutcome, GamePeerError> {
-    let limit = if matches!(request, DirectoryGameRequest::DueWork { .. }) {
+    let limit = if matches!(
+        request,
+        DirectoryGameRequest::DueWork { .. } | DirectoryGameRequest::HistoryIndexes { .. }
+    ) {
         GAME_PEER_BATCH_MAX_BYTES
     } else {
         GAME_PEER_MAX_BYTES

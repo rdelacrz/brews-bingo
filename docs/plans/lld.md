@@ -644,6 +644,33 @@ The initial final combined Worker attempt passed 140 cases but hit an existing t
 
 The code-only structural graph verifies 153 source hashes, with 481 dangling-endpoint and 208 collapsed directed edges. These are navigation limitations, not correctness evidence; the documentation graph remains stale. Production KDF/runtime/Unicode consistency, provider capacity/quotas, deployment and infrastructure/secret provisioning are not certified by local gates. The separate proposed History listing/detail, participant recovery and spectator-admission APIs are not implemented by this slice. Frontend work and deployment remain unauthorized. The user has authorized committing and pushing this reviewed backend slice.
 
+### 3.13 Local History API implementation slice — complete locally
+
+The user requested implementing the game History backend/APIs from these plans. Scope is F3/F4 cross-host read-only listing/detail and required owner integration; preserve the already implemented DO-069–075 terminal snapshots and fixed expiry/cleanup. Frontend, export, new datastore, deployment and provisioning remain unauthorized. The user separately authorized committing and pushing History after the decoder refactor; final verification and independent review remain prerequisites.
+
+[HISTORY-01–03](api-design.md#local-history-implementation-contract-decisions) approve newest-ended-first keyset paging with a stable game-ID tie-breaker, default 20/max 50, nullable continuation cursor/no total or cross-page snapshot promise, optional resolved/cancelled outcome filtering, and the list/detail projection/error contract. Date-range, host and search filters are deferred. HISTORY-03 was initially skipped and subsequently explicitly approved. Winner summaries must be read from their Game owner, not copied into the Directory. Host/admin-only History authority is independent of terminal-view Exit and must never create/revive grants or memberships. Fixed three-calendar-month retention remains unchanged. F3/F4 are implemented locally and independently reviewed with no remaining blocking findings.
+
+The public routes require current enabled Verified Normal host/admin Accounts authority. Directory supplies only bounded routing metadata; summaries and detail are hydrated from each original Game's immutable snapshot. Reads do not restore final grants, extend retention, expose credentials/presence or recreate memberships. Missing/nonterminal/pre-start-cancelled/expired detail returns 404; storage/peer failure returns 503, never empty success. Responses use no-store and the existing GET Origin policy.
+
+HISTORY-STORAGE-01 was reproduced and repaired with native and genuine Workerd RED/GREEN evidence. Expiry first observed at the final owner cut persists and verifies the exact sampled clock/floor before durable denial; successful final cuts remain write-free. Owner sync failures return unavailable. Expiry first observed after the edge Accounts await requires durable denial from the original owner and fresh Accounts reauthorization. List recuts are bounded by selected rows and never refill holes. Rollback/reconstruction, IGNORE/ABORT/readback faults and revocation during denial awaits are covered.
+
+#### Local History verification checkpoint
+
+| Gate | Verified result |
+| --- | --- |
+| Workspace nextest, all features, debug | 711 passed, no failures or skips |
+| Workspace nextest, all features, release-assertions | 711 passed, no failures or skips |
+| Workspace doctests | 12 passed |
+| Fresh-built complete local Workerd suite | 162 passed, no failures or skips |
+| Actual HTTPS/WSS gameplay/History harness | 69 checks passed, including six History-specific checks |
+| Native/Wasm strict Clippy, formatter and diff checks | Passed |
+| Independent storage re-review | Original rollback reproducer, 11 independent probes and 135 scoped native tests in each profile passed |
+| Independent runtime re-review | 28 History regressions and 14 independently authored boundary probes passed in isolated actual Workerd |
+
+Final gates and independent reports are bound to 187 unchanged source hashes. Completion notes were updated afterward; reviewed code and build bytes remain unchanged. The fresh combined Wasm matches the independent runtime artifact. Earlier shared-target stale-artifact failures were corrected by package/profile/target-specific cleanup and a complete rebuild, without treating old-build 404s as source defects. Independent scratch-fixture corrections are retained in the review evidence; final results are not substituted for the failed-run provenance.
+
+The current code-only graph verifies 161 source hashes, with 507 dangling-endpoint and 211 collapsed directed edges; the documentation graph remains stale. Directory page/fanout limits do not certify bounded SQL scan/sort cost: the unchanged query's temporary ORDER BY B-tree remains a provider capacity-measurement concern. Production backup/copy retention, restore controls, quotas, deployment and provisioning are not certified by local gates. Frontend, exports and deferred date-range/host/search filters are not implemented by this slice. The separately authorized History commit/push does not authorize those scopes.
+
 ## 4. Views and frontend contracts
 
 **Design status:** Concrete UI design proposals captured at the user's request (LLD-026), not implemented screens or a new approval of the whole LLD. The requested public **Home**, privileged **Games**, admin-only **Users**, **Create game**, and active **Play** experiences are included, with enrollment, admission, lobby, recovery, results and History completing their flows. Approved domain/security rules remain mandatory. Suggested routes, component names, layout choices and interaction details below are reviewable UI proposals; they do not finalize API payloads, add backend permissions or authorize implementation.
@@ -920,7 +947,7 @@ No Replay game, restart, further call, second winner, edit outcome, or export bu
 
 **Purpose/access:** Cross-host read-only inspection for normal host/admin accounts, not former participant entitlement. Sources: BR-021, HLD-029/032/072, DO-069–075. Contracts: F3/F4.
 
-**List:** Lives in the Games dashboard, satisfying the requested historical-games display. Show code, terminal outcome, ended time, winner only for Resolved, expiry and **View history**. Do not mix pre-start cancellations or expired entries into the list. Suggested outcome filtering/newest-ended-first sorting and cursor paging need final API agreement; no fabricated total or extra datastore is implied.
+**List:** Lives in the Games dashboard, satisfying the requested historical-games display. Show code, terminal outcome, ended time, winner only for Resolved, expiry and **View history**. Do not mix pre-start cancellations or expired entries into the list. HISTORY-01/02 approve optional outcome filtering, newest-ended-first sorting and bounded keyset cursor paging; no total count or extra datastore is implied.
 
 **Detail components:** Read-only outcome/winner header, original game code, permitted host identity and started/ended/expiry times; complete final ordered calls; participating-player aliases and a selectable/expandable final-board inspector. Preserve API ordering (calls by sequence, players by stable ID, cells row-major). Show final cells/matches, not intermediate board playback or unsupported live-presence data. Include **Back to Games**, no gameplay controls.
 

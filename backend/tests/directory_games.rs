@@ -7,6 +7,8 @@
 mod directory;
 #[path = "../src/db/directory.rs"]
 mod directory_db;
+#[path = "directory_games/history.rs"]
+mod history;
 #[path = "../src/limits.rs"]
 #[allow(dead_code, reason = "Scoped tests share backend constants.")]
 mod limits;

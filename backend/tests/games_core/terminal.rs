@@ -3,6 +3,8 @@ use super::*;
 use brews_domain::games::GameState;
 #[path = "terminal_faults.rs"]
 mod faults;
+#[path = "history.rs"]
+mod history;
 #[path = "prestart_maintenance.rs"]
 mod prestart_maintenance;
 #[path = "start_publication.rs"]

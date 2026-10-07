@@ -5,6 +5,11 @@ pub use decode::{BODY_LIMIT, Decoded, Operation, Payload, decode};
 pub use error::ApiError;
 mod developer;
 pub use developer::{CliRequest, authenticate_cli, decode_cli};
+mod history;
+pub use history::{
+    HISTORY_DEFAULT_LIMIT, HISTORY_MAX_LIMIT, HistoryCommand, HistoryCursor, HistoryQuery,
+    HistoryRequest, decode_history,
+};
 mod users;
 pub use users::{UsersRequest, decode_users};
 mod games;

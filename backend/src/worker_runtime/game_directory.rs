@@ -170,6 +170,13 @@ impl WorkWire {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum DirectoryGameRequest {
+    HistoryIndexes {
+        #[serde(deserialize_with = "optional_object")]
+        after: Option<crate::api::HistoryCursor>,
+        limit: u32,
+        #[serde(deserialize_with = "Option::<GameState>::deserialize")]
+        outcome: Option<GameState>,
+    },
     Claim {
         account_id: AccountId,
         command_id: CommandId,
@@ -240,6 +247,10 @@ impl From<DirectoryError> for DirectoryGameRejection {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum DirectoryGameOutcome {
+    HistoryIndexes {
+        #[serde(deserialize_with = "super::game_peers::bounded_objects")]
+        entries: Vec<ProjectionWire>,
+    },
     Work {
         #[serde(deserialize_with = "object")]
         work: WorkWire,
@@ -302,6 +313,15 @@ pub(super) fn dispatch<D: Database, R: Runtime>(
 ) -> DirectoryGameReply {
     let result =
         match request {
+            DirectoryGameRequest::HistoryIndexes {
+                after,
+                limit,
+                outcome,
+            } => service
+                .history_indexes(after.map(|c| (c.ended_at, c.game_id)), *limit, *outcome)
+                .map(|entries| DirectoryGameOutcome::HistoryIndexes {
+                    entries: entries.iter().map(ProjectionWire::from).collect(),
+                }),
             DirectoryGameRequest::Claim {
                 account_id,
                 command_id,
@@ -393,6 +413,27 @@ pub(super) fn verify_reply(
         return Err(GamePeerError::Unavailable);
     }
     let valid = match (request, &reply.outcome) {
+        (
+            DirectoryGameRequest::HistoryIndexes {
+                after,
+                limit,
+                outcome,
+            },
+            DirectoryGameOutcome::HistoryIndexes { entries },
+        ) => {
+            (1..=crate::api::HISTORY_MAX_LIMIT).contains(limit)
+                && entries.len() <= (*limit as usize) + 1
+                && entries.iter().all(|e| {
+                    e.proof().is_ok()
+                        && after.is_none_or(|c| {
+                            (e.ended_at.unwrap_or(0), e.game_id) < (c.ended_at, c.game_id)
+                        })
+                        && outcome.is_none_or(|s| e.state == s)
+                })
+                && entries
+                    .windows(2)
+                    .all(|p| (p[0].ended_at, p[0].game_id) > (p[1].ended_at, p[1].game_id))
+        }
         (
             DirectoryGameRequest::Claim {
                 account_id,
@@ -519,7 +560,10 @@ impl super::directory::GameDirectoryObject {
         let result = dispatch(&service, &message);
         self.schedule_cleanup().await?;
         self.state.storage().sync().await?;
-        let limit = if matches!(message, DirectoryGameRequest::DueWork { .. }) {
+        let limit = if matches!(
+            message,
+            DirectoryGameRequest::DueWork { .. } | DirectoryGameRequest::HistoryIndexes { .. }
+        ) {
             super::game_peers::GAME_PEER_BATCH_MAX_BYTES
         } else {
             super::game_peers::GAME_PEER_MAX_BYTES

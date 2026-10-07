@@ -28,4 +28,5 @@ mod worker_runtime {
     mod game_recovery;
     mod game_recovery_wire;
     mod game_wire;
+    mod history_wire;
 }

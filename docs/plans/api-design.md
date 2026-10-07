@@ -205,6 +205,18 @@ These decisions finalize only this local implementation slice; unrelated catalog
 | GAMEPLAY-SLICE-02 | Approved | E7/E8/E9 require the existing account cookie, exact application Origin and canonical UUID-v7 `Idempotency-Key`. E7 random-call JSON requires `expected_revision`; E8 manual-call JSON requires `value` and `expected_revision`; E9 winner JSON requires stable `player_id` and `expected_revision`. A fresh mutation must match the current authorized host-view revision. Exact authorized retries return only the stored secret-free receipt/result and perform no new writes/draw/award, even if that original revision is now stale. The backend resolves the selected member’s alias and revalidates qualification; alias is display data, not the request identity. |
 | GAMEPLAY-SLICE-03 | Approved | E10/E11 use the shared `POST /api/games/{game_id}/cancel` and the existing account cookie, exact application Origin and canonical UUID-v7 `Idempotency-Key`. JSON requires `confirmed: true` and `expected_state` exactly equal to the displayed branch state: `new` or `awaiting_players` for pre-start deletion, `in_progress` for confirmed no-winner ending. Any mismatch is a conflict; never infer a branch solely from current state, so a delayed pre-start confirmation cannot end a game after Start. Pre-start cancellation commits Cancelled and deletes game/participant data without History; InProgress manual ending commits Cancelled with a three-month History snapshot. |
 
+### Local History implementation contract decisions
+
+The user requested local implementation of the game History backend and APIs using these plans. This authorizes F3/F4 listing/detail work and necessary existing-owner integration, not frontend, export, new storage, deployment or provisioning. The user has separately authorized committing and pushing History after the decoder refactor, subject to final verification and independent review. The approved DO-069–075 snapshot, ownership, account-only cross-host permission and fixed expiry rules remain unchanged. HISTORY-01/02 were approved in the initial batch; HISTORY-03 was initially skipped, then explicitly approved by the user. All three contract decisions are approved. The local F3/F4 implementation, expiry repair and final integrated verification are complete; independent API/storage/runtime reviews have no remaining blocking findings. See [LLD Section 3.13](lld.md#313-local-history-api-implementation-slice--complete-locally) for verified scope and limitations.
+
+| ID | Status | Decision / proposal |
+| --- | --- | --- |
+| HISTORY-01 | Approved | `GET /api/history` uses bounded keyset pagination, newest `ended_at` first with `game_id` as deterministic tie-breaker. Accept optional `cursor` and `limit`; default 20 entries, maximum 50. Return `games` and nullable `next_cursor`, without a total count or snapshot-consistency promise across pages. User response: “Approve this pagination contract.” |
+| HISTORY-02 | Approved | Accept optional `outcome=resolved\|cancelled`; defer date-range, host and search filters. All pages remain cross-host and exclude unstarted/expired games. User response: “Optional outcome=resolved\|cancelled; defer date-range, host and search filters.” |
+| HISTORY-03 | Approved | List summaries contain `game_id`, `game_code`, `designated_host_id`, `outcome`, `started_at`, `ended_at`, `expires_at` and nullable `winner { player_id, alias }`. Detail returns `{ history }` with those fields plus `ordered_calls` (string values in accepted order) and `players { player_id, alias, side_length, cells }` in stable-ID/row-major order. Use only DO-069 snapshot content: no sessions, presence, editable configuration, revisions or new grants. Missing/nonterminal/pre-start-cancelled/expired detail shares 404; storage/peer failure returns 503, never empty success. Both routes use existing normal account cookies, no-store and existing GET Origin policy; participant proof alone cannot authorize History. Read winner summaries from their Game owner, not an expanded Directory index. Initially skipped; the user subsequently answered “approve” to approve this pending contract without revision. |
+
+Review cursor: HISTORY-01–03 approved; no pending History contract decisions or blocking implementation-review findings remain. The separate History commit/push is authorized; frontend, exports and deployment remain outside scope.
+
 ### Local gameplay wire implementation
 
 This records the completed local implementation, not additional business approvals. Final integrated local gates and independent core/runtime reviews pass at verified source hashes. The user has authorized committing and pushing this reviewed local slice; deployment remains unauthorized. See the [LLD verification checkpoint](lld.md#local-gameplay-verification-checkpoint) for execution evidence and limitations.
@@ -1824,27 +1836,27 @@ Path: `GET /api/history`
 
 Auth scope: Host
 
-List unexpired started-game History across hosts. Exclude pre-start cancellations and expired records. Query options remain TBD.
+List unexpired started-game History across hosts. Exclude pre-start cancellations and expired records. HISTORY-01–03 approve pagination, ordering, outcome filtering, summary fields and the response/error contract.
 
 ##### Request
 
 Proposed request: cookie carrying an enrolled host/admin session. No request body.
 
-Possible query `cursor: Option<String>`, `limit: Option<u32>`, `outcome: Option<HistoryOutcome>` and terminal-date range; filter/date encoding/order/defaults are **TBD**.
+Approved HISTORY-01/02 query: optional `cursor`, `limit` (default 20, range 1–50), and `outcome=resolved|cancelled`. Order newest `ended_at` first with `game_id` as deterministic tie-breaker; no cross-page snapshot-consistency promise. Date-range, host and search filters are deferred. Cursor wire encoding remains an implementation detail; it carries no authorization.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 
 ##### Response
 
-Proposed list of unexpired started-game History across hosts. Exclude pre-start cancellations and expired History even before physical cleanup. Exact summary columns and whether to use paging are **TBD**.
+List unexpired started-game History across hosts. Exclude pre-start cancellations and expired History even before physical cleanup. Return `games` with nullable `next_cursor` and no total count. Summaries use HISTORY-03 fields; storage/peer failures return 503 rather than an empty success. Winner summaries come from their Game owner, never an expanded Directory index.
 
-No exports, account credentials, spectator identities or renewed membership. Access/query errors are **TBD**.
+No exports, account credentials, spectator identities or renewed membership. Require a valid enabled Verified Normal host/admin account session; existing account authentication and fixed value-free transport/error conventions apply.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-|| `games` | `Vec<object>` | Y | History summaries with proposed `game_id: GameId`, `game_code: GameCode`, terminal outcome/time, `expires_at: Timestamp` and optional winning alias; exact summary columns TBD. Deadline follows DO-071’s UTC three-calendar-month rule. Includes only unexpired started-game History across hosts. |
-| `next_cursor` | `Option<String>` | N | Possible continuation cursor if paging is chosen. Paging and nullability versus absence TBD. |
+| `games` | `Vec<object>` | Y | Paginated unexpired started-game summaries: game ID/code, designated host ID, outcome, started/ended/expiry timestamps and nullable winner ID/alias. Deadline follows DO-071’s UTC three-calendar-month rule. |
+| `next_cursor` | `Option<String>` | Y | Approved HISTORY-01 continuation cursor; null at the end, no total count. |
 
 #### F4: `get_game_history` (Non-mutating)
 
@@ -1865,7 +1877,7 @@ Proposed request: path `game_id: GameId`; cookie carrying an enrolled host/admin
 
 Proposed read-only final History response. No intermediate replay/archive, sessions, account credentials, recovery verifiers, spectator identities, membership restoration, renewed game access or mutation.
 
-Absent/expired History and denied-access error distinctions are **TBD**; reads never extend the DO-071 UTC calendar deadline, which denies at `now >= expires_at`.
+Missing/nonterminal/pre-start-cancelled/expired History shares 404; storage/peer failure returns 503. Require a valid enabled Verified Normal host/admin account session, independent of old final-view grants/Exit. Return `{ history }` with HISTORY-03 scalar fields, ordered string calls and stable-ID/row-major player snapshots. Reads never extend the DO-071 UTC calendar deadline, which denies at `now >= expires_at`; no sessions, presence, editable configuration, revisions or new grants are returned or created.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |

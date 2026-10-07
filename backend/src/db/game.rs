@@ -1,4 +1,5 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
+mod history;
 mod terminal;
 use super::{Database, SqlValue, StorageError};
 use crate::auth::{AuthPolicy, GameAccountAuthority, Runtime};
@@ -3532,7 +3533,7 @@ fn terminal_fingerprint(
     }
     hash.finalize().into()
 }
-fn add_three_calendar_months(timestamp: i64) -> Result<i64, GameError> {
+pub(crate) fn add_three_calendar_months(timestamp: i64) -> Result<i64, GameError> {
     if !(0..=JS_SAFE_INTEGER_MAX).contains(&timestamp) {
         return Err(GameError::Storage);
     }

@@ -11,6 +11,9 @@ mod game_recovery_wire;
 mod game_sockets;
 mod game_wire;
 mod games;
+mod history;
+mod history_owner;
+mod history_wire;
 mod management;
 mod removals;
 mod runtime;
@@ -62,6 +65,8 @@ pub async fn fetch(
         .route("/_dev/commands", any(management::handle))
         .route("/api/users", any(users::handle))
         .route("/api/users/{*path}", any(users::handle))
+        .route("/api/history", any(history::handle))
+        .route("/api/history/{*path}", any(history::handle))
         .route("/api/games", any(games::handle))
         .route("/api/games/{*path}", any(games::handle))
         .fallback(edge::handle)

@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 #[cfg(feature = "games")]
 pub mod games;
+#[cfg(feature = "games")]
+pub mod history;
 #[cfg(feature = "management")]
 pub mod management;
 #[cfg(feature = "users")]

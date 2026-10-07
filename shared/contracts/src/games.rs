@@ -13,7 +13,7 @@ pub const GAME_VIEW_PLAYER: &str = "player";
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 #[error("Invalid game JSON.")]
 pub struct GameDecodeError;
-fn object<'de, D, T>(d: D) -> Result<T, D::Error>
+pub(crate) fn object<'de, D, T>(d: D) -> Result<T, D::Error>
 where
     D: serde::Deserializer<'de>,
     T: Deserialize<'de>,
@@ -65,7 +65,7 @@ macro_rules! map_enum {
         }
     };
 }
-fn nullable_value<'de, D, T>(d: D) -> Result<Option<T>, D::Error>
+pub(crate) fn nullable_value<'de, D, T>(d: D) -> Result<Option<T>, D::Error>
 where
     D: serde::Deserializer<'de>,
     T: Deserialize<'de>,

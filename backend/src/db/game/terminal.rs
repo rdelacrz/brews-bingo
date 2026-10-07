@@ -523,7 +523,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         Ok(view)
     }
 
-    fn final_snapshot(&self, record: &Record) -> Result<GameView, GameError> {
+    pub(super) fn final_snapshot(&self, record: &Record) -> Result<GameView, GameError> {
         let parent = self
             .db
             .query(super::SQL_SELECT_GAME_HISTORY_PARENT, &[text(record.id)])?;

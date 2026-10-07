@@ -1,7 +1,7 @@
 import { beforeEach, expect, test } from "vitest";
 import { env, exports } from "cloudflare:workers";
 import { evictDurableObject, reset, runInDurableObject } from "cloudflare:test";
-import { enroll, post, resetStorage, origin, cookie, commandId, inOwner } from "./fixtures.js";
+import { enroll, post, resetStorage, origin, cookie, commandId, inOwner, seedPending } from "./fixtures.js";
 
 beforeEach(async () => {
   await reset();
@@ -10,8 +10,8 @@ beforeEach(async () => {
   await runInDurableObject(directory, async (_instance, state) => state.storage.deleteAll());
 });
 
-async function newGame() {
-  const actor = await enroll();
+async function newGame(existingActor) {
+  const actor = existingActor ?? await enroll();
   const created = await post("/api/games", { configuration: {
     numeric_upper_bound: 4, board_side_length: 2, free_cells_enabled: false,
     free_cell_positions: [], player_capacity: 3, spectator_capacity: 0,
@@ -54,8 +54,8 @@ async function stream(id, session, view = "player", acknowledge = true) {
   };
   return { socket, next, initial, atRevision };
 }
-async function startedGame(startStatus = 200) {
-  const fixture = await newGame();
+async function startedGame(startStatus = 200, existingActor) {
+  const fixture = await newGame(existingActor);
   const { id, actor } = fixture;
   const response = await post(`/api/games/${id}/lobby`, { expected_revision: 0 }, { session: actor.session });
   expect(response.status).toBe(200);
@@ -662,4 +662,467 @@ test("History deadline alarm purges actual owner rows and matching Directory ind
       expect([...state.storage.sql.exec("SELECT game_id FROM directory_hosted_nonterminal_games")]).toEqual([{ game_id: nextId }]);
     });
   } finally { Date.now = originalNow; }
+});
+
+test("History account reads are immutable and survive Exit with a fresh login", async () => {
+  const { id, actor, players, connections } = await startedGame();
+  const host = await sync(id, actor.session, "account");
+  expect((await post(`/api/games/${id}/calls/manual`, { value: "1", expected_revision: host.view_revision }, { session: actor.session })).status).toBe(200);
+  expect((await post(`/api/games/${id}/cancel`, { confirmed: true, expected_state: "in_progress" }, { session: actor.session })).status).toBe(200);
+  for (const connection of connections) connection.socket.close();
+  const response = await exports.default.fetch(`${origin}/api/history/${id}`, { headers: { Cookie: actor.session } });
+  expect(response.status).toBe(200);
+  const { history } = await response.json();
+  expect(Object.keys(history).sort()).toEqual(["game_id", "game_code", "designated_host_id", "outcome", "started_at", "ended_at", "expires_at", "winner", "ordered_calls", "players"].sort());
+  expect(history).toMatchObject({ game_id: id, outcome: "cancelled", winner: null, ordered_calls: ["1"] });
+  expect(history.players).toHaveLength(3);
+  expect(history.players.map(p => p.player_id)).toEqual(history.players.map(p => p.player_id).sort());
+  for (const p of history.players) {
+    expect(Object.keys(p).sort()).toEqual(["player_id", "alias", "side_length", "cells"].sort());
+    expect(p.cells).toHaveLength(4);
+    expect(p.cells.map(c => [c.position.row, c.position.column])).toEqual([[1,1],[1,2],[2,1],[2,2]]);
+  }
+  const list = await exports.default.fetch(`${origin}/api/history`, { headers: { Cookie: actor.session } });
+  expect(list.status).toBe(200);
+  expect(await list.json()).toEqual({ games: [{ game_id: id, game_code: history.game_code, designated_host_id: history.designated_host_id, outcome: history.outcome, started_at: history.started_at, ended_at: history.ended_at, expires_at: history.expires_at, winner: null }], next_cursor: null });
+  expect((await exports.default.fetch(`${origin}/api/history`, { headers: { Cookie: players[0].session } })).status).toBe(401);
+  expect((await post(`/api/games/${id}/exit?view=account`, {}, { session: actor.session })).status).toBe(200);
+  const login = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.77" });
+  expect(login.status).toBe(200);
+  const fresh = cookie(login);
+  const before = await runInDurableObject(owner(id), (_instance, state) => JSON.stringify([...state.storage.sql.exec("SELECT * FROM game_history"), ...state.storage.sql.exec("SELECT * FROM game_connection_grants"), ...state.storage.sql.exec("SELECT * FROM game_view_revisions")]));
+  const again = await exports.default.fetch(`${origin}/api/history/${id}`, { headers: { Cookie: fresh } });
+  expect(again.status).toBe(200);
+  expect(await again.json()).toEqual({ history });
+  const after = await runInDurableObject(owner(id), (_instance, state) => JSON.stringify([...state.storage.sql.exec("SELECT * FROM game_history"), ...state.storage.sql.exec("SELECT * FROM game_connection_grants"), ...state.storage.sql.exec("SELECT * FROM game_view_revisions")]));
+  expect(after === before).toBe(true);
+  for (const r of [response, list, again]) {
+    expect(r.headers.get("cache-control")).toBe("no-store");
+    expect(r.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(r.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(r.headers.get("set-cookie")).toBeNull();
+  }
+});
+
+async function historyGet(path, session, headers = {}) {
+  return exports.default.fetch(`${origin}${path}`, { headers: { ...(session ? { Cookie: session } : {}), ...headers } });
+}
+async function cancelledHistory() {
+  const f = await startedGame();
+  expect((await post(`/api/games/${f.id}/cancel`, { confirmed: true, expected_state: "in_progress" }, { session: f.actor.session })).status).toBe(200);
+  const closed = f.connections.map(c => c.socket.readyState === 3 ? Promise.resolve() : new Promise(resolve => c.socket.addEventListener("close", resolve, { once: true })));
+  for (const c of f.connections) c.socket.close();
+  await Promise.all(closed);
+  return f;
+}
+test("History final Accounts await expiry is durably fenced before denial and survives reconstruction", async () => {
+  const { id, actor } = await cancelledHistory();
+  const expiry = await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT expires_at FROM game_history").one().expires_at);
+  const originalNow = Date.now;
+  let session;
+  try {
+    Date.now = () => expiry - 1;
+    const login = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.101" });
+    expect(login.status).toBe(200);
+    session = cookie(login);
+    await runInDurableObject(owner(id), (instance, state) => {
+      instance.historyExpiryHolder = { alarm: instance.alarm.bind(instance), sync: state.storage.sync.bind(state.storage) };
+      instance.alarm = async () => new Response("test-only expiry alarm held");
+      instance.historyExpirySyncs = [];
+      state.storage.sync = async () => {
+        instance.historyExpirySyncs.push(state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms);
+        return instance.historyExpiryHolder.sync();
+      };
+    });
+    await inOwner(instance => {
+      instance.historyExpiryHolder = { fetch: instance.fetch.bind(instance) };
+      instance.historyExpiryProofs = 0;
+      instance.fetch = async request => {
+        const response = await instance.historyExpiryHolder.fetch(request.clone());
+        if (new URL(request.url).pathname === "/game-authority" && (await request.json()).action === "authorize") {
+          instance.historyExpiryProofs++;
+          expect(response.status).toBe(200);
+          expect((await response.clone().json()).outcome.result).toBe("authorized");
+          if (instance.historyExpiryProofs === 2) Date.now = () => expiry;
+        }
+        return response;
+      };
+    });
+    const response = await owner(id).fetch("https://game.internal/history", {
+      method: "POST", body: JSON.stringify({ game_id: id, token: session.split("=", 2)[1], summary: false }),
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).outcome).toEqual({ result: "not_found" });
+    expect(await inOwner(instance => instance.historyExpiryProofs)).toBe(2);
+    const fenced = await runInDurableObject(owner(id), (instance, state) => ({
+      now: state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms,
+      syncs: instance.historyExpirySyncs,
+      retained: state.storage.sql.exec("SELECT count(*) AS n FROM game_history").one().n,
+    }));
+    expect(fenced.retained).toBe(1);
+    expect(fenced.now).toBe(expiry);
+    expect(fenced.syncs).toEqual([expiry - 1, expiry]);
+    await inOwner(instance => { instance.fetch = instance.historyExpiryHolder.fetch; delete instance.historyExpiryHolder; });
+    Date.now = () => expiry - 1;
+    await evictDurableObject(owner(id));
+    const fresh = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.102" });
+    expect(fresh.status).toBe(200);
+    expect((await historyGet(`/api/history/${id}`, cookie(fresh))).status).toBe(503);
+    expect(await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms)).toBe(expiry);
+  } finally {
+    Date.now = originalNow;
+    await inOwner(instance => { if (instance.historyExpiryHolder) { instance.fetch = instance.historyExpiryHolder.fetch; delete instance.historyExpiryHolder; } });
+    await runInDurableObject(owner(id), (instance, state) => {
+      if (instance.historyExpiryHolder) {
+        instance.alarm = instance.historyExpiryHolder.alarm;
+        state.storage.sync = instance.historyExpiryHolder.sync;
+        delete instance.historyExpiryHolder;
+      }
+    });
+  }
+});
+
+test.each(["detail", "list"])("History %s expiry first observed after the edge Accounts await is durably fenced", async kind => {
+  const { id, actor } = await cancelledHistory();
+  const expiry = await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT expires_at FROM game_history").one().expires_at);
+  const originalNow = Date.now;
+  try {
+    Date.now = () => expiry - 1;
+    const login = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.103" });
+    expect(login.status).toBe(200);
+    const session = cookie(login);
+    await runInDurableObject(owner(id), instance => {
+      instance.historyEdgeAlarm = instance.alarm.bind(instance);
+      instance.alarm = async () => new Response("test-only expiry alarm held");
+    });
+    await inOwner(instance => {
+      instance.historyEdgeHolder = { fetch: instance.fetch.bind(instance) };
+      instance.historyEdgeProofs = 0;
+      instance.fetch = async request => {
+        const before = Date.now;
+        // Accounts is a distinct trusted clock; every proof is obtained from its real service.
+        Date.now = () => expiry - 1;
+        let response;
+        try { response = await instance.historyEdgeHolder.fetch(request.clone()); }
+        finally { Date.now = before; }
+        if (new URL(request.url).pathname === "/game-authority" && (await request.json()).action === "authorize") {
+          instance.historyEdgeProofs++;
+          expect((await response.clone().json()).outcome.result).toBe("authorized");
+          if (instance.historyEdgeProofs === 4) Date.now = () => expiry;
+        }
+        return response;
+      };
+    });
+    const response = await historyGet(kind === "detail" ? `/api/history/${id}` : "/api/history", session);
+    expect(response.status).toBe(kind === "detail" ? 404 : 200);
+    if (kind === "list") expect((await response.json()).games).toEqual([]);
+    expect(await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms)).toBe(expiry);
+    await inOwner(instance => { instance.fetch = instance.historyEdgeHolder.fetch; delete instance.historyEdgeHolder; });
+    Date.now = () => expiry - 1;
+    await evictDurableObject(owner(id));
+    const fresh = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.104" });
+    expect(fresh.status).toBe(200);
+    expect((await historyGet(`/api/history/${id}`, cookie(fresh))).status).toBe(503);
+  } finally {
+    Date.now = originalNow;
+    await inOwner(instance => { if (instance.historyEdgeHolder) { instance.fetch = instance.historyEdgeHolder.fetch; delete instance.historyEdgeHolder; } });
+    await runInDurableObject(owner(id), instance => { if (instance.historyEdgeAlarm) { instance.alarm = instance.historyEdgeAlarm; delete instance.historyEdgeAlarm; } });
+  }
+});
+
+test.each(["ignore", "abort", "clock_readback", "floor_readback", "sync"])("History final expiry %s failure is unavailable rather than a nondurable NotFound", async fault => {
+  const { id, actor } = await cancelledHistory();
+  const originalNow = Date.now;
+  const expiry = await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT expires_at FROM game_history").one().expires_at);
+  try {
+    Date.now = () => expiry - 1;
+    const login = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.105" });
+    expect(login.status).toBe(200);
+    const session = cookie(login);
+    expect((await historyGet(`/api/history/${id}`, session)).status).toBe(200);
+    const before = await runInDurableObject(owner(id), (instance, state) => {
+      instance.historyFaultHolder = { alarm: instance.alarm.bind(instance), sync: state.storage.sync.bind(state.storage) };
+      instance.alarm = async () => new Response("test-only expiry alarm held");
+      if (fault === "ignore") state.storage.sql.exec("CREATE TRIGGER history_expiry_fault BEFORE UPDATE ON game_metadata WHEN NEW.last_observed_ms>OLD.last_observed_ms BEGIN SELECT RAISE(IGNORE); END");
+      if (fault === "abort") state.storage.sql.exec("CREATE TRIGGER history_expiry_fault BEFORE UPDATE ON game_metadata WHEN NEW.last_observed_ms>OLD.last_observed_ms BEGIN SELECT RAISE(ABORT,'test-only expiry failure'); END");
+      if (fault === "clock_readback") state.storage.sql.exec("CREATE TRIGGER history_expiry_fault AFTER UPDATE ON game_metadata WHEN NEW.last_observed_ms>OLD.last_observed_ms BEGIN UPDATE game_metadata SET last_observed_ms=OLD.last_observed_ms; END");
+      if (fault === "floor_readback") state.storage.sql.exec("CREATE TRIGGER history_expiry_fault AFTER UPDATE ON game_metadata WHEN NEW.last_observed_ms>OLD.last_observed_ms BEGIN UPDATE game_metadata SET command_floor_ms=OLD.command_floor_ms-1; END");
+      if (fault === "sync") state.storage.sync = async () => {
+        if (state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms === expiry) throw new Error("test-only final fence sync failure");
+        return instance.historyFaultHolder.sync();
+      };
+      return JSON.stringify([...state.storage.sql.exec("SELECT * FROM game_metadata"), ...state.storage.sql.exec("SELECT * FROM game_history"), ...state.storage.sql.exec("SELECT * FROM game_connection_grants"), ...state.storage.sql.exec("SELECT * FROM game_view_revisions")]);
+    });
+    await inOwner(instance => {
+      instance.historyFaultHolder = { fetch: instance.fetch.bind(instance) };
+      instance.historyFaultProofs = 0;
+      instance.fetch = async request => {
+        const response = await instance.historyFaultHolder.fetch(request.clone());
+        if (new URL(request.url).pathname === "/game-authority" && (await request.json()).action === "authorize") {
+          instance.historyFaultProofs++;
+          expect((await response.clone().json()).outcome.result).toBe("authorized");
+          if (instance.historyFaultProofs === 2) Date.now = () => expiry;
+        }
+        return response;
+      };
+    });
+    const response = await owner(id).fetch("https://game.internal/history", {
+      method: "POST", body: JSON.stringify({ game_id: id, token: session.split("=", 2)[1], summary: false }),
+    });
+    expect((await response.json()).outcome).toEqual({ result: "unavailable" });
+    expect(await inOwner(instance => instance.historyFaultProofs)).toBe(2);
+    const after = await runInDurableObject(owner(id), (_instance, state) => JSON.stringify([...state.storage.sql.exec("SELECT * FROM game_metadata"), ...state.storage.sql.exec("SELECT * FROM game_history"), ...state.storage.sql.exec("SELECT * FROM game_connection_grants"), ...state.storage.sql.exec("SELECT * FROM game_view_revisions")]));
+    if (fault !== "sync") expect(after === before).toBe(true);
+    else expect(await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms)).toBe(expiry);
+  } finally {
+    Date.now = originalNow;
+    await inOwner(instance => { if (instance.historyFaultHolder) { instance.fetch = instance.historyFaultHolder.fetch; delete instance.historyFaultHolder; } });
+    await runInDurableObject(owner(id), (instance, state) => {
+      if (instance.historyFaultHolder) {
+        instance.alarm = instance.historyFaultHolder.alarm;
+        state.storage.sync = instance.historyFaultHolder.sync;
+        delete instance.historyFaultHolder;
+      }
+      if (fault !== "sync") state.storage.sql.exec("DROP TRIGGER IF EXISTS history_expiry_fault");
+    });
+  }
+});
+
+test.each([
+  ["detail", "revoked"], ["list", "revoked"],
+  ["detail", "sync"], ["list", "sync"],
+  ["detail", "rollback"], ["list", "rollback"],
+])("History %s edge expiry confirmation fails closed on %s without post-await disclosure", async (kind, fault) => {
+  const { id, actor } = await cancelledHistory();
+  const expiry = await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT expires_at FROM game_history").one().expires_at);
+  const originalNow = Date.now;
+  try {
+    Date.now = () => expiry - 1;
+    const login = await post("/api/auth/login", { username: actor.username, password: actor.password }, { caller: "192.0.2.106" });
+    expect(login.status).toBe(200);
+    const session = cookie(login);
+    await runInDurableObject(owner(id), (instance, state) => {
+      instance.historyConfirmHolder = { fetch: instance.fetch.bind(instance), alarm: instance.alarm.bind(instance), sync: state.storage.sync.bind(state.storage) };
+      instance.alarm = async () => new Response("test-only expiry alarm held");
+      instance.historyConfirmRequests = 0;
+      state.storage.sync = async () => {
+        if (fault === "sync" && state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms === expiry) throw new Error("test-only expiry confirmation sync failure");
+        return instance.historyConfirmHolder.sync();
+      };
+      instance.fetch = async request => {
+        if (new URL(request.url).pathname === "/history") {
+          instance.historyConfirmRequests++;
+          if (fault === "rollback" && instance.historyConfirmRequests === 2) Date.now = () => expiry - 1;
+        }
+        const response = await instance.historyConfirmHolder.fetch(request);
+        if (fault === "revoked" && instance.historyConfirmRequests === 2) await inOwner((_instance, state) => state.storage.sql.exec("UPDATE accounts SET disabled_at=? WHERE account_id=?", expiry - 1, actor.accountId));
+        return response;
+      };
+    });
+    await inOwner(instance => {
+      instance.historyConfirmHolder = { fetch: instance.fetch.bind(instance) };
+      instance.historyConfirmProofs = 0;
+      instance.fetch = async request => {
+        const before = Date.now;
+        Date.now = () => expiry - 1;
+        let response;
+        try { response = await instance.historyConfirmHolder.fetch(request.clone()); }
+        finally { Date.now = before; }
+        if (new URL(request.url).pathname === "/game-authority" && (await request.json()).action === "authorize") {
+          instance.historyConfirmProofs++;
+          if (instance.historyConfirmProofs === 4) Date.now = () => expiry;
+        }
+        return response;
+      };
+    });
+    const response = await historyGet(kind === "detail" ? `/api/history/${id}` : "/api/history", session);
+    expect(response.status).toBe(fault === "revoked" ? 401 : 503);
+    expect(Object.keys(await response.json())).toEqual(["error"]);
+    expect(response.headers.has("Set-Cookie")).toBe(false);
+    expect(await runInDurableObject(owner(id), instance => instance.historyConfirmRequests)).toBe(2);
+    if (fault === "revoked") expect(await inOwner(instance => instance.historyConfirmProofs)).toBe(6);
+  } finally {
+    Date.now = originalNow;
+    await inOwner(instance => { if (instance.historyConfirmHolder) { instance.fetch = instance.historyConfirmHolder.fetch; delete instance.historyConfirmHolder; } });
+    await runInDurableObject(owner(id), (instance, state) => {
+      if (instance.historyConfirmHolder) {
+        instance.fetch = instance.historyConfirmHolder.fetch;
+        instance.alarm = instance.historyConfirmHolder.alarm;
+        state.storage.sync = instance.historyConfirmHolder.sync;
+        delete instance.historyConfirmHolder;
+      }
+    });
+  }
+});
+
+test("History cross-host and admin access revalidates live Accounts instead of cached metadata", async () => {
+  const { id, actor } = await cancelledHistory();
+  const peer = await enroll("OtherHistoryHost");
+  const pending=await seedPending("RestrictedHistoryAccount");
+  const redeemed=await post("/api/auth/enrollment/redeem",{enrollment_token:pending.token});
+  expect(redeemed.status).toBe(200);
+  for(const path of ["/api/history",`/api/history/${id}`])expect((await historyGet(path,cookie(redeemed))).status).toBe(401);
+  for (const path of ["/api/history", `/api/history/${id}`]) {
+    expect((await historyGet(path, peer.session)).status).toBe(200);
+    expect((await historyGet(path)).status).toBe(401);
+    expect((await historyGet(path, "__Host-brews_session=malformed")).status).toBe(401);
+    expect((await historyGet(path, actor.session, { Origin: "https://other.invalid" })).status).toBe(403);
+    expect((await historyGet(path, actor.session, { Authorization: "Bearer" })).status).toBe(403);
+    expect((await historyGet(path, actor.session, { "Idempotency-Key": commandId() })).status).toBe(400);
+    expect((await exports.default.fetch(`http://localhost:8787${path}`, { headers: { Cookie: peer.session } })).status).toBe(403);
+  }
+  await inOwner((_instance, state) => state.storage.sql.exec("UPDATE accounts SET role='admin' WHERE account_id=?", peer.accountId));
+  expect((await historyGet(`/api/history/${id}`, peer.session)).status).toBe(200);
+  for (const mutation of ["disabled_at", "credential_epoch", "status", "revoked_at", "expires_at", "deleted"]) {
+    await inOwner((_instance, state) => {
+      if (mutation === "disabled_at") state.storage.sql.exec("UPDATE accounts SET disabled_at=? WHERE account_id=?", Date.now(), peer.accountId);
+      if (mutation === "credential_epoch") state.storage.sql.exec("UPDATE accounts SET credential_epoch=credential_epoch+1 WHERE account_id=?", peer.accountId);
+      if (mutation === "status") state.storage.sql.exec("UPDATE accounts SET status='reset_required' WHERE account_id=?", peer.accountId);
+      if (mutation === "revoked_at") state.storage.sql.exec("UPDATE account_sessions SET revoked_at=? WHERE account_id=?", Date.now(), peer.accountId);
+      if (mutation === "expires_at") state.storage.sql.exec("UPDATE account_sessions SET issued_at=issued_at-86400000,expires_at=expires_at-86400000 WHERE account_id=?", peer.accountId);
+
+    });
+    if (mutation === "deleted") {
+      await inOwner((_instance,state)=>state.storage.sql.exec("UPDATE accounts SET role='host' WHERE account_id=?",peer.accountId));
+      const removed=await exports.default.fetch(`${origin}/_dev/commands`, {method:"POST",headers:{"Content-Type":"application/json",Authorization:["Bearer",env.DEV_CLI_KEY].join(" "),"Idempotency-Key":commandId()},body:JSON.stringify({operation:"delete_account",account_id:peer.accountId})});
+      expect(removed.status).toBe(200);
+      expect(await inOwner((_instance,state)=>state.storage.sql.exec("SELECT count(*) AS n FROM accounts WHERE account_id=?",peer.accountId).one().n)).toBe(0);
+    }
+    for (const path of ["/api/history", `/api/history/${id}`]) expect((await historyGet(path, peer.session)).status).toBe(401);
+    if (mutation !== "deleted") await inOwner((_instance, state) => {
+      state.storage.sql.exec("UPDATE accounts SET disabled_at=NULL,status='verified',credential_epoch=1 WHERE account_id=?", peer.accountId);
+    });
+    if (mutation !== "deleted") {
+      const fresh = await post("/api/auth/login", { username: peer.username, password: peer.password }, { caller: "192.0.2.88" });
+      expect(fresh.status).toBe(200);
+      peer.session = cookie(fresh);
+      expect((await historyGet(`/api/history/${id}`, peer.session)).status).toBe(200);
+    }
+  }
+});
+test("History rejects malformed authoritative owner replies without empty-success fallbacks", async () => {
+  const { id, actor } = await cancelledHistory();
+  const game = owner(id);
+  for (const fault of ["wrong_id", "missing_nullable", "duplicate", "unknown", "sequence", "wrong_expiry", "winner", "not_found", "bad_cells", "exception"]) {
+    await runInDurableObject(game, instance => {
+      instance.historyFaultOriginal = instance.fetch.bind(instance);
+      instance.fetch = async request => {
+        if (new URL(request.url).pathname !== "/history") return instance.historyFaultOriginal(request);
+        if (fault === "exception") throw new Error("test-only History owner unavailability");
+        const response = await instance.historyFaultOriginal(request);
+        const reply = await response.json();
+        const h = reply.outcome.history ?? reply.outcome.summary;
+        if (fault === "wrong_id") reply.game_id = commandId();
+        if (fault === "missing_nullable") delete h.winner;
+        if (fault === "unknown") h.presence = [];
+        if (fault === "sequence") reply.outcome = ["detail", h];
+        if (fault === "wrong_expiry") h.expires_at++;
+        if (fault === "winner") h.winner = { player_id: commandId(), alias: "Unjustified" };
+        if (fault === "not_found") reply.outcome = { result: "not_found" };
+        if (fault === "bad_cells" && h.players) h.players[0].cells[0].position = [1,1];
+        let encoded = JSON.stringify(reply);
+        if (fault === "duplicate") encoded = encoded.replace('"winner":null', '"winner":null,"winner":null');
+        return new Response(encoded, { headers: { "Content-Type": "application/json" } });
+      };
+    });
+    try {
+      const detail = await historyGet(`/api/history/${id}`, actor.session);
+      expect(detail.status).toBe(fault === "not_found" ? 404 : 503);
+      if (fault !== "bad_cells") expect((await historyGet("/api/history", actor.session)).status).toBe(503);
+    } finally {
+      await runInDurableObject(game, instance => { instance.fetch = instance.historyFaultOriginal; delete instance.historyFaultOriginal; });
+    }
+  }
+  expect((await historyGet(`/api/history/${id}`, actor.session)).status).toBe(200);
+});
+test("History corruption and ignored durable clock writes fail closed in actual Workerd SQL", async () => {
+  const { id, actor } = await cancelledHistory();
+  await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("UPDATE game_history_board_cells SET is_matched=1 WHERE row=1 AND column=1"));
+  for (const path of ["/api/history", `/api/history/${id}`]) expect((await historyGet(path, actor.session)).status).toBe(503);
+  await runInDurableObject(owner(id), (_instance, state) => {
+    state.storage.sql.exec("UPDATE game_history_board_cells SET is_matched=0");
+    state.storage.sql.exec("CREATE TRIGGER ignored_history_clock BEFORE UPDATE ON game_metadata BEGIN SELECT RAISE(IGNORE); END");
+  });
+  expect((await historyGet(`/api/history/${id}`, actor.session)).status).toBe(503);
+  await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("DROP TRIGGER ignored_history_clock"));
+  expect((await historyGet(`/api/history/${id}`, actor.session)).status).toBe(200);
+});
+
+test("History resolved winner, pagination and beyond-first-page expiry use original owners", async () => {
+  const games=[];let actor;
+  for(let i=0;i<3;i++) {
+    const f=await startedGame(200,actor);actor=f.actor;
+    if(i===2) {
+      for(const value of ["1","2","3","4"]) {
+        const host=await sync(f.id,actor.session,"account");
+        expect((await post(`/api/games/${f.id}/calls/manual`,{value,expected_revision:host.view_revision},{session:actor.session})).status).toBe(200);
+      }
+      const host=await sync(f.id,actor.session,"account");
+      expect((await post(`/api/games/${f.id}/winner`,{player_id:host.snapshot.players[0].player_id,expected_revision:host.view_revision},{session:actor.session})).status).toBe(200);
+    } else expect((await post(`/api/games/${f.id}/cancel`,{confirmed:true,expected_state:"in_progress"},{session:actor.session})).status).toBe(200);
+    for(const c of f.connections)c.socket.close();
+    const response=await historyGet(`/api/history/${f.id}`,actor.session);expect(response.status).toBe(200);games.push((await response.json()).history);
+  }
+  const expected=games.toSorted((a,b)=>b.ended_at-a.ended_at || b.game_id.localeCompare(a.game_id));
+  const seen=[];let cursor;
+  do {
+    const response=await historyGet(`/api/history?limit=1${cursor ? `&cursor=${cursor}`:""}`,actor.session);expect(response.status).toBe(200);
+    const page=await response.json();expect(Object.keys(page).sort()).toEqual(["games","next_cursor"]);seen.push(...page.games.map(g=>g.game_id));cursor=page.next_cursor;
+  } while(cursor);
+  expect(seen).toEqual(expected.map(g=>g.game_id));
+  const resolved=await historyGet("/api/history?outcome=resolved&limit=50",actor.session);expect(resolved.status).toBe(200);const body=await resolved.json();expect(body.games).toHaveLength(1);expect(body.games[0].winner).toEqual(games[2].winner);expect(games[2].ordered_calls).toEqual(["1","2","3","4"]);
+  const full=await historyGet("/api/history",actor.session);expect((await full.json()).games).toHaveLength(3);
+  const first=await historyGet("/api/history?limit=1",actor.session);const next=(await first.json()).next_cursor;
+  const originalNow=Date.now;
+  try {
+    Date.now=()=>games[0].expires_at-1;
+    const login=await post("/api/auth/login",{username:actor.username,password:actor.password},{caller:"192.0.2.99"});expect(login.status).toBe(200);const fresh=cookie(login);
+    expect((await historyGet(`/api/history/${games[0].game_id}`,fresh)).status).toBe(200);
+    Date.now=()=>games[0].expires_at;
+    expect((await historyGet(`/api/history/${games[0].game_id}`,fresh)).status).toBe(404);
+    const second=await historyGet(`/api/history?limit=1&cursor=${next}`,fresh);expect(second.status).toBe(200);const page=await second.json();expect(page.games.map(g=>g.game_id)).toEqual([expected[1].game_id]);expect(page.next_cursor).toBeNull();
+  } finally {Date.now=originalNow;}
+},60000);
+
+
+
+test("History rechecks Accounts after owner awaits and never returns a disabled account snapshot", async () => {
+  const {id,actor}=await cancelledHistory();
+  await runInDurableObject(owner(id),instance=>{
+    instance.historyAwaitOriginal=instance.fetch.bind(instance);
+    instance.fetch=async request=>{
+      const response=await instance.historyAwaitOriginal(request);
+      if(new URL(request.url).pathname==="/history") await inOwner((_instance,state)=>state.storage.sql.exec("UPDATE accounts SET disabled_at=? WHERE account_id=?",Date.now(),actor.accountId));
+      return response;
+    };
+  });
+  try {
+    for(const path of [`/api/history/${id}`,"/api/history"]) {
+      await inOwner((_instance,state)=>state.storage.sql.exec("UPDATE accounts SET disabled_at=NULL WHERE account_id=?",actor.accountId));
+      expect((await historyGet(path,actor.session)).status).toBe(401);
+    }
+  }
+  finally {await runInDurableObject(owner(id),instance=>{instance.fetch=instance.historyAwaitOriginal;delete instance.historyAwaitOriginal;});}
+});
+test("History remains readable while a genuine terminal Directory ACK is pending", async () => {
+  const f=await startedGame();
+  const directory=env.GAME_DIRECTORY.get(env.GAME_DIRECTORY.idFromName("directory"));
+  await runInDurableObject(directory,instance=>{
+    instance.historyAckOriginal=instance.fetch.bind(instance);
+    instance.fetch=async request=>{
+      const response=await instance.historyAckOriginal(request.clone());
+      if(new URL(request.url).pathname==="/games" && (await request.json()).action==="release") throw new Error("test-only lost genuine terminal ACK");
+      return response;
+    };
+  });
+  try {
+    expect((await post(`/api/games/${f.id}/cancel`,{confirmed:true,expected_state:"in_progress"},{session:f.actor.session})).status).toBe(202);
+    expect(await runInDurableObject(owner(f.id),(_instance,state)=>state.storage.sql.exec("SELECT count(*) AS n FROM game_pending_work WHERE kind='release'").one().n)).toBe(1);
+    expect((await historyGet(`/api/history/${f.id}`,f.actor.session)).status).toBe(200);
+    const response=await historyGet("/api/history",f.actor.session);expect(response.status).toBe(200);expect((await response.json()).games.map(g=>g.game_id)).toEqual([f.id]);
+    expect(await runInDurableObject(owner(f.id),(_instance,state)=>state.storage.sql.exec("SELECT count(*) AS n FROM game_pending_work WHERE kind='release'").one().n)).toBe(1);
+  } finally {
+    await runInDurableObject(directory,instance=>{instance.fetch=instance.historyAckOriginal;delete instance.historyAckOriginal;});
+    for(const c of f.connections)c.socket.close();
+  }
 });

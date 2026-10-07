@@ -191,7 +191,8 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             enrollment_url = output_file.read_text().strip()
             check(enrollment_url.startswith(origin + '/enroll#'), 'enrollment URL origin mismatch')
             _, restricted = call('redeem-host-enrollment', '/api/auth/enrollment/redeem', body={'enrollment_token': enrollment_url.split('#', 1)[1]}, cookie_effect=True)
-            _, host = call('complete-host-enrollment', '/api/auth/enrollment/complete', body={'new_password': secrets.token_urlsafe(24)}, session=restricted, cookie_effect=True)
+            host_password = secrets.token_urlsafe(24)
+            _, host = call('complete-host-enrollment', '/api/auth/enrollment/complete', body={'new_password': host_password}, session=restricted, cookie_effect=True)
             call('unauthenticated-create-denied', '/api/games', body={}, expected=401)
             call('wrong-Origin-denied', '/api/games', body={}, session=host, application_origin='https://different.example.test', expected=403)
             call('invalid-configuration-before-reservation', '/api/games', body={'configuration': {'numeric_upper_bound': 1}}, session=host, expected=400)
@@ -304,6 +305,18 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             call('terminal-call-denied', base + '/calls/random', body={'expected_revision': resolved['view_revision']}, session=host, expected=409)
             offline_final, _ = call('offline-final-read', base + '/sync?view=player', method='GET', session=retained_cookie, retry=False)
             check(offline_final['snapshot']['state'] == 'resolved', 'existing offline terminal access lost')
+            history_path = '/api/history/' + game_id
+            detail, _ = call('History-detail-over-real-TLS', history_path, method='GET', session=host, retry=False)
+            history = detail['history']
+            check(set(history) == {'game_id','game_code','designated_host_id','outcome','started_at','ended_at','expires_at','winner','ordered_calls','players'}, 'History detail projection leaked final-view fields')
+            check(history['winner'] == resolved['winner'] and len(history['players']) == 3, 'History snapshot lost retained boards or winner')
+            listing, _ = call('History-list-over-real-TLS', '/api/history?limit=1&outcome=resolved', method='GET', session=host, retry=False)
+            check(len(listing['games']) == 1 and listing['games'][0]['game_id'] == game_id and listing['next_cursor'] is None, 'History list projection mismatch')
+            call('History-player-cookie-denied', history_path, method='GET', session=alice_cookie, retry=False, expected=401)
+            call('History-account-Exit', base + '/exit?view=account', body={}, session=host)
+            _, fresh_host = call('History-fresh-login-after-Exit', '/api/auth/login', body={'username':'GameHttpsAdmin','password':host_password}, cookie_effect=True)
+            after_exit, _ = call('History-independent-of-final-grants', history_path, method='GET', session=fresh_host, retry=False)
+            check(after_exit == detail, 'History changed or final grants were required after Exit')
             for state in ['new', 'awaiting_players']:
                 created_next, _ = call('create-after-terminal-' + state, '/api/games', body={}, session=host)
                 next_base = '/api/games/' + created_next['game']['game_id']

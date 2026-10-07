@@ -56,8 +56,8 @@ export async function seedLink(accountId, purpose, epoch) {
   });
   return token;
 }
-export async function enroll() {
-  const fixture = await seedPending();
+export async function enroll(username = "ExactCaseUser") {
+  const fixture = await seedPending(username);
   const redemption = await post("/api/auth/enrollment/redeem", { enrollment_token: fixture.token });
   if (redemption.status !== 200) throw new Error("fixture redemption failed");
   const secret = password();

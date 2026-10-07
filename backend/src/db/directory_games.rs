@@ -6,10 +6,53 @@ use brews_domain::{
     ids::{CommandId, GameId},
 };
 
+const HISTORY_PAGE_MAX: u32 = brews_contracts::history::HISTORY_MAX_LIMIT;
+const SQL_SELECT_HISTORY_PAGE: &str = "SELECT game_id,designated_host_id,fingerprint,state,source_revision,game_code,created_at,started_at,ended_at,history_expires_at,publication_state FROM directory_game_index WHERE state IN (?,?) AND started_at IS NOT NULL AND history_expires_at>? AND (? IS NULL OR state=?) AND (? IS NULL OR ended_at<? OR (ended_at=? AND game_id<?)) ORDER BY ended_at DESC,game_id DESC LIMIT ?";
 const CREATION_COLUMNS: &str = "account_id,command_id,game_id,fingerprint,created_at,deadline,next_retry_at,attempts,ready_revision,completed_at";
 const INDEX_COLUMNS: &str = "game_id,designated_host_id,fingerprint,state,source_revision,game_code,created_at,started_at,ended_at,history_expires_at,publication_state";
 const SQL_DELETE_EXPIRED_HISTORY_INDEX: &str =
     "DELETE FROM directory_game_index WHERE game_id=? AND history_expires_at=?";
+impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
+    /// One bounded page plus exact lookahead. Pending terminal metadata is eligible;
+    /// no snapshots, boards or winner aliases are copied into Directory.
+    pub fn history_indexes(
+        &self,
+        after: Option<(i64, GameId)>,
+        limit: u32,
+        outcome: Option<GameState>,
+    ) -> Result<Vec<GameProjection>, DirectoryError> {
+        if !(1..=HISTORY_PAGE_MAX).contains(&limit)
+            || outcome.is_some_and(|s| !matches!(s, GameState::Resolved | GameState::Cancelled))
+            || after.is_some_and(|(t, _)| !(1..=JS_SAFE_INTEGER_MAX).contains(&t))
+        {
+            return Err(DirectoryError::ProofMismatch);
+        }
+        self.transaction_before_compaction(|now| {
+            let filter = outcome.map_or(SqlValue::Null, text);
+            let time = after.map_or(SqlValue::Null, |(t, _)| integer(t));
+            let id = after.map_or(SqlValue::Null, |(_, id)| text(id));
+            self.db
+                .query(
+                    SQL_SELECT_HISTORY_PAGE,
+                    &[
+                        text(GameState::Resolved),
+                        text(GameState::Cancelled),
+                        integer(now),
+                        filter.clone(),
+                        filter,
+                        time.clone(),
+                        time.clone(),
+                        time,
+                        id,
+                        integer(i64::from(limit) + 1),
+                    ],
+                )?
+                .iter()
+                .map(|r| parse_index(r, now).map(|(p, _)| p))
+                .collect()
+        })
+    }
+}
 fn text(value: impl ToString) -> SqlValue {
     SqlValue::Text(value.to_string())
 }
