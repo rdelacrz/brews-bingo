@@ -255,6 +255,42 @@ impl GameObject {
         }
         Ok(())
     }
+    /// Read socket identity hints without presence reconciliation or socket retirement.
+    pub(super) fn discovery_observed(&self) -> Result<Vec<ConnectionGrant>, GameError> {
+        let raw = self.state.as_raw().as_ref();
+        let value = method(raw, "getWebSockets")?
+            .call0(raw)
+            .map_err(sdk_error)?;
+        if !Array::is_array(&value) {
+            return Err(GameError::Storage);
+        }
+        let array = Array::from(&value);
+        if array.length() > SOCKET_LIMIT as u32 {
+            return Err(GameError::Storage);
+        }
+        let mut observed = Vec::with_capacity(SOCKET_LIMIT);
+        for value in array.iter() {
+            let ws = value
+                .dyn_into::<worker::web_sys::WebSocket>()
+                .map(WebSocket::from)
+                .map_err(sdk_error)?;
+            if ready_state(&ws)? != 1 {
+                continue;
+            }
+            let hint = Attachment::read(&ws).map_err(|_| GameError::Storage)?;
+            if let Viewer::Player(player) = hint.viewer {
+                observed.push(ConnectionGrant {
+                    game: hint.game_id,
+                    session: hint.session_id,
+                    player,
+                    connection: hint.connection_id,
+                    epoch: hint.authentication_epoch,
+                    expires: hint.session_expires_at,
+                });
+            }
+        }
+        Ok(observed)
+    }
     pub(super) fn observed(
         &self,
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,

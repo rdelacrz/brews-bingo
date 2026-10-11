@@ -22,6 +22,7 @@ mod worker_runtime;
     reason = "Native tests exercise exact private-peer sources; SDK adapters are Wasm-only."
 )]
 mod worker_runtime {
+    mod discovery_wire;
     mod game_accounts;
     mod game_directory;
     mod game_peers;

@@ -280,7 +280,7 @@ fn read_query(
 }
 // Project one cookie into the existing account-cookie decoder rather than copying
 // its size/duplicate/header policy. Bound the original bytes before projection.
-fn named_cookie(headers: &HeaderMap, name: &str) -> Result<Option<String>, ApiError> {
+pub(super) fn named_cookie(headers: &HeaderMap, name: &str) -> Result<Option<String>, ApiError> {
     let mut masked_headers = HeaderMap::new();
     for value in headers.get_all("cookie") {
         let raw = value.to_str().map_err(|_| ApiError::InvalidInput)?;
@@ -343,7 +343,7 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
     };
     Ok((operation, Some(id)))
 }
-fn validate_headers(headers: &HeaderMap) -> Result<(), ApiError> {
+pub(super) fn validate_headers(headers: &HeaderMap) -> Result<(), ApiError> {
     if headers.len() > GAME_HEADERS_MAX_FIELDS
         || headers
             .iter()

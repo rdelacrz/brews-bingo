@@ -1,5 +1,7 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
+mod discovery;
 mod history;
+pub use discovery::{DiscoveryCut, DiscoveryValue, DiscoveryViewer};
 mod terminal;
 use super::{Database, SqlValue, StorageError};
 use crate::auth::{AuthPolicy, GameAccountAuthority, Runtime};
@@ -1609,7 +1611,9 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 SQL_SELECT_GAME_CURRENT_CONNECTIONS_COUNT_DISTINCT_PRINCIPAL_ID,
                 &[text(PLAYER_KIND), int(now)],
             )?;
-            if number(count.first().ok_or(GameError::Storage)?, 0)? < 2 {
+            if number(count.first().ok_or(GameError::Storage)?, 0)?
+                < i64::from(crate::game::START_CONNECTED_PLAYER_MIN)
+            {
                 return Err(GameError::Conflict);
             }
             let rows = self.db.query(SQL_SELECT_GAME_PLAYERS_PLAYER_ID, &[])?;

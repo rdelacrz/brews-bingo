@@ -325,3 +325,14 @@ impl CreationWork {
         self.ready_revision
     }
 }
+
+/// Internal discovery route proof. Contains no pending allocation, actor or operation.
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DiscoveryRoute {
+    pub game_id: GameId,
+    pub initialized: bool,
+    pub releasing: bool,
+    #[serde(deserialize_with = "Option::<GameCode>::deserialize")]
+    pub published_code: Option<GameCode>,
+}

@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 pub(super) enum AccountAction {
     Authorize,
+    FenceExpiry,
     Register,
     AuthorizeConnection,
     Unregister,
@@ -21,6 +22,13 @@ pub(super) enum AccountAction {
 pub(super) enum AccountRequest {
     Authorize {
         token: SecretToken,
+    },
+    FenceExpiry {
+        token: SecretToken,
+        #[serde(deserialize_with = "super::game_peers::object")]
+        authority: AccountAuthorityWire,
+        #[serde(deserialize_with = "super::game_peers::positive_integer")]
+        observed_at: i64,
     },
     Register {
         token: SecretToken,
@@ -40,6 +48,7 @@ impl AccountRequest {
     pub(super) fn action(&self) -> AccountAction {
         match self {
             Self::Authorize { .. } => AccountAction::Authorize,
+            Self::FenceExpiry { .. } => AccountAction::FenceExpiry,
             Self::Register { .. } => AccountAction::Register,
             Self::AuthorizeConnection { .. } => AccountAction::AuthorizeConnection,
             Self::Unregister { .. } => AccountAction::Unregister,
@@ -47,7 +56,7 @@ impl AccountRequest {
     }
     fn target(&self) -> Option<AccountTarget> {
         match self {
-            Self::Authorize { .. } => None,
+            Self::Authorize { .. } | Self::FenceExpiry { .. } => None,
             Self::Register {
                 game_id,
                 connection_id,
@@ -103,7 +112,7 @@ pub(super) struct AccountTarget {
     game_id: GameId,
     connection_id: ConnectionId,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct AccountAuthorityWire {
     account_id: AccountId,
@@ -131,6 +140,12 @@ pub(super) enum AccountOutcome {
     Authorized {
         #[serde(deserialize_with = "super::game_peers::object")]
         authority: AccountAuthorityWire,
+    },
+    ExpiryFenced {
+        #[serde(deserialize_with = "super::game_peers::object")]
+        authority: AccountAuthorityWire,
+        #[serde(deserialize_with = "super::game_peers::positive_integer")]
+        observed_at: i64,
     },
     Unregistered {
         #[serde(deserialize_with = "super::game_peers::object")]
@@ -168,10 +183,9 @@ pub(super) struct AccountReply {
     outcome: AccountOutcome,
 }
 
-pub(super) fn verified_authority(
+fn verified_metadata(
     request: &AccountRequest,
     reply: AccountReply,
-    now: i64,
 ) -> Result<GameAccountAuthority, GamePeerError> {
     verify_binding(request, &reply)?;
     let wire = match reply.outcome {
@@ -179,9 +193,6 @@ pub(super) fn verified_authority(
         AccountOutcome::Rejected { code } => return Err(code.into()),
         _ => return Err(GamePeerError::Unavailable),
     };
-    if wire.expires <= now || now < 0 {
-        return Err(GamePeerError::Unavailable);
-    }
     let proof = GameAccountAuthority::from_trusted_peer(
         wire.account_id,
         wire.session_id,
@@ -199,10 +210,72 @@ pub(super) fn verified_authority(
     {
         return Err(GamePeerError::Unavailable);
     }
-    if matches!(request, AccountRequest::Unregister { .. }) {
+    if matches!(
+        request,
+        AccountRequest::Unregister { .. } | AccountRequest::FenceExpiry { .. }
+    ) {
         return Err(GamePeerError::Unavailable);
     }
     Ok(proof)
+}
+pub(super) fn verified_authority(
+    request: &AccountRequest,
+    reply: AccountReply,
+    now: i64,
+) -> Result<GameAccountAuthority, GamePeerError> {
+    let proof = verified_metadata(request, reply)?;
+    if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&now) || proof.expires_at() <= now {
+        return Err(GamePeerError::Unavailable);
+    }
+    Ok(proof)
+}
+
+pub(super) enum DiscoveryAccountAuthority {
+    Current(GameAccountAuthority),
+    Expired {
+        proof: GameAccountAuthority,
+        observed_at: i64,
+    },
+}
+pub(super) fn verified_discovery_authority(
+    request: &AccountRequest,
+    reply: AccountReply,
+    now: i64,
+) -> Result<DiscoveryAccountAuthority, GamePeerError> {
+    if !matches!(request, AccountRequest::Authorize { .. })
+        || !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&now)
+    {
+        return Err(GamePeerError::Unavailable);
+    }
+    let proof = verified_metadata(request, reply)?;
+    if proof.expires_at() <= now {
+        Ok(DiscoveryAccountAuthority::Expired {
+            proof,
+            observed_at: now,
+        })
+    } else {
+        Ok(DiscoveryAccountAuthority::Current(proof))
+    }
+}
+pub(super) fn verified_expiry_fenced(
+    request: &AccountRequest,
+    reply: AccountReply,
+) -> Result<(), GamePeerError> {
+    verify_binding(request, &reply)?;
+    match (request, reply.outcome) {
+        (
+            AccountRequest::FenceExpiry {
+                authority,
+                observed_at,
+                ..
+            },
+            AccountOutcome::ExpiryFenced {
+                authority: found,
+                observed_at: sampled,
+            },
+        ) if *authority == found && *observed_at == sampled => Ok(()),
+        _ => Err(GamePeerError::Unavailable),
+    }
 }
 pub(super) fn verified_unregistered(
     request: &AccountRequest,
@@ -320,6 +393,24 @@ pub(super) fn apply_account_request<D: crate::db::Database, R: crate::auth::Runt
                     authority: (&p).into(),
                 })
         }
+        AccountRequest::FenceExpiry {
+            token,
+            authority,
+            observed_at,
+        } => GameAccountAuthority::from_trusted_peer(
+            authority.account_id,
+            authority.session_id,
+            authority.role,
+            authority.epoch,
+            authority.expires,
+        )
+        .and_then(|proof| {
+            service.fence_game_account_expiry(token.as_str(), &proof, *observed_at)?;
+            Ok(AccountOutcome::ExpiryFenced {
+                authority: (&proof).into(),
+                observed_at: *observed_at,
+            })
+        }),
         AccountRequest::Register {
             token,
             game_id,
@@ -523,6 +614,124 @@ mod tests {
                 authority: p.into(),
             },
         }
+    }
+    #[test]
+    fn discovery_authentic_expiry_retains_original_sample_after_binding_validation() {
+        let request = AccountRequest::Authorize {
+            token: SecretToken::new("native-test-placeholder"),
+        };
+        let p = proof();
+        assert!(matches!(
+            verified_discovery_authority(&request, reply(&p), 1000),
+            Ok(DiscoveryAccountAuthority::Expired {
+                observed_at: 1000,
+                ..
+            })
+        ));
+        assert!(matches!(
+            verified_discovery_authority(&request, reply(&p), 999),
+            Ok(DiscoveryAccountAuthority::Current(_))
+        ));
+        for field in 0..5 {
+            let mut wrong = reply(&p);
+            if let AccountOutcome::Authorized { authority } = &mut wrong.outcome {
+                match field {
+                    0 => wrong.action = AccountAction::Register,
+                    1 => {
+                        wrong.target = Some(AccountTarget {
+                            game_id: id(4),
+                            connection_id: id(5),
+                        })
+                    }
+                    2 => authority.epoch = -1,
+                    3 => authority.expires = 0,
+                    _ => authority.expires = crate::limits::JS_SAFE_INTEGER_MAX + 1,
+                }
+            }
+            assert!(matches!(
+                verified_discovery_authority(&request, wrong, 1000),
+                Err(GamePeerError::Unavailable)
+            ));
+        }
+        for now in [-1, crate::limits::JS_SAFE_INTEGER_MAX + 1] {
+            assert!(matches!(
+                verified_discovery_authority(&request, reply(&p), now),
+                Err(GamePeerError::Unavailable)
+            ));
+        }
+    }
+
+    #[test]
+    fn discovery_expiry_ack_requires_exact_identity_sample_and_durable_outcome() {
+        let p = proof();
+        let request = AccountRequest::FenceExpiry {
+            token: SecretToken::new("native-test-placeholder"),
+            authority: (&p).into(),
+            observed_at: 1000,
+        };
+        let good = || AccountReply {
+            action: AccountAction::FenceExpiry,
+            target: None,
+            outcome: AccountOutcome::ExpiryFenced {
+                authority: (&p).into(),
+                observed_at: 1000,
+            },
+        };
+        assert!(verified_expiry_fenced(&request, good()).is_ok());
+        for field in 0..8 {
+            let mut wrong = good();
+            if let AccountOutcome::ExpiryFenced {
+                authority,
+                observed_at,
+            } = &mut wrong.outcome
+            {
+                match field {
+                    0 => wrong.action = AccountAction::Authorize,
+                    1 => authority.account_id = id(8),
+                    2 => authority.session_id = id(8),
+                    3 => authority.role = AccountRole::Admin,
+                    4 => authority.epoch += 1,
+                    5 => authority.expires += 1,
+                    6 => *observed_at += 1,
+                    _ => {
+                        wrong.target = Some(AccountTarget {
+                            game_id: id(4),
+                            connection_id: id(5),
+                        })
+                    }
+                }
+            }
+            assert!(verified_expiry_fenced(&request, wrong).is_err());
+        }
+        for code in [
+            AccountRejection::Unauthorized,
+            AccountRejection::Unavailable,
+        ] {
+            assert!(
+                verified_expiry_fenced(
+                    &request,
+                    AccountReply {
+                        action: AccountAction::FenceExpiry,
+                        target: None,
+                        outcome: AccountOutcome::Rejected { code },
+                    }
+                )
+                .is_err()
+            );
+        }
+        assert!(
+            verified_expiry_fenced(
+                &request,
+                AccountReply {
+                    action: AccountAction::FenceExpiry,
+                    target: None,
+                    outcome: AccountOutcome::Authorized {
+                        authority: (&p).into()
+                    },
+                }
+            )
+            .is_err()
+        );
     }
     #[test]
     fn malformed_private_denial_and_wrong_attachment_never_become_authority() {

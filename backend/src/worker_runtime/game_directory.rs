@@ -170,6 +170,10 @@ impl WorkWire {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum DirectoryGameRequest {
+    Discovery {},
+    DiscoveryCode {
+        game_code: GameCode,
+    },
     HistoryIndexes {
         #[serde(deserialize_with = "optional_object")]
         after: Option<crate::api::HistoryCursor>,
@@ -247,6 +251,10 @@ impl From<DirectoryError> for DirectoryGameRejection {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum DirectoryGameOutcome {
+    Discovery {
+        #[serde(deserialize_with = "optional_object")]
+        route: Option<DiscoveryRoute>,
+    },
     HistoryIndexes {
         #[serde(deserialize_with = "super::game_peers::bounded_objects")]
         entries: Vec<ProjectionWire>,
@@ -311,95 +319,109 @@ pub(super) fn dispatch<D: Database, R: Runtime>(
     service: &DirectoryService<'_, D, R>,
     request: &DirectoryGameRequest,
 ) -> DirectoryGameReply {
-    let result =
-        match request {
-            DirectoryGameRequest::HistoryIndexes {
-                after,
-                limit,
-                outcome,
-            } => service
-                .history_indexes(after.map(|c| (c.ended_at, c.game_id)), *limit, *outcome)
-                .map(|entries| DirectoryGameOutcome::HistoryIndexes {
-                    entries: entries.iter().map(ProjectionWire::from).collect(),
-                }),
-            DirectoryGameRequest::Claim {
-                account_id,
-                command_id,
-                fingerprint,
-            } => service
-                .claim_game(
-                    *account_id,
-                    *command_id,
-                    CreationFingerprint::from_digest(*fingerprint),
-                )
-                .map(|w| DirectoryGameOutcome::Work { work: (&w).into() }),
-            DirectoryGameRequest::Acknowledge { ready } => ready
-                .proof()
-                .and_then(|p| service.acknowledge_creation(p))
-                .map(|a| DirectoryGameOutcome::Acknowledged {
-                    ready: (&a.proof()).into(),
-                }),
-            DirectoryGameRequest::AllocateCode { ready } => ready
-                .proof()
-                .and_then(|p| service.allocate_game_code(CreationAck::new(p)))
-                .map(|g| DirectoryGameOutcome::CodeAllocated {
-                    ready: (&g.creation().proof()).into(),
-                    game_code: g.game_code().clone(),
-                }),
-            DirectoryGameRequest::ConfirmReservation { game_id } => service
-                .confirm_reservation(*game_id)
-                .map(|p| DirectoryGameOutcome::Reserved {
-                    game_id: p.game_id(),
-                }),
-            DirectoryGameRequest::Publish { projection } => projection
-                .proof()
-                .and_then(|p| service.publish_game(p))
-                .map(|a| DirectoryGameOutcome::Published {
-                    game_id: a.game_id(),
-                    source_revision: a.source_revision(),
-                    published: a.published(),
-                }),
-            DirectoryGameRequest::Release { projection } => projection
-                .proof()
-                .and_then(|p| service.release_game(TerminalProof::new(p)))
-                .map(|a| DirectoryGameOutcome::Released {
-                    game_id: a.game_id(),
-                }),
-            DirectoryGameRequest::PendingProbe { game_id } => {
-                service
-                    .creation_work(*game_id)
-                    .map(|w| DirectoryGameOutcome::Pending {
-                        game_id: *game_id,
-                        work: w.as_ref().map(WorkWire::from),
-                    })
-            }
-            DirectoryGameRequest::GameCode { game_id } => {
-                service
-                    .game_code(*game_id)
-                    .map(|game_code| DirectoryGameOutcome::Code {
-                        game_id: *game_id,
-                        game_code,
-                    })
-            }
-            DirectoryGameRequest::LookupCode { game_code } => service
+    let result = match request {
+        DirectoryGameRequest::DiscoveryCode { game_code } => {
+            service
+                .discovery_route()
+                .map(|route| DirectoryGameOutcome::Lookup {
+                    game_code: game_code.clone(),
+                    game_id: route
+                        .filter(|r| r.published_code.as_ref() == Some(game_code) && !r.releasing)
+                        .map(|r| r.game_id),
+                })
+        }
+        DirectoryGameRequest::Discovery {} => service
+            .discovery_route()
+            .map(|route| DirectoryGameOutcome::Discovery { route }),
+        DirectoryGameRequest::HistoryIndexes {
+            after,
+            limit,
+            outcome,
+        } => service
+            .history_indexes(after.map(|c| (c.ended_at, c.game_id)), *limit, *outcome)
+            .map(|entries| DirectoryGameOutcome::HistoryIndexes {
+                entries: entries.iter().map(ProjectionWire::from).collect(),
+            }),
+        DirectoryGameRequest::Claim {
+            account_id,
+            command_id,
+            fingerprint,
+        } => service
+            .claim_game(
+                *account_id,
+                *command_id,
+                CreationFingerprint::from_digest(*fingerprint),
+            )
+            .map(|w| DirectoryGameOutcome::Work { work: (&w).into() }),
+        DirectoryGameRequest::Acknowledge { ready } => ready
+            .proof()
+            .and_then(|p| service.acknowledge_creation(p))
+            .map(|a| DirectoryGameOutcome::Acknowledged {
+                ready: (&a.proof()).into(),
+            }),
+        DirectoryGameRequest::AllocateCode { ready } => ready
+            .proof()
+            .and_then(|p| service.allocate_game_code(CreationAck::new(p)))
+            .map(|g| DirectoryGameOutcome::CodeAllocated {
+                ready: (&g.creation().proof()).into(),
+                game_code: g.game_code().clone(),
+            }),
+        DirectoryGameRequest::ConfirmReservation { game_id } => service
+            .confirm_reservation(*game_id)
+            .map(|p| DirectoryGameOutcome::Reserved {
+                game_id: p.game_id(),
+            }),
+        DirectoryGameRequest::Publish { projection } => projection
+            .proof()
+            .and_then(|p| service.publish_game(p))
+            .map(|a| DirectoryGameOutcome::Published {
+                game_id: a.game_id(),
+                source_revision: a.source_revision(),
+                published: a.published(),
+            }),
+        DirectoryGameRequest::Release { projection } => projection
+            .proof()
+            .and_then(|p| service.release_game(TerminalProof::new(p)))
+            .map(|a| DirectoryGameOutcome::Released {
+                game_id: a.game_id(),
+            }),
+        DirectoryGameRequest::PendingProbe { game_id } => {
+            service
+                .creation_work(*game_id)
+                .map(|w| DirectoryGameOutcome::Pending {
+                    game_id: *game_id,
+                    work: w.as_ref().map(WorkWire::from),
+                })
+        }
+        DirectoryGameRequest::GameCode { game_id } => {
+            service
+                .game_code(*game_id)
+                .map(|game_code| DirectoryGameOutcome::Code {
+                    game_id: *game_id,
+                    game_code,
+                })
+        }
+        DirectoryGameRequest::LookupCode { game_code } => {
+            service
                 .lookup_game_code(game_code)
                 .map(|game_id| DirectoryGameOutcome::Lookup {
                     game_code: game_code.clone(),
                     game_id,
-                }),
-            DirectoryGameRequest::DueWork { limit } => {
-                service
-                    .due_creation_work(*limit)
-                    .map(|work| DirectoryGameOutcome::Due {
-                        work: work.iter().map(WorkWire::from).collect(),
-                    })
-            }
-            DirectoryGameRequest::Retry { work } => work
-                .work()
-                .map_err(|_| DirectoryError::ProofMismatch)
-                .and_then(|w| service.retry_creation(w))
-                .map(|w| DirectoryGameOutcome::Work { work: (&w).into() }),
-        };
+                })
+        }
+        DirectoryGameRequest::DueWork { limit } => {
+            service
+                .due_creation_work(*limit)
+                .map(|work| DirectoryGameOutcome::Due {
+                    work: work.iter().map(WorkWire::from).collect(),
+                })
+        }
+        DirectoryGameRequest::Retry { work } => work
+            .work()
+            .map_err(|_| DirectoryError::ProofMismatch)
+            .and_then(|w| service.retry_creation(w))
+            .map(|w| DirectoryGameOutcome::Work { work: (&w).into() }),
+    };
     DirectoryGameReply {
         request: request.clone(),
         outcome: result.unwrap_or_else(|e| DirectoryGameOutcome::Rejected { code: e.into() }),
@@ -413,6 +435,12 @@ pub(super) fn verify_reply(
         return Err(GamePeerError::Unavailable);
     }
     let valid = match (request, &reply.outcome) {
+        (DirectoryGameRequest::Discovery {}, DirectoryGameOutcome::Discovery { route }) => {
+            route.as_ref().is_none_or(|r| {
+                (r.initialized || r.published_code.is_none())
+                    && (!r.releasing || r.published_code.is_none())
+            })
+        }
         (
             DirectoryGameRequest::HistoryIndexes {
                 after,
@@ -488,7 +516,8 @@ pub(super) fn verify_reply(
             DirectoryGameOutcome::Code { game_id: found, .. },
         ) => game_id == found,
         (
-            DirectoryGameRequest::LookupCode { game_code },
+            DirectoryGameRequest::LookupCode { game_code }
+            | DirectoryGameRequest::DiscoveryCode { game_code },
             DirectoryGameOutcome::Lookup {
                 game_code: found, ..
             },
@@ -558,7 +587,12 @@ impl super::directory::GameDirectoryObject {
         let service = DirectoryService::new(&db, &rt)
             .map_err(|_| worker::Error::RustError("Directory unavailable".into()))?;
         let result = dispatch(&service, &message);
-        self.schedule_cleanup().await?;
+        if !matches!(
+            message,
+            DirectoryGameRequest::Discovery {} | DirectoryGameRequest::DiscoveryCode { .. }
+        ) {
+            self.schedule_cleanup().await?;
+        }
         self.state.storage().sync().await?;
         let limit = if matches!(
             message,

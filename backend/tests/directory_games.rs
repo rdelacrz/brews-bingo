@@ -2114,3 +2114,118 @@ fn terminal_release_at_history_expiry_purges_only_old_game_and_never_resurrects_
         );
     }
 }
+
+#[test]
+fn discovery_reservation_route_is_write_free_and_hides_pending_code() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let service = DirectoryService::new(&db, &rt).unwrap();
+    assert!(service.discovery_route().unwrap().is_none());
+    let work = service
+        .claim_game(account(1), command(&rt, 1), fingerprint())
+        .unwrap();
+    let route = service.discovery_route().unwrap().unwrap();
+    assert_eq!(route.game_id, work.game_id());
+    assert!(!route.initialized);
+    assert!(!route.releasing);
+    assert!(route.published_code.is_none());
+    let proof = creation_proof(
+        work.game_id(),
+        work.account_id(),
+        work.command_id(),
+        work.fingerprint(),
+        work.created_at(),
+        0,
+    );
+    let ack = service.acknowledge_creation(proof).unwrap();
+    assert!(service.discovery_route().unwrap().unwrap().initialized);
+    let grant = service.allocate_game_code(ack).unwrap();
+    assert!(
+        service
+            .discovery_route()
+            .unwrap()
+            .unwrap()
+            .published_code
+            .is_none()
+    );
+    let live = projection(
+        work.game_id(),
+        work.account_id(),
+        work.fingerprint(),
+        GameState::AwaitingPlayers,
+        1,
+        Some(grant.game_code().clone()),
+        work.created_at(),
+        None,
+        None,
+        None,
+    );
+    service.publish_game(live).unwrap();
+    let tables = crate::db::schema::directory_schema::DIRECTORY_TABLES;
+    let read_all = || {
+        tables
+            .iter()
+            .map(|name| {
+                db.query(&format!("SELECT * FROM {name} ORDER BY 1"), &[])
+                    .unwrap()
+            })
+            .collect::<Vec<_>>()
+    };
+    let before = read_all();
+    rt.now.set(rt.now.get() + 1);
+    let route = service.discovery_route().unwrap().unwrap();
+    assert!(route.initialized);
+    assert_eq!(route.published_code.as_ref(), Some(grant.game_code()));
+    assert_eq!(
+        read_all(),
+        before,
+        "route reads must not compact receipts or update clock metadata"
+    );
+    db.execute(
+        "UPDATE directory_game_index SET state=?,ended_at=?,publication_state=? WHERE game_id=?",
+        &[
+            SqlValue::Text(GameState::Cancelled.to_string()),
+            SqlValue::Integer(rt.now.get()),
+            SqlValue::Text(directory::games::PUBLICATION_PENDING.into()),
+            SqlValue::Text(work.game_id().to_string()),
+        ],
+    )
+    .unwrap();
+    let route = service.discovery_route().unwrap().unwrap();
+    assert!(route.releasing);
+    assert!(route.published_code.is_none());
+    assert_eq!(route.game_id, work.game_id());
+}
+
+#[test]
+fn discovery_directory_clock_and_sql_faults_do_not_claim_a_free_slot() {
+    let db = Sqlite::new();
+    let rt = TestRuntime::new();
+    migrate_directory(&db).unwrap();
+    let service = DirectoryService::new(&db, &rt).unwrap();
+    service
+        .claim_game(account(1), command(&rt, 1), fingerprint())
+        .unwrap();
+    rt.now.set(rt.now.get() - 1);
+    assert_eq!(
+        service.discovery_route().err(),
+        Some(directory::DirectoryError::Storage)
+    );
+    rt.now.set(rt.now.get() + 1);
+    db.execute(
+        "UPDATE directory_global_reservation SET game_id=?",
+        &[SqlValue::Text(command(&rt, 99).to_string())],
+    )
+    .unwrap();
+    assert_eq!(
+        service.discovery_route().err(),
+        Some(directory::DirectoryError::Storage)
+    );
+    db.execute("DELETE FROM directory_global_reservation", &[])
+        .unwrap();
+    assert_eq!(
+        service.discovery_route().err(),
+        Some(directory::DirectoryError::Storage)
+    );
+}

@@ -66,6 +66,9 @@ impl DurableObject for GameDirectoryObject {
     }
     async fn fetch(&self, request: Request) -> Result<Response> {
         observability::init();
+        if request.path() == "/discovery" {
+            return self.execute_discovery_directory(request).await;
+        }
         if request.path() == "/games" {
             return self.execute_games_request(request).await;
         }

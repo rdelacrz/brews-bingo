@@ -870,7 +870,7 @@ impl DurableObject for GameObject {
             || request.url()?.query().is_some()
             || !matches!(
                 path.as_str(),
-                "/command" | "/recovery" | "/close-account" | "/history"
+                "/command" | "/recovery" | "/close-account" | "/history" | "/discovery"
             )
         {
             return Response::error("invalid private game request", 400);
@@ -885,6 +885,14 @@ impl DurableObject for GameObject {
             .map_err(|_| worker::Error::RustError("invalid private game request".into()))?
             .to_vec(),
         );
+        if path == "/discovery" {
+            let request =
+                match game_peers::decode::<super::discovery_wire::DiscoveryOwnerRequest>(&bytes) {
+                    Ok(request) => request,
+                    Err(_) => return Response::error("invalid private discovery request", 400),
+                };
+            return self.execute_discovery(request).await;
+        }
         if path == "/history" {
             let request =
                 match game_peers::decode::<super::history_wire::HistoryOwnerRequest>(&bytes) {

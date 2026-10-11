@@ -257,6 +257,45 @@ async fn account_reply(
     .await
 }
 #[cfg(target_arch = "wasm32")]
+pub(super) async fn authorize_discovery_account(
+    env: &worker::Env,
+    token: &str,
+) -> Result<GameAccountAuthority, GamePeerError> {
+    let request = AccountRequest::Authorize {
+        token: SecretToken::new(token),
+    };
+    let reply = account_reply(env, &request).await?;
+    match game_accounts::verified_discovery_authority(
+        &request,
+        reply,
+        super::WorkerRuntime.now_ms(),
+    )? {
+        game_accounts::DiscoveryAccountAuthority::Current(proof) => Ok(proof),
+        game_accounts::DiscoveryAccountAuthority::Expired { proof, observed_at } => {
+            fence_discovery_account_expiry(env, token, &proof, observed_at).await?;
+            Err(GamePeerError::Unauthorized)
+        }
+    }
+}
+#[cfg(target_arch = "wasm32")]
+pub(super) async fn fence_discovery_account_expiry(
+    env: &worker::Env,
+    token: &str,
+    proof: &GameAccountAuthority,
+    observed_at: i64,
+) -> Result<(), GamePeerError> {
+    if !(proof.expires_at()..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+        return Err(GamePeerError::Unavailable);
+    }
+    let request = AccountRequest::FenceExpiry {
+        token: SecretToken::new(token),
+        authority: proof.into(),
+        observed_at,
+    };
+    let reply = account_reply(env, &request).await?;
+    game_accounts::verified_expiry_fenced(&request, reply)
+}
+#[cfg(target_arch = "wasm32")]
 pub(super) async fn authorize_account(
     env: &worker::Env,
     token: &str,

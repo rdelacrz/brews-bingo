@@ -22,6 +22,11 @@ use worker::{
 use zeroize::Zeroizing;
 
 pub(super) async fn handle(State(env): State<SendWrapper<Env>>, request: Request) -> Response {
+    if (request.method() == http::Method::GET && request.uri().path() == "/api/games")
+        || request.uri().path().ends_with("/availability")
+    {
+        return super::discovery::handle(State(env), request).await;
+    }
     SendFuture::new(async move {
         match dispatch(&env, request).await {
             Ok(response) => response,

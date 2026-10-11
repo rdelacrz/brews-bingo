@@ -193,6 +193,10 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             _, restricted = call('redeem-host-enrollment', '/api/auth/enrollment/redeem', body={'enrollment_token': enrollment_url.split('#', 1)[1]}, cookie_effect=True)
             host_password = secrets.token_urlsafe(24)
             _, host = call('complete-host-enrollment', '/api/auth/enrollment/complete', body={'new_password': host_password}, session=restricted, cookie_effect=True)
+            call('discovery-account-required', '/api/games/current', method='GET', retry=False, expected=401)
+            free, _ = call('discovery-free-slot-over-TLS', '/api/games/current', method='GET', session=host, retry=False)
+            check(free == {'slot': 'free', 'game': None}, 'free discovery slot mismatch')
+            call('discovery-unknown-code-over-TLS', '/api/game-codes/ZZZZZZZZ', method='GET', retry=False, expected=404)
             call('unauthenticated-create-denied', '/api/games', body={}, expected=401)
             call('wrong-Origin-denied', '/api/games', body={}, session=host, application_origin='https://different.example.test', expected=403)
             call('invalid-configuration-before-reservation', '/api/games', body={'configuration': {'numeric_upper_bound': 1}}, session=host, expected=400)
@@ -200,6 +204,9 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             created, _ = call('create-New', '/api/games', body={}, session=host, command=creation)
             check(created['result'] == 'created' and created['game']['state'] == 'new', 'creation lifecycle mismatch')
             game_id = created['game']['game_id']
+            discovery, _ = call('discovery-New-list-over-TLS', '/api/games?state=new', method='GET', session=host, retry=False)
+            check(discovery['slot'] == 'occupied' and len(discovery['games']) == 1 and discovery['next_cursor'] is None, 'New discovery listing mismatch')
+            check(discovery['games'][0]['game_id'] == game_id and discovery['games'][0]['game_code'] is None and discovery['games'][0]['may_operate'], 'New summary authority or code mismatch')
             replay, _ = call('create-receipt-only', '/api/games', body={}, session=host, command=creation)
             check(set(replay) == {'result', 'receipt'} and replay['result'] == 'committed', 'creation retry exposed snapshot')
             call('global-reservation-conflict', '/api/games', body={}, session=host, expected=409)
@@ -208,6 +215,10 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             lobby, _ = call('open-lobby', base + '/lobby', body={'expected_revision': 0}, session=host)
             check(lobby['result'] == 'lobby_opened' and lobby['state'] == 'awaiting_players', 'lobby lifecycle mismatch')
             code = lobby['game_code']
+            entry, _ = call('discovery-normalized-code-over-TLS', '/api/game-codes/%20' + code.lower() + '%20', method='GET', retry=False)
+            check(entry == {'game_id': game_id, 'game_code': code, 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'limited normalized code projection mismatch')
+            availability, _ = call('discovery-public-availability-over-TLS', base + '/availability?view=entry&game_code=' + code, method='GET', retry=False)
+            check(availability == {'view': 'entry', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'public availability leaked detail')
             call('Start-needs-real-presence', base + '/start', body={'expected_revision': lobby['view_revision']}, session=host, expected=409)
 
             def join(alias, answer=None):
@@ -234,9 +245,17 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             completed.append('two-real-TLS-player-streams')
             current, _ = call('host-reads-connected-presence', base + '/sync?view=account', method='GET', session=host, retry=False)
             check(current['snapshot']['connected_player_count'] == 2, 'Start presence is not two real players')
+            availability, _ = call('discovery-connected-Start-availability-over-TLS', base + '/availability?view=account', method='GET', session=host, retry=False)
+            check(availability['can_start'] and availability['connected_player_count'] == 2 and availability['player_count'] == 3, 'discovery Start eligibility does not reflect real sockets/retained members')
+            own_availability, _ = call('discovery-player-availability-over-TLS', base + '/availability?view=player', method='GET', session=alice_cookie, retry=False)
+            check(own_availability == {'view': 'player', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'player availability leaked account details')
             start_id = str(uuid.uuid7())
             started, _ = call('Start-InProgress', base + '/start', body={'expected_revision': current['view_revision']}, session=host, command=start_id)
             check(started['result'] == 'started' and started['state'] == 'in_progress', 'Start did not commit')
+            discovery, _ = call('discovery-filtered-list-preserves-occupied-slot', '/api/games?state=new', method='GET', session=host, retry=False)
+            check(discovery == {'slot': 'occupied', 'games': [], 'next_cursor': None}, 'filtered empty list falsely released the slot')
+            entry, _ = call('discovery-InProgress-code-over-TLS', '/api/game-codes/' + code, method='GET', retry=False)
+            check(entry['state'] == 'in_progress' and not entry['can_join_player'], 'InProgress discovery admitted a new player')
             received = []
             for stream in sockets:
                 for _ in range(20):
@@ -290,6 +309,9 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             resolved, _ = call('winner-commits-Resolved', base + '/winner', body=winner_input, session=host, command=winner_id)
             check(resolved['state'] == 'resolved' and resolved['winner'] == {'player_id': retained['player_id'], 'alias': 'alice'}, 'selected winner mismatch')
             check(resolved['history_available'] and resolved['history_expires_at'] > resolved['ended_at'], 'terminal History deadline missing')
+            call('discovery-terminal-code-denied-over-TLS', '/api/game-codes/' + code, method='GET', retry=False, expected=404)
+            free, _ = call('discovery-terminal-release-over-TLS', '/api/games/current', method='GET', session=host, retry=False)
+            check(free == {'slot': 'free', 'game': None}, 'terminal discovery reservation not released')
             repeat, _ = call('winner-receipt-only', base + '/winner', body=winner_input, session=host, command=winner_id)
             check(repeat == {'result': 'committed', 'receipt': resolved['receipt']}, 'winner retry changed result')
             for index, stream in enumerate(sockets):

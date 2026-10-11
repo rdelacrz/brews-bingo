@@ -990,3 +990,58 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         Ok(())
     }
 }
+
+const SQL_SELECT_DISCOVERY_CLOCK: &str =
+    "SELECT last_observed_ms,command_floor_ms FROM directory_metadata WHERE singleton=1";
+impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
+    /// Read the singleton reservation, without compaction, receipts, alarms or clock writes.
+    /// A pending or terminal reservation is retained until its owning Game releases it.
+    pub fn discovery_route(&self) -> Result<Option<DiscoveryRoute>, DirectoryError> {
+        self.db
+            .transaction(|| {
+                super::validate_schema(self.db).map_err(|_| StorageError)?;
+                let now = self.runtime.now_ms();
+                let rows = self.db.query(SQL_SELECT_DISCOVERY_CLOCK, &[])?;
+                let [row] = rows.as_slice() else {
+                    return Err(StorageError);
+                };
+                let [SqlValue::Integer(previous), SqlValue::Integer(floor)] = row.as_slice() else {
+                    return Err(StorageError);
+                };
+                if !(0..=JS_SAFE_INTEGER_MAX).contains(&now)
+                    || !(0..=*previous).contains(floor)
+                    || now < *previous
+                {
+                    return Err(StorageError);
+                }
+                let read = (|| {
+                    let Some(game_id) = self.reserved_game()? else {
+                        return Ok(None);
+                    };
+                    let index = self.load_index(game_id, now)?;
+                    let work = self.load_creation(game_id, now)?;
+                    let initialized = work.as_ref().is_some_and(|w| w.ready_revision().is_some())
+                        || index.as_ref().is_some_and(|(_, published)| *published);
+                    if index.is_none() && work.is_none() {
+                        return Err(DirectoryError::Storage);
+                    }
+                    let releasing = index.as_ref().is_some_and(|(p, _)| {
+                        matches!(p.state(), GameState::Resolved | GameState::Cancelled)
+                    });
+                    let published_code = index.and_then(|(p, published)| {
+                        (published && !releasing)
+                            .then(|| p.game_code().cloned())
+                            .flatten()
+                    });
+                    Ok(Some(DiscoveryRoute {
+                        game_id,
+                        initialized,
+                        releasing,
+                        published_code,
+                    }))
+                })();
+                read.map_err(|_| StorageError)
+            })
+            .map_err(|_| DirectoryError::Storage)
+    }
+}

@@ -19,3 +19,6 @@ pub use games::{
     ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameViewSelector, GamesRequest,
     PLAYER_COOKIE_NAME, decode_games, game_cookie_path,
 };
+
+mod discovery;
+pub use discovery::{AvailabilityView, DiscoveryCommand, DiscoveryRequest, decode_discovery};

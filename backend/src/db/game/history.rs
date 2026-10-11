@@ -61,7 +61,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     if let Err(error) = self.require_final_history(&record, now) {
                         if error == GameError::Expired {
                             if !observe {
-                                self.fence_history_expiry(now)?;
+                                self.fence_read_deadline(now)?;
                             }
                             return Err(GameError::NotFound);
                         }
@@ -114,7 +114,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             })
             .map_err(|_| GameError::Storage)?
     }
-    fn fence_history_expiry(&self, now: i64) -> Result<(), GameError> {
+    pub(super) fn fence_read_deadline(&self, now: i64) -> Result<(), GameError> {
         let rows = self.db.query(
             super::SQL_SELECT_GAME_METADATA_LAST_OBSERVED_MS_COMMAND_FLOOR_MS,
             &[],

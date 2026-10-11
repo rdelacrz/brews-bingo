@@ -1,6 +1,10 @@
 //! Cloudflare entry points; private adapters, no listening TCP server.
 mod database;
 pub(super) mod directory;
+mod discovery;
+mod discovery_directory;
+mod discovery_owner;
+mod discovery_wire;
 mod edge;
 mod game_accounts;
 mod game_directory;
@@ -67,6 +71,8 @@ pub async fn fetch(
         .route("/api/users/{*path}", any(users::handle))
         .route("/api/history", any(history::handle))
         .route("/api/history/{*path}", any(history::handle))
+        .route("/api/game-codes/{*path}", any(discovery::handle))
+        .route("/api/games/current", any(discovery::handle))
         .route("/api/games", any(games::handle))
         .route("/api/games/{*path}", any(games::handle))
         .fallback(edge::handle)

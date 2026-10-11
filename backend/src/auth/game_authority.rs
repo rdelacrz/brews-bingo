@@ -195,6 +195,19 @@ fn subscription_values(
 }
 
 impl<D: Database, R: Runtime> AuthService<'_, D, R> {
+    /// A denial only: retain the private caller's original sample across rollback.
+    #[cfg(any(test, target_arch = "wasm32"))]
+    pub(crate) fn fence_game_account_expiry(
+        &self,
+        token: &str,
+        proof: &GameAccountAuthority,
+        observed_at: i64,
+    ) -> Result<(), AuthError> {
+        let digest = crate::security::token_digest(token)?;
+        crate::db::account_expiry::fence_account_expiry(self.db, &digest, proof, observed_at)
+            .map_err(AuthError::from)
+    }
+
     /// Reprove current Normal account authority in the serialized Accounts transaction.
     /// This proves neither designated-host assignment nor a Game-owned view grant.
     pub fn authorize_game_account(
