@@ -60,7 +60,7 @@ class SocketClient:
         masked = bytes(byte ^ mask[index % 4] for index, byte in enumerate(content))
         self.socket.sendall(prefix + mask + masked)
 
-    def frame(self):
+    def frame(self, *, allow_close=False) -> dict:
         while True:
             first, second = self.read_exact(2)
             check(first & 128 and not first & 112, 'unexpected fragmented/compressed WSS frame')
@@ -76,6 +76,10 @@ class SocketClient:
             if opcode == 9:
                 self.send(10, data)
                 continue
+            if opcode == 8:
+                check(allow_close and len(data) >= 2, 'unexpected WSS close frame')
+                self.send(8, data)
+                return {'transport_close_code': struct.unpack('!H', data[:2])[0]}
             check(opcode == 1, 'expected JSON snapshot frame')
             value = json.loads(data)
             check(value.get('version') == 1 and value.get('kind') == 'snapshot', 'invalid snapshot envelope')
@@ -232,11 +236,25 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
                 check(set(replay) == {'result', 'receipt'} and replay['result'] == 'committed', 'join retry replayed private result')
                 return player, player_cookie
 
-            alice, alice_cookie = join('Alice', secrets.token_urlsafe(24))
+            alice_answer = secrets.token_urlsafe(24)
+            alice, alice_cookie = join('Alice', alice_answer)
             bob, bob_cookie = join('Bob')
             retained, retained_cookie = join('alice')
             own, _ = call('player-before-Start-no-board', base + '/sync?view=player', method='GET', session=alice_cookie, retry=False)
             check(own['snapshot']['role'] == 'player' and 'board' not in own['snapshot'], 'prestart player board leaked')
+            answer_path = base + '/membership/recovery-answer'
+            replacement_answer = secrets.token_urlsafe(24)
+            call('recovery-answer-account-is-not-owner-over-TLS', answer_path, method='PUT', body={'recovery_answer': replacement_answer}, session=host, expected=401)
+            answer_command = str(uuid.uuid7())
+            changed, _ = call('recovery-answer-replace-over-TLS', answer_path, method='PUT', body={'recovery_answer': replacement_answer}, session=alice_cookie, command=answer_command)
+            check(changed['recovery_enabled'], 'replacement did not enable recovery')
+            repeated, _ = call('recovery-answer-receipt-only-over-TLS', answer_path, method='PUT', body={'recovery_answer': replacement_answer}, session=alice_cookie, command=answer_command)
+            check(repeated == {'result': 'committed', 'receipt': changed['receipt']}, 'answer receipt replay leaked data')
+            call('recovery-old-answer-denied-over-TLS', '/api/player-recovery', body={'game_code': code, 'alias': 'Alice', 'recovery_answer': alice_answer}, expected=401)
+            removed, _ = call('recovery-answer-delete-over-TLS', answer_path, method='DELETE', body={}, session=alice_cookie)
+            check(not removed['recovery_enabled'], 'answer deletion kept recovery enabled')
+            call('recovery-deleted-answer-denied-over-TLS', '/api/player-recovery', body={'game_code': code, 'alias': 'Alice', 'recovery_answer': replacement_answer}, expected=401)
+            call('recovery-answer-restore-over-TLS', answer_path, method='PUT', body={'recovery_answer': alice_answer}, session=alice_cookie)
             for session in [alice_cookie, bob_cookie]:
                 stream = SocketClient('localhost', port, tls, base + '/stream?view=player', origin, session)
                 sockets.append(stream)
@@ -277,6 +295,32 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             check(boards_before == {player['player_id']: player['board'] for player in final_again['snapshot']['players']}, 'Start retry regenerated boards')
             own, _ = call('own-view-unchanged-sync', base + '/sync?view=player&known_revision=' + str(received[0]['view_revision']), method='GET', session=alice_cookie, retry=False)
             check(own['up_to_date'] and own['snapshot'] is None, 'private revision unchanged contract failed')
+            recovery_command = str(uuid.uuid7())
+            recovery_input = {'game_code': ' ' + code.lower() + ' ', 'alias': ' Alice ', 'recovery_answer': alice_answer}
+            restored, recovered_cookie = call('recover-InProgress-player-over-TLS', '/api/player-recovery', body=recovery_input, command=recovery_command, cookie_effect=True)
+            check(restored['receipt']['game_id'] == game_id, 'recovery receipt game binding mismatch')
+            call('recovered-predecessor-session-denied-over-TLS', base + '/sync?view=player', method='GET', session=alice_cookie, retry=False, expected=401)
+            recovered_view, _ = call('recovered-same-player-and-board-over-TLS', base + '/sync?view=player', method='GET', session=recovered_cookie, retry=False)
+            check(recovered_view['snapshot']['player_id'] == alice['player_id'] and recovered_view['snapshot']['board'] == boards_before[alice['player_id']], 'recovery replaced player or board')
+            repeated, _ = call('recovery-secret-free-receipt-only-over-TLS', '/api/player-recovery', body=recovery_input, command=recovery_command)
+            check(repeated == {'receipt': restored['receipt']}, 'recovery replay exposed cookie/snapshot')
+            call('recovery-retry-still-needs-answer-over-TLS', '/api/player-recovery', body={**recovery_input, 'recovery_answer': secrets.token_urlsafe(24)}, command=recovery_command, expected=401)
+            old_stream = sockets[0]
+            for _ in range(20):
+                frame = old_stream.frame(allow_close=True)
+                if 'transport_close_code' in frame:
+                    check(frame['transport_close_code'] in [1008, 1013], 'recovery did not fence predecessor transport')
+                    break
+                check(frame['view_revision'] <= received[0]['view_revision'], 'predecessor received a post-recovery snapshot')
+            else:
+                raise RuntimeError('recovery predecessor close was not acknowledged within bounded backlog')
+            old_stream.close()
+            completed.append('recovery-predecessor-WSS-close-acknowledged')
+            alice_cookie = recovered_cookie
+            sockets[0] = SocketClient('localhost', port, tls, base + '/stream?view=player', origin, alice_cookie)
+            successor = sockets[0].frame()
+            check(successor['view']['player_id'] == alice['player_id'] and successor['view']['board'] == boards_before[alice['player_id']], 'recovery successor stream lost board')
+            completed.append('recovery-successor-real-WSS-same-board')
             call('new-player-after-Start-denied', base + '/admission-context', body={'game_code': code}, retry=False, expected=409)
             host_view, _ = call('gameplay-current-host-revision', base + '/sync?view=account', method='GET', session=host, retry=False)
             random_id = str(uuid.uuid7())

@@ -1,7 +1,9 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
 mod discovery;
 mod history;
+mod player_recovery;
 pub use discovery::{DiscoveryCut, DiscoveryValue, DiscoveryViewer};
+pub use player_recovery::{RecoveryOutcome, RecoverySocketClose};
 mod terminal;
 use super::{Database, SqlValue, StorageError};
 use crate::auth::{AuthPolicy, GameAccountAuthority, Runtime};
@@ -170,9 +172,9 @@ const SQL_SELECT_GAME_CONNECTION_GRANTS_GRANT_ID: &str =
     "SELECT grant_id FROM game_connection_grants WHERE expires_at<=? ORDER BY expires_at LIMIT ?";
 const SQL_CHECK_CONNECTION_GRANT_EXISTS_BY_ID: &str =
     "SELECT 1 FROM game_connection_grants WHERE grant_id=?";
-const GAME_DEADLINE_SOURCE_COUNT: usize = 9;
+const GAME_DEADLINE_SOURCE_COUNT: usize = 11;
 // Scalar aggregates avoid Workerd's bounded compound-SELECT terms.
-const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record)";
+const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record), (SELECT min(expires_at) FROM game_recovery_buckets), (SELECT min(next_attempt_at) FROM game_socket_closures)";
 const SQL_UPDATE_PENDING_WORK_RETRY: &str =
     "UPDATE game_pending_work SET attempt_count=?,next_attempt_at=? WHERE operation_id=?";
 const SQL_INSERT_CANCELLED_GAME_RECORD: &str = "INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,ended_at,cancellation_reason,terminal_actor_kind,terminal_actor_id) VALUES(1,?,?,?,?,?,0,?,1,?,?,?,?,'system',NULL)";
@@ -272,7 +274,11 @@ const SYSTEM_ACTOR: &str = "system";
 const OBSERVED_CONNECTION_LIMIT: usize = 100;
 const RETAINED_PLAYER_LIMIT: usize = 20;
 const PENDING_WORK_BATCH_LIMIT: u32 = 100;
-const PRESTART_PURGE: [(&str, &str); 14] = [
+const PRESTART_PURGE: [(&str, &str); 15] = [
+    (
+        "DELETE FROM game_recovery_buckets",
+        "SELECT 1 FROM game_recovery_buckets LIMIT 1",
+    ),
     (
         SQL_DELETE_GAME_COMPLETED_LINES,
         SQL_SELECT_ANY_COMPLETED_LINE,
@@ -306,7 +312,11 @@ const PRESTART_PURGE: [(&str, &str); 14] = [
         SQL_SELECT_ANY_PENDING_GAME_WORK,
     ),
 ];
-const TERMINAL_LIVE_PURGE: [(&str, &str); 11] = [
+const TERMINAL_LIVE_PURGE: [(&str, &str); 12] = [
+    (
+        "DELETE FROM game_recovery_buckets",
+        "SELECT 1 FROM game_recovery_buckets LIMIT 1",
+    ),
     (
         SQL_DELETE_GAME_PENDING_WORK_ALL,
         SQL_SELECT_ANY_GAME_PENDING_WORK,
@@ -2707,6 +2717,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         Ok(true)
     }
     fn compact(&self, now: i64) -> Result<(), GameError> {
+        self.cleanup_recovery_buckets(now)?;
         self.purge_expired_history(now)?;
         self.cleanup_terminal_access(now)?;
         if let Some(r) = self.record_optional()?.filter(|r| {
@@ -4027,6 +4038,24 @@ fn validate_schema<D: Database>(db: &D) -> Result<(), StorageError> {
     {
         return Err(StorageError);
     }
+    for statement in game_schema::recovery_coordination_statements() {
+        let (kind, prefix) = if statement.starts_with("CREATE TABLE") {
+            ("table", "CREATE TABLE ")
+        } else {
+            ("index", "CREATE INDEX ")
+        };
+        let name = statement
+            .strip_prefix(prefix)
+            .and_then(|rest| rest.split(['(', ' ']).next())
+            .ok_or(StorageError)?;
+        if db.query(
+            "SELECT sql FROM sqlite_master WHERE type=? AND name=?",
+            &[text(kind), text(name)],
+        )? != vec![vec![text(statement)]]
+        {
+            return Err(StorageError);
+        }
+    }
     Ok(())
 }
 fn schema_statement_for(table: &str) -> Result<String, StorageError> {
@@ -4204,6 +4233,12 @@ fn migrate_previous_game_schema<D: Database>(db: &D) -> Result<(), StorageError>
             return Err(StorageError);
         }
     }
+    for statement in game_schema::recovery_coordination_statements()
+        .into_iter()
+        .filter(|sql| sql.starts_with("CREATE INDEX"))
+    {
+        db.execute(&statement, &[])?;
+    }
     db.execute(
         SQL_UPDATE_GAME_SCHEMA_VERSION,
         &[int(GAME_SCHEMA_VERSION), int(PREVIOUS_GAME_SCHEMA_VERSION)],
@@ -4212,6 +4247,45 @@ fn migrate_previous_game_schema<D: Database>(db: &D) -> Result<(), StorageError>
         != vec![vec![int(GAME_SCHEMA_VERSION)]]
     {
         return Err(StorageError);
+    }
+    Ok(())
+}
+fn migrate_recovery_coordination<D: Database>(db: &D) -> Result<(), StorageError> {
+    let old = GAME_TABLES
+        .iter()
+        .copied()
+        .filter(|name| !matches!(*name, "game_recovery_buckets" | "game_socket_closures"))
+        .collect::<Vec<_>>();
+    let actual = inventory(db)?;
+    for table in &old {
+        let expected = schema_statement_for(table)?;
+        if db.query(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
+            &[text(table)],
+        )? != vec![vec![text(expected)]]
+        {
+            return Err(StorageError);
+        }
+    }
+    if actual != migration_table_set(&old, false) && actual != migration_table_set(&old, true) {
+        return Err(StorageError);
+    }
+    for statement in game_schema::recovery_coordination_statements() {
+        db.execute(&statement, &[])?;
+    }
+    db.execute(
+        SQL_UPDATE_GAME_SCHEMA_VERSION,
+        &[int(GAME_SCHEMA_VERSION), int(2)],
+    )?;
+    validate_schema(db)?;
+    for name in ["game_recovery_bucket_expiry", "game_socket_closure_retry"] {
+        if db.query(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name=?",
+            &[text(name)],
+        )? != vec![vec![text(name)]]
+        {
+            return Err(StorageError);
+        }
     }
     Ok(())
 }
@@ -4239,6 +4313,8 @@ pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
                     return Err(StorageError);
                 }
                 migrate_previous_game_schema(db)?;
+            } else if version == 2 {
+                migrate_recovery_coordination(db)?;
             } else if version != GAME_SCHEMA_VERSION {
                 return Err(StorageError);
             }

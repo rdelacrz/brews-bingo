@@ -74,6 +74,7 @@ pub async fn fetch(
         .route("/api/game-codes/{*path}", any(discovery::handle))
         .route("/api/games/current", any(discovery::handle))
         .route("/api/games", any(games::handle))
+        .route("/api/player-recovery", any(games::handle))
         .route("/api/games/{*path}", any(games::handle))
         .fallback(edge::handle)
         .with_state(SendWrapper::new(env));

@@ -866,6 +866,12 @@ enum RateLimitScope {
 
 DO-085 approves these fields/scopes and AccountsObject ownership for account login/access-link buckets; player-recovery buckets live in the owning GameObject. DO-086 approves failure-only accounting: 5 failures in a fixed 15-minute window blocks 15 minutes; success clears; blocked attempts do not extend the block. DO-087 approves domain-separated HMAC-SHA-256 subject keys using a server-managed key, trusted edge metadata for caller aggregation, layered account/game controls and deletion after window/block. Never store raw answer/username/token/IP or long-term attempt history. Key rotation and exact scope composition remain implementation work.
 
+#### Local Slice 2 physical mapping
+
+The dedicated `game_recovery_buckets` table implements only PlayerRecovery, so scope is implicit in its owning table rather than repeated per row. It stores a 32-byte HMAC `subject_key`, fixed window start, failure count, nullable block deadline and expiry. Distinct domain-separated keys cover game/current-alias, game/trusted ingress caller and game aggregate. Shared named rate-policy limits enforce the approved five-failure/15-minute window and block. Game's combined alarm includes the expiry index; cleanup is bounded, and blocked attempts cannot extend retention. Accounts login/link storage is unchanged.
+
+Game also stores bound predecessor socket-close work in `game_socket_closures`: exact connection/session/player/epoch, retry deadline and saturating attempt count. Clock/epoch revocation precedes physical close; typed work remains until closed/already-absent ACK, with the approved bounded exponential retry and successor fencing. Both new tables/indexes are installed by the purpose-named recovery coordination migration at storage schema counter 3. Existing private `game_recovery` verifier rows are reused; no plaintext answer or token is added. These are local implementation mappings, not production certification; see LLD Section 3.15 for verification and the outstanding review gate.
+
 #### `AdminAuditRecord`
 
 ```rust

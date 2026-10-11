@@ -271,6 +271,35 @@ impl GameObject {
         }
         Ok(())
     }
+    async fn close_recovered_sockets(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+    ) -> Result<(), GameError> {
+        let sockets = self.sockets()?;
+        for close in service.pending_recovery_socket_closes()? {
+            let mut pending = false;
+            for ws in &sockets {
+                let hint = Attachment::read(ws)?;
+                if hint.connection_id == close.connection {
+                    if hint.session_id != close.session
+                        || hint.authentication_epoch != close.epoch
+                        || hint.viewer != Viewer::Player(close.player)
+                    {
+                        return Err(GameError::Storage);
+                    }
+                    if close_checked(ws, CloseCode::Policy).is_err() {
+                        pending = true;
+                    }
+                }
+            }
+            if pending {
+                service.retry_recovery_socket_close(&close)?;
+            } else {
+                service.acknowledge_recovery_socket_close(&close)?;
+            }
+        }
+        Ok(())
+    }
     async fn wake(&self) -> Result<(), GameError> {
         const RECOVERY_BATCH_LIMIT: u32 = 10;
         self.transport_retry.set(false);
@@ -284,6 +313,7 @@ impl GameObject {
             .map_err(|_| GameError::Storage)?;
         // Required SQL/peer recovery is independent of best-effort transport.
         self.persist_recovery(&service, &db).await?;
+        let close_result = self.close_recovered_sockets(&service).await;
         let socket_result = self.broadcast(&service, &db).await;
         let due = service.pending_work(RECOVERY_BATCH_LIMIT)?;
         for snapshot in due {
@@ -320,7 +350,7 @@ impl GameObject {
             self.persist_recovery(&service, &db).await?;
         }
         self.persist(&service, &db).await?;
-        socket_result
+        close_result.and(socket_result)
     }
     async fn execute(&self, ingress: &GameIngress) -> Result<GameOwnerResponse, GameError> {
         let db = self.database()?;
@@ -452,6 +482,90 @@ impl GameObject {
                 Ok(GameOwnerResponse::Success {
                     response: outcome.response,
                     cookie,
+                })
+            }
+            (GameAction::RecoverPlayer, GamePayload::RecoverPlayer(input)) => {
+                let code = brews_domain::games::GameCode::from_lookup(&input.game_code)
+                    .map_err(|_| GameError::InvalidRecovery)?;
+                let outcome = service.recover_player(
+                    command.ok_or(GameError::InvalidInput)?,
+                    &code,
+                    &input.alias,
+                    &input.recovery_answer,
+                    ingress
+                        .recovery_caller
+                        .as_deref()
+                        .ok_or(GameError::Storage)?,
+                )?;
+                // Persist the close ledger and alarm before transport or output awaits.
+                self.persist(&service, &db).await?;
+                let _ = self.close_recovered_sockets(&service).await;
+                self.persist(&service, &db).await?;
+                service.validate_recovery_outcome(&outcome)?;
+                let (game, cookie) = match outcome.cookie.as_ref() {
+                    Some(cookie) => (
+                        Some(service.recovered_player_view(cookie.token())?),
+                        GameCookieWire::Player {
+                            token: cookie.token().to_owned(),
+                            expires_at: cookie.expires_at(),
+                        },
+                    ),
+                    None => (None, GameCookieWire::None),
+                };
+                Ok(GameOwnerResponse::Recovered {
+                    valid_until: outcome
+                        .cookie
+                        .as_ref()
+                        .map(|cookie| service.recovered_player_deadline(cookie.token()))
+                        .transpose()?,
+                    receipt: outcome.receipt,
+                    game,
+                    cookie,
+                })
+            }
+            (GameAction::RecoveryOutput, GamePayload::RecoverPlayer(_)) => {
+                self.persist(&service, &db).await?;
+                let game = service.recovered_player_view(token)?;
+                let receipt = service
+                    .recovery_output_receipt(command.ok_or(GameError::InvalidInput)?, token)?;
+                let brews_contracts::games::GameOutcome::PlayerRecovered {
+                    session_expires_at, ..
+                } = receipt.outcome
+                else {
+                    return Err(GameError::Storage);
+                };
+                Ok(GameOwnerResponse::Recovered {
+                    valid_until: Some(service.recovered_player_deadline(token)?),
+                    receipt,
+                    game: Some(game),
+                    cookie: GameCookieWire::Player {
+                        token: token.to_owned(),
+                        expires_at: session_expires_at,
+                    },
+                })
+            }
+            (GameAction::PutRecoveryAnswer, GamePayload::RecoveryAnswer(input)) => {
+                let response = service.manage_recovery_answer(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    Some(&input.recovery_answer),
+                )?;
+                self.persist(&service, &db).await?;
+                Ok(GameOwnerResponse::RecoveryAnswer {
+                    response,
+                    valid_until: service.recovered_player_deadline(token)?,
+                })
+            }
+            (GameAction::DeleteRecoveryAnswer, GamePayload::Empty) => {
+                let response = service.manage_recovery_answer(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    None,
+                )?;
+                self.persist(&service, &db).await?;
+                Ok(GameOwnerResponse::RecoveryAnswer {
+                    response,
+                    valid_until: service.recovered_player_deadline(token)?,
                 })
             }
             (GameAction::JoinPlayer, GamePayload::JoinPlayer(input)) => {
@@ -817,6 +931,8 @@ fn success(response: GameResponse) -> GameOwnerResponse {
 }
 fn rejection(error: GameError) -> GameRejection {
     match error {
+        GameError::InvalidRecovery => GameRejection::InvalidRecovery,
+        GameError::RecoveryBlocked => GameRejection::RecoveryBlocked,
         GameError::Unauthorized => GameRejection::Unauthorized,
         GameError::Forbidden => GameRejection::Forbidden,
         GameError::InvalidInput => GameRejection::InvalidInput,

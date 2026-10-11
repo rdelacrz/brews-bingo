@@ -7,6 +7,10 @@ use brews_domain::games::GameConfiguration;
 pub enum GameError {
     #[error("game storage unavailable")]
     Storage,
+    #[error("invalid player recovery proof")]
+    InvalidRecovery,
+    #[error("player recovery blocked")]
+    RecoveryBlocked,
     #[error("game authority required")]
     Unauthorized,
     #[error("game permission denied")]

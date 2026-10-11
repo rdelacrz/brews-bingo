@@ -75,10 +75,23 @@ pub(super) enum GameRejection {
     Conflict,
     StaleCommand,
     Unavailable,
+    InvalidRecovery,
+    RecoveryBlocked,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "owner_result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum GameOwnerResponse {
+    RecoveryAnswer {
+        #[serde(deserialize_with = "object")]
+        response: GameResponse,
+        valid_until: i64,
+    },
+    Recovered {
+        valid_until: Option<i64>,
+        receipt: brews_contracts::games::GameReceipt,
+        game: Option<brews_contracts::games::GameView>,
+        cookie: GameCookieWire,
+    },
     Success {
         #[serde(deserialize_with = "object")]
         response: GameResponse,
@@ -95,6 +108,89 @@ pub(super) enum GameOwnerResponse {
 }
 impl GameOwnerResponse {
     pub(super) fn validate_for(&self, request: &GameIngress) -> Result<(), ()> {
+        if let Self::Recovered {
+            receipt,
+            game,
+            cookie,
+            valid_until,
+        } = self
+        {
+            if !matches!(
+                request.operation,
+                GameAction::RecoverPlayer | GameAction::RecoveryOutput
+            ) || Some(receipt.command_id) != request.command_id
+                || Some(receipt.game_id) != request.game_id
+            {
+                return Err(());
+            }
+            receipt.validate().map_err(|_| ())?;
+            let brews_contracts::games::GameOutcome::PlayerRecovered {
+                player_id,
+                session_expires_at,
+                ..
+            } = receipt.outcome
+            else {
+                return Err(());
+            };
+            if game.is_some() != valid_until.is_some()
+                || valid_until.is_some_and(|deadline| {
+                    deadline <= receipt.completed_at || deadline > session_expires_at
+                })
+            {
+                return Err(());
+            }
+            match (game, cookie) {
+                (None, GameCookieWire::None) => {}
+                (
+                    Some(brews_contracts::games::GameView::Player {
+                        game_id,
+                        player_id: own,
+                        ..
+                    }),
+                    GameCookieWire::Player { token, expires_at },
+                ) if *own == player_id
+                    && *game_id == receipt.game_id
+                    && *expires_at == session_expires_at =>
+                {
+                    crate::security::token_digest(token).map_err(|_| ())?;
+                    if request.operation == GameAction::RecoveryOutput
+                        && request.session_token.as_deref() != Some(token.as_str())
+                    {
+                        return Err(());
+                    }
+                }
+                _ => return Err(()),
+            }
+            return Ok(());
+        }
+        if let Self::RecoveryAnswer {
+            response,
+            valid_until,
+        } = self
+        {
+            if !matches!(
+                request.operation,
+                GameAction::PutRecoveryAnswer | GameAction::DeleteRecoveryAnswer
+            ) || !(1..=crate::limits::JS_SAFE_INTEGER_MAX).contains(valid_until)
+            {
+                return Err(());
+            }
+            return Self::Success {
+                response: response.clone(),
+                cookie: GameCookieWire::None,
+            }
+            .validate_success_for(request);
+        }
+        if matches!(
+            request.operation,
+            GameAction::PutRecoveryAnswer | GameAction::DeleteRecoveryAnswer
+        ) && !matches!(self, Self::Rejected { .. })
+        {
+            return Err(());
+        }
+        self.validate_success_for(request)
+    }
+    fn validate_success_for(&self, request: &GameIngress) -> Result<(), ()> {
         use brews_contracts::games::GameOutcome;
         let Self::Success { response, .. } = self else {
             if let Self::Synced { response } = self {
@@ -186,6 +282,14 @@ impl GameOwnerResponse {
                 }
                 receipt
             }
+            GameResponse::RecoveryAnswerChanged { receipt, .. }
+                if matches!(
+                    request.operation,
+                    GameAction::PutRecoveryAnswer | GameAction::DeleteRecoveryAnswer
+                ) =>
+            {
+                receipt
+            }
             GameResponse::Committed { receipt } => receipt,
             GameResponse::AdmissionContext { .. }
                 if request.operation == GameAction::AdmissionContext =>
@@ -217,7 +321,11 @@ impl GameOwnerResponse {
             | (GameAction::Start, GameOutcome::Started { .. })
             | (GameAction::JoinPlayer, GameOutcome::PlayerJoined { .. })
             | (GameAction::CallRandom, GameOutcome::CallAccepted { .. })
-            | (GameAction::Exit, GameOutcome::Exited {}) => true,
+            | (GameAction::Exit, GameOutcome::Exited {})
+            | (
+                GameAction::PutRecoveryAnswer | GameAction::DeleteRecoveryAnswer,
+                GameOutcome::RecoveryAnswerChanged { .. },
+            ) => true,
             (GameAction::CallManual, GameOutcome::CallAccepted { call, .. }) => {
                 matches!(request.payload()?, GamePayload::CallManual(input) if input.value == call.value)
             }
@@ -265,6 +373,15 @@ impl GameOwnerResponse {
         }
         let value: Self = serde_json::from_slice(bytes).map_err(|_| ())?;
         match &value {
+            Self::RecoveryAnswer {
+                response,
+                valid_until,
+            } => {
+                response.encode_json().map_err(|_| ())?;
+                if !(1..=crate::limits::JS_SAFE_INTEGER_MAX).contains(valid_until) {
+                    return Err(());
+                }
+            }
             Self::Success { response, cookie } => match (response, cookie) {
                 (
                     GameResponse::AdmissionContext { expires_at },
@@ -297,6 +414,12 @@ impl GameOwnerResponse {
             Self::Synced { response } => {
                 response.encode_json().map_err(|_| ())?;
             }
+            Self::Recovered { receipt, game, .. } => {
+                receipt.validate().map_err(|_| ())?;
+                if let Some(game) = game {
+                    game.validate().map_err(|_| ())?;
+                }
+            }
             Self::Rejected { .. } => {}
         }
         Ok(value)
@@ -316,6 +439,10 @@ pub(super) enum GameAction {
     Exit,
     AdmissionContext,
     JoinPlayer,
+    RecoverPlayer,
+    RecoveryOutput,
+    PutRecoveryAnswer,
+    DeleteRecoveryAnswer,
     Stream,
     Sync,
 }
@@ -332,6 +459,9 @@ impl From<GameOperation> for GameAction {
             GameOperation::Exit => Self::Exit,
             GameOperation::AdmissionContext => Self::AdmissionContext,
             GameOperation::JoinPlayer => Self::JoinPlayer,
+            GameOperation::RecoverPlayer => Self::RecoverPlayer,
+            GameOperation::PutRecoveryAnswer => Self::PutRecoveryAnswer,
+            GameOperation::DeleteRecoveryAnswer => Self::DeleteRecoveryAnswer,
             GameOperation::Stream => Self::Stream,
             GameOperation::Sync => Self::Sync,
         }
@@ -362,6 +492,8 @@ pub(super) struct GameIngress {
     pub known_revision: Option<u64>,
     pub session_token: Option<String>,
     pub admission_token: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recovery_caller: Option<String>,
     pub body: String,
 }
 impl Drop for GameIngress {
@@ -381,6 +513,7 @@ impl GameIngress {
             known_revision: request.known_revision,
             session_token: request.session_token.take(),
             admission_token: request.admission_token.take(),
+            recovery_caller: None,
             body: std::str::from_utf8(body).map_err(|_| ())?.to_owned(),
         };
         value.validate()?;
@@ -405,6 +538,17 @@ impl GameIngress {
             return Err(());
         }
         match self.operation {
+            GameAction::RecoverPlayer | GameAction::RecoveryOutput => {
+                crate::api::decode_recovery_input(bytes)
+                    .map(GamePayload::RecoverPlayer)
+                    .map_err(|_| ())
+            }
+            GameAction::PutRecoveryAnswer => crate::api::decode_recovery_input(bytes)
+                .map(GamePayload::RecoveryAnswer)
+                .map_err(|_| ()),
+            GameAction::DeleteRecoveryAnswer => crate::api::decode_empty_game_body(bytes)
+                .map(|()| GamePayload::Empty)
+                .map_err(|_| ()),
             GameAction::Create => CreateGame::decode_json(bytes)
                 .map(GamePayload::Create)
                 .map_err(|_| ()),
@@ -446,6 +590,10 @@ impl GameIngress {
                 | GameAction::Lobby
                 | GameAction::Start
                 | GameAction::JoinPlayer
+                | GameAction::RecoverPlayer
+                | GameAction::RecoveryOutput
+                | GameAction::PutRecoveryAnswer
+                | GameAction::DeleteRecoveryAnswer
                 | GameAction::CallRandom
                 | GameAction::CallManual
                 | GameAction::Winner
@@ -453,7 +601,10 @@ impl GameIngress {
                 | GameAction::Exit
         );
         if retry_sensitive != self.command_id.is_some()
-            || (self.operation != GameAction::Create && self.game_id.is_none())
+            || (!matches!(
+                self.operation,
+                GameAction::Create | GameAction::RecoverPlayer
+            ) && self.game_id.is_none())
             || (!selected_view && (self.view.is_some() || self.known_revision.is_some()))
             || (selected_view && self.view.is_none())
             || (self.operation != GameAction::Sync && self.known_revision.is_some())
@@ -494,6 +645,7 @@ mod tests {
             known_revision: None,
             session_token: None,
             admission_token: None,
+            recovery_caller: None,
             body: body.into(),
         };
         request.validate().unwrap();
@@ -562,6 +714,7 @@ mod tests {
             known_revision: None,
             session_token: None,
             admission_token: None,
+            recovery_caller: None,
             body: "{}".into(),
         };
         request.validate().unwrap();

@@ -697,6 +697,29 @@ The final independent review binds 27 new/changed production source hashes and t
 
 The code-only graph verifies 174 source hashes; its dangling/collapsed AST-edge limitations remain navigation caveats, and the older documentation graph is stale. Local bounds and constant fanout do not certify production abuse resistance, load/quotas, KDF costs, Unicode/runtime consistency or provider deployment behavior. The existing development-toolchain npm audit finding is outside this slice; dependencies were not upgraded. Recovery, aliases/Leave, spectators/switching, setup/resume/transfer, other dedicated read surfaces, command-result lookup, game auditing and production gates remain in their separate PENDING slices. No commit, push or deployment was performed.
 
+### 3.15 Local player recovery and private answer maintenance checkpoint
+
+The user authorized local Slice 2 after committing/pushing Slice 1 as `968747c`. D13 recovery, D14 answer set/replace/delete and the required Game-owned rate/socket coordination are implemented and exercised locally. [API implementation choices](api-design.md#local-slice-2-player-recovery-implementation-choices) and [physical mappings](durable-object-design.md#local-slice-2-physical-mapping) record the concrete contracts. At this local verification checkpoint Slice 2 remained uncommitted. The user has now separately authorized committing and pushing it with independent review sign-off still pending; deployment and provisioning remain unauthorized.
+
+Recovery proves the current exact alias and enrolled answer on every attempt, including receipt retries. Argon verification/enrollment occurs outside the write transaction; commit rechecks lifecycle, membership, epoch and unchanged verifier/version/update time. Fresh success restores the same player/seat/board, advances the epoch once, revokes predecessors and issues one fixed-day credential; exact retries return only a secret-free receipt. A lost response requires fresh proof plus a fresh command. Answer maintenance uses current player authority and preserves sessions, expiry, idle deadline, host/other-player revisions and existing boards. Canonical-equivalent PUT and deleting an absent answer are revision-preserving no-ops.
+
+The recovery coordination migration preserves existing owner data while adding HMAC-keyed failure buckets and bound socket-close work at storage schema counter 3. Rates use the approved five failures/fixed 15-minute window/block, nonextending blocked attempts, success clearing and bounded expiry cleanup. Epoch revocation precedes transport close, and closed/already-absent acknowledgement, durable retry deadlines and saturating exponential backoff fence successors across reconstruction.
+
+The parent reproduced and repaired initial-cut recovery expiry/rollback, mismatched denial ACK acceptance, D14 disclosure after an owner-return revocation and substitution of a different syntactically valid recovered cookie. Both D13/D14 now sample deadline-bearing replies before subsequent awaits, carry the original observed UTC through a checked durable Game fence, require the exact denial ACK and release no protected data on uncertainty. D13 binds the final token/expiry/receipt; D14 makes a current authenticated receipt cut before releasing the original safe result. Unchanged independently authored reproductions are retained as permanent tests and pass on the fresh release artifact.
+
+| Executed local gate | Result |
+| --- | --- |
+| Full workspace nextest, debug / release-assertions | 756 passed in each profile, no failures or skips |
+| Workspace doctests | 12 passed |
+| Fresh release complete Workerd suite | 247 passed, no failures or skips |
+| Actual local HTTPS/WSS harness | 95 checks passed, including answer maintenance, same-board In Progress recovery, predecessor session denial and real close ACK/successor stream |
+| Formatter, native/Wasm strict Clippy, diff checks | Passed |
+| Code-only structural graph | 179 source hashes verified; 627 dangling and 334 collapsed AST-edge caveats; documentation graph remains stale |
+
+**Independent review is not signed off.** The read-only reviewer executed real scratch reproductions and identified the four response-release defects above. Its provider subsequently stopped the review with a content-policy error before a final report/verdict was produced. The parent incorporated and reran its unchanged six probes, repaired the findings and added further deadline/ACK cases; that is parent execution evidence, not an independent final verdict. No claim of “no remaining blocking findings” or publication readiness is made for Slice 2. PENDING leaves an explicit final-review gate unchecked.
+
+Intermediate runs included schema/formatter/build timing failures and response-envelope/fixture differences; they are not final gate evidence. The accepted Workerd result comes after the complete release build, with unchanged native/production sources and enumerated assertion totals checked. Production KDF/Unicode/concurrency/quotas, infrastructure/accounts, deployed provider behavior and secrets remain unverified/out of scope. The pre-existing npm development-toolchain audit finding is unchanged. Slice 3 and later work remain pending.
+
 ## 4. Views and frontend contracts
 
 **Design status:** Concrete UI design proposals captured at the user's request (LLD-026), not implemented screens or a new approval of the whole LLD. The requested public **Home**, privileged **Games**, admin-only **Users**, **Create game**, and active **Play** experiences are included, with enrollment, admission, lobby, recovery, results and History completing their flows. Approved domain/security rules remain mandatory. Suggested routes, component names, layout choices and interaction details below are reviewable UI proposals; they do not finalize API payloads, add backend permissions or authorize implementation.

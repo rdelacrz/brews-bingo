@@ -2,12 +2,12 @@
 
 ## Status and use
 
-Backlog assessed against the planning documents and implementation at commit `594adcb` (History APIs). Slice 1 is now implemented and verified locally; see [LLD Section 3.14](lld.md#314-local-game-discovery-and-availability-implementation-slice). Other slice statuses are unchanged. Slice grouping does not authorize later implementation, deployment or publication.
+Backlog assessed against the planning documents and implementation at commit `594adcb` (History APIs). Slice 1 is implemented, verified locally and published as `968747c`; see [LLD Section 3.14](lld.md#314-local-game-discovery-and-availability-implementation-slice). Slice 2 implementation/local gates pass, but final independent review remains pending; see [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Other slice statuses are unchanged. Slice grouping does not authorize later implementation, deployment or publication.
 
 - `[ ]` means pending implementation or verification; `[x]` means completed and verified locally, not publication or production certification.
 - Mark a pending item complete only after implementation and relevant native/Worker verification. Approval of a design is not implementation evidence.
 - All DO-001–DO-107 design decisions are approved; no schema-policy approvals remain pending. Unfinished wire details and production measurements remain distinct from those approvals.
-- Follow later approved decisions and the completion notes in [LLD Sections 3.9–3.14](lld.md), rather than treating every older generic “TBD” statement as a missing feature.
+- Follow later approved decisions and the completion notes in [LLD Sections 3.9–3.15](lld.md), rather than treating every older generic “TBD” statement as a missing feature.
 - Frontend work is outside this backend checklist. New implementation scope and commit/push need separate authorization; deployment, infrastructure/account creation and secret provisioning remain unauthorized.
 
 Sources: [requirements](requirements.md), [HLD](hld.md), [LLD](lld.md), [API operation catalog](api-design.md#operation-catalog), [Durable Object design](durable-object-design.md#outstanding-decisions), and [provider research](research.md).
@@ -31,13 +31,18 @@ References: API C1/C2/C4/D3; DO-011–018. Existing History F3/F4 remains separa
 
 Goal: restore the same retained player after lost/expired session authority, without allocating another seat or board.
 
-- [ ] Finalize D13/D14 request, response, error and retry contracts, preserving secret-free receipts and no credential replay.
-- [ ] Implement D13 `recover_player_session`: code, exact current alias and enrolled answer proof only; no terminal recovery or alternative ownership proof.
-- [ ] Verify outside the write transaction, then revalidate lifecycle, membership, current alias and unchanged verifier/normalization version at commit.
-- [ ] Advance the player session epoch, invalidate predecessor sessions, issue a fresh fixed-life session and durably fence/close predecessor sockets.
-- [ ] Implement D14 PUT/DELETE own recovery answer in Awaiting Players/In Progress without rotating or extending the current session.
-- [ ] Add Game-owned recovery rate-limit buckets with approved failure-only accounting, HMAC subject keys, trusted caller/game aggregation and expiry cleanup.
-- [ ] Add migrations and tests for proof failure, answer-change/recovery races, rollback, lost response, old-socket denial and secret redaction.
+The user authorized local Slice 2 implementation after Slice 1 publication. Its implementation and integrated local gates are verified; final independent review remains pending. The user has now separately authorized committing and pushing Slice 2 with that review gate still outstanding. This does not authorize deployment, provisioning or later implementation.
+
+- [x] Finalize D13/D14 request, response, error and retry contracts, preserving secret-free receipts and no credential replay.
+- [x] Implement D13 `recover_player_session`: code, exact current alias and enrolled answer proof only; no terminal recovery or alternative ownership proof.
+- [x] Verify outside the write transaction, then revalidate lifecycle, membership, current alias and unchanged verifier/normalization version at commit.
+- [x] Advance the player session epoch, invalidate predecessor sessions, issue a fresh fixed-life session and durably fence/close predecessor sockets.
+- [x] Implement D14 PUT/DELETE own recovery answer in Awaiting Players/In Progress without rotating or extending the current session.
+- [x] Add Game-owned recovery rate-limit buckets with approved failure-only accounting, HMAC subject keys, trusted caller/game aggregation and expiry cleanup.
+- [x] Add migrations and tests for proof failure, answer-change/recovery races, rollback, lost response, old-socket denial and secret redaction.
+- [ ] Complete final independent review sign-off after the repaired response-release findings. The reviewer provider stopped before a final verdict; passing parent reruns do not substitute for that verdict.
+
+Local contracts and gate evidence: [API notes](api-design.md#local-slice-2-player-recovery-implementation-choices), [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Final executed gates: 756 native tests in both profiles, 12 doctests, 247 fresh release Workerd cases and 95 actual HTTPS/WSS checks. At the verification checkpoint no Slice 2 commit or push had occurred. Commit/push is now separately authorized with the final-review gate still pending; no deployment or provisioning has occurred.
 
 References: API D13/D14; DO-049–052/085–087. Optional answer normalization and verifier enrollment at initial player admission already exist; do not duplicate that foundation. Production KDF/Unicode certification remains in Slice 9.
 

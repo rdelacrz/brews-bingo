@@ -3,6 +3,7 @@ use super::{
     edge, game_peers,
     game_wire::{GameAction, GameCookieWire, GameIngress, GameOwnerResponse, GameRejection},
 };
+use crate::auth::Runtime as _;
 use crate::{
     api::{self, ApiError, GamePayload},
     config::get_backend_config,
@@ -65,6 +66,41 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
     )?;
     let mut ingress =
         GameIngress::from_decoded(&mut decoded, &bytes).map_err(|_| ApiError::InvalidInput)?;
+    if ingress.operation == GameAction::RecoverPlayer {
+        let GamePayload::RecoverPlayer(input) =
+            ingress.payload().map_err(|_| ApiError::InvalidInput)?
+        else {
+            return Err(ApiError::InvalidInput);
+        };
+        let code = match brews_domain::games::GameCode::from_lookup(&input.game_code) {
+            Ok(code) => code,
+            Err(_) => return rejected(GameRejection::InvalidRecovery),
+        };
+        let caller = parts
+            .headers
+            .get("cf-connecting-ip")
+            .and_then(|h| h.to_str().ok())
+            .filter(|s| s.len() <= 45)
+            .and_then(|s| s.parse::<std::net::IpAddr>().ok())
+            .ok_or(ApiError::Unavailable)?;
+        ingress.recovery_caller = Some(caller.to_string());
+        match game_peers::directory_reply(
+            env,
+            super::game_directory::DirectoryGameRequest::DiscoveryCode { game_code: code },
+        )
+        .await
+        .map_err(|_| ApiError::Unavailable)?
+        {
+            super::game_directory::DirectoryGameOutcome::Lookup {
+                game_id: Some(game_id),
+                ..
+            } => ingress.game_id = Some(game_id),
+            super::game_directory::DirectoryGameOutcome::Lookup { game_id: None, .. } => {
+                return rejected(GameRejection::InvalidRecovery);
+            }
+            _ => return Err(ApiError::Unavailable),
+        }
+    }
     if ingress.operation == GameAction::Create {
         let GamePayload::Create(input) = ingress.payload().map_err(|_| ApiError::InvalidInput)?
         else {
@@ -159,6 +195,115 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .validate_for(&ingress)
         .map_err(|_| ApiError::Unavailable)?;
     match &result {
+        GameOwnerResponse::RecoveryAnswer {
+            response,
+            valid_until,
+        } => {
+            let observed_at = super::runtime::WorkerRuntime.now_ms();
+            if observed_at >= *valid_until {
+                fence_recovery_output(env, &ingress, *valid_until, observed_at).await?;
+                return rejected(GameRejection::Unauthorized);
+            }
+            let checked: GameOwnerResponse = game_peers::call(
+                env,
+                "GAMES",
+                &game_id.to_string(),
+                "/command",
+                &ingress,
+                brews_contracts::games::GAME_FRAME_MAX_BYTES
+                    + super::game_wire::GAME_WIRE_MAX_BYTES,
+            )
+            .await
+            .map_err(|_| ApiError::Unavailable)?;
+            checked
+                .validate_for(&ingress)
+                .map_err(|_| ApiError::Unavailable)?;
+            match &checked {
+                GameOwnerResponse::RecoveryAnswer {
+                    response: current,
+                    valid_until,
+                } => {
+                    if !same_receipt(answer_receipt(response)?, answer_receipt(current)?)? {
+                        return Err(ApiError::Unavailable);
+                    }
+                    let observed_at = super::runtime::WorkerRuntime.now_ms();
+                    if observed_at >= *valid_until {
+                        fence_recovery_output(env, &ingress, *valid_until, observed_at).await?;
+                        return rejected(GameRejection::Unauthorized);
+                    }
+                    json_response(
+                        200,
+                        response.encode_json().map_err(|_| ApiError::Unavailable)?,
+                    )
+                }
+                GameOwnerResponse::Rejected { code } => rejected(*code),
+                _ => Err(ApiError::Unavailable),
+            }
+        }
+        GameOwnerResponse::Recovered {
+            receipt,
+            game,
+            cookie,
+            valid_until,
+        } => {
+            if let GameCookieWire::Player { token, expires_at } = cookie {
+                ingress.operation = GameAction::RecoveryOutput;
+                ingress.session_token = Some(token.to_owned());
+                let observed_at = super::runtime::WorkerRuntime.now_ms();
+                if let Some(deadline) = valid_until.filter(|deadline| *deadline <= observed_at) {
+                    fence_recovery_output(env, &ingress, deadline, observed_at).await?;
+                    return rejected(GameRejection::InvalidRecovery);
+                }
+                // A new owner cut follows each await; an expired initial cut is never retried.
+                let checked: GameOwnerResponse = game_peers::call(
+                    env,
+                    "GAMES",
+                    &game_id.to_string(),
+                    "/command",
+                    &ingress,
+                    brews_contracts::games::GAME_FRAME_MAX_BYTES
+                        + super::game_wire::GAME_WIRE_MAX_BYTES,
+                )
+                .await
+                .map_err(|_| ApiError::Unavailable)?;
+                checked
+                    .validate_for(&ingress)
+                    .map_err(|_| ApiError::Unavailable)?;
+                match checked {
+                    GameOwnerResponse::Recovered {
+                        receipt: current_receipt,
+                        game,
+                        valid_until: Some(valid_until),
+                        cookie:
+                            GameCookieWire::Player {
+                                ref token,
+                                expires_at: current_expiry,
+                            },
+                    } => {
+                        let observed_at = super::runtime::WorkerRuntime.now_ms();
+                        if current_expiry != *expires_at
+                            || !same_receipt(receipt, &current_receipt)?
+                        {
+                            return Err(ApiError::Unavailable);
+                        }
+                        if observed_at >= valid_until {
+                            fence_recovery_output(env, &ingress, valid_until, observed_at).await?;
+                            return rejected(GameRejection::InvalidRecovery);
+                        }
+                        recovery_output(
+                            game_id,
+                            &current_receipt,
+                            game.as_ref(),
+                            Some((token, current_expiry)),
+                        )
+                    }
+                    GameOwnerResponse::Rejected { code } => rejected(code),
+                    _ => Err(ApiError::Unavailable),
+                }
+            } else {
+                recovery_output(game_id, receipt, game.as_ref(), None)
+            }
+        }
         GameOwnerResponse::Rejected { code } => rejected(*code),
         GameOwnerResponse::Synced { response } => json_response(
             200,
@@ -187,6 +332,99 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             Ok(output)
         }
     }
+}
+fn same_receipt(
+    first: &brews_contracts::games::GameReceipt,
+    second: &brews_contracts::games::GameReceipt,
+) -> Result<bool, ApiError> {
+    Ok(first.encode_json().map_err(|_| ApiError::Unavailable)?
+        == second.encode_json().map_err(|_| ApiError::Unavailable)?)
+}
+fn answer_receipt(
+    response: &brews_contracts::games::GameResponse,
+) -> Result<&brews_contracts::games::GameReceipt, ApiError> {
+    match response {
+        brews_contracts::games::GameResponse::RecoveryAnswerChanged { receipt, .. }
+        | brews_contracts::games::GameResponse::Committed { receipt } => Ok(receipt),
+        _ => Err(ApiError::Unavailable),
+    }
+}
+fn recovery_output(
+    game_id: GameId,
+    receipt: &brews_contracts::games::GameReceipt,
+    game: Option<&brews_contracts::games::GameView>,
+    cookie: Option<(&str, i64)>,
+) -> Result<Response, ApiError> {
+    let value = if let Some(game) = game {
+        let brews_contracts::games::GameView::Player {
+            player_id,
+            alias,
+            board,
+            ..
+        } = game
+        else {
+            return Err(ApiError::Unavailable);
+        };
+        serde_json::json!({"receipt":receipt,"membership":{"player_id":player_id,"alias":alias},"game":game,"board":board})
+    } else {
+        serde_json::json!({"receipt":receipt})
+    };
+    let mut response = json_response(
+        200,
+        serde_json::to_vec(&value).map_err(|_| ApiError::Unavailable)?,
+    )?;
+    if let Some((token, expires)) = cookie {
+        set_cookie(
+            &mut response,
+            api::PLAYER_COOKIE_NAME,
+            game_id,
+            token,
+            expires,
+        )?;
+    }
+    Ok(response)
+}
+async fn fence_recovery_output(
+    env: &Env,
+    ingress: &GameIngress,
+    deadline: i64,
+    observed_at: i64,
+) -> Result<(), ApiError> {
+    let game = ingress.game_id.ok_or(ApiError::Unavailable)?;
+    let request = super::discovery_wire::DiscoveryOwnerRequest {
+        game_id: game,
+        action: super::discovery_wire::DiscoveryAction::Player {
+            token: game_peers::SecretToken::new(
+                ingress
+                    .session_token
+                    .as_deref()
+                    .ok_or(ApiError::Unavailable)?,
+            ),
+        },
+        expiry: Some(super::discovery_wire::ObservedDiscoveryExpiry {
+            deadline,
+            observed_at,
+        }),
+    };
+    let reply: super::discovery_wire::DiscoveryOwnerReply = game_peers::call(
+        env,
+        "GAMES",
+        &game.to_string(),
+        "/discovery",
+        &request,
+        super::discovery_wire::DISCOVERY_REPLY_MAX_BYTES,
+    )
+    .await
+    .map_err(|_| ApiError::Unavailable)?;
+    super::discovery_wire::verify(&request, &reply, super::runtime::WorkerRuntime.now_ms())
+        .map_err(|_| ApiError::Unavailable)?;
+    if !matches!(
+        reply.outcome,
+        super::discovery_wire::DiscoveryOutcome::ExpiryFenced { .. }
+    ) {
+        return Err(ApiError::Unavailable);
+    }
+    Ok(())
 }
 fn set_cookie(
     response: &mut Response,
@@ -232,6 +470,10 @@ pub(super) fn rejected(code: GameRejection) -> Result<Response, ApiError> {
         GameRejection::NotFound => (404, "not_found", "game not found"),
         GameRejection::Conflict => (409, "conflict", "game command conflict"),
         GameRejection::StaleCommand => (409, "stale_command", "stale game command"),
+        GameRejection::InvalidRecovery => {
+            (401, "invalid_recovery", "invalid player recovery proof")
+        }
+        GameRejection::RecoveryBlocked => (429, "recovery_blocked", "player recovery blocked"),
         GameRejection::Unavailable => (503, "service_unavailable", "game service unavailable"),
     };
     let mut response = json_response(

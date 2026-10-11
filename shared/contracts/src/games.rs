@@ -499,6 +499,15 @@ map_enum!(pub GameOutcome, "operation", {
         #[serde(deserialize_with = "safe_timestamp")]
         session_expires_at: i64,
     },
+    PlayerRecovered {
+        player_id: PlayerId,
+        view_revision: u64,
+        session_expires_at: i64,
+    },
+    RecoveryAnswerChanged {
+        recovery_enabled: bool,
+        view_revision: u64,
+    },
     CallAccepted {
         call: CallView,
         remaining_count: u32,
@@ -569,7 +578,13 @@ impl GameReceipt {
                 }
                 *view_revision
             }
-            GameOutcome::PlayerJoined {
+            GameOutcome::RecoveryAnswerChanged { view_revision, .. } => *view_revision,
+            GameOutcome::PlayerRecovered {
+                view_revision,
+                session_expires_at,
+                ..
+            }
+            | GameOutcome::PlayerJoined {
                 view_revision,
                 session_expires_at,
                 ..
@@ -721,6 +736,12 @@ map_enum!(pub GameResponse, "result", {
         view_revision: u64,
         receipt: GameReceipt,
     },
+    RecoveryAnswerChanged {
+        recovery_enabled: bool,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+        receipt: GameReceipt,
+    },
     CallAccepted {
         call: CallView,
         remaining_count: u32,
@@ -807,6 +828,14 @@ impl GameResponse {
                 validate_alias(alias).map_err(|_| GameDecodeError)? == alias
                     && matches!(&receipt.outcome, GameOutcome::PlayerJoined { player_id: player, view_revision: revision, session_expires_at: expiry }
                         if player == player_id && revision == view_revision && expiry == session_expires_at)
+            }
+            Self::RecoveryAnswerChanged {
+                recovery_enabled,
+                view_revision,
+                receipt,
+            } => {
+                receipt.validate()?;
+                matches!(receipt.outcome, GameOutcome::RecoveryAnswerChanged { recovery_enabled: enabled, view_revision: revision } if enabled == *recovery_enabled && revision == *view_revision)
             }
             Self::CallAccepted {
                 call,

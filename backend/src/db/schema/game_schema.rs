@@ -1,7 +1,7 @@
 //! Normalized, isolated Game-owner schema. No authoritative JSON collections.
 use crate::limits::JS_SAFE_INTEGER_MAX;
 use brews_domain::games::GameState;
-pub const GAME_SCHEMA_VERSION: i64 = 2;
+pub const GAME_SCHEMA_VERSION: i64 = 3;
 pub const PREVIOUS_GAME_SCHEMA_VERSION: i64 = 1;
 pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_admission_contexts",
@@ -21,7 +21,7 @@ pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_sessions",
     "game_view_revisions",
 ];
-pub const GAME_TABLES: [&str; 23] = [
+pub const GAME_TABLES: [&str; 25] = [
     "game_admission_contexts",
     "game_board_cells",
     "game_boards",
@@ -41,7 +41,9 @@ pub const GAME_TABLES: [&str; 23] = [
     "game_receipts",
     "game_record",
     "game_recovery",
+    "game_recovery_buckets",
     "game_sessions",
+    "game_socket_closures",
     "game_terminal_route",
     "game_terminal_views",
     "game_view_revisions",
@@ -134,5 +136,21 @@ pub fn statements() -> Vec<String> {
             *statement = statement.replace(&source, &bounded);
         }
     }
+    statements.extend(recovery_coordination_statements());
     statements
+}
+
+pub fn recovery_coordination_statements() -> Vec<String> {
+    let max = JS_SAFE_INTEGER_MAX;
+    let failures = crate::limits::RATE_LIMIT_MAX_FAILURES;
+    vec![
+        format!(
+            "CREATE TABLE game_recovery_buckets(subject_key BLOB PRIMARY KEY CHECK(length(subject_key)=32),window_started_at INTEGER NOT NULL CHECK(window_started_at BETWEEN 0 AND {max}),attempt_count INTEGER NOT NULL CHECK(attempt_count BETWEEN 1 AND {failures}),blocked_until INTEGER CHECK(blocked_until IS NULL OR blocked_until BETWEEN 0 AND {max}),expires_at INTEGER NOT NULL CHECK(expires_at BETWEEN 0 AND {max}),CHECK(expires_at>window_started_at),CHECK((attempt_count={failures} AND blocked_until=expires_at) OR (attempt_count<{failures} AND blocked_until IS NULL))) STRICT"
+        ),
+        format!(
+            "CREATE TABLE game_socket_closures(connection_id TEXT PRIMARY KEY,session_id TEXT NOT NULL,player_id TEXT NOT NULL,epoch INTEGER NOT NULL CHECK(epoch BETWEEN 0 AND {max}),next_attempt_at INTEGER NOT NULL CHECK(next_attempt_at BETWEEN 0 AND {max}),attempt_count INTEGER NOT NULL CHECK(attempt_count BETWEEN 0 AND 4294967295)) STRICT"
+        ),
+        "CREATE INDEX game_recovery_bucket_expiry ON game_recovery_buckets(expires_at)".into(),
+        "CREATE INDEX game_socket_closure_retry ON game_socket_closures(next_attempt_at)".into(),
+    ]
 }

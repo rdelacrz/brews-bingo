@@ -15,9 +15,14 @@ pub use users::{UsersRequest, decode_users};
 mod games;
 #[cfg(any(test, target_arch = "wasm32"))]
 pub(crate) use games::decode_empty_game_body;
+#[allow(
+    unused_imports,
+    reason = "Private Worker wire is also compiled by native boundary tests."
+)]
+pub(crate) use games::decode_recovery_input;
 pub use games::{
     ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameViewSelector, GamesRequest,
-    PLAYER_COOKIE_NAME, decode_games, game_cookie_path,
+    PLAYER_COOKIE_NAME, RecoverPlayerInput, RecoveryAnswerInput, decode_games, game_cookie_path,
 };
 
 mod discovery;

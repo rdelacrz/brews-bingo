@@ -26,6 +26,9 @@ pub enum GameOperation {
     Exit,
     AdmissionContext,
     JoinPlayer,
+    RecoverPlayer,
+    PutRecoveryAnswer,
+    DeleteRecoveryAnswer,
     Stream,
     Sync,
 }
@@ -42,7 +45,44 @@ pub enum GamePayload {
     Cancel(CancelGameInput),
     AdmissionContext(AdmissionContextInput),
     JoinPlayer(JoinPlayer),
+    RecoverPlayer(RecoverPlayerInput),
+    RecoveryAnswer(RecoveryAnswerInput),
     Empty,
+}
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoverPlayerInput {
+    pub game_code: String,
+    pub alias: String,
+    pub recovery_answer: String,
+}
+impl Drop for RecoverPlayerInput {
+    fn drop(&mut self) {
+        self.recovery_answer.zeroize();
+    }
+}
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoveryAnswerInput {
+    pub recovery_answer: String,
+}
+impl Drop for RecoveryAnswerInput {
+    fn drop(&mut self) {
+        self.recovery_answer.zeroize();
+    }
+}
+pub(crate) fn decode_recovery_input<T: serde::de::DeserializeOwned>(
+    body: &[u8],
+) -> Result<T, ApiError> {
+    if body.len() > BODY_LIMIT
+        || body
+            .iter()
+            .find(|b| !matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
+            != Some(&b'{')
+    {
+        return Err(ApiError::InvalidInput);
+    }
+    serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)
 }
 /// Secret-bearing request deliberately has no Debug implementation.
 ///
@@ -88,9 +128,22 @@ pub fn decode_games(
     body: &[u8],
     origin: &str,
 ) -> Result<GamesRequest, ApiError> {
-    let (operation, game_id) = route(path)?;
+    let (mut operation, game_id) = route(path)?;
+    if operation == GameOperation::PutRecoveryAnswer && method == Method::DELETE {
+        operation = GameOperation::DeleteRecoveryAnswer;
+    }
     let read = matches!(operation, GameOperation::Sync | GameOperation::Stream);
-    if method != if read { Method::GET } else { Method::POST } {
+    if method
+        != if read {
+            Method::GET
+        } else if operation == GameOperation::PutRecoveryAnswer {
+            Method::PUT
+        } else if operation == GameOperation::DeleteRecoveryAnswer {
+            Method::DELETE
+        } else {
+            Method::POST
+        }
+    {
         return Err(ApiError::MethodNotAllowed);
     }
     validate_headers(headers)?;
@@ -122,6 +175,14 @@ pub fn decode_games(
         require_json(headers)?;
     }
     let payload = match operation {
+        GameOperation::RecoverPlayer => GamePayload::RecoverPlayer(decode_recovery_input(body)?),
+        GameOperation::PutRecoveryAnswer => {
+            GamePayload::RecoveryAnswer(decode_recovery_input(body)?)
+        }
+        GameOperation::DeleteRecoveryAnswer => {
+            decode_empty_game_body(body)?;
+            GamePayload::Empty
+        }
         GameOperation::Create => {
             GamePayload::Create(CreateGame::decode_json(body).map_err(|_| ApiError::InvalidInput)?)
         }
@@ -167,7 +228,13 @@ pub fn decode_games(
             named_cookie(headers, PLAYER_COOKIE_NAME)?,
             named_cookie(headers, ADMISSION_COOKIE_NAME)?,
         )
-    } else if view == Some(GameViewSelector::Player) {
+    } else if operation == GameOperation::RecoverPlayer {
+        (None, None)
+    } else if matches!(
+        operation,
+        GameOperation::PutRecoveryAnswer | GameOperation::DeleteRecoveryAnswer
+    ) || view == Some(GameViewSelector::Player)
+    {
         (named_cookie(headers, PLAYER_COOKIE_NAME)?, None)
     } else {
         (super::decode::session_cookie(headers)?, None)
@@ -319,6 +386,9 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
     if path.len() > GAME_PATH_MAX_BYTES {
         return Err(ApiError::NotFound);
     }
+    if path == "/api/player-recovery" {
+        return Ok((GameOperation::RecoverPlayer, None));
+    }
     if path == "/api/games" {
         return Ok((GameOperation::Create, None));
     }
@@ -337,6 +407,7 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
         "exit" => GameOperation::Exit,
         "admission-context" => GameOperation::AdmissionContext,
         "players" => GameOperation::JoinPlayer,
+        "membership/recovery-answer" => GameOperation::PutRecoveryAnswer,
         "sync" => GameOperation::Sync,
         "stream" => GameOperation::Stream,
         _ => return Err(ApiError::NotFound),

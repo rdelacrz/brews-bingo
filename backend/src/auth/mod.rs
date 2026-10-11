@@ -81,6 +81,8 @@ impl Default for AuthPolicy {
 pub trait Runtime {
     fn now_ms(&self) -> i64;
     fn fill_random(&self, bytes: &mut [u8]) -> Result<(), AuthError>;
+    /// Native runtimes may model a concurrent authority change at the KDF boundary.
+    fn player_recovery_proof_complete(&self) {}
 }
 mod error;
 pub use error::AuthError;
