@@ -3,7 +3,7 @@ use super::{
     database::OwnerDatabase,
     game_accounts::{AccountCloseReply, AccountCloseRequest, CloseResult},
     game_peers,
-    game_recovery_wire::{GameRecoveryOutcome, GameRecoveryReply, GameRecoveryRequest},
+    game_recovery::wire::{GameRecoveryOutcome, GameRecoveryReply, GameRecoveryRequest},
     game_sockets::{Attachment, CloseCode, Viewer, ready_state},
     game_wire::{GameAction, GameCookieWire, GameIngress, GameOwnerResponse, GameRejection},
     runtime::WorkerRuntime,
@@ -1003,7 +1003,7 @@ impl DurableObject for GameObject {
         );
         if path == "/discovery" {
             let request =
-                match game_peers::decode::<super::discovery_wire::DiscoveryOwnerRequest>(&bytes) {
+                match game_peers::decode::<super::discovery::wire::DiscoveryOwnerRequest>(&bytes) {
                     Ok(request) => request,
                     Err(_) => return Response::error("invalid private discovery request", 400),
                 };
@@ -1011,7 +1011,7 @@ impl DurableObject for GameObject {
         }
         if path == "/history" {
             let request =
-                match game_peers::decode::<super::history_wire::HistoryOwnerRequest>(&bytes) {
+                match game_peers::decode::<super::history::wire::HistoryOwnerRequest>(&bytes) {
                     Ok(request) => request,
                     Err(_) => return Response::error("invalid private History request", 400),
                 };

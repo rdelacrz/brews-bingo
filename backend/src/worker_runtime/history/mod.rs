@@ -1,9 +1,12 @@
 //! Public History reads: bounded routing index, authoritative owner hydration.
+mod owner;
+pub(super) mod wire;
+
+use self::wire::{HistoryOwnerOutcome, HistoryOwnerReply, HistoryOwnerRequest};
 use super::{
     edge,
     game_directory::{DirectoryGameOutcome, DirectoryGameRequest},
     game_peers,
-    history_wire::{self, HistoryOwnerOutcome, HistoryOwnerReply, HistoryOwnerRequest},
 };
 use crate::{
     api::{self, ApiError, HistoryCommand, HistoryCursor},
@@ -74,11 +77,11 @@ async fn owner(
         &request.game_id.to_string(),
         "/history",
         request,
-        history_wire::HISTORY_REPLY_MAX_BYTES,
+        wire::HISTORY_REPLY_MAX_BYTES,
     )
     .await
     .map_err(peer_error)?;
-    history_wire::verify_owner(request, reply, super::WorkerRuntime.now_ms()).map_err(peer_error)
+    wire::verify_owner(request, reply, super::WorkerRuntime.now_ms()).map_err(peer_error)
 }
 async fn confirm_expiry_denial(
     env: &Env,
@@ -150,7 +153,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, HistoryError>
             match outcome {
                 HistoryOwnerOutcome::Detail { history } => {
                     let now = super::WorkerRuntime.now_ms();
-                    history_wire::validate_history(&history, now).map_err(peer_error)?;
+                    wire::validate_history(&history, now).map_err(peer_error)?;
                     if history.expires_at <= now {
                         confirm_expiry_denial(env, token, game_id).await?;
                         let proof = current(env, token).await?;
@@ -257,7 +260,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, HistoryError>
                 }
                 let now = super::WorkerRuntime.now_ms();
                 for s in &games {
-                    history_wire::validate_summary(s, now).map_err(peer_error)?;
+                    wire::validate_summary(s, now).map_err(peer_error)?;
                 }
                 let expired = games
                     .iter()

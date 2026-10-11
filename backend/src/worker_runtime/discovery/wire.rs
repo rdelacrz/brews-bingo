@@ -1,5 +1,5 @@
 //! Closed private discovery messages; tokens are zeroized and never part of replies.
-use super::game_peers::{
+use super::super::game_peers::{
     GamePeerError, SecretToken, object, optional_integer, optional_object, positive_integer,
 };
 use brews_contracts::discovery::{CurrentGameSummary, GameAvailability, GameEntry, GameSlot};
@@ -9,10 +9,10 @@ use brews_domain::{
 };
 use serde::{Deserialize, Serialize};
 
-pub(super) const DISCOVERY_REPLY_MAX_BYTES: usize = 4096;
+pub(in crate::worker_runtime) const DISCOVERY_REPLY_MAX_BYTES: usize = 4096;
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "view", rename_all = "snake_case", deny_unknown_fields)]
-pub(super) enum DiscoveryAction {
+pub(in crate::worker_runtime) enum DiscoveryAction {
     Summary { token: SecretToken },
     Entry { game_code: GameCode },
     Account { token: SecretToken },
@@ -20,7 +20,7 @@ pub(super) enum DiscoveryAction {
 }
 #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct ObservedDiscoveryExpiry {
+pub(in crate::worker_runtime) struct ObservedDiscoveryExpiry {
     #[serde(deserialize_with = "positive_integer")]
     pub deadline: i64,
     #[serde(deserialize_with = "positive_integer")]
@@ -28,7 +28,7 @@ pub(super) struct ObservedDiscoveryExpiry {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct DiscoveryOwnerRequest {
+pub(in crate::worker_runtime) struct DiscoveryOwnerRequest {
     pub game_id: GameId,
     #[serde(deserialize_with = "object")]
     pub action: DiscoveryAction,
@@ -37,7 +37,7 @@ pub(super) struct DiscoveryOwnerRequest {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
-pub(super) enum DiscoveryOutcome {
+pub(in crate::worker_runtime) enum DiscoveryOutcome {
     Current {
         slot: GameSlot,
         #[serde(deserialize_with = "optional_object")]
@@ -61,7 +61,7 @@ pub(super) enum DiscoveryOutcome {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct DiscoveryOwnerReply {
+pub(in crate::worker_runtime) struct DiscoveryOwnerReply {
     pub game_id: GameId,
     #[serde(deserialize_with = "positive_integer")]
     pub checked_at: i64,
@@ -76,7 +76,7 @@ fn live(state: GameState) -> bool {
 fn flags(state: GameState, player: bool, spectator: bool) -> bool {
     !spectator && (!player || state == GameState::AwaitingPlayers)
 }
-pub(super) fn verify(
+pub(in crate::worker_runtime) fn verify(
     request: &DiscoveryOwnerRequest,
     reply: &DiscoveryOwnerReply,
     now: i64,
@@ -195,12 +195,12 @@ pub(super) fn verify(
 
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct DiscoveryDirectoryRequest {
+pub(in crate::worker_runtime) struct DiscoveryDirectoryRequest {
     pub token: SecretToken,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
-pub(super) enum DiscoveryDirectoryReply {
+pub(in crate::worker_runtime) enum DiscoveryDirectoryReply {
     Route {
         #[serde(deserialize_with = "optional_object")]
         route: Option<crate::directory::games::DiscoveryRoute>,
@@ -234,7 +234,8 @@ mod tests {
         let request = request();
         let original = serde_json::to_string(&request).unwrap();
         assert!(
-            super::super::game_peers::decode::<DiscoveryOwnerRequest>(original.as_bytes()).is_ok()
+            super::super::super::game_peers::decode::<DiscoveryOwnerRequest>(original.as_bytes())
+                .is_ok()
         );
         for bad in [
             original.replace(
@@ -249,7 +250,8 @@ mod tests {
             ),
         ] {
             assert!(
-                super::super::game_peers::decode::<DiscoveryOwnerRequest>(bad.as_bytes()).is_err()
+                super::super::super::game_peers::decode::<DiscoveryOwnerRequest>(bad.as_bytes())
+                    .is_err()
             );
         }
         let reply = DiscoveryOwnerReply {
@@ -282,7 +284,8 @@ mod tests {
             ),
         ] {
             assert!(
-                super::super::game_peers::decode::<DiscoveryOwnerReply>(bad.as_bytes()).is_err()
+                super::super::super::game_peers::decode::<DiscoveryOwnerReply>(bad.as_bytes())
+                    .is_err()
             );
         }
     }
@@ -360,7 +363,8 @@ mod tests {
             ),
         ] {
             assert!(
-                super::super::game_peers::decode::<DiscoveryOwnerRequest>(bad.as_bytes()).is_err()
+                super::super::super::game_peers::decode::<DiscoveryOwnerRequest>(bad.as_bytes())
+                    .is_err()
             );
         }
     }

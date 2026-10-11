@@ -1,5 +1,5 @@
 //! Closed History peer replies and semantic release validation.
-use super::game_peers::{GamePeerError, SecretToken, object};
+use super::super::game_peers::{GamePeerError, SecretToken, object};
 use brews_contracts::{
     games::{BoardView, CallView, FinalBoardView, GameView, WinnerView},
     history::{History, HistorySummary},
@@ -10,17 +10,17 @@ use brews_domain::{
 };
 use serde::{Deserialize, Serialize};
 
-pub(super) const HISTORY_REPLY_MAX_BYTES: usize = 256 * 1024;
+pub(in crate::worker_runtime) const HISTORY_REPLY_MAX_BYTES: usize = 256 * 1024;
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct HistoryOwnerRequest {
+pub(in crate::worker_runtime) struct HistoryOwnerRequest {
     pub game_id: GameId,
     pub token: SecretToken,
     pub summary: bool,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
-pub(super) enum HistoryOwnerOutcome {
+pub(in crate::worker_runtime) enum HistoryOwnerOutcome {
     Summary { summary: HistorySummary },
     Detail { history: History },
     NotFound {},
@@ -29,12 +29,15 @@ pub(super) enum HistoryOwnerOutcome {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct HistoryOwnerReply {
+pub(in crate::worker_runtime) struct HistoryOwnerReply {
     pub game_id: GameId,
     #[serde(deserialize_with = "object")]
     pub outcome: HistoryOwnerOutcome,
 }
-pub(super) fn validate_summary(s: &HistorySummary, now: i64) -> Result<(), GamePeerError> {
+pub(in crate::worker_runtime) fn validate_summary(
+    s: &HistorySummary,
+    now: i64,
+) -> Result<(), GamePeerError> {
     if !(1..=now).contains(&s.started_at)
         || !(s.started_at..=now).contains(&s.ended_at)
         || crate::db::game::add_three_calendar_months(s.ended_at).ok() != Some(s.expires_at)
@@ -50,7 +53,10 @@ pub(super) fn validate_summary(s: &HistorySummary, now: i64) -> Result<(), GameP
     }
     Ok(())
 }
-pub(super) fn validate_history(h: &History, now: i64) -> Result<(), GamePeerError> {
+pub(in crate::worker_runtime) fn validate_history(
+    h: &History,
+    now: i64,
+) -> Result<(), GamePeerError> {
     validate_summary(&h.summary(), now)?;
     if !h
         .players
@@ -106,7 +112,7 @@ pub(super) fn validate_history(h: &History, now: i64) -> Result<(), GamePeerErro
     };
     view.validate().map_err(|_| GamePeerError::Unavailable)
 }
-pub(super) fn verify_owner(
+pub(in crate::worker_runtime) fn verify_owner(
     request: &HistoryOwnerRequest,
     reply: HistoryOwnerReply,
     now: i64,

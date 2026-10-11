@@ -391,9 +391,9 @@ async fn fence_recovery_output(
     observed_at: i64,
 ) -> Result<(), ApiError> {
     let game = ingress.game_id.ok_or(ApiError::Unavailable)?;
-    let request = super::discovery_wire::DiscoveryOwnerRequest {
+    let request = super::discovery::wire::DiscoveryOwnerRequest {
         game_id: game,
-        action: super::discovery_wire::DiscoveryAction::Player {
+        action: super::discovery::wire::DiscoveryAction::Player {
             token: game_peers::SecretToken::new(
                 ingress
                     .session_token
@@ -401,26 +401,26 @@ async fn fence_recovery_output(
                     .ok_or(ApiError::Unavailable)?,
             ),
         },
-        expiry: Some(super::discovery_wire::ObservedDiscoveryExpiry {
+        expiry: Some(super::discovery::wire::ObservedDiscoveryExpiry {
             deadline,
             observed_at,
         }),
     };
-    let reply: super::discovery_wire::DiscoveryOwnerReply = game_peers::call(
+    let reply: super::discovery::wire::DiscoveryOwnerReply = game_peers::call(
         env,
         "GAMES",
         &game.to_string(),
         "/discovery",
         &request,
-        super::discovery_wire::DISCOVERY_REPLY_MAX_BYTES,
+        super::discovery::wire::DISCOVERY_REPLY_MAX_BYTES,
     )
     .await
     .map_err(|_| ApiError::Unavailable)?;
-    super::discovery_wire::verify(&request, &reply, super::runtime::WorkerRuntime.now_ms())
+    super::discovery::wire::verify(&request, &reply, super::runtime::WorkerRuntime.now_ms())
         .map_err(|_| ApiError::Unavailable)?;
     if !matches!(
         reply.outcome,
-        super::discovery_wire::DiscoveryOutcome::ExpiryFenced { .. }
+        super::discovery::wire::DiscoveryOutcome::ExpiryFenced { .. }
     ) {
         return Err(ApiError::Unavailable);
     }

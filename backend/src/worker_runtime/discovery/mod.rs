@@ -1,5 +1,10 @@
 //! Slice 1 edge routing. The final successful owner reply is released without another await.
-use super::{discovery_owner, discovery_wire::*, edge, game_peers};
+mod owner;
+mod reservation_lookup;
+pub(super) mod wire;
+
+use self::wire::*;
+use super::{edge, game_peers};
 use crate::{
     api::{self, ApiError, AvailabilityView, DiscoveryCommand},
     auth::Runtime,
@@ -61,8 +66,7 @@ async fn owner(
     )
     .await
     .map_err(peer_error)?;
-    super::discovery_wire::verify(request, &reply, super::WorkerRuntime.now_ms())
-        .map_err(peer_error)?;
+    wire::verify(request, &reply, super::WorkerRuntime.now_ms()).map_err(peer_error)?;
     Ok(reply)
 }
 async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryError> {
@@ -116,9 +120,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
     };
     let (game_id, action) = match &decoded.command {
         DiscoveryCommand::List { .. } | DiscoveryCommand::Current => {
-            let routing = discovery_owner::route(env)
-                .await
-                .map_err(|_| ApiError::Unavailable)?;
+            let routing = owner::route(env).await.map_err(|_| ApiError::Unavailable)?;
             let token = decoded
                 .session_token
                 .as_deref()
@@ -274,7 +276,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
         .map_err(peer_error)?;
         if !initial
             .as_ref()
-            .is_some_and(|a| discovery_owner::same_authority(a, &proof))
+            .is_some_and(|a| owner::same_authority(a, &proof))
         {
             return Err(DiscoveryError::Unauthorized);
         }

@@ -1,5 +1,5 @@
 //! Closed known-ID Game recovery metadata. Never browser authority.
-use super::{
+use super::super::{
     game_directory::{ProjectionWire, ReadyWire, WorkWire},
     game_peers::{GamePeerError, object},
 };
@@ -8,23 +8,23 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct GameRecoveryRequest {
+pub(in crate::worker_runtime) struct GameRecoveryRequest {
     #[serde(deserialize_with = "object")]
-    pub(super) work: WorkWire,
+    pub(in crate::worker_runtime) work: WorkWire,
     #[serde(deserialize_with = "Option::<GameCode>::deserialize")]
-    pub(super) game_code: Option<GameCode>,
+    pub(in crate::worker_runtime) game_code: Option<GameCode>,
 }
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct GameRecoveryReply {
+pub(in crate::worker_runtime) struct GameRecoveryReply {
     #[serde(deserialize_with = "object")]
-    pub(super) request: GameRecoveryRequest,
+    pub(in crate::worker_runtime) request: GameRecoveryRequest,
     #[serde(deserialize_with = "object")]
-    pub(super) outcome: GameRecoveryOutcome,
+    pub(in crate::worker_runtime) outcome: GameRecoveryOutcome,
 }
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
-pub(super) enum GameRecoveryOutcome {
+pub(in crate::worker_runtime) enum GameRecoveryOutcome {
     Ready {
         #[serde(deserialize_with = "object")]
         ready: ReadyWire,
@@ -43,7 +43,7 @@ pub(super) enum GameRecoveryOutcome {
     Unavailable {},
 }
 impl GameRecoveryReply {
-    pub(super) fn validate_for(
+    pub(in crate::worker_runtime) fn validate_for(
         &self,
         request: &GameRecoveryRequest,
     ) -> Result<GameRecoveryOutcome, GamePeerError> {
@@ -238,7 +238,7 @@ mod tests {
     }
     #[test]
     fn recovery_original_bytes_require_maps_nullable_fields_and_closed_shapes() {
-        use super::super::game_peers::decode;
+        use super::super::super::game_peers::decode;
         let (request, reply) = genuine_ready();
         let bytes = serde_json::to_string(&reply).unwrap();
         assert!(decode::<GameRecoveryReply>(bytes.as_bytes()).is_ok());

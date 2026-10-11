@@ -1,13 +1,11 @@
 //! Game-owner History adapter, independent of terminal view admission and grants.
-use super::{
-    WorkerRuntime,
-    game_object::GameObject,
-    game_peers,
-    history_wire::{HistoryOwnerOutcome, HistoryOwnerReply, HistoryOwnerRequest},
+use super::super::{WorkerRuntime, game_object::GameObject, game_peers};
+use super::wire::{
+    HISTORY_REPLY_MAX_BYTES, HistoryOwnerOutcome, HistoryOwnerReply, HistoryOwnerRequest,
 };
 use crate::game::GameError;
 impl GameObject {
-    pub(super) async fn execute_history(
+    pub(in crate::worker_runtime) async fn execute_history(
         &self,
         request: HistoryOwnerRequest,
     ) -> worker::Result<worker::Response> {
@@ -63,7 +61,7 @@ impl GameObject {
         });
         let bytes = game_peers::encode_limit(
             &HistoryOwnerReply { game_id, outcome },
-            super::history_wire::HISTORY_REPLY_MAX_BYTES,
+            HISTORY_REPLY_MAX_BYTES,
         )
         .map_err(|_| worker::Error::RustError("History response bound".into()))?;
         let mut response = worker::Response::from_bytes(bytes.to_vec())?;

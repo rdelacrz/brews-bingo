@@ -1,13 +1,12 @@
 //! Directory final account cut: an honest free slot after the Accounts await.
-use super::{
-    OwnerDatabase, WorkerRuntime, directory::GameDirectoryObject, discovery_wire::*, game_peers,
-};
+use super::super::{OwnerDatabase, WorkerRuntime, directory::GameDirectoryObject, game_peers};
+use super::wire::{DISCOVERY_REPLY_MAX_BYTES, DiscoveryDirectoryReply, DiscoveryDirectoryRequest};
 use crate::{
     auth::Runtime,
     db::directory::{DirectoryService, migrate_directory},
 };
 impl GameDirectoryObject {
-    pub(super) async fn execute_discovery_directory(
+    pub(in crate::worker_runtime) async fn execute_discovery_directory(
         &self,
         request: worker::Request,
     ) -> worker::Result<worker::Response> {

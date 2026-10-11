@@ -1,5 +1,9 @@
 //! Authoritative read cuts after Directory and Accounts awaits, without view admission.
-use super::{WorkerRuntime, discovery_wire::*, game_object::GameObject, game_peers};
+use super::super::{WorkerRuntime, game_object::GameObject, game_peers};
+use super::wire::{
+    DISCOVERY_REPLY_MAX_BYTES, DiscoveryAction, DiscoveryOutcome, DiscoveryOwnerReply,
+    DiscoveryOwnerRequest,
+};
 use crate::{
     auth::{GameAccountAuthority, Runtime},
     db::game::{DiscoveryValue, DiscoveryViewer},
@@ -18,12 +22,12 @@ pub(super) async fn route(
 ) -> Result<Option<crate::directory::games::DiscoveryRoute>, GameError> {
     match game_peers::directory_reply(
         env,
-        super::game_directory::DirectoryGameRequest::Discovery {},
+        super::super::game_directory::DirectoryGameRequest::Discovery {},
     )
     .await
     .map_err(peer_error)?
     {
-        super::game_directory::DirectoryGameOutcome::Discovery { route } => Ok(route),
+        super::super::game_directory::DirectoryGameOutcome::Discovery { route } => Ok(route),
         _ => Err(GameError::Storage),
     }
 }
@@ -35,7 +39,7 @@ pub(super) fn same_authority(a: &GameAccountAuthority, b: &GameAccountAuthority)
         && a.expires_at() == b.expires_at()
 }
 impl GameObject {
-    pub(super) async fn execute_discovery(
+    pub(in crate::worker_runtime) async fn execute_discovery(
         &self,
         request: DiscoveryOwnerRequest,
     ) -> worker::Result<worker::Response> {

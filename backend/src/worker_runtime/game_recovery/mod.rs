@@ -1,8 +1,8 @@
 //! Directory alarm coordination; only actual Game state is initializer/terminal evidence.
-use super::{
-    game_peers::GamePeerError,
-    game_recovery_wire::{GameRecoveryReply, GameRecoveryRequest},
-};
+pub(super) mod wire;
+
+use self::wire::{GameRecoveryReply, GameRecoveryRequest};
+use super::game_peers::GamePeerError;
 use crate::{
     auth::Runtime,
     db::{Database, directory::DirectoryService},
@@ -25,7 +25,7 @@ fn settle_probe<D: Database, R: Runtime>(
         return Ok(());
     }
     let outcome = reply.and_then(|r| r.validate_for(request));
-    if let Ok(super::game_recovery_wire::GameRecoveryOutcome::Terminal { projection }) = &outcome {
+    if let Ok(wire::GameRecoveryOutcome::Terminal { projection }) = &outcome {
         match service.release_game(crate::directory::games::TerminalProof::new(
             projection.proof()?,
         )) {
@@ -43,7 +43,7 @@ fn settle_probe<D: Database, R: Runtime>(
             Err(_) => {}
         }
     }
-    if let Ok(super::game_recovery_wire::GameRecoveryOutcome::Committed { projection }) = &outcome {
+    if let Ok(wire::GameRecoveryOutcome::Committed { projection }) = &outcome {
         match service.publish_game(projection.proof()?) {
             Ok(ack) => {
                 if !ack.published()
@@ -62,7 +62,7 @@ fn settle_probe<D: Database, R: Runtime>(
             Err(_) => {}
         }
     }
-    if let Ok(super::game_recovery_wire::GameRecoveryOutcome::Ready { ready, .. }) = outcome
+    if let Ok(wire::GameRecoveryOutcome::Ready { ready, .. }) = outcome
         && current.ready_revision().is_none()
     {
         match service.acknowledge_creation(ready.proof()?) {
@@ -286,7 +286,7 @@ mod tests {
         fn ready_reply(&self, request: &GameRecoveryRequest) -> GameRecoveryReply {
             GameRecoveryReply {
                 request: request.clone(),
-                outcome: super::super::game_recovery_wire::GameRecoveryOutcome::Ready {
+                outcome: super::wire::GameRecoveryOutcome::Ready {
                     ready: (&self.ready).into(),
                     projection: (&self.game().directory_projection().unwrap()).into(),
                 },
@@ -478,7 +478,7 @@ mod tests {
     }
     #[test]
     fn genuine_committed_lobby_recovers_directory_publication_without_faking_game_ack() {
-        use super::super::game_recovery_wire::GameRecoveryOutcome;
+        use super::wire::GameRecoveryOutcome;
         use crate::game::LobbyPreparation;
         let f = Fixture::new();
         let ack = f.directory().acknowledge_creation(f.ready).unwrap();
@@ -519,7 +519,7 @@ mod tests {
     }
     #[test]
     fn genuine_owner_terminal_evidence_releases_reservation_after_deadline() {
-        use super::super::game_recovery_wire::GameRecoveryOutcome;
+        use super::wire::GameRecoveryOutcome;
         let f = Fixture::new();
         f.rt.now.set(f.work.deadline());
         let terminal = f.game().cleanup().unwrap().unwrap();
@@ -601,7 +601,7 @@ mod tests {
             let request = f.request();
             let reply = GameRecoveryReply {
                 request: request.clone(),
-                outcome: super::super::game_recovery_wire::GameRecoveryOutcome::Absent {},
+                outcome: super::wire::GameRecoveryOutcome::Absent {},
             };
             settle_probe(&f.directory(), &request, Ok(reply)).unwrap();
             let current = f
@@ -664,7 +664,7 @@ mod tests {
     }
     #[test]
     fn recovery_accepts_actual_cancellation_without_inventing_the_hidden_code() {
-        use super::super::game_recovery_wire::GameRecoveryOutcome;
+        use super::wire::GameRecoveryOutcome;
         let f = Fixture::new();
         let ack = f.directory().acknowledge_creation(f.ready).unwrap();
         let grant = f.directory().allocate_game_code(ack).unwrap();
@@ -726,7 +726,7 @@ mod tests {
             let request = f.request();
             let reply = GameRecoveryReply {
                 request: request.clone(),
-                outcome: super::super::game_recovery_wire::GameRecoveryOutcome::Terminal {
+                outcome: super::wire::GameRecoveryOutcome::Terminal {
                     projection: wire.clone(),
                 },
             };
