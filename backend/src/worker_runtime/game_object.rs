@@ -79,6 +79,15 @@ impl GameObject {
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         db: &OwnerDatabase,
     ) -> Result<RegistryAvailability, GameError> {
+        self.persist_recovery_with_gate(service, db, || Ok(()))
+            .await
+    }
+    async fn persist_recovery_with_gate(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        gate: impl Fn() -> Result<(), GameError>,
+    ) -> Result<RegistryAvailability, GameError> {
         let delivery = DeliveryService::new(db, &WorkerRuntime).map_err(|_| GameError::Storage)?;
         let core_due = service.next_deadline()?;
         let ledger_due = delivery.next_deadline().map_err(|_| GameError::Storage)?;
@@ -114,6 +123,7 @@ impl GameObject {
             .min();
         let storage = self.state.storage();
         let alarm = storage.get_alarm().await.map_err(|_| GameError::Storage)?;
+        gate()?;
         match deadline {
             Some(due) => {
                 let now = WorkerRuntime.now_ms();
@@ -129,15 +139,20 @@ impl GameObject {
                         ))))
                         .await
                         .map_err(|_| GameError::Storage)?;
+                    gate()?;
                 }
             }
-            None if alarm.is_some() => storage
-                .delete_alarm()
-                .await
-                .map_err(|_| GameError::Storage)?,
+            None if alarm.is_some() => {
+                storage
+                    .delete_alarm()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+                gate()?;
+            }
             None => {}
         }
         storage.sync().await.map_err(|_| GameError::Storage)?;
+        gate()?;
         Ok(registry)
     }
     async fn recover(
@@ -361,7 +376,11 @@ impl GameObject {
             return Err(GameError::Conflict);
         }
         service.cleanup()?;
-        self.broadcast(&service, &db).await?;
+        // Leave first captures durable current/prepared bindings, including accepted
+        // native preparations whose owner acceptance failed. Transport follows commit.
+        if ingress.operation != GameAction::LeavePlayer {
+            self.broadcast(&service, &db).await?;
+        }
         // A caller cannot retarget an existing Game by supplying a different typed ID.
         if let Ok(projection) = service.directory_projection()
             && projection.game_id() != id
@@ -543,6 +562,53 @@ impl GameObject {
                         expires_at: session_expires_at,
                     },
                 })
+            }
+            (GameAction::RenameAlias, GamePayload::RenameAlias(input)) => {
+                let outcome = service.rename_my_alias(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    &input.alias,
+                )?;
+                self.complete_membership(&service, &db, token, outcome)
+                    .await
+            }
+            (GameAction::LeavePlayer, GamePayload::LeavePlayer(input)) => {
+                let outcome = service.leave_player(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    input.expected_state,
+                )?;
+                self.complete_membership(&service, &db, token, outcome)
+                    .await
+            }
+            (GameAction::RenameAliasOutput, GamePayload::RenameAlias(input)) => {
+                let outcome = service.membership_output(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    Some(&input.alias),
+                    None,
+                )?;
+                self.complete_membership(&service, &db, token, outcome)
+                    .await
+            }
+            (GameAction::RenameAliasReceiptOutput, GamePayload::RenameAlias(input)) => {
+                let outcome = service.membership_receipt_output(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    &input.alias,
+                )?;
+                self.complete_membership(&service, &db, token, outcome)
+                    .await
+            }
+            (GameAction::LeavePlayerOutput, GamePayload::LeavePlayer(input)) => {
+                let outcome = service.membership_output(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    None,
+                    Some(input.expected_state),
+                )?;
+                self.complete_membership(&service, &db, token, outcome)
+                    .await
             }
             (GameAction::PutRecoveryAnswer, GamePayload::RecoveryAnswer(input)) => {
                 let response = service.manage_recovery_answer(
@@ -760,6 +826,52 @@ impl GameObject {
                 Ok(success(response))
             }
             _ => Err(GameError::InvalidInput),
+        }
+    }
+    async fn complete_membership(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        token: &str,
+        outcome: crate::db::game::MembershipOutcome,
+    ) -> Result<GameOwnerResponse, GameError> {
+        self.persist_membership(service, db, token, &outcome)
+            .await?;
+        service.membership_output_deadline(token, &outcome)?;
+        self.close_recovered_sockets(service).await?;
+        service.membership_output_deadline(token, &outcome)?;
+        self.persist_membership(service, db, token, &outcome)
+            .await?;
+        service.membership_output_deadline(token, &outcome)?;
+        self.broadcast(service, db).await?;
+        service.membership_output_deadline(token, &outcome)?;
+        self.persist_membership(service, db, token, &outcome)
+            .await?;
+        let valid_until = service.membership_output_deadline(token, &outcome)?;
+        let clear_player_cookie = outcome.clears_player_cookie();
+        Ok(GameOwnerResponse::Membership {
+            response: outcome.response,
+            valid_until,
+            clear_player_cookie,
+        })
+    }
+    async fn persist_membership(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        token: &str,
+        outcome: &crate::db::game::MembershipOutcome,
+    ) -> Result<(), GameError> {
+        match self
+            .persist_recovery_with_gate(service, db, || {
+                service
+                    .membership_output_deadline(token, outcome)
+                    .map(|_| ())
+            })
+            .await?
+        {
+            RegistryAvailability::Available => Ok(()),
+            RegistryAvailability::Unavailable => Err(GameError::Storage),
         }
     }
     async fn complete_gameplay(
@@ -1051,6 +1163,24 @@ impl DurableObject for GameObject {
                     }
                 } else {
                     self.execute(&ingress).await.unwrap_or_else(|error| {
+                        use crate::observability::{
+                            PlayerLifecycleOperation, player_lifecycle_failure,
+                        };
+                        match ingress.operation {
+                            GameAction::RenameAlias
+                            | GameAction::RenameAliasOutput
+                            | GameAction::RenameAliasReceiptOutput => player_lifecycle_failure(
+                                PlayerLifecycleOperation::RenameAlias,
+                                error,
+                            ),
+                            GameAction::LeavePlayer | GameAction::LeavePlayerOutput => {
+                                player_lifecycle_failure(
+                                    PlayerLifecycleOperation::LeavePlayer,
+                                    error,
+                                )
+                            }
+                            _ => {}
+                        }
                         GameOwnerResponse::Rejected {
                             code: rejection(error),
                         }

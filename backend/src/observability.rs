@@ -106,6 +106,36 @@ pub(crate) fn failure(boundary: Boundary, reason: Failure) {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Copy)]
+pub(crate) enum PlayerLifecycleOperation {
+    RenameAlias,
+    LeavePlayer,
+}
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn player_lifecycle_failure(
+    operation: PlayerLifecycleOperation,
+    error: crate::game::GameError,
+) {
+    use crate::game::GameError;
+    let operation = match operation {
+        PlayerLifecycleOperation::RenameAlias => "rename_alias",
+        PlayerLifecycleOperation::LeavePlayer => "leave_player",
+    };
+    let reason = match error {
+        GameError::InvalidInput => Failure::InvalidInput,
+        GameError::Unauthorized | GameError::Forbidden => Failure::Forbidden,
+        GameError::Conflict | GameError::StaleRevision => Failure::Conflict,
+        GameError::StaleCommand => Failure::StaleCommand,
+        _ => Failure::Storage,
+    };
+    if reason.is_error() {
+        tracing::error!(target: TARGET, event = "boundary_failure", boundary = "game_membership", operation, reason = reason.as_str());
+    } else {
+        tracing::warn!(target: TARGET, event = "boundary_failure", boundary = "game_membership", operation, reason = reason.as_str());
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum RemovalEvent {
     Committed,

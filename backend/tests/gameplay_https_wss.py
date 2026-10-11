@@ -225,14 +225,15 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             check(availability == {'view': 'entry', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'public availability leaked detail')
             call('Start-needs-real-presence', base + '/start', body={'expected_revision': lobby['view_revision']}, session=host, expected=409)
 
-            def join(alias, answer=None):
-                _, context = call('admission-context-' + alias, base + '/admission-context', body={'game_code': code}, retry=False, cookie_effect=True)
+            def join(alias, answer=None, *, label=None):
+                label = alias if label is None else label
+                _, context = call('admission-context-' + label, base + '/admission-context', body={'game_code': code}, retry=False, cookie_effect=True)
                 body = {'game_code': code, 'alias': alias}
                 if answer is not None:
                     body['recovery_answer'] = answer
                 join_id = str(uuid.uuid7())
-                player, player_cookie = call('join-' + alias, base + '/players', body=body, session=context, command=join_id, cookie_effect=True)
-                replay, _ = call('join-receipt-only-' + alias, base + '/players', body=body, session=context, command=join_id)
+                player, player_cookie = call('join-' + label, base + '/players', body=body, session=context, command=join_id, cookie_effect=True)
+                replay, _ = call('join-receipt-only-' + label, base + '/players', body=body, session=context, command=join_id)
                 check(set(replay) == {'result', 'receipt'} and replay['result'] == 'committed', 'join retry replayed private result')
                 return player, player_cookie
 
@@ -240,6 +241,47 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             alice, alice_cookie = join('Alice', alice_answer)
             bob, bob_cookie = join('Bob')
             retained, retained_cookie = join('alice')
+            alias_path = base + '/membership/alias'
+            leave_path = base + '/membership/leave'
+            call('alias-account-cookie-is-not-player-over-TLS', alias_path, method='PATCH', body={'alias': 'Alice Updated!'}, session=host, expected=401)
+            rename_command = str(uuid.uuid7())
+            renamed, _ = call('rename-own-alias-over-TLS', alias_path, method='PATCH', body={'alias': ' Alice Updated! '}, session=alice_cookie, command=rename_command)
+            check(renamed['player_id'] == alice['player_id'] and renamed['alias'] == 'Alice Updated!' and renamed['session_expires_at'] == alice['session_expires_at'], 'rename changed identity or original expiry')
+            replayed_alias, _ = call('rename-canonical-receipt-only-over-TLS', alias_path, method='PATCH', body={'alias': 'Alice Updated!'}, session=alice_cookie, command=rename_command)
+            check(replayed_alias == {'result': 'committed', 'receipt': renamed['receipt']}, 'rename retry replayed data or changed receipt')
+            call('rename-conflicting-command-over-TLS', alias_path, method='PATCH', body={'alias': 'Different'}, session=alice_cookie, command=rename_command, expected=409)
+            call('rename-claimed-alias-over-TLS', alias_path, method='PATCH', body={'alias': 'Bob'}, session=alice_cookie, expected=409)
+            renamed_view, _ = call('rename-same-cookie-current-alias-over-TLS', base + '/sync?view=player', method='GET', session=alice_cookie, retry=False)
+            check(renamed_view['snapshot']['player_id'] == alice['player_id'] and renamed_view['snapshot']['alias'] == renamed['alias'], 'existing cookie did not follow stable renamed membership')
+            call('rename-previous-alias-recovery-denied-over-TLS', '/api/player-recovery', body={'game_code': code, 'alias': 'Alice', 'recovery_answer': alice_answer}, expected=401)
+            reset_alias, _ = call('rename-restore-alias-over-TLS', alias_path, method='PATCH', body={'alias': 'Alice'}, session=alice_cookie)
+            check(reset_alias['session_expires_at'] == alice['session_expires_at'], 'rename restoration renewed session')
+            same_alias, _ = call('rename-self-no-op-over-TLS', alias_path, method='PATCH', body={'alias': ' Alice '}, session=alice_cookie)
+            check(same_alias['view_revision'] == reset_alias['view_revision'], 'self rename bumped own revision')
+            departing_answer = secrets.token_urlsafe(24)
+            departing, departing_cookie = join('Departing', departing_answer)
+            departing_socket = SocketClient('localhost', port, tls, base + '/stream?view=player', origin, departing_cookie)
+            try:
+                departing_socket.frame()
+                lobby_leave_command = str(uuid.uuid7())
+                left_lobby, cleared = call('player-lobby-Leave-over-TLS', leave_path, body={'expected_state': 'awaiting_players'}, session=departing_cookie, command=lobby_leave_command, cookie_effect=True)
+                check(not left_lobby['membership_retained'] and left_lobby['fresh_admission_required'] and cleared == '__Secure-brews-player=', 'lobby Leave did not delete authority and clear only player cookie')
+                call('lobby-Leave-old-cookie-denied-over-TLS', base + '/sync?view=player', method='GET', session=departing_cookie, retry=False, expected=401)
+                call('lobby-Leave-old-answer-denied-over-TLS', '/api/player-recovery', body={'game_code': code, 'alias': 'Departing', 'recovery_answer': departing_answer}, expected=401)
+                call('lobby-Leave-deleted-authority-retry-denied-over-TLS', leave_path, body={'expected_state': 'awaiting_players'}, session=departing_cookie, command=lobby_leave_command, expected=401)
+                for _ in range(20):
+                    departing_frame = departing_socket.frame(allow_close=True)
+                    if 'transport_close_code' in departing_frame:
+                        check(departing_frame['transport_close_code'] in [1008, 1013], 'lobby Leave predecessor was not fenced')
+                        break
+                else:
+                    raise RuntimeError('lobby Leave predecessor close exceeded bounded backlog')
+                completed.append('lobby-Leave-predecessor-real-WSS-closed')
+            finally:
+                departing_socket.close()
+            fresh_departing, fresh_departing_cookie = join('Departing', label='Departing-again')
+            check(fresh_departing['player_id'] != departing['player_id'], 'fresh admission restored deleted identity')
+            call('fresh-admitted-player-lobby-Leave-over-TLS', leave_path, body={'expected_state': 'awaiting_players'}, session=fresh_departing_cookie, cookie_effect=True)
             own, _ = call('player-before-Start-no-board', base + '/sync?view=player', method='GET', session=alice_cookie, retry=False)
             check(own['snapshot']['role'] == 'player' and 'board' not in own['snapshot'], 'prestart player board leaked')
             answer_path = base + '/membership/recovery-answer'
@@ -321,6 +363,33 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             successor = sockets[0].frame()
             check(successor['view']['player_id'] == alice['player_id'] and successor['view']['board'] == boards_before[alice['player_id']], 'recovery successor stream lost board')
             completed.append('recovery-successor-real-WSS-same-board')
+            call('rename-after-Start-denied-over-TLS', alias_path, method='PATCH', body={'alias': 'TooLate'}, session=alice_cookie, expected=409)
+            call('delayed-lobby-Leave-after-Start-conflicts-over-TLS', leave_path, body={'expected_state': 'awaiting_players'}, session=bob_cookie, expected=409)
+            bob_leave_command = str(uuid.uuid7())
+            left_game, _ = call('player-InProgress-Leave-over-TLS', leave_path, body={'expected_state': 'in_progress'}, session=bob_cookie, command=bob_leave_command)
+            check(left_game['membership_retained'] and not left_game['fresh_admission_required'], 'in-progress Leave did not retain return authority')
+            for _ in range(20):
+                departing_frame = sockets[1].frame(allow_close=True)
+                if 'transport_close_code' in departing_frame:
+                    check(departing_frame['transport_close_code'] in [1008, 1013], 'in-progress Leave did not fence predecessor socket')
+                    break
+            else:
+                raise RuntimeError('in-progress Leave predecessor close exceeded bounded backlog')
+            sockets[1].close()
+            completed.append('InProgress-Leave-predecessor-real-WSS-closed')
+            away_host, _ = call('InProgress-Leave-host-presence-over-TLS', base + '/sync?view=account', method='GET', session=host, retry=False)
+            away_bob = next(player for player in away_host['snapshot']['players'] if player['player_id'] == bob['player_id'])
+            check(not away_bob['connected'] and away_bob['board'] == boards_before[bob['player_id']], 'in-progress Leave lost board or kept detached presence')
+            sockets[1] = SocketClient('localhost', port, tls, base + '/stream?view=player', origin, bob_cookie)
+            bob_return = sockets[1].frame()
+            check(bob_return['session_expires_at'] == bob['session_expires_at'] and bob_return['view']['board'] == boards_before[bob['player_id']], 'same-session return renewed expiry or regenerated board')
+            completed.append('InProgress-Leave-same-session-real-WSS-return')
+            repeated_leave, _ = call('InProgress-Leave-receipt-only-over-TLS', leave_path, body={'expected_state': 'in_progress'}, session=bob_cookie, command=bob_leave_command)
+            check(repeated_leave == {'result': 'committed', 'receipt': left_game['receipt']}, 'Leave retry repeated effects or leaked live state')
+            returned_host, _ = call('InProgress-Leave-retry-preserves-returned-presence-over-TLS', base + '/sync?view=account', method='GET', session=host, retry=False)
+            check(next(player for player in returned_host['snapshot']['players'] if player['player_id'] == bob['player_id'])['connected'], 'same-command retry detached successor')
+            retained_leave, _ = call('retained-offline-explicit-Leave-over-TLS', leave_path, body={'expected_state': 'in_progress'}, session=retained_cookie)
+            check(retained_leave['membership_retained'], 'offline explicit Leave removed winner eligibility')
             call('new-player-after-Start-denied', base + '/admission-context', body={'game_code': code}, retry=False, expected=409)
             host_view, _ = call('gameplay-current-host-revision', base + '/sync?view=account', method='GET', session=host, retry=False)
             random_id = str(uuid.uuid7())

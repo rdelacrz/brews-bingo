@@ -474,6 +474,28 @@ fn same_winner(left: &Option<WinnerView>, right: &Option<WinnerView>) -> bool {
         _ => false,
     }
 }
+map_struct!(pub RenameAliasInput { alias: String });
+impl RenameAliasInput {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        let value: Self = decode(bytes, GAME_BODY_MAX_BYTES)?;
+        validate_alias(&value.alias).map_err(|_| GameDecodeError)?;
+        Ok(value)
+    }
+}
+map_struct!(pub LeavePlayerInput { expected_state: GameState });
+impl LeavePlayerInput {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        let value: Self = decode(bytes, GAME_BODY_MAX_BYTES)?;
+        if !matches!(
+            value.expected_state,
+            GameState::AwaitingPlayers | GameState::InProgress
+        ) {
+            return Err(GameDecodeError);
+        }
+        Ok(value)
+    }
+}
+
 map_enum!(pub GameOutcome, "operation", {
     Exited {},
     Created {
@@ -503,6 +525,23 @@ map_enum!(pub GameOutcome, "operation", {
         player_id: PlayerId,
         view_revision: u64,
         session_expires_at: i64,
+    },
+    AliasRenamed {
+        player_id: PlayerId,
+        #[serde(deserialize_with = "canonical_alias")]
+        alias: String,
+        session_expires_at: i64,
+        view_revision: u64,
+    },
+    PlayerLeft {
+        left: bool,
+        expected_state: GameState,
+        membership_retained: bool,
+        fresh_admission_required: bool,
+        player_id: PlayerId,
+        #[serde(deserialize_with = "nullable_value")]
+        session_expires_at: Option<i64>,
+        view_revision: u64,
     },
     RecoveryAnswerChanged {
         recovery_enabled: bool,
@@ -574,6 +613,46 @@ impl GameReceipt {
             } => {
                 validate_timestamp(*started_at)?;
                 if *started_at > self.completed_at {
+                    return Err(GameDecodeError);
+                }
+                *view_revision
+            }
+            GameOutcome::AliasRenamed {
+                alias,
+                session_expires_at,
+                view_revision,
+                ..
+            } => {
+                if validate_alias(alias).map_err(|_| GameDecodeError)? != alias
+                    || *session_expires_at <= self.completed_at
+                    || *session_expires_at > self.expires_at
+                {
+                    return Err(GameDecodeError);
+                }
+                *view_revision
+            }
+            GameOutcome::PlayerLeft {
+                left,
+                expected_state,
+                membership_retained,
+                fresh_admission_required,
+                session_expires_at,
+                view_revision,
+                ..
+            } => {
+                let retained = *expected_state == GameState::InProgress;
+                if !*left
+                    || !matches!(
+                        expected_state,
+                        GameState::AwaitingPlayers | GameState::InProgress
+                    )
+                    || *membership_retained != retained
+                    || *fresh_admission_required == retained
+                    || session_expires_at.is_some() != retained
+                    || session_expires_at.is_some_and(|expiry| {
+                        expiry <= self.completed_at || expiry > self.expires_at
+                    })
+                {
                     return Err(GameDecodeError);
                 }
                 *view_revision
@@ -736,6 +815,25 @@ map_enum!(pub GameResponse, "result", {
         view_revision: u64,
         receipt: GameReceipt,
     },
+    AliasRenamed {
+        player_id: PlayerId,
+        #[serde(deserialize_with = "canonical_alias")]
+        alias: String,
+        session_expires_at: i64,
+        view_revision: u64,
+        receipt: GameReceipt,
+    },
+    PlayerLeft {
+        left: bool,
+        expected_state: GameState,
+        membership_retained: bool,
+        fresh_admission_required: bool,
+        player_id: PlayerId,
+        #[serde(deserialize_with = "nullable_value")]
+        session_expires_at: Option<i64>,
+        view_revision: u64,
+        receipt: GameReceipt,
+    },
     RecoveryAnswerChanged {
         recovery_enabled: bool,
         #[serde(deserialize_with = "safe_revision")]
@@ -828,6 +926,29 @@ impl GameResponse {
                 validate_alias(alias).map_err(|_| GameDecodeError)? == alias
                     && matches!(&receipt.outcome, GameOutcome::PlayerJoined { player_id: player, view_revision: revision, session_expires_at: expiry }
                         if player == player_id && revision == view_revision && expiry == session_expires_at)
+            }
+            Self::AliasRenamed {
+                player_id,
+                alias,
+                session_expires_at,
+                view_revision,
+                receipt,
+            } => {
+                receipt.validate()?;
+                matches!(&receipt.outcome, GameOutcome::AliasRenamed { player_id: p, alias: a, session_expires_at: e, view_revision: v } if p == player_id && a == alias && e == session_expires_at && v == view_revision)
+            }
+            Self::PlayerLeft {
+                left,
+                expected_state,
+                membership_retained,
+                fresh_admission_required,
+                player_id,
+                session_expires_at,
+                view_revision,
+                receipt,
+            } => {
+                receipt.validate()?;
+                matches!(&receipt.outcome, GameOutcome::PlayerLeft { left: l, expected_state: s, membership_retained: m, fresh_admission_required: f, player_id: p, session_expires_at: e, view_revision: v } if l == left && s == expected_state && m == membership_retained && f == fresh_admission_required && p == player_id && e == session_expires_at && v == view_revision)
             }
             Self::RecoveryAnswerChanged {
                 recovery_enabled,
@@ -2716,6 +2837,55 @@ mod tests {
             br#"{"host_id":"x"}"#,
         ] {
             assert!(CreateGame::decode_json(bytes).is_err());
+        }
+    }
+    #[test]
+    fn membership_inputs_are_closed_maps_with_ascii_alias_and_exact_live_branch() {
+        for alias in [
+            "A",
+            " Alice ",
+            "alice",
+            "!@#$%^&*()_+-=[]{}:;",
+            "abcdefghijklmnopqrst",
+        ] {
+            let bytes = serde_json::to_vec(&serde_json::json!({"alias": alias})).unwrap();
+            assert!(RenameAliasInput::decode_json(&bytes).is_ok());
+        }
+        for bytes in [
+            b"[]".as_slice(),
+            b"null",
+            br#"{"alias":null}"#,
+            br#"{"alias":[]}"#,
+            br#"{"alias":""}"#,
+            br#"{"alias":"\u00e9"}"#,
+            br#"{"alias":"\tA"}"#,
+            br#"{"alias":"abcdefghijklmnopqrstu"}"#,
+            br#"{"alias":"A","\u0061lias":"B"}"#,
+            br#"{"alias":"A","player_id":"x"}"#,
+            br#"{"alias":"A","expected_revision":1}"#,
+        ] {
+            assert!(RenameAliasInput::decode_json(bytes).is_err());
+        }
+        for state in ["awaiting_players", "in_progress"] {
+            assert!(
+                LeavePlayerInput::decode_json(
+                    &serde_json::to_vec(&serde_json::json!({"expected_state":state})).unwrap()
+                )
+                .is_ok()
+            );
+        }
+        for bytes in [
+            b"{}".as_slice(),
+            b"null",
+            b"[]",
+            br#"{"expected_state":null}"#,
+            br#"{"expected_state":"new"}"#,
+            br#"{"expected_state":"resolved"}"#,
+            br#"{"expected_state":"in_progress","expected_state":"awaiting_players"}"#,
+            br#"{"expected_state":"in_progress","actor":"player"}"#,
+            br#"{"expected_state":"awaiting_players","player_id":"x"}"#,
+        ] {
+            assert!(LeavePlayerInput::decode_json(bytes).is_err());
         }
     }
 }

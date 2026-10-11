@@ -27,6 +27,8 @@ pub enum GameOperation {
     AdmissionContext,
     JoinPlayer,
     RecoverPlayer,
+    RenameAlias,
+    LeavePlayer,
     PutRecoveryAnswer,
     DeleteRecoveryAnswer,
     Stream,
@@ -46,6 +48,8 @@ pub enum GamePayload {
     AdmissionContext(AdmissionContextInput),
     JoinPlayer(JoinPlayer),
     RecoverPlayer(RecoverPlayerInput),
+    RenameAlias(brews_contracts::games::RenameAliasInput),
+    LeavePlayer(brews_contracts::games::LeavePlayerInput),
     RecoveryAnswer(RecoveryAnswerInput),
     Empty,
 }
@@ -136,6 +140,8 @@ pub fn decode_games(
     if method
         != if read {
             Method::GET
+        } else if operation == GameOperation::RenameAlias {
+            Method::PATCH
         } else if operation == GameOperation::PutRecoveryAnswer {
             Method::PUT
         } else if operation == GameOperation::DeleteRecoveryAnswer {
@@ -175,6 +181,14 @@ pub fn decode_games(
         require_json(headers)?;
     }
     let payload = match operation {
+        GameOperation::RenameAlias => GamePayload::RenameAlias(
+            brews_contracts::games::RenameAliasInput::decode_json(body)
+                .map_err(|_| ApiError::InvalidInput)?,
+        ),
+        GameOperation::LeavePlayer => GamePayload::LeavePlayer(
+            brews_contracts::games::LeavePlayerInput::decode_json(body)
+                .map_err(|_| ApiError::InvalidInput)?,
+        ),
         GameOperation::RecoverPlayer => GamePayload::RecoverPlayer(decode_recovery_input(body)?),
         GameOperation::PutRecoveryAnswer => {
             GamePayload::RecoveryAnswer(decode_recovery_input(body)?)
@@ -232,7 +246,10 @@ pub fn decode_games(
         (None, None)
     } else if matches!(
         operation,
-        GameOperation::PutRecoveryAnswer | GameOperation::DeleteRecoveryAnswer
+        GameOperation::PutRecoveryAnswer
+            | GameOperation::DeleteRecoveryAnswer
+            | GameOperation::RenameAlias
+            | GameOperation::LeavePlayer
     ) || view == Some(GameViewSelector::Player)
     {
         (named_cookie(headers, PLAYER_COOKIE_NAME)?, None)
@@ -407,6 +424,8 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
         "exit" => GameOperation::Exit,
         "admission-context" => GameOperation::AdmissionContext,
         "players" => GameOperation::JoinPlayer,
+        "membership/alias" => GameOperation::RenameAlias,
+        "membership/leave" => GameOperation::LeavePlayer,
         "membership/recovery-answer" => GameOperation::PutRecoveryAnswer,
         "sync" => GameOperation::Sync,
         "stream" => GameOperation::Stream,
@@ -1236,6 +1255,64 @@ mod tests {
             assert_eq!(
                 decode_games(&Method::POST, "/api/games", None, &headers(), body, ORIGIN).err(),
                 Some(ApiError::InvalidInput)
+            );
+        }
+    }
+    #[test]
+    fn membership_routes_select_player_cookie_and_reject_transport_and_actor_injection() {
+        let mut h = headers();
+        let token = "player-transport-fixture";
+        h.insert(
+            "cookie",
+            http::HeaderValue::from_str(&format!("__Secure-brews-player={token}")).unwrap(),
+        );
+        for (action, method, body, operation) in [
+            (
+                "alias",
+                Method::PATCH,
+                br#"{"alias":" Player "}"#.as_slice(),
+                GameOperation::RenameAlias,
+            ),
+            (
+                "leave",
+                Method::POST,
+                br#"{"expected_state":"awaiting_players"}"#.as_slice(),
+                GameOperation::LeavePlayer,
+            ),
+        ] {
+            let path = format!("/api/games/{ID}/membership/{action}");
+            let request = decode_games(&method, &path, None, &h, body, ORIGIN).unwrap();
+            assert_eq!(request.operation, operation);
+            assert!(request.session_token.as_deref() == Some(token));
+            assert!(request.admission_token.is_none());
+            assert_eq!(
+                decode_games(&Method::PUT, &path, None, &h, body, ORIGIN).err(),
+                Some(ApiError::MethodNotAllowed)
+            );
+            assert_eq!(
+                decode_games(&method, &path, Some("view=player"), &h, body, ORIGIN).err(),
+                Some(ApiError::InvalidInput)
+            );
+            let mut missing = h.clone();
+            missing.remove("idempotency-key");
+            assert!(decode_games(&method, &path, None, &missing, body, ORIGIN).is_err());
+            let mut bearer = h.clone();
+            bearer.insert(
+                "authorization",
+                http::HeaderValue::from_static("Bearer forbidden"),
+            );
+            assert_eq!(
+                decode_games(&method, &path, None, &bearer, body, ORIGIN).err(),
+                Some(ApiError::Forbidden)
+            );
+            let mut wrong_origin = h.clone();
+            wrong_origin.insert(
+                "origin",
+                http::HeaderValue::from_static("https://invalid.example"),
+            );
+            assert_eq!(
+                decode_games(&method, &path, None, &wrong_origin, body, ORIGIN).err(),
+                Some(ApiError::Forbidden)
             );
         }
     }

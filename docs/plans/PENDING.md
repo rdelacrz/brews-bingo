@@ -2,12 +2,12 @@
 
 ## Status and use
 
-Backlog assessed against the planning documents and implementation at commit `594adcb` (History APIs). Slice 1 is implemented, verified locally and published as `968747c`; see [LLD Section 3.14](lld.md#314-local-game-discovery-and-availability-implementation-slice). Slice 2 implementation/local gates pass, but final independent review remains pending; see [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Other slice statuses are unchanged. Slice grouping does not authorize later implementation, deployment or publication.
+Backlog assessed against the planning documents and implementation at commit `594adcb` (History APIs). Slice 1 is implemented, verified locally and published as `968747c`; see [LLD Section 3.14](lld.md#314-local-game-discovery-and-availability-implementation-slice). Slice 2 implementation/local gates pass, but final independent review remains pending; see [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Slice 3 is implemented, verified locally and independently reviewed; see [LLD Section 3.16](lld.md#316-local-player-alias-and-explicit-leave-checkpoint). Later slice statuses are unchanged. Slice grouping does not authorize later implementation, deployment or publication.
 
 - `[ ]` means pending implementation or verification; `[x]` means completed and verified locally, not publication or production certification.
 - Mark a pending item complete only after implementation and relevant native/Worker verification. Approval of a design is not implementation evidence.
 - All DO-001–DO-107 design decisions are approved; no schema-policy approvals remain pending. Unfinished wire details and production measurements remain distinct from those approvals.
-- Follow later approved decisions and the completion notes in [LLD Sections 3.9–3.15](lld.md), rather than treating every older generic “TBD” statement as a missing feature.
+- Follow later approved decisions and the completion notes in [LLD Sections 3.9–3.16](lld.md), rather than treating every older generic “TBD” statement as a missing feature.
 - Frontend work is outside this backend checklist. New implementation scope and commit/push need separate authorization; deployment, infrastructure/account creation and secret provisioning remain unauthorized.
 
 Sources: [requirements](requirements.md), [HLD](hld.md), [LLD](lld.md), [API operation catalog](api-design.md#operation-catalog), [Durable Object design](durable-object-design.md#outstanding-decisions), and [provider research](research.md).
@@ -50,12 +50,17 @@ References: API D13/D14; DO-049–052/085–087. Optional answer normalization a
 
 Goal: distinguish intentional membership changes from disconnection and terminal Exit.
 
-- [ ] Finalize alias no-op/retry behavior and Leave lifecycle/version fencing so a delayed lobby Leave cannot silently acquire in-progress meaning after Start.
-- [ ] Implement D7 `rename_my_alias` atomically in Awaiting Players, preserving stable player ID, recovery verifier, seat and original session expiry.
-- [ ] Implement D10 pre-start player Leave: release seat/alias, delete membership/recovery/session authority and require fresh admission on return.
-- [ ] Implement D11 in-progress player Leave: retain membership/seat/board/matching/winner eligibility and fixed-expiry return authority; record the explicit Leave event separately from current presence.
-- [ ] Integrate receipts, view revisions, socket detachment/fencing and cleanup without changing terminal Exit behavior.
-- [ ] Test alias conflicts, Start/Leave races, concurrent requests, reconnect, failure rollback and post-terminal denial in native and Worker paths.
+The user authorized local Slice 3 implementation after publication of the runtime module-layout refactor (`423de87`). Implementation and integrated local gates pass; final independent review has no remaining blocking findings. The user has separately authorized committing and pushing this reviewed Slice 3. Later slices, frontend, deployment and provisioning remain unauthorized.
+
+- [x] Finalize alias no-op/retry behavior and Leave lifecycle/version fencing so a delayed lobby Leave cannot silently acquire in-progress meaning after Start.
+- [x] Implement D7 `rename_my_alias` atomically in Awaiting Players, preserving stable player ID, recovery verifier, seat and original session expiry.
+- [x] Implement D10 pre-start player Leave: release seat/alias, delete membership/recovery/session authority and require fresh admission on return.
+- [x] Implement D11 in-progress player Leave: retain membership/seat/board/matching/winner eligibility and fixed-expiry return authority; record the explicit Leave event separately from current presence.
+- [x] Integrate receipts, view revisions, socket detachment/fencing and cleanup without changing terminal Exit behavior.
+- [x] Test alias conflicts, Start/Leave races, concurrent requests, reconnect, failure rollback and post-terminal denial in native and Worker paths.
+- [x] Complete final independent review sign-off against the frozen source hashes.
+
+Local choices and checkpoint: [API notes](api-design.md#local-slice-3-transport-implementation-choices-d7d10d11), [LLD Section 3.16](lld.md#316-local-player-alias-and-explicit-leave-checkpoint). Executed integrated gates pass: 774 native tests in both profiles, 12 doctests, 284 fresh release Workerd cases and 125 actual HTTPS/WSS checks. Existing schemas suffice; no migration is required. The four reproduced output/close/receipt/prepared-socket findings are repaired and covered by permanent regressions. The first reviewer provider stopped before a final verdict; a fresh bounded read-only review then independently verified R1–R4 repairs, passed 18 focused native tests and signed off with no remaining blocking findings. All nine reviewed production hashes match the frozen source. At the verification checkpoint Slice 3 remained uncommitted and unpublished; commit/push is now separately authorized. Slice 2's earlier pending review is unchanged.
 
 References: API D7/D10/D11; DO-045–048/055. Role switching depends on spectators and is grouped in Slice 4.
 

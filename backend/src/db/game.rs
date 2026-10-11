@@ -1,8 +1,10 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
 mod discovery;
 mod history;
+mod player_lifecycle;
 mod player_recovery;
 pub use discovery::{DiscoveryCut, DiscoveryValue, DiscoveryViewer};
+pub use player_lifecycle::MembershipOutcome;
 pub use player_recovery::{RecoveryOutcome, RecoverySocketClose};
 mod terminal;
 use super::{Database, SqlValue, StorageError};

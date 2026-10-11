@@ -195,6 +195,93 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .validate_for(&ingress)
         .map_err(|_| ApiError::Unavailable)?;
     match &result {
+        GameOwnerResponse::Membership {
+            response,
+            valid_until,
+            clear_player_cookie,
+        } => {
+            if *clear_player_cookie {
+                let mut output = json_response(
+                    200,
+                    response.encode_json().map_err(|_| ApiError::Unavailable)?,
+                )?;
+                output.headers_mut().insert(
+                    "set-cookie",
+                    HeaderValue::from_str(&format!(
+                        "{}=; Secure; HttpOnly; Path={}; SameSite=Strict; Max-Age=0",
+                        api::PLAYER_COOKIE_NAME,
+                        api::game_cookie_path(game_id)
+                    ))
+                    .map_err(|_| ApiError::Unavailable)?,
+                );
+                return Ok(output);
+            }
+            let original_deadline = valid_until.ok_or(ApiError::Unavailable)?;
+            let observed_at = super::runtime::WorkerRuntime.now_ms();
+            if observed_at >= original_deadline {
+                fence_recovery_output(env, &ingress, original_deadline, observed_at).await?;
+                return rejected(GameRejection::Unauthorized);
+            }
+            ingress.operation = match ingress.operation {
+                GameAction::RenameAlias
+                    if matches!(
+                        response,
+                        brews_contracts::games::GameResponse::Committed { .. }
+                    ) =>
+                {
+                    GameAction::RenameAliasReceiptOutput
+                }
+                GameAction::RenameAlias => GameAction::RenameAliasOutput,
+                GameAction::LeavePlayer => GameAction::LeavePlayerOutput,
+                _ => return Err(ApiError::Unavailable),
+            };
+            let checked: GameOwnerResponse = game_peers::call(
+                env,
+                "GAMES",
+                &game_id.to_string(),
+                "/command",
+                &ingress,
+                brews_contracts::games::GAME_FRAME_MAX_BYTES
+                    + super::game_wire::GAME_WIRE_MAX_BYTES,
+            )
+            .await
+            .map_err(|_| ApiError::Unavailable)?;
+            // Expiry at this receiving cut binds the original owner deadline and sample.
+            let observed_at = super::runtime::WorkerRuntime.now_ms();
+            if observed_at >= original_deadline {
+                fence_recovery_output(env, &ingress, original_deadline, observed_at).await?;
+                return rejected(GameRejection::Unauthorized);
+            }
+            checked
+                .validate_for(&ingress)
+                .map_err(|_| ApiError::Unavailable)?;
+            match &checked {
+                GameOwnerResponse::Membership {
+                    response: current,
+                    valid_until: Some(deadline),
+                    clear_player_cookie: false,
+                } => {
+                    if *deadline > original_deadline
+                        || !same_receipt(
+                            membership_receipt(response)?,
+                            membership_receipt(current)?,
+                        )?
+                    {
+                        return Err(ApiError::Unavailable);
+                    }
+                    if observed_at >= *deadline {
+                        fence_recovery_output(env, &ingress, *deadline, observed_at).await?;
+                        return rejected(GameRejection::Unauthorized);
+                    }
+                    json_response(
+                        200,
+                        response.encode_json().map_err(|_| ApiError::Unavailable)?,
+                    )
+                }
+                GameOwnerResponse::Rejected { code } => rejected(*code),
+                _ => Err(ApiError::Unavailable),
+            }
+        }
         GameOwnerResponse::RecoveryAnswer {
             response,
             valid_until,
@@ -345,6 +432,16 @@ fn answer_receipt(
 ) -> Result<&brews_contracts::games::GameReceipt, ApiError> {
     match response {
         brews_contracts::games::GameResponse::RecoveryAnswerChanged { receipt, .. }
+        | brews_contracts::games::GameResponse::Committed { receipt } => Ok(receipt),
+        _ => Err(ApiError::Unavailable),
+    }
+}
+fn membership_receipt(
+    response: &brews_contracts::games::GameResponse,
+) -> Result<&brews_contracts::games::GameReceipt, ApiError> {
+    match response {
+        brews_contracts::games::GameResponse::AliasRenamed { receipt, .. }
+        | brews_contracts::games::GameResponse::PlayerLeft { receipt, .. }
         | brews_contracts::games::GameResponse::Committed { receipt } => Ok(receipt),
         _ => Err(ApiError::Unavailable),
     }

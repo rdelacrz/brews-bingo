@@ -5,6 +5,10 @@
 )]
 #[path = "games_core/discovery.rs"]
 mod discovery;
+#[path = "games_core/player_lifecycle.rs"]
+mod player_lifecycle;
+#[path = "games_core/player_lifecycle_review.rs"]
+mod player_lifecycle_review;
 #[path = "games_core/player_recovery.rs"]
 mod player_recovery;
 #[path = "games_core/publication_receipt.rs"]

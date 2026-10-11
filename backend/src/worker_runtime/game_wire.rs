@@ -14,6 +14,10 @@ pub(super) const GAME_WIRE_MAX_BYTES: usize = 16_384;
 #[cfg(target_arch = "wasm32")]
 pub(super) const STREAM_INGRESS_HEADER: &str = "X-Brews-Game-Ingress";
 
+fn membership_nullable<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<i64>, D::Error> {
+    Option::<i64>::deserialize(d)
+}
+
 fn object<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -81,6 +85,13 @@ pub(super) enum GameRejection {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "owner_result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum GameOwnerResponse {
+    Membership {
+        #[serde(deserialize_with = "object")]
+        response: GameResponse,
+        #[serde(deserialize_with = "membership_nullable")]
+        valid_until: Option<i64>,
+        clear_player_cookie: bool,
+    },
     RecoveryAnswer {
         #[serde(deserialize_with = "object")]
         response: GameResponse,
@@ -108,6 +119,86 @@ pub(super) enum GameOwnerResponse {
 }
 impl GameOwnerResponse {
     pub(super) fn validate_for(&self, request: &GameIngress) -> Result<(), ()> {
+        if let Self::Membership {
+            response,
+            valid_until,
+            clear_player_cookie,
+        } = self
+        {
+            if !matches!(
+                request.operation,
+                GameAction::RenameAlias
+                    | GameAction::LeavePlayer
+                    | GameAction::RenameAliasOutput
+                    | GameAction::RenameAliasReceiptOutput
+                    | GameAction::LeavePlayerOutput
+            ) {
+                return Err(());
+            }
+            response.validate().map_err(|_| ())?;
+            let receipt = match response {
+                GameResponse::AliasRenamed { receipt, .. }
+                | GameResponse::PlayerLeft { receipt, .. }
+                | GameResponse::Committed { receipt } => receipt,
+                _ => return Err(()),
+            };
+            if valid_until.is_some_and(|deadline| {
+                deadline <= receipt.completed_at || deadline > receipt.expires_at
+            }) {
+                return Err(());
+            }
+            let deleted = matches!(
+                response,
+                GameResponse::PlayerLeft {
+                    expected_state: brews_domain::games::GameState::AwaitingPlayers,
+                    ..
+                }
+            );
+            if *clear_player_cookie != deleted
+                || valid_until.is_none() != deleted
+                || (deleted && request.operation != GameAction::LeavePlayer)
+                || valid_until
+                    .is_some_and(|d| !(1..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&d))
+            {
+                return Err(());
+            }
+            let operation = match request.operation {
+                GameAction::RenameAliasOutput | GameAction::RenameAliasReceiptOutput => {
+                    GameAction::RenameAlias
+                }
+                GameAction::LeavePlayerOutput => GameAction::LeavePlayer,
+                other => other,
+            };
+            let mut selected = GameIngress {
+                operation,
+                game_id: request.game_id,
+                command_id: request.command_id,
+                view: request.view,
+                known_revision: request.known_revision,
+                session_token: None,
+                admission_token: None,
+                recovery_caller: None,
+                body: request.body.clone(),
+            };
+            let checked = Self::Success {
+                response: response.clone(),
+                cookie: GameCookieWire::None,
+            }
+            .validate_success_for(&selected);
+            selected.body.zeroize();
+            return checked;
+        }
+        if matches!(
+            request.operation,
+            GameAction::RenameAlias
+                | GameAction::LeavePlayer
+                | GameAction::RenameAliasOutput
+                | GameAction::RenameAliasReceiptOutput
+                | GameAction::LeavePlayerOutput
+        ) && !matches!(self, Self::Rejected { .. })
+        {
+            return Err(());
+        }
         if let Self::Recovered {
             receipt,
             game,
@@ -290,6 +381,16 @@ impl GameOwnerResponse {
             {
                 receipt
             }
+            GameResponse::AliasRenamed { receipt, .. }
+                if request.operation == GameAction::RenameAlias =>
+            {
+                receipt
+            }
+            GameResponse::PlayerLeft { receipt, .. }
+                if request.operation == GameAction::LeavePlayer =>
+            {
+                receipt
+            }
             GameResponse::Committed { receipt } => receipt,
             GameResponse::AdmissionContext { .. }
                 if request.operation == GameAction::AdmissionContext =>
@@ -315,7 +416,14 @@ impl GameOwnerResponse {
         {
             return Err(());
         }
+        receipt.validate().map_err(|_| ())?;
         let coherent = match (request.operation, &receipt.outcome) {
+            (GameAction::RenameAlias, GameOutcome::AliasRenamed { alias, .. }) => {
+                matches!(request.payload()?, GamePayload::RenameAlias(input) if brews_domain::games::validate_alias(&input.alias).ok() == Some(alias.as_str()))
+            }
+            (GameAction::LeavePlayer, GameOutcome::PlayerLeft { expected_state, .. }) => {
+                matches!(request.payload()?, GamePayload::LeavePlayer(input) if input.expected_state == *expected_state)
+            }
             (GameAction::Create, GameOutcome::Created { .. })
             | (GameAction::Lobby, GameOutcome::LobbyOpened { .. })
             | (GameAction::Start, GameOutcome::Started { .. })
@@ -373,6 +481,18 @@ impl GameOwnerResponse {
         }
         let value: Self = serde_json::from_slice(bytes).map_err(|_| ())?;
         match &value {
+            Self::Membership {
+                response,
+                valid_until,
+                ..
+            } => {
+                response.validate().map_err(|_| ())?;
+                if valid_until
+                    .is_some_and(|d| !(1..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&d))
+                {
+                    return Err(());
+                }
+            }
             Self::RecoveryAnswer {
                 response,
                 valid_until,
@@ -441,6 +561,11 @@ pub(super) enum GameAction {
     JoinPlayer,
     RecoverPlayer,
     RecoveryOutput,
+    RenameAlias,
+    LeavePlayer,
+    RenameAliasOutput,
+    RenameAliasReceiptOutput,
+    LeavePlayerOutput,
     PutRecoveryAnswer,
     DeleteRecoveryAnswer,
     Stream,
@@ -460,6 +585,8 @@ impl From<GameOperation> for GameAction {
             GameOperation::AdmissionContext => Self::AdmissionContext,
             GameOperation::JoinPlayer => Self::JoinPlayer,
             GameOperation::RecoverPlayer => Self::RecoverPlayer,
+            GameOperation::RenameAlias => Self::RenameAlias,
+            GameOperation::LeavePlayer => Self::LeavePlayer,
             GameOperation::PutRecoveryAnswer => Self::PutRecoveryAnswer,
             GameOperation::DeleteRecoveryAnswer => Self::DeleteRecoveryAnswer,
             GameOperation::Stream => Self::Stream,
@@ -538,6 +665,18 @@ impl GameIngress {
             return Err(());
         }
         match self.operation {
+            GameAction::RenameAlias
+            | GameAction::RenameAliasOutput
+            | GameAction::RenameAliasReceiptOutput => {
+                brews_contracts::games::RenameAliasInput::decode_json(bytes)
+                    .map(GamePayload::RenameAlias)
+                    .map_err(|_| ())
+            }
+            GameAction::LeavePlayer | GameAction::LeavePlayerOutput => {
+                brews_contracts::games::LeavePlayerInput::decode_json(bytes)
+                    .map(GamePayload::LeavePlayer)
+                    .map_err(|_| ())
+            }
             GameAction::RecoverPlayer | GameAction::RecoveryOutput => {
                 crate::api::decode_recovery_input(bytes)
                     .map(GamePayload::RecoverPlayer)
@@ -592,6 +731,11 @@ impl GameIngress {
                 | GameAction::JoinPlayer
                 | GameAction::RecoverPlayer
                 | GameAction::RecoveryOutput
+                | GameAction::RenameAlias
+                | GameAction::LeavePlayer
+                | GameAction::RenameAliasOutput
+                | GameAction::RenameAliasReceiptOutput
+                | GameAction::LeavePlayerOutput
                 | GameAction::PutRecoveryAnswer
                 | GameAction::DeleteRecoveryAnswer
                 | GameAction::CallRandom
@@ -825,5 +969,72 @@ mod tests {
         let mut altered = serde_json::to_value(&request).unwrap();
         altered["view"] = "player".into();
         assert!(GameIngress::decode_json(&serde_json::to_vec(&altered).unwrap()).is_err());
+    }
+    #[test]
+    fn membership_wire_requires_original_maps_exact_receipt_outcome_and_narrow_clear_cookie() {
+        let request = ingress(GameAction::RenameAlias, r#"{"alias":" Alice "}"#);
+        let game_id = request.game_id.unwrap();
+        let command_id = request.command_id.unwrap();
+        let player_id = game_id.to_string().parse().unwrap();
+        let completed_at = 1_000;
+        let receipt = brews_contracts::games::GameReceipt {
+            version: 1,
+            game_id,
+            command_id,
+            completed_at,
+            expires_at: completed_at + 86_400_000,
+            outcome: brews_contracts::games::GameOutcome::AliasRenamed {
+                player_id,
+                alias: "Alice".into(),
+                session_expires_at: 2_000,
+                view_revision: 1,
+            },
+        };
+        let response = GameOwnerResponse::Membership {
+            response: GameResponse::AliasRenamed {
+                player_id,
+                alias: "Alice".into(),
+                session_expires_at: 2_000,
+                view_revision: 1,
+                receipt,
+            },
+            valid_until: Some(2_000),
+            clear_player_cookie: false,
+        };
+        assert!(response.validate_for(&request).is_ok());
+        let original = serde_json::to_value(&response).unwrap();
+        for (field, value) in [
+            ("clear_player_cookie", serde_json::json!(true)),
+            ("valid_until", serde_json::Value::Null),
+            ("valid_until", serde_json::json!(completed_at)),
+            ("valid_until", serde_json::json!(completed_at + 86_400_001)),
+        ] {
+            let mut altered = original.clone();
+            altered[field] = value;
+            let bad = GameOwnerResponse::decode_json(&serde_json::to_vec(&altered).unwrap());
+            assert!(bad.is_err() || bad.unwrap().validate_for(&request).is_err());
+        }
+        let mut altered = original.clone();
+        altered["response"]["alias"] = "Different".into();
+        assert!(GameOwnerResponse::decode_json(&serde_json::to_vec(&altered).unwrap()).is_err());
+        let mut altered = original;
+        altered["response"]["receipt"]["outcome"]["alias"] = "Different".into();
+        assert!(GameOwnerResponse::decode_json(&serde_json::to_vec(&altered).unwrap()).is_err());
+        for (action, body) in [
+            (
+                GameAction::RenameAlias,
+                r#"{"alias":"Alice","player_id":"x"}"#,
+            ),
+            (
+                GameAction::LeavePlayer,
+                r#"{"expected_state":"awaiting_players","expected_state":"in_progress"}"#,
+            ),
+            (GameAction::LeavePlayer, "[]"),
+        ] {
+            let mut request = ingress(GameAction::RenameAlias, r#"{"alias":"Alice"}"#);
+            request.operation = action;
+            request.body = body.to_owned();
+            assert!(GameIngress::decode_json(&serde_json::to_vec(&request).unwrap()).is_err());
+        }
     }
 }

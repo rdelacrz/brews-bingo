@@ -291,6 +291,22 @@ impl GameObject {
         }
         Ok(observed)
     }
+    fn fenced_player_socket(
+        &self,
+        hint: &Attachment,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+    ) -> Result<bool, GameError> {
+        match hint.viewer {
+            Viewer::Player(player) => service.player_socket_is_fenced(
+                hint.game_id,
+                hint.connection_id,
+                hint.session_id,
+                player,
+                hint.authentication_epoch,
+            ),
+            Viewer::Account(_) => Ok(false),
+        }
+    }
     pub(super) fn observed(
         &self,
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
@@ -311,6 +327,16 @@ impl GameObject {
                     continue;
                 }
             };
+            if self.fenced_player_socket(&hint, service)? {
+                // Detachment is durable; a failing provider close is pending work.
+                if ws
+                    .close(Some(CloseCode::Policy.value()), Some("session unavailable"))
+                    .is_err()
+                {
+                    self.transport_retry.set(true);
+                }
+                continue;
+            }
             if matches!(hint.viewer, Viewer::Player(_)) {
                 match service.player_connection(hint.connection_id) {
                     Ok(Some(grant)) if hint.matches_player(&grant) => out.push(hint.connection_id),
@@ -398,8 +424,15 @@ impl GameObject {
                 && old_hint.session_id == hint.session_id
                 && old_hint.viewer == hint.viewer
             {
-                old.close(Some(CloseCode::Policy.value()), Some("connection replaced"))
-                    .map_err(|_| GameError::Storage)?;
+                let closed =
+                    old.close(Some(CloseCode::Policy.value()), Some("connection replaced"));
+                if self.fenced_player_socket(&old_hint, &service)? {
+                    if closed.is_err() {
+                        self.transport_retry.set(true);
+                    }
+                } else {
+                    closed.map_err(|_| GameError::Storage)?;
+                }
                 DeliveryService::new(&db, &rt)
                     .map_err(|_| GameError::Storage)?
                     .retire_connection(old_hint.binding())
@@ -550,6 +583,18 @@ impl GameObject {
         service.reconcile_connections(&self.observed(service)?)?;
         self.persist(service, db).await?;
         for ws in self.sockets()? {
+            if let Ok(hint) = Attachment::read(&ws)
+                && self.fenced_player_socket(&hint, service)?
+            {
+                // No delivery/presence authority survives this captured tuple.
+                if ws
+                    .close(Some(CloseCode::Policy.value()), Some("session unavailable"))
+                    .is_err()
+                {
+                    self.transport_retry.set(true);
+                }
+                continue;
+            }
             if ready_state(&ws)? == 2 {
                 // A real close handshake is not a close ACK; the combined wake retains it.
                 continue;
