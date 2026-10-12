@@ -22,6 +22,10 @@ pub enum GameError {
     Forbidden,
     #[error("invalid game command")]
     InvalidInput,
+    #[error("game result not committed")]
+    ResultNotCommitted,
+    #[error("remaining values unavailable in final view")]
+    RemainingValuesUnavailable,
     #[error("game command conflict")]
     Conflict,
     #[error("stale game revision")]

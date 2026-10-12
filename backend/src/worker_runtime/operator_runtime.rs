@@ -178,7 +178,7 @@ fn original_authority(
     }
 }
 impl GameObject {
-    async fn authorize_operator_account(
+    pub(super) async fn authorize_operator_account(
         &self,
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         token: &str,

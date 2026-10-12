@@ -96,12 +96,12 @@ pub struct SpectatorOutputCut {
     pub valid_until: i64,
 }
 
-struct SpectatorSession {
-    session: SessionId,
-    spectator: SpectatorId,
-    epoch: i64,
-    expires: i64,
-    grace: Option<i64>,
+pub(super) struct SpectatorSession {
+    pub(super) session: SessionId,
+    pub(super) spectator: SpectatorId,
+    pub(super) epoch: i64,
+    pub(super) expires: i64,
+    pub(super) grace: Option<i64>,
 }
 
 struct AudienceCommand {
@@ -196,7 +196,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         Ok((s.spectator, s.expires.min(s.grace.unwrap_or(s.expires))))
     }
 
-    fn spectator_session(
+    pub(super) fn spectator_session(
         &self,
         token: &str,
         r: &Record,
@@ -1091,7 +1091,11 @@ Ok(out)
         })
     }
 
-    fn spectator_projection(&self, r: &Record, id: SpectatorId) -> Result<GameView, GameError> {
+    pub(super) fn spectator_projection(
+        &self,
+        r: &Record,
+        id: SpectatorId,
+    ) -> Result<GameView, GameError> {
         let configuration = self.configuration()?;
 
         let calls = self

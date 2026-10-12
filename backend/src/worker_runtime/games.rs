@@ -61,9 +61,27 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             ) {
                 super::operator_runtime::audit_rejected_transport(env, context).await?;
             }
+            if let Ok(Some((game, kind, token))) = api::read_rejection_context(
+                &parts.method,
+                parts.uri.path(),
+                parts.uri.query(),
+                &parts.headers,
+            ) {
+                super::operator_runtime::audit_rejected_transport(
+                    env,
+                    (game, crate::db::game::read_purpose(kind), token),
+                )
+                .await?;
+            }
             return Err(ApiError::PayloadTooLarge);
         }
     };
+    if let Some((_, kind)) = api::game_read_route(parts.uri.path())
+        && (parts.method == http::Method::GET
+            || kind != brews_contracts::games::reads::ReadKind::Players)
+    {
+        return super::game_reads::dispatch(env, &parts, &bytes, &cfg.application_origin).await;
+    }
     let decoded = api::decode_games(
         &parts.method,
         parts.uri.path(),
@@ -892,7 +910,7 @@ fn set_cookie(
     );
     Ok(())
 }
-fn json_response(status: u16, bytes: Vec<u8>) -> Result<Response, ApiError> {
+pub(super) fn json_response(status: u16, bytes: Vec<u8>) -> Result<Response, ApiError> {
     http::Response::builder()
         .status(status)
         .header("Content-Type", "application/json; charset=utf-8")

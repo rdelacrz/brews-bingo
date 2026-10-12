@@ -8,6 +8,7 @@ mod game_accounts;
 mod game_directory;
 mod game_object;
 mod game_peers;
+mod game_reads;
 mod game_recovery;
 mod game_sockets;
 mod game_wire;

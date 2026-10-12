@@ -1449,7 +1449,9 @@ pub(super) fn rejection(error: GameError) -> GameRejection {
         GameError::Forbidden => GameRejection::Forbidden,
         GameError::InvalidInput => GameRejection::InvalidInput,
         GameError::NotFound | GameError::Expired => GameRejection::NotFound,
-        GameError::Conflict
+        GameError::ResultNotCommitted
+        | GameError::RemainingValuesUnavailable
+        | GameError::Conflict
         | GameError::StaleRevision
         | GameError::Capacity
         | GameError::Infeasible => GameRejection::Conflict,
@@ -1477,6 +1479,15 @@ impl DurableObject for GameObject {
             return self
                 .execute_transfer_recovery(request, path == "/operator-transfer-ack")
                 .await;
+        }
+        if matches!(
+            path.as_str(),
+            "/read" | "/read-release" | "/read-expiry-denial"
+        ) {
+            if request.method() != worker::Method::Post || request.url()?.query().is_some() {
+                return worker::Response::error("invalid passive read", 400);
+            }
+            return self.execute_read_transport(request, &path).await;
         }
         if path == "/operator-expiry-denial" {
             if request.method() != worker::Method::Post || request.url()?.query().is_some() {

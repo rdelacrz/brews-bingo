@@ -1,10 +1,20 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
 mod connection_capacity;
 mod operator;
+#[cfg_attr(
+    not(target_arch = "wasm32"),
+    allow(
+        dead_code,
+        reason = "Private read release cuts are verified natively and used by the Worker."
+    )
+)]
+mod reads;
 pub(crate) use operator::OperatorAuditOutcome;
 pub use operator::{OperatorPurpose, TransferPreparation};
 #[cfg(target_arch = "wasm32")]
 pub(crate) use operator::{patch_fingerprint, transfer_fingerprint};
+#[cfg(target_arch = "wasm32")]
+pub(crate) use reads::{ReadBinding, ReadCut, ReadIdentity, read_purpose};
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn resume_fingerprint() -> [u8; 32] {
     command_fingerprint("resume", 0)
@@ -2644,7 +2654,7 @@ mod tests {
     use crate::db::directory::{DirectoryService, migrate_directory};
     use crate::db::schema::game_schema::GAME_TABLES;
 
-    fn id<T: std::str::FromStr>(rt: &TestRuntime, n: u8) -> T
+    pub(super) fn id<T: std::str::FromStr>(rt: &TestRuntime, n: u8) -> T
     where
         T::Err: std::fmt::Debug,
     {
@@ -2655,7 +2665,7 @@ mod tests {
         bytes[15] = n;
         uuid::Uuid::from_bytes(bytes).to_string().parse().unwrap()
     }
-    fn authority(rt: &TestRuntime, session: u8) -> GameAccountAuthority {
+    pub(super) fn authority(rt: &TestRuntime, session: u8) -> GameAccountAuthority {
         GameAccountAuthority::from_trusted_peer(
             id(rt, 1),
             id(rt, session),
@@ -2665,7 +2675,7 @@ mod tests {
         )
         .unwrap()
     }
-    fn initialized(db: &Sqlite, rt: &TestRuntime) {
+    pub(super) fn initialized(db: &Sqlite, rt: &TestRuntime) {
         migrate_game(db).unwrap();
         let directory = Sqlite::new();
         migrate_directory(&directory).unwrap();

@@ -30,3 +30,9 @@ pub use games::{
 
 mod discovery;
 pub use discovery::{AvailabilityView, DiscoveryCommand, DiscoveryRequest, decode_discovery};
+
+mod game_reads;
+pub use game_reads::{GameReadRequest, ReadRole, ReadSelection, decode_game_read, game_read_route};
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) use game_reads::read_rejection_context;

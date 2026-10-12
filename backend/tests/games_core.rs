@@ -15,6 +15,8 @@ mod player_lifecycle_review;
 mod player_recovery;
 #[path = "games_core/publication_receipt.rs"]
 mod publication_receipt;
+#[path = "games_core/reads.rs"]
+mod reads;
 #[path = "games_core/spectators.rs"]
 mod spectators;
 mod support;

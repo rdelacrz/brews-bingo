@@ -8,6 +8,15 @@ pub(crate) fn statements() -> Vec<String> {
         OperatorPurpose::Resume,
         OperatorPurpose::HostTransfer,
         OperatorPurpose::HostTransferTargets,
+        OperatorPurpose::GameRead,
+        OperatorPurpose::MembershipRead,
+        OperatorPurpose::PlayersRead,
+        OperatorPurpose::CallsRead,
+        OperatorPurpose::RemainingValuesRead,
+        OperatorPurpose::OwnBoardRead,
+        OperatorPurpose::BoardsRead,
+        OperatorPurpose::QualificationRead,
+        OperatorPurpose::ResultRead,
     ]
     .map(|p| format!("'{}'", p.tag()))
     .join(",");

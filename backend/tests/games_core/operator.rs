@@ -3,7 +3,7 @@ use super::*;
 use brews_backend::db::game::TransferPreparation;
 use brews_contracts::games::{ConfigurationPatch, GameOutcome, HostTransferInput};
 use brews_domain::games::GameState;
-fn saved(f: &Fixture) {
+pub(super) fn saved(f: &Fixture) {
     let config = GameConfiguration::default();
     let work = f
         .directory()
@@ -23,7 +23,7 @@ fn saved(f: &Fixture) {
         .unwrap();
     f.directory().acknowledge_creation(out.ready).unwrap();
 }
-fn actor(f: &Fixture, n: u8, role: AccountRole) -> (AccountId, String) {
+pub(super) fn actor(f: &Fixture, n: u8, role: AccountRole) -> (AccountId, String) {
     let account: AccountId = id(&f.rt, n).parse().unwrap();
     f.accounts.execute("INSERT INTO accounts SELECT ?,?,?,status,verifier,credential_epoch,created_at,password_set_at,disabled_at FROM accounts WHERE account_id=?",&[SqlValue::Text(account.to_string()),SqlValue::Text(format!("OperatorPerson{n}")),SqlValue::Text(role.to_string()),SqlValue::Text(f.account.to_string())]).unwrap();
     let token = brews_backend::security::new_token(&f.rt).unwrap();

@@ -405,7 +405,7 @@ fn require_upgrade(headers: &HeaderMap) -> Result<(), ApiError> {
     }
     Ok(())
 }
-fn read_query(
+pub(super) fn read_query(
     query: Option<&str>,
     headers: &HeaderMap,
     allow_revision: bool,

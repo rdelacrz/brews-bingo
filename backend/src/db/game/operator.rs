@@ -16,6 +16,15 @@ pub enum OperatorPurpose {
     Resume,
     HostTransfer,
     HostTransferTargets,
+    GameRead,
+    MembershipRead,
+    PlayersRead,
+    CallsRead,
+    RemainingValuesRead,
+    OwnBoardRead,
+    BoardsRead,
+    QualificationRead,
+    ResultRead,
 }
 impl OperatorPurpose {
     pub const fn tag(self) -> &'static str {
@@ -24,6 +33,15 @@ impl OperatorPurpose {
             Self::Resume => "resume",
             Self::HostTransfer => "host_transfer",
             Self::HostTransferTargets => "host_transfer_targets",
+            Self::GameRead => "game_read",
+            Self::MembershipRead => "membership_read",
+            Self::PlayersRead => "players_read",
+            Self::CallsRead => "calls_read",
+            Self::RemainingValuesRead => "remaining_values_read",
+            Self::OwnBoardRead => "own_board_read",
+            Self::BoardsRead => "boards_read",
+            Self::QualificationRead => "qualification_read",
+            Self::ResultRead => "result_read",
         }
     }
 }
@@ -102,7 +120,7 @@ fn parse_transfer(row: &super::super::Row) -> Result<HostTransferWork, GameError
     Ok(result)
 }
 impl<D: Database, R: Runtime> GameService<'_, D, R> {
-    fn operator_attempt<T>(
+    pub(super) fn operator_attempt<T>(
         &self,
         authority: &GameAccountAuthority,
         purpose: OperatorPurpose,
@@ -234,7 +252,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         }
         Ok(true)
     }
-    fn assignment_revision(&self) -> Result<i64, GameError> {
+    pub(super) fn assignment_revision(&self) -> Result<i64, GameError> {
         let rows = self.db.query(
             "SELECT host_assignment_revision FROM game_record WHERE singleton=1",
             &[],

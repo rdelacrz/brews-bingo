@@ -14,6 +14,14 @@ use brews_domain::games::GameState;
 mod previous_admission_schema;
 #[path = "../schema/previous_gameplay_schema.rs"]
 mod previous_gameplay_schema;
+#[allow(
+    dead_code,
+    reason = "Frozen historical schema includes its original inventory metadata."
+)]
+#[path = "../schema/previous_saved_game_schema.rs"]
+mod previous_saved_game_schema;
+#[path = "../schema/previous_saved_operator_schema.rs"]
+mod previous_saved_operator_schema;
 
 const MINIFLARE_OWNER_METADATA_TABLE: &str = "__miniflare_do_name";
 const CLOUDFLARE_OWNER_METADATA_TABLE: &str = "_cf_METADATA";
@@ -101,11 +109,27 @@ pub(super) fn validate_schema<D: Database>(db: &D) -> Result<(), StorageError> {
             .strip_prefix(prefix)
             .and_then(|rest| rest.split(['(', ' ']).next())
             .ok_or(StorageError)?;
-        if db.query(
+        let rows = db.query(
             "SELECT sql FROM sqlite_master WHERE type=? AND name=?",
             &[text(kind), text(name)],
-        )? != vec![vec![text(statement)]]
-        {
+        )?;
+        let [row] = rows.as_slice() else {
+            return Err(StorageError);
+        };
+        let [SqlValue::Text(actual_sql)] = row.as_slice() else {
+            return Err(StorageError);
+        };
+        let valid = if kind == "table" {
+            retained_schema_matches(
+                name,
+                actual_sql,
+                &actual.iter().map(String::as_str).collect::<Vec<_>>(),
+                &statement,
+            )
+        } else {
+            actual_sql == &statement
+        };
+        if !valid {
             return Err(StorageError);
         }
     }
@@ -642,6 +666,56 @@ fn migrate_saved_operator_workflows<D: Database>(db: &D) -> Result<(), StorageEr
     )?;
     validate_schema(db)
 }
+fn migrate_read_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError> {
+    let actual = inventory(db)?;
+    let tables = actual.iter().map(String::as_str).collect::<Vec<_>>();
+    if actual != migration_table_set(&previous_saved_game_schema::GAME_TABLES, false)
+        && actual != migration_table_set(&previous_saved_game_schema::GAME_TABLES, true)
+    {
+        return Err(StorageError);
+    }
+    let published = previous_saved_game_schema::statements();
+    validate_historical_schema(
+        db,
+        &tables,
+        &published.iter().map(String::as_str).collect::<Vec<_>>(),
+    )?;
+    let before = db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])?;
+    let ddl = schema_statement_for("game_admin_audit")?.replacen(
+        "CREATE TABLE game_admin_audit(",
+        "CREATE TABLE game_admin_audit_read_purposes(",
+        1,
+    );
+    db.execute(&ddl, &[])?;
+    db.execute(
+        "INSERT INTO game_admin_audit_read_purposes SELECT * FROM game_admin_audit",
+        &[],
+    )?;
+    if db.query(
+        "SELECT * FROM game_admin_audit_read_purposes ORDER BY audit_id",
+        &[],
+    )? != before
+    {
+        return Err(StorageError);
+    }
+    db.execute("DROP TABLE game_admin_audit", &[])?;
+    db.execute(
+        "ALTER TABLE game_admin_audit_read_purposes RENAME TO game_admin_audit",
+        &[],
+    )?;
+    db.execute(
+        "CREATE INDEX game_admin_audit_expiry ON game_admin_audit(expires_at,audit_id)",
+        &[],
+    )?;
+    if db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])? != before {
+        return Err(StorageError);
+    }
+    db.execute(
+        SQL_UPDATE_GAME_SCHEMA_VERSION,
+        &[int(GAME_SCHEMA_VERSION), int(5)],
+    )?;
+    validate_schema(db)
+}
 pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
     db.transaction(|| {
         let actual = inventory(db)?;
@@ -681,6 +755,8 @@ pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
                 migrate_spectator_authority(db)?;
             } else if version == 4 {
                 migrate_saved_operator_workflows(db)?;
+            } else if version == 5 {
+                migrate_read_audit_vocabulary(db)?;
             } else if version != GAME_SCHEMA_VERSION {
                 return Err(StorageError);
             }
@@ -1309,6 +1385,145 @@ mod tests {
                     assert_eq!(counted.writes.get(), 0);
                 }
             }
+        }
+    }
+    fn published_read_audit_database(delivery: bool) -> Sqlite {
+        let db = Sqlite::new();
+        for sql in previous_saved_game_schema::statements() {
+            db.execute(&sql, &[]).unwrap();
+        }
+        db.execute(SQL_INSERT_GAME_METADATA, &[int(5)]).unwrap();
+        db.execute("INSERT INTO game_admin_audit VALUES('01890f3e-53b7-7d28-9b05-4f65092d5701','01890f3e-53b7-7d28-9b05-4f65092d5702','01890f3e-53b7-7d28-9b05-4f65092d5703',?,?,1,7776000001)",&[text(super::super::OperatorPurpose::Resume.tag()),text(super::super::OperatorAuditOutcome::Succeeded.tag())]).unwrap();
+        if delivery {
+            crate::db::game_delivery::migrate_game_delivery(&db).unwrap();
+        }
+        db
+    }
+    #[test]
+    fn dedicated_read_audit_migration_preserves_frozen_published_inventory_rows_and_optional_delivery()
+     {
+        for delivery in [false, true] {
+            let db = published_read_audit_database(delivery);
+            let before = db.query("SELECT * FROM game_admin_audit", &[]).unwrap();
+            migrate_game(&db).unwrap();
+            validate_schema(&db).unwrap();
+            assert_eq!(
+                db.query("SELECT * FROM game_admin_audit", &[]).unwrap(),
+                before
+            );
+            assert!(
+                db.query(
+                    "SELECT name FROM sqlite_master WHERE name LIKE 'game_history_read_%'",
+                    &[]
+                )
+                .unwrap()
+                .is_empty()
+            );
+        }
+    }
+    #[test]
+    fn dedicated_read_audit_migration_rejects_full_unknown_shape_before_any_write() {
+        for delivery in [false, true] {
+            for table in previous_saved_game_schema::GAME_TABLES {
+                let db = published_read_audit_database(delivery);
+                db.execute(
+                    &format!("ALTER TABLE {table} ADD COLUMN unapproved_shape TEXT"),
+                    &[],
+                )
+                .unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage), "{table}");
+                assert_eq!(counted.writes.get(), 0);
+            }
+            for sql in [
+                "DROP INDEX game_admin_audit_expiry",
+                "CREATE TABLE unknown_table(value INTEGER) STRICT",
+                "CREATE INDEX unexpected_read_index ON game_admin_audit(operation)",
+            ] {
+                let db = published_read_audit_database(delivery);
+                db.execute(sql, &[]).unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage));
+                assert_eq!(counted.writes.get(), 0);
+            }
+        }
+    }
+    #[test]
+    fn dedicated_read_audit_migration_ignored_or_failed_marker_rolls_back_ddl_and_rows() {
+        for fault in ["IGNORE", "ABORT,'fault'"] {
+            let db = published_read_audit_database(false);
+            let before = db
+                .query(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='game_admin_audit'",
+                    &[],
+                )
+                .unwrap();
+            db.execute(&format!("CREATE TRIGGER read_audit_marker_fault BEFORE UPDATE OF schema_version ON game_metadata BEGIN SELECT RAISE({fault}); END"),&[]).unwrap();
+            assert_eq!(migrate_game(&db), Err(GameError::Storage));
+            assert_eq!(
+                db.query(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='game_admin_audit'",
+                    &[]
+                )
+                .unwrap(),
+                before
+            );
+            assert_eq!(
+                db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])
+                    .unwrap(),
+                vec![vec![int(5)]]
+            );
+        }
+    }
+    #[test]
+    fn dedicated_read_frozen_workerd_fixture_matches_published_templates() {
+        let fixture: Vec<String> = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/game-schema-published-operator.json"
+        ))
+        .unwrap();
+        assert_eq!(fixture, previous_saved_game_schema::statements());
+    }
+    #[test]
+    fn dedicated_read_published_constraint_foreign_key_strict_and_partial_delivery_drift_writes_nothing()
+     {
+        for drift in ["constraint", "foreign_key", "strict", "partial_delivery"] {
+            let db = published_read_audit_database(false);
+            if drift == "partial_delivery" {
+                let sql = previous_admission_schema::TABLE_STATEMENTS
+                    .iter()
+                    .find(|s| s.starts_with("CREATE TABLE game_delivery_metadata("))
+                    .unwrap();
+                db.execute(sql, &[]).unwrap();
+            } else {
+                db.execute("DROP TABLE game_free_cells", &[]).unwrap();
+                let ddl = previous_saved_game_schema::statements()
+                    .into_iter()
+                    .find(|s| s.starts_with("CREATE TABLE game_free_cells("))
+                    .unwrap();
+                let ddl = match drift {
+                    "constraint" => {
+                        ddl.replace("row INTEGER NOT NULL", "row INTEGER NOT NULL CHECK(row>0)")
+                    }
+                    "foreign_key" => ddl.replace(
+                        "row INTEGER NOT NULL",
+                        "row INTEGER NOT NULL REFERENCES game_record(singleton)",
+                    ),
+                    _ => ddl.replace(" STRICT", ""),
+                };
+                db.execute(&ddl, &[]).unwrap();
+            }
+            let counted = WriteCounter {
+                inner: &db,
+                writes: std::cell::Cell::new(0),
+            };
+            assert_eq!(migrate_game(&counted), Err(GameError::Storage), "{drift}");
+            assert_eq!(counted.writes.get(), 0, "{drift}");
         }
     }
 }

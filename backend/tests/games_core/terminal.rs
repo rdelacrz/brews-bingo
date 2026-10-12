@@ -29,7 +29,10 @@ fn count(f: &Fixture, table: &str) -> i64 {
     }
 }
 
-fn end_without_winner(f: &Fixture, command: CommandId) -> brews_contracts::games::GameReceipt {
+pub(super) fn end_without_winner(
+    f: &Fixture,
+    command: CommandId,
+) -> brews_contracts::games::GameReceipt {
     match f
         .service()
         .cancel_game(
