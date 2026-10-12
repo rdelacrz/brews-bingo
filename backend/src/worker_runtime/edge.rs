@@ -69,6 +69,10 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .and_then(|s| s.parse::<IpAddr>().ok())
         .map(|ip| ip.to_string())
         .unwrap_or_else(|| "unavailable".to_owned());
+    let current_token = decoded
+        .session_token
+        .as_deref()
+        .map(|value| Zeroizing::new(value.to_owned()));
     let command_id = decoded.command_id.clone();
     let command = command(decoded)?;
     let payload = Zeroizing::new(
@@ -94,7 +98,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .map_err(|_| ApiError::Unavailable)?;
     let request = worker::Request::new_with_init("https://accounts.internal/auth", &init)
         .map_err(|_| ApiError::Unavailable)?;
-    let mut response = stub.fetch_with_request(request).await.map_err(|_| {
+    let response = stub.fetch_with_request(request).await.map_err(|_| {
         observability::failure(Boundary::AccountsPeer, Failure::PeerTransport);
         ApiError::Unavailable
     })?;
@@ -102,14 +106,56 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         observability::failure(Boundary::AccountsPeer, Failure::PeerProtocol);
         return Err(ApiError::Unavailable);
     }
-    let data = Zeroizing::new(response.bytes().await.map_err(|_| ApiError::Unavailable)?);
-    if data.len() > OWNER_RESPONSE_MAX_BYTES {
-        return Err(ApiError::Unavailable);
-    }
-    let result: OwnerResponse = serde_json::from_slice(&data).map_err(|_| {
+    let http: worker::HttpResponse = response.try_into().map_err(|_| ApiError::Unavailable)?;
+    let data = Zeroizing::new(
+        to_bytes(Body::new(http.into_body()), OWNER_RESPONSE_MAX_BYTES)
+            .await
+            .map_err(|_| ApiError::Unavailable)?
+            .to_vec(),
+    );
+    let result: OwnerResponse = super::decode_private_json(&data).map_err(|_| {
         observability::failure(Boundary::AccountsPeer, Failure::PeerProtocol);
         ApiError::Unavailable
     })?;
+    let token = match &result.cookie {
+        CookieWire::Set { token, .. } => Some(token.as_str()),
+        _ => current_token.as_deref().map(|value| value.as_str()),
+    };
+    let protected = result
+        .body
+        .get("session")
+        .is_some_and(|value| !value.is_null())
+        || matches!(result.cookie, CookieWire::Set { .. });
+    let mut release_sample = None;
+    if protected {
+        let authority = result.authority.as_ref().ok_or(ApiError::Unavailable)?;
+        let token = token.ok_or(ApiError::Unavailable)?;
+        if let CookieWire::Set { expires_at, .. } = &result.cookie
+            && *expires_at != authority.expires_at
+        {
+            return Err(ApiError::Unavailable);
+        }
+        let observed_at = js_sys::Date::now() as i64;
+        if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+            return Err(ApiError::Unavailable);
+        }
+        if observed_at >= authority.expires_at {
+            super::auth_output::fence(env, token, authority, observed_at).await?;
+            return Err(ApiError::Unavailable);
+        }
+        super::auth_output::check(env, token, authority, &result.body).await?;
+        let observed_at = js_sys::Date::now() as i64;
+        if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+            return Err(ApiError::Unavailable);
+        }
+        if observed_at >= authority.expires_at {
+            super::auth_output::fence(env, token, authority, observed_at).await?;
+            return Err(ApiError::Unavailable);
+        }
+        release_sample = Some(observed_at);
+    } else if result.authority.is_some() {
+        return Err(ApiError::Unavailable);
+    }
     let mut response = json_response(result.status, result.body)?;
     match &result.cookie {
         CookieWire::None => {}
@@ -118,7 +164,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         }
         CookieWire::Set { token, expires_at } => {
             token_digest(token).map_err(|_| ApiError::Unavailable)?;
-            let now = js_sys::Date::now() as i64;
+            let now = release_sample.ok_or(ApiError::Unavailable)?;
             let remaining = expires_at
                 .checked_sub(now)
                 .filter(|n| *n > 0 && *n <= SESSION_LIFETIME_MS)

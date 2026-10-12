@@ -25,7 +25,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
     }
     pub fn cleanup_management(&self) -> Result<(), ManagementError> {
         self.management_transaction(|| {
-            let now=self.now()?;
+            let now=self.observe_clock()?;
             self.db.execute("DELETE FROM management_receipts WHERE (actor,command_id) IN (SELECT actor,command_id FROM management_receipts WHERE expires_at<=? AND NOT EXISTS(SELECT 1 FROM pending_account_removals p WHERE p.actor=management_receipts.actor AND p.command_id=management_receipts.command_id) LIMIT ?)",&[SqlValue::Integer(now),SqlValue::Integer(CLEANUP_BATCH_SIZE)])?;
             self.db.execute("DELETE FROM admin_audit WHERE audit_id IN (SELECT audit_id FROM admin_audit WHERE expires_at<=? LIMIT ?)",&[SqlValue::Integer(now),SqlValue::Integer(CLEANUP_BATCH_SIZE)])?;
             Ok(())

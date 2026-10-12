@@ -8,6 +8,9 @@ use crate::{
 };
 use brews_contracts::management::AuditOutcome;
 use brews_domain::ids::OperationId;
+
+const REMOVAL_RETRY_BACKOFF_MAX_SHIFT: u32 = 9;
+
 impl<D: Database, R: Runtime> AuthService<'_, D, R> {
     /// Only due work, bounded and stably ordered. Never drops unresolved intents.
     pub fn removal_work(&self, limit: u32) -> Result<Vec<RemovalWork>, ManagementError> {
@@ -18,7 +21,9 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
     pub fn retry_removal(&self, operation_id: OperationId) -> Result<(), ManagementError> {
         self.management_transaction(|| {
             let work=self.removal_operation(operation_id)?.ok_or(ManagementError::NotFound)?;
-            let delay=REMOVAL_INITIAL_DELAY_MS.saturating_mul(1i64<<work.attempt_count.min(9)).min(REMOVAL_MAX_DELAY_MS);
+            let delay = REMOVAL_INITIAL_DELAY_MS
+                .saturating_mul(1i64 << work.attempt_count.min(REMOVAL_RETRY_BACKOFF_MAX_SHIFT))
+                .min(REMOVAL_MAX_DELAY_MS);
             self.db.execute("UPDATE pending_account_removals SET attempt_count=?,next_attempt_at=? WHERE operation_id=?",&[SqlValue::Integer(i64::from(work.attempt_count.saturating_add(1))),SqlValue::Integer(deadline(self.now()?,delay)?),SqlValue::Text(operation_id.to_string())])?;
             Ok(())
         })

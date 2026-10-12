@@ -36,8 +36,7 @@ impl zeroize::Zeroize for UsersRequest {
     }
 }
 
-const DEFAULT_PAGE_SIZE: u32 = 50;
-const MAX_PAGE_SIZE: u32 = 100;
+use crate::limits::{MANAGEMENT_DEFAULT_PAGE_SIZE, MANAGEMENT_MAX_PAGE_SIZE};
 const QUERY_MAX_BYTES: usize = 512;
 const QUERY_MAX_FIELDS: usize = 2;
 
@@ -99,7 +98,7 @@ fn list_command(query: Option<&str>) -> Result<ManagementCommand, ApiError> {
                         return Err(ApiError::InvalidInput);
                     }
                     let parsed = value.parse().map_err(|_| ApiError::InvalidInput)?;
-                    if !(1..=MAX_PAGE_SIZE).contains(&parsed) {
+                    if !(1..=MANAGEMENT_MAX_PAGE_SIZE).contains(&parsed) {
                         return Err(ApiError::InvalidInput);
                     }
                     limit = Some(parsed);
@@ -110,7 +109,7 @@ fn list_command(query: Option<&str>) -> Result<ManagementCommand, ApiError> {
     }
     Ok(ManagementCommand::ListAccounts {
         after,
-        limit: limit.unwrap_or(DEFAULT_PAGE_SIZE),
+        limit: limit.unwrap_or(MANAGEMENT_DEFAULT_PAGE_SIZE),
     })
 }
 

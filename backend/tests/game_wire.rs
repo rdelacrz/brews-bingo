@@ -135,8 +135,10 @@ fn private_reply_must_match_the_exact_command_operation_and_target() {
 fn private_up_to_date_sync_is_bound_to_the_exact_requested_known_revision() {
     use game_wire::{GameIngress, GameOwnerResponse};
     let id = "01890f3e-53b7-7d28-9b05-4f65092d5711";
-    let bytes = br#"{"owner_result":"synced","response":{"up_to_date":true,"view_revision":2,"snapshot":null}}"#;
-    let reply = GameOwnerResponse::decode_json(bytes).unwrap();
+    let bytes = format!(
+        r#"{{"owner_result":"synced","valid_until":100,"player_authority":{{"game_id":"{id}","session_id":"{id}","player_id":"{id}","epoch":1,"session_expires_at":200,"valid_until":100}},"response":{{"up_to_date":true,"view_revision":2,"snapshot":null}}}}"#
+    );
+    let reply = GameOwnerResponse::decode_json(bytes.as_bytes()).unwrap();
     let request = |known: &str| {
         let bytes = format!(
             r#"{{"operation":"sync","game_id":"{id}","command_id":null,"view":"player","known_revision":{known},"session_token":null,"admission_token":null,"body":""}}"#

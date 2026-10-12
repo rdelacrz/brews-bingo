@@ -157,7 +157,10 @@ pub fn decode_discovery(
         return Err(ApiError::InvalidInput);
     }
     let account = Zeroizing::new(super::decode::session_cookie(headers)?);
-    let player = Zeroizing::new(games::named_cookie(headers, super::PLAYER_COOKIE_NAME)?);
+    let player = Zeroizing::new(super::decode::named_cookie(
+        headers,
+        super::PLAYER_COOKIE_NAME,
+    )?);
     let (command, token) = if path == "/api/games" {
         let mut state = None;
         for (key, value) in query_fields(query)? {

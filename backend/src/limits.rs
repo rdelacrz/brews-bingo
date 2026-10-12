@@ -7,6 +7,8 @@ pub(crate) const ACCESS_LINK_LIFETIME_MS: i64 = MILLISECONDS_PER_DAY;
 pub(crate) const COMMAND_RECEIPT_RETENTION_MS: i64 = MILLISECONDS_PER_DAY;
 pub(crate) const ACCESS_LINK_METADATA_RETENTION_MS: i64 = 30 * MILLISECONDS_PER_DAY;
 pub(crate) const COMMAND_RECEIPT_MAX_BYTES: usize = 4_096;
+pub(crate) const MANAGEMENT_DEFAULT_PAGE_SIZE: u32 = 50;
+pub(crate) const MANAGEMENT_MAX_PAGE_SIZE: u32 = 100;
 pub(crate) const RATE_LIMIT_WINDOW_MS: i64 = 900_000;
 pub(crate) const RATE_LIMIT_BLOCK_MS: i64 = 900_000;
 pub(crate) const RATE_LIMIT_MAX_FAILURES: i64 = 5;
@@ -25,7 +27,9 @@ pub(crate) const OWNER_REQUEST_MAX_BYTES: usize = 8_192;
 #[cfg(target_arch = "wasm32")]
 pub(crate) const OWNER_RESPONSE_MAX_BYTES: usize = 8_192;
 #[cfg(target_arch = "wasm32")]
-pub(crate) const SQL_QUERY_MAX_ROWS: usize = 512;
+// Terminal snapshot verification reads every retained board, plus an overflow sentinel.
+pub(crate) const SQL_QUERY_MAX_ROWS: usize =
+    brews_domain::games::BOARD_CELLS_MAX * brews_domain::games::PLAYER_CAPACITY_MAX as usize + 1;
 #[cfg(target_arch = "wasm32")]
 pub(crate) const MANAGEMENT_RESPONSE_MAX_BYTES: usize = 128 * 1024;
 #[cfg(target_arch = "wasm32")]

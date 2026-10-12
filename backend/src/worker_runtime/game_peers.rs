@@ -300,11 +300,7 @@ pub(super) async fn authorize_account(
     env: &worker::Env,
     token: &str,
 ) -> Result<GameAccountAuthority, GamePeerError> {
-    let request = AccountRequest::Authorize {
-        token: SecretToken::new(token),
-    };
-    let reply = account_reply(env, &request).await?;
-    game_accounts::verified_authority(&request, reply, super::WorkerRuntime.now_ms())
+    authorize_discovery_account(env, token).await
 }
 #[cfg(target_arch = "wasm32")]
 pub(super) async fn register_account_connection(

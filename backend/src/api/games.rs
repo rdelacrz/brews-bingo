@@ -1,5 +1,5 @@
 //! Bounded public game transport; grammar is not authentication or authorization.
-use super::{ApiError, BODY_LIMIT};
+use super::{ApiError, BODY_LIMIT, decode::named_cookie};
 use brews_contracts::games::{
     AdmissionContextInput, CallManualInput, CancelGameInput, CreateGame, GAME_QUERY_KNOWN_REVISION,
     GAME_QUERY_VIEW, GAME_VIEW_ACCOUNT, GAME_VIEW_PLAYER, JoinPlayer, RevisionCommand, WinnerInput,
@@ -361,43 +361,6 @@ fn read_query(
         });
     }
     Ok((view, known))
-}
-// Project one cookie into the existing account-cookie decoder rather than copying
-// its size/duplicate/header policy. Bound the original bytes before projection.
-pub(super) fn named_cookie(headers: &HeaderMap, name: &str) -> Result<Option<String>, ApiError> {
-    let mut masked_headers = HeaderMap::new();
-    for value in headers.get_all("cookie") {
-        let raw = value.to_str().map_err(|_| ApiError::InvalidInput)?;
-        let masked =
-            zeroize::Zeroizing::new(raw.replace("__Host-brews_session", "__Skip-brews_session"));
-        masked_headers.append(
-            "cookie",
-            http::HeaderValue::from_bytes(masked.as_bytes()).map_err(|_| ApiError::InvalidInput)?,
-        );
-    }
-    super::decode::session_cookie(&masked_headers)?;
-    let Some(raw) = headers.get("cookie") else {
-        return Ok(None);
-    };
-    let raw = raw.to_str().map_err(|_| ApiError::InvalidInput)?;
-    let mut projected = zeroize::Zeroizing::new(String::with_capacity(raw.len()));
-    for part in raw.split(';') {
-        if let Some((key, value)) = part.trim().split_once('=')
-            && key == name
-        {
-            if !projected.is_empty() {
-                projected.push(';');
-            }
-            projected.push_str("__Host-brews_session=");
-            projected.push_str(value);
-        }
-    }
-    let mut selected_headers = HeaderMap::new();
-    selected_headers.insert(
-        "cookie",
-        http::HeaderValue::from_bytes(projected.as_bytes()).map_err(|_| ApiError::InvalidInput)?,
-    );
-    super::decode::session_cookie(&selected_headers)
 }
 fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
     if path.len() > GAME_PATH_MAX_BYTES {

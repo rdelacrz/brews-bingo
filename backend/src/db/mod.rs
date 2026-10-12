@@ -51,28 +51,65 @@ fn metadata_statement() -> String {
     )
 }
 
+const SQL_SELECT_SCHEMA_VERSION: &str =
+    "SELECT schema_version FROM storage_metadata WHERE singleton=1";
+const SQL_INSERT_SCHEMA_METADATA: &str = "INSERT INTO storage_metadata(singleton,schema_version,last_observed_ms,command_floor_ms) VALUES(1,?,0,0)";
+const SQL_ADVANCE_SCHEMA_VERSION: &str =
+    "UPDATE storage_metadata SET schema_version=? WHERE singleton=1 AND schema_version=?";
+
+fn schema_version(db: &impl Database) -> Result<Option<i64>, StorageError> {
+    let rows = db.query(SQL_SELECT_SCHEMA_VERSION, &[])?;
+    match rows.as_slice() {
+        [] => Ok(None),
+        [row] => match row.as_slice() {
+            [SqlValue::Integer(version)] => Ok(Some(*version)),
+            _ => Err(StorageError),
+        },
+        _ => Err(StorageError),
+    }
+}
+
 /// Initialize auth and management storage atomically; unknown schemas fail closed.
 pub fn migrate<D: Database>(db: &D) -> Result<(), StorageError> {
     db.transaction(|| {
         db.execute(&metadata_statement(), &[])?;
-        let rows = db.query("SELECT schema_version FROM storage_metadata WHERE singleton=1", &[])?;
-        let mut version = if rows.is_empty() {
-            for sql in schema::auth_schema::auth_schema_statements() { db.execute(&sql, &[])?; }
-            db.execute("INSERT INTO storage_metadata(singleton,schema_version,last_observed_ms,command_floor_ms) VALUES(1,?,0,0)", &[SqlValue::Integer(AUTH_SCHEMA_VERSION)])?;
-            AUTH_SCHEMA_VERSION
-        } else {
-            match rows.as_slice() {
-                [row] => match row.as_slice() { [SqlValue::Integer(v)] => *v, _ => return Err(StorageError) },
-                _ => return Err(StorageError),
+        let version = match schema_version(db)? {
+            Some(version) => version,
+            None => {
+                for sql in schema::auth_schema::auth_schema_statements() {
+                    db.execute(&sql, &[])?;
+                }
+                db.execute(
+                    SQL_INSERT_SCHEMA_METADATA,
+                    &[SqlValue::Integer(AUTH_SCHEMA_VERSION)],
+                )?;
+                if schema_version(db)? != Some(AUTH_SCHEMA_VERSION) {
+                    return Err(StorageError);
+                }
+                AUTH_SCHEMA_VERSION
             }
         };
-        if version == AUTH_SCHEMA_VERSION {
-            for sql in schema::management_schema::management_schema_statements() { db.execute(&sql, &[])?; }
-            db.execute("UPDATE storage_metadata SET schema_version=2 WHERE singleton=1 AND schema_version=1", &[])?;
-            version = 2;
+        match version {
+            CURRENT_SCHEMA_VERSION => Ok(()),
+            AUTH_SCHEMA_VERSION => {
+                for sql in schema::management_schema::management_schema_statements() {
+                    db.execute(&sql, &[])?;
+                }
+                db.execute(
+                    SQL_ADVANCE_SCHEMA_VERSION,
+                    &[
+                        SqlValue::Integer(CURRENT_SCHEMA_VERSION),
+                        SqlValue::Integer(AUTH_SCHEMA_VERSION),
+                    ],
+                )?;
+                // Successful execution alone does not prove the marker changed.
+                if schema_version(db)? != Some(CURRENT_SCHEMA_VERSION) {
+                    return Err(StorageError);
+                }
+                Ok(())
+            }
+            _ => Err(StorageError),
         }
-        if version != CURRENT_SCHEMA_VERSION { return Err(StorageError); }
-        Ok(())
     })
 }
 

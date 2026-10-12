@@ -73,6 +73,76 @@ fn failed_auth_initialization_rolls_back_metadata_and_partial_ddl() {
 }
 
 #[test]
+fn ignored_initial_schema_marker_rolls_back_all_auth_tables() {
+    let initialized = Sqlite::new();
+    migrate(&initialized).unwrap();
+    let ddl = initialized
+        .query(
+            "SELECT sql FROM sqlite_master WHERE name='storage_metadata'",
+            &[],
+        )
+        .unwrap();
+    let SqlValue::Text(metadata_ddl) = &ddl[0][0] else {
+        panic!("metadata DDL missing");
+    };
+    let db = Sqlite::new();
+    db.execute(metadata_ddl, &[]).unwrap();
+    db.execute(
+        "CREATE TRIGGER ignore_marker BEFORE INSERT ON storage_metadata BEGIN SELECT RAISE(IGNORE); END",
+        &[],
+    )
+    .unwrap();
+    let before = db
+        .query("SELECT name,sql FROM sqlite_master ORDER BY name", &[])
+        .unwrap();
+    assert_eq!(migrate(&db), Err(StorageError));
+    assert_eq!(
+        db.query("SELECT name,sql FROM sqlite_master ORDER BY name", &[])
+            .unwrap(),
+        before
+    );
+    assert!(
+        db.query("SELECT * FROM storage_metadata", &[])
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn ignored_or_corrupted_upgrade_marker_rolls_back_management_ddl() {
+    for trigger in [
+        "CREATE TRIGGER marker_fault BEFORE UPDATE OF schema_version ON storage_metadata BEGIN SELECT RAISE(IGNORE); END",
+        "CREATE TRIGGER marker_fault AFTER UPDATE OF schema_version ON storage_metadata BEGIN UPDATE storage_metadata SET schema_version=3; END",
+    ] {
+        let db = Sqlite::new();
+        migrate(&db).unwrap();
+        for table in [
+            "management_receipts",
+            "admin_audit",
+            "pending_account_removals",
+        ] {
+            db.execute(&format!("DROP TABLE {table}"), &[]).unwrap();
+        }
+        db.execute("UPDATE storage_metadata SET schema_version=1,last_observed_ms=123,command_floor_ms=100", &[]).unwrap();
+        db.execute(trigger, &[]).unwrap();
+        let before = db
+            .query("SELECT name,sql FROM sqlite_master ORDER BY name", &[])
+            .unwrap();
+        let metadata = db.query("SELECT * FROM storage_metadata", &[]).unwrap();
+        assert_eq!(migrate(&db), Err(StorageError));
+        assert_eq!(
+            db.query("SELECT name,sql FROM sqlite_master ORDER BY name", &[])
+                .unwrap(),
+            before
+        );
+        assert_eq!(
+            db.query("SELECT * FROM storage_metadata", &[]).unwrap(),
+            metadata
+        );
+    }
+}
+
+#[test]
 fn sql_constraints_preserve_control_bytes_and_reject_unsafe_values() {
     let db = Sqlite::new();
     migrate(&db).unwrap();

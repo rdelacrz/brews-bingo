@@ -1,6 +1,7 @@
 use super::{
     AuthCommand, AuthError, AuthOutcome, AuthPolicy, AuthService, CookieEffect, RequestContext,
     Runtime,
+    rate::ACCOUNT_LOGIN_SCOPE,
     records::{ACCOUNT_SELECT, Account, Session},
 };
 use crate::{
@@ -21,6 +22,10 @@ use brews_domain::{
 };
 use std::cell::Cell;
 use zeroize::Zeroizing;
+
+const SQL_READ_CLOCK_FENCE: &str =
+    "SELECT last_observed_ms,command_floor_ms FROM storage_metadata WHERE singleton=1";
+const SQL_OBSERVE_CLOCK: &str = "UPDATE storage_metadata SET last_observed_ms=?,command_floor_ms=max(command_floor_ms,?) WHERE singleton=1";
 
 impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
     pub fn new(
@@ -49,7 +54,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
     }
     pub fn cleanup(&self) -> Result<(), AuthError> {
         self.transaction(|| {
-            let now=self.now()?;
+            let now=self.observe_clock()?;
             self.enqueue_expired_closes(now)?;
             self.db.execute("DELETE FROM account_sessions WHERE session_id IN (SELECT session_id FROM account_sessions WHERE expires_at<=? OR revoked_at IS NOT NULL LIMIT ?)",&[SqlValue::Integer(now),SqlValue::Integer(CLEANUP_BATCH_SIZE)])?;
             self.db.execute("DELETE FROM command_receipts WHERE (actor_account_id,command_id) IN (SELECT actor_account_id,command_id FROM command_receipts WHERE expires_at<=? LIMIT ?)",&[SqlValue::Integer(now),SqlValue::Integer(CLEANUP_BATCH_SIZE)])?;
@@ -116,9 +121,43 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         Ok(now)
     }
     pub(super) fn observe_clock(&self) -> Result<i64, AuthError> {
-        let now = self.now()?;
-        self.db.execute("UPDATE storage_metadata SET last_observed_ms=?,command_floor_ms=max(command_floor_ms,?) WHERE singleton=1",&[SqlValue::Integer(now),SqlValue::Integer(now.saturating_sub(COMMAND_RECEIPT_RETENTION_MS).max(0))])?;
+        self.observe_clock_at(self.now()?)
+    }
+    pub(super) fn observe_clock_at(&self, now: i64) -> Result<i64, AuthError> {
+        if !(0..=JS_SAFE_INTEGER_MAX).contains(&now) {
+            return Err(AuthError::Crypto);
+        }
+        let (previous, previous_floor) = self.clock_fence()?;
+        if now < previous {
+            return Err(AuthError::Crypto);
+        }
+        let floor = previous_floor.max(now.saturating_sub(COMMAND_RECEIPT_RETENTION_MS).max(0));
+        if (now, floor) != (previous, previous_floor) {
+            self.db.execute(
+                SQL_OBSERVE_CLOCK,
+                &[SqlValue::Integer(now), SqlValue::Integer(floor)],
+            )?;
+        }
+        // A successful execute can still ignore a write. Denials need a durable fence.
+        if self.clock_fence()? != (now, floor) {
+            return Err(AuthError::Storage);
+        }
         Ok(now)
+    }
+    fn clock_fence(&self) -> Result<(i64, i64), AuthError> {
+        let rows = self.db.query(SQL_READ_CLOCK_FENCE, &[])?;
+        match rows.as_slice() {
+            [row] => match row.as_slice() {
+                [SqlValue::Integer(observed), SqlValue::Integer(stored_floor)]
+                    if (0..=JS_SAFE_INTEGER_MAX).contains(observed)
+                        && (0..=JS_SAFE_INTEGER_MAX).contains(stored_floor) =>
+                {
+                    Ok((*observed, *stored_floor))
+                }
+                _ => Err(AuthError::Storage),
+            },
+            _ => Err(AuthError::Storage),
+        }
     }
     pub(super) fn transaction<T>(
         &self,
@@ -156,15 +195,21 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
     }
     fn current(&self, token: Option<&str>) -> Result<AuthOutcome, AuthError> {
         self.transaction(|| {
-            let now=self.now()?;
-            if let Some(token)=token
-                && let Some(s)=self.session(token)?
-                && let Some(a)=self.account(s.account_id)?
-                && s.eligible(&a,now)
+            let now = self.observe_clock()?;
+            if let Some(token) = token
+                && let Some(session) = self.session(token)?
+                && let Some(account) = self.account(session.account_id)?
+                && session.eligible(&account, now)
             {
-                return Ok(AuthOutcome{body:serde_json::json!({"authenticated":true,"account":a.safe(),"session":s.safe(&a)}),cookie:CookieEffect::None});
+                return Ok(AuthOutcome {
+                    body: serde_json::json!({"authenticated":true,"account":account.safe(),"session":session.safe(&account)}),
+                    cookie: CookieEffect::None,
+                });
             }
-            Ok(AuthOutcome{body:serde_json::json!({"authenticated":false,"session":null}),cookie:if token.is_some(){CookieEffect::Clear}else{CookieEffect::None}})
+            Ok(AuthOutcome {
+                body: serde_json::json!({"authenticated":false,"session":null}),
+                cookie: if token.is_some() { CookieEffect::Clear } else { CookieEffect::None },
+            })
         })
     }
     fn complete(
@@ -189,71 +234,121 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         if original.scope != scope {
             return Err(AuthError::Unauthorized);
         }
-        if !original.eligible(&account, self.now()?) {
-            // A retired cookie is a binding hint, not current authority. Reprove
-            // the CURRENT account password before any safe receipt is returned.
-            if !account.login_eligible()
-                || original.expires <= self.now()?
-                || original.epoch.checked_add(1) != Some(account.epoch)
-                || original.revoked.is_none()
-            {
-                return Err(AuthError::Unauthorized);
-            }
-            if !verify_password(
+        let eligible =
+            self.transaction(|| Ok(original.eligible(&account, self.observe_clock()?)))?;
+        if !eligible {
+            // A retired cookie binds the retry but grants no current authority.
+            // Prove the current password before returning a receipt.
+            let keys = self.rate_keys(ACCOUNT_LOGIN_SCOPE, account.username.as_bytes(), context)?;
+            self.transaction(|| {
+                let now = self.observe_clock()?;
+                if !retired_completion_eligible(&original, &account, now) {
+                    return Err(AuthError::Unauthorized);
+                }
+                self.check_rate(ACCOUNT_LOGIN_SCOPE, &keys, now)
+            })?;
+            let verified = verify_password(
                 password,
                 account.verifier.as_deref().ok_or(AuthError::Unauthorized)?,
-            )? {
-                return Err(AuthError::Unauthorized);
-            }
+            )?;
             return self.transaction(|| {
-                let now = self.now()?;
+                let now = self.observe_clock()?;
+                self.check_rate(ACCOUNT_LOGIN_SCOPE, &keys, now)?;
+                if !verified {
+                    self.fail_rate(ACCOUNT_LOGIN_SCOPE, &keys, now)?;
+                    return Err(AuthError::Unauthorized);
+                }
+                let session = self.session(token)?.ok_or(AuthError::Unauthorized)?;
                 let current = self.account(account.id)?.ok_or(AuthError::Unauthorized)?;
-                if !current.login_eligible()
+                if session.id != original.id
+                    || session.account_id != original.account_id
+                    || session.scope != original.scope
+                    || session.epoch != original.epoch
+                    || session.expires != original.expires
+                    || session.revoked != original.revoked
+                    || !retired_completion_eligible(&session, &current, now)
                     || current.epoch != account.epoch
                     || current.verifier != account.verifier
+                    || current.username != account.username
                 {
                     return Err(AuthError::Unauthorized);
                 }
-                self.receipt(current.id, command, fp, now)?
-                    .ok_or(AuthError::Unauthorized)
+                let receipt = self
+                    .receipt(current.id, command, fp, now)?
+                    .ok_or(AuthError::Unauthorized)?;
+                self.clear_rate(ACCOUNT_LOGIN_SCOPE, &keys)?;
+                Ok(receipt)
             });
         }
         self.transaction(|| {
-            self.receipt(account.id, command, fp, self.now()?)
+            self.receipt(account.id, command, fp, self.observe_clock()?)
                 .map(|_| ())
         })?;
         let phc = Zeroizing::new(hash_password(password, self.policy, self.runtime)?);
         self.transaction(|| {
-            let now=self.now()?;
-            let s=self.session(token)?.ok_or(AuthError::Unauthorized)?;
-            let mut a=self.account(s.account_id)?.ok_or(AuthError::Unauthorized)?;
-            if s.id!=original.id || s.scope!=scope || !s.eligible(&a,now) {return Err(AuthError::Unauthorized);}
-            if let Some(receipt)=self.receipt(a.id,command,fp,now)? {return Ok(receipt);}
-            a.epoch=a.epoch.checked_add(1).filter(|v|*v<=JS_SAFE_INTEGER_MAX).ok_or(AuthError::Conflict)?;
-            self.enqueue_account_closes(a.id,now)?;
+            let now = self.observe_clock()?;
+            let session = self.session(token)?.ok_or(AuthError::Unauthorized)?;
+            let mut account = self.account(session.account_id)?.ok_or(AuthError::Unauthorized)?;
+            if session.id != original.id
+                || session.scope != scope
+                || !session.eligible(&account, now)
+            {
+                return Err(AuthError::Unauthorized);
+            }
+            if let Some(receipt) = self.receipt(account.id, command, fp, now)? {
+                return Ok(receipt);
+            }
+            account.epoch = account
+                .epoch
+                .checked_add(1)
+                .filter(|epoch| *epoch <= JS_SAFE_INTEGER_MAX)
+                .ok_or(AuthError::Conflict)?;
+            self.enqueue_account_closes(account.id, now)?;
             self.db.execute(
                 "UPDATE accounts SET verifier=?,status=?,password_set_at=?,credential_epoch=? WHERE account_id=?",
                 &[
                     SqlValue::Text(phc.to_string()),
                     SqlValue::Text(AccountStatus::Verified.to_string()),
                     SqlValue::Integer(now),
-                    SqlValue::Integer(a.epoch),
-                    SqlValue::Text(a.id.to_string()),
+                    SqlValue::Integer(account.epoch),
+                    SqlValue::Text(account.id.to_string()),
                 ],
             )?;
-            self.db.execute("UPDATE account_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",&[SqlValue::Integer(now),SqlValue::Text(a.id.to_string())])?;
-            self.db.execute("UPDATE access_links SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",&[SqlValue::Integer(now),SqlValue::Text(a.id.to_string())])?;
-            a.status=AccountStatus::Verified;
-            let outcome=if scope==SessionScope::EnrollmentOnly {super::receipts::CommandOutcome::CompleteEnrollment{account_id:a.id}}else{super::receipts::CommandOutcome::CompletePasswordReset{account_id:a.id}};
-            self.record_receipt(a.id,command,fp,outcome,now)?;
-            if scope==SessionScope::EnrollmentOnly {
-                let (normal,bearer)=self.issue_session(&a,SessionScope::Normal,now,s.expires)?;
-                Ok(AuthOutcome{body:serde_json::json!({"account":a.safe(),"session":normal.safe(&a)}),cookie:CookieEffect::Set{token:bearer,expires_at:s.expires}})
-            }else{
-                Ok(AuthOutcome{body:serde_json::json!({"reset_completed":true,"next_action":"login"}),cookie:CookieEffect::Clear})
+            self.db.execute(
+                "UPDATE account_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+                &[SqlValue::Integer(now), SqlValue::Text(account.id.to_string())],
+            )?;
+            self.db.execute(
+                "UPDATE access_links SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+                &[SqlValue::Integer(now), SqlValue::Text(account.id.to_string())],
+            )?;
+            account.status = AccountStatus::Verified;
+            let outcome = match scope {
+                SessionScope::EnrollmentOnly => {
+                    super::receipts::CommandOutcome::CompleteEnrollment { account_id: account.id }
+                }
+                SessionScope::PasswordResetOnly => {
+                    super::receipts::CommandOutcome::CompletePasswordReset { account_id: account.id }
+                }
+                SessionScope::Normal => return Err(AuthError::InvalidInput),
+            };
+            self.record_receipt(account.id, command, fp, outcome, now)?;
+            if scope == SessionScope::EnrollmentOnly {
+                let (normal, bearer) =
+                    self.issue_session(&account, SessionScope::Normal, now, session.expires)?;
+                Ok(AuthOutcome {
+                    body: serde_json::json!({"account":account.safe(),"session":normal.safe(&account)}),
+                    cookie: CookieEffect::Set { token: bearer, expires_at: session.expires },
+                })
+            } else {
+                Ok(AuthOutcome {
+                    body: serde_json::json!({"reset_completed":true,"next_action":"login"}),
+                    cookie: CookieEffect::Clear,
+                })
             }
         })
     }
+
     fn redeem(
         &self,
         purpose: AccessLinkPurpose,
@@ -267,7 +362,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         let keys = self.rate_keys("access_link_redemption", subject, context)?;
         self.transaction(|| {
             use super::records::{text,integer,optional_integer};
-            let now=self.now()?;
+            let now=self.observe_clock()?;
             self.check_rate("access_link_redemption",&keys,now)?;
             let result=(|| {
             let digest=token_digest(token).map_err(|_|AuthError::InvalidLink)?;
@@ -301,7 +396,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
     }
     fn logout(&self, token: Option<&str>) -> Result<AuthOutcome, AuthError> {
         self.transaction(|| {
-            let now=self.now()?;
+            let now=self.observe_clock()?;
             if let Some(token)=token && let Some(s)=self.session(token)? {
                 self.enqueue_session_closes(s.id,now)?;
                 self.db.execute("UPDATE account_sessions SET revoked_at=? WHERE session_id=? AND revoked_at IS NULL",&[SqlValue::Integer(now),SqlValue::Text(s.id.to_string())])?;
@@ -319,9 +414,11 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         let username = validate_username(username).map_err(|_| AuthError::InvalidInput)?;
         let fp = super::receipts::fingerprint("login", &[username])?;
         validate_password(password).map_err(|_| AuthError::InvalidInput)?;
-        let keys = self.rate_keys("account_login", username.as_bytes(), context)?;
+        let keys = self.rate_keys(ACCOUNT_LOGIN_SCOPE, username.as_bytes(), context)?;
         for _ in 0..LOGIN_VERIFICATION_MAX_ATTEMPTS {
-            self.transaction(|| self.check_rate("account_login", &keys, self.now()?))?;
+            self.transaction(|| {
+                self.check_rate(ACCOUNT_LOGIN_SCOPE, &keys, self.observe_clock()?)
+            })?;
             let original=self.db.query("SELECT account_id,username,role,status,verifier,credential_epoch,created_at,password_set_at,disabled_at FROM accounts WHERE username=? COLLATE BINARY",&[SqlValue::Text(username.to_owned())])?.first().map(Account::parse).transpose()?;
             let Some(original) = original else {
                 // Real KDF work masks cheap denial; it grants no authority.
@@ -357,11 +454,11 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
                 None
             };
             let committed=self.transaction(|| {
-                let now=self.now()?;self.check_rate("account_login",&keys,now)?;
+                let now=self.observe_clock()?;self.check_rate(ACCOUNT_LOGIN_SCOPE,&keys,now)?;
                 let a=self.account(original.id)?.ok_or(AuthError::InvalidCredentials)?;
                 if !a.login_eligible() {return Err(AuthError::InvalidCredentials);}
                 if a.epoch!=original.epoch || a.verifier!=original.verifier {return Ok(None);}
-                if let Some(receipt)=self.receipt(a.id,command,fp,now)? {self.clear_rate("account_login",&keys)?;return Ok(Some(receipt));}
+                if let Some(receipt)=self.receipt(a.id,command,fp,now)? {self.clear_rate(ACCOUNT_LOGIN_SCOPE,&keys)?;return Ok(Some(receipt));}
                 if let Some(candidate)=&candidate {
                     self.db.execute(
                         "UPDATE accounts SET verifier=? WHERE account_id=? AND credential_epoch=? AND verifier=? AND status=? AND disabled_at IS NULL",
@@ -377,7 +474,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
                 let deadline=add_deadline(now,SESSION_LIFETIME_MS)?;
                 let (s,token)=self.issue_session(&a,SessionScope::Normal,now,deadline)?;
                 self.record_receipt(a.id,command,fp,super::receipts::CommandOutcome::Login{account_id:a.id,session_id:s.id,session_expires_at:deadline},now)?;
-                self.clear_rate("account_login",&keys)?;
+                self.clear_rate(ACCOUNT_LOGIN_SCOPE,&keys)?;
                 Ok(Some(AuthOutcome{body:serde_json::json!({"account":a.safe(),"session":s.safe(&a)}),cookie:CookieEffect::Set{token,expires_at:deadline}}))
             })?;
             if let Some(outcome) = committed {
@@ -470,4 +567,12 @@ fn add_deadline(now: i64, period: i64) -> Result<i64, AuthError> {
     now.checked_add(period)
         .filter(|n| *n <= JS_SAFE_INTEGER_MAX)
         .ok_or(AuthError::Crypto)
+}
+
+fn retired_completion_eligible(session: &Session, account: &Account, now: i64) -> bool {
+    account.id == session.account_id
+        && account.login_eligible()
+        && session.expires > now
+        && session.epoch.checked_add(1) == Some(account.epoch)
+        && session.revoked.is_some()
 }

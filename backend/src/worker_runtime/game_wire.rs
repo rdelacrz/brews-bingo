@@ -82,6 +82,134 @@ pub(super) enum GameRejection {
     InvalidRecovery,
     RecoveryBlocked,
 }
+fn optional_object<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(bound(deserialize = "T: Deserialize<'de>"))]
+    struct Object<T>(#[serde(deserialize_with = "object")] T);
+    Option::<Object<T>>::deserialize(deserializer).map(|value| value.map(|value| value.0))
+}
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub(super) struct SyncAccountAuthority {
+    account_id: brews_domain::ids::AccountId,
+    session_id: brews_domain::ids::SessionId,
+    role: brews_domain::accounts::AccountRole,
+    epoch: i64,
+    expires_at: i64,
+}
+#[cfg(target_arch = "wasm32")]
+impl SyncAccountAuthority {
+    pub(super) fn denial_authority(&self) -> Result<crate::auth::GameAccountAuthority, ()> {
+        crate::auth::GameAccountAuthority::from_trusted_peer(
+            self.account_id,
+            self.session_id,
+            self.role,
+            self.epoch,
+            self.expires_at,
+        )
+        .map_err(|_| ())
+    }
+}
+#[cfg(target_arch = "wasm32")]
+impl From<&crate::auth::GameAccountAuthority> for SyncAccountAuthority {
+    fn from(proof: &crate::auth::GameAccountAuthority) -> Self {
+        Self {
+            account_id: proof.account_id(),
+            session_id: proof.session_id(),
+            role: proof.role(),
+            epoch: proof.credential_epoch(),
+            expires_at: proof.expires_at(),
+        }
+    }
+}
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct SyncPlayerAuthority {
+    pub game_id: GameId,
+    pub session_id: brews_domain::ids::SessionId,
+    pub player_id: brews_domain::ids::PlayerId,
+    pub epoch: i64,
+    pub session_expires_at: i64,
+    pub valid_until: i64,
+}
+impl SyncPlayerAuthority {
+    pub(super) fn validate(&self) -> Result<(), ()> {
+        if !(1..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&self.valid_until)
+            || !(self.valid_until..=crate::limits::JS_SAFE_INTEGER_MAX)
+                .contains(&self.session_expires_at)
+            || !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&self.epoch)
+        {
+            return Err(());
+        }
+        Ok(())
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub(super) fn binding(&self) -> crate::db::game::SyncPlayerBinding {
+        crate::db::game::SyncPlayerBinding {
+            game_id: self.game_id,
+            session_id: self.session_id,
+            player_id: self.player_id,
+            epoch: self.epoch,
+            session_expires_at: self.session_expires_at,
+            valid_until: self.valid_until,
+        }
+    }
+}
+#[cfg(target_arch = "wasm32")]
+impl From<crate::db::game::SyncPlayerBinding> for SyncPlayerAuthority {
+    fn from(binding: crate::db::game::SyncPlayerBinding) -> Self {
+        Self {
+            game_id: binding.game_id,
+            session_id: binding.session_id,
+            player_id: binding.player_id,
+            epoch: binding.epoch,
+            session_expires_at: binding.session_expires_at,
+            valid_until: binding.valid_until,
+        }
+    }
+}
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct PlayerSyncReleaseRequest {
+    pub token: String,
+    #[serde(deserialize_with = "object")]
+    pub authority: SyncPlayerAuthority,
+}
+impl Drop for PlayerSyncReleaseRequest {
+    fn drop(&mut self) {
+        self.token.zeroize();
+    }
+}
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "release_result", rename_all = "snake_case", deny_unknown_fields)]
+pub(super) enum PlayerSyncReleaseReply {
+    Released {
+        #[serde(deserialize_with = "object")]
+        authority: SyncPlayerAuthority,
+        checked_at: i64,
+    },
+    Rejected {
+        code: GameRejection,
+    },
+}
+impl PlayerSyncReleaseReply {
+    pub(super) fn validate_for(&self, expected: &SyncPlayerAuthority) -> Result<(), ()> {
+        expected.validate()?;
+        if let Self::Released {
+            authority,
+            checked_at,
+        } = self
+            && (authority != expected || !(0..expected.valid_until).contains(checked_at))
+        {
+            return Err(());
+        }
+        Ok(())
+    }
+}
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "owner_result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum GameOwnerResponse {
@@ -110,6 +238,11 @@ pub(super) enum GameOwnerResponse {
         cookie: GameCookieWire,
     },
     Synced {
+        valid_until: Option<i64>,
+        #[serde(default, deserialize_with = "optional_object")]
+        authority: Option<SyncAccountAuthority>,
+        #[serde(default, deserialize_with = "optional_object")]
+        player_authority: Option<SyncPlayerAuthority>,
         #[serde(deserialize_with = "object")]
         response: SyncResponse,
     },
@@ -284,7 +417,35 @@ impl GameOwnerResponse {
     fn validate_success_for(&self, request: &GameIngress) -> Result<(), ()> {
         use brews_contracts::games::GameOutcome;
         let Self::Success { response, .. } = self else {
-            if let Self::Synced { response } = self {
+            if let Self::Synced {
+                response,
+                valid_until,
+                authority,
+                player_authority,
+            } = self
+            {
+                match request.view {
+                    Some(ViewSelector::Player) => {
+                        let binding = player_authority.as_ref().ok_or(())?;
+                        binding.validate()?;
+                        if authority.is_some()
+                            || Some(binding.game_id) != request.game_id
+                            || Some(binding.valid_until) != *valid_until
+                        {
+                            return Err(());
+                        }
+                        if let Some(
+                            brews_contracts::games::GameView::Player { player_id, .. }
+                            | brews_contracts::games::GameView::FinalPlayer { player_id, .. },
+                        ) = &response.snapshot
+                            && *player_id != binding.player_id
+                        {
+                            return Err(());
+                        }
+                    }
+                    Some(ViewSelector::Account) if player_authority.is_none() => {}
+                    _ => return Err(()),
+                }
                 if request.operation != GameAction::Sync
                     || (response.up_to_date
                         && request.known_revision != Some(response.view_revision))
@@ -531,7 +692,20 @@ impl GameOwnerResponse {
                 (_, GameCookieWire::None) => {}
                 _ => return Err(()),
             },
-            Self::Synced { response } => {
+            Self::Synced {
+                response,
+                valid_until,
+                player_authority,
+                ..
+            } => {
+                if let Some(binding) = player_authority {
+                    binding.validate()?;
+                }
+                if valid_until.is_some_and(|deadline| {
+                    !(1..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&deadline)
+                }) {
+                    return Err(());
+                }
                 response.encode_json().map_err(|_| ())?;
             }
             Self::Recovered { receipt, game, .. } => {
@@ -1036,5 +1210,73 @@ mod tests {
             request.body = body.to_owned();
             assert!(GameIngress::decode_json(&serde_json::to_vec(&request).unwrap()).is_err());
         }
+    }
+    #[test]
+    fn player_sync_release_requires_exact_original_proof_and_closed_objects() {
+        let proof = SyncPlayerAuthority {
+            game_id: ID.parse().unwrap(),
+            session_id: ID.parse().unwrap(),
+            player_id: ID.parse().unwrap(),
+            epoch: 1,
+            session_expires_at: 200,
+            valid_until: 100,
+        };
+        let reply = PlayerSyncReleaseReply::Released {
+            authority: proof.clone(),
+            checked_at: 99,
+        };
+        assert!(reply.validate_for(&proof).is_ok());
+        for field in [
+            "game_id",
+            "session_id",
+            "player_id",
+            "epoch",
+            "session_expires_at",
+            "valid_until",
+            "checked_at",
+        ] {
+            let mut bad = serde_json::to_value(&reply).unwrap();
+            if field == "checked_at" {
+                bad[field] = 100.into();
+            } else {
+                bad["authority"][field] = if field.ends_with("_id") {
+                    OTHER_ID.into()
+                } else {
+                    2.into()
+                };
+            }
+            let bad: PlayerSyncReleaseReply = serde_json::from_value(bad).unwrap();
+            assert!(bad.validate_for(&proof).is_err(), "{field}");
+        }
+        for bytes in [
+            r#"{"release_result":"released","checked_at":99}"#,
+            r#"{"release_result":"released","authority":[],"checked_at":99}"#,
+            r#"{"release_result":"rejected","code":"unauthorized","unknown":1}"#,
+        ] {
+            assert!(serde_json::from_str::<PlayerSyncReleaseReply>(bytes).is_err());
+        }
+        let release_request = PlayerSyncReleaseRequest {
+            token: String::new(),
+            authority: proof.clone(),
+        };
+        assert!(
+            serde_json::from_slice::<PlayerSyncReleaseRequest>(
+                &serde_json::to_vec(&release_request).unwrap()
+            )
+            .is_ok()
+        );
+        let request = GameIngress {
+            operation: GameAction::Sync,
+            game_id: Some(proof.game_id),
+            command_id: None,
+            view: Some(ViewSelector::Player),
+            known_revision: Some(2),
+            session_token: None,
+            admission_token: None,
+            recovery_caller: None,
+            body: String::new(),
+        };
+        let missing = GameOwnerResponse::decode_json(br#"{"owner_result":"synced","valid_until":100,"response":{"up_to_date":true,"view_revision":2,"snapshot":null}}"#).unwrap();
+        assert!(missing.validate_for(&request).is_err());
     }
 }

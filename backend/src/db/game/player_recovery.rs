@@ -1,5 +1,19 @@
 //! Allocation-conscious private proof, failure buckets and epoch-close coordination.
-use super::*;
+use super::{
+    GameService, Record, SQL_SELECT_GAME_RECOVERY_ANSWER_VERIFIER_NORMALIZATION_VERSION_UPDATED_AT,
+    SQL_SELECT_REQUIRED_GAME_RECEIPT, add_time, advance, int, make_id, number, optional_number,
+    player_actor, string, text,
+};
+use crate::{
+    auth::Runtime,
+    db::{Database, SqlValue},
+    game::{GameError, LIVE_ACCESS, PLAYER_SESSION_MS, SecretCookie},
+};
+use brews_contracts::games::{GameOutcome, GameReceipt, GameResponse, GameView};
+use brews_domain::{
+    games::{GameCode, GameState},
+    ids::{CommandId, ConnectionId, GameId, PlayerId, SessionId},
+};
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
 use zeroize::{Zeroize as _, Zeroizing};
@@ -9,7 +23,9 @@ const SQL_PROOF: &str = "SELECT p.player_id,p.session_epoch,r.answer_verifier,r.
 const SQL_BUCKET: &str = "SELECT window_started_at,attempt_count,blocked_until,expires_at FROM game_recovery_buckets WHERE subject_key=?";
 const SQL_SET_BUCKET: &str = "INSERT INTO game_recovery_buckets VALUES(?,?,?,?,?) ON CONFLICT(subject_key) DO UPDATE SET window_started_at=excluded.window_started_at,attempt_count=excluded.attempt_count,blocked_until=excluded.blocked_until,expires_at=excluded.expires_at";
 const SQL_CLEAR_BUCKET: &str = "DELETE FROM game_recovery_buckets WHERE subject_key=?";
-const SQL_CLOSES: &str = "SELECT connection_id,session_id,player_id,epoch,next_attempt_at,attempt_count FROM game_socket_closures ORDER BY next_attempt_at,connection_id LIMIT 100";
+const SOCKET_CLOSE_BATCH_LIMIT: i64 = super::OBSERVED_CONNECTION_LIMIT as i64;
+const SQL_CLOSES: &str = "SELECT connection_id,session_id,player_id,epoch,next_attempt_at,attempt_count FROM game_socket_closures ORDER BY next_attempt_at,connection_id LIMIT ?";
+const SQL_DUE_CLOSES: &str = "SELECT connection_id,session_id,player_id,epoch,next_attempt_at,attempt_count FROM game_socket_closures WHERE next_attempt_at<=? ORDER BY next_attempt_at,connection_id LIMIT ?";
 
 struct PrivateRows(Vec<super::super::Row>);
 impl std::ops::Deref for PrivateRows {
@@ -269,34 +285,91 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         self.maintenance(|now| {
             let r = self.recovery_live(Some(code), now)?;
             self.recovery_rate_check(&keys, now)?;
-            if self.recovery_proof(alias)?.as_ref() != Some(&proof) { return Err(GameError::InvalidRecovery); }
+            if self.recovery_proof(alias)?.as_ref() != Some(&proof) {
+                return Err(GameError::InvalidRecovery);
+            }
             if let Some(receipt) = self.receipt(&player_actor(proof.player), command, fp, now)? {
-                return Ok(RecoveryOutcome { proof: proof.clone(), alias: alias.to_owned(), code: code.clone(), receipt, cookie: None });
+                return Ok(RecoveryOutcome {
+                    proof: proof.clone(),
+                    alias: alias.to_owned(),
+                    code: code.clone(),
+                    receipt,
+                    cookie: None,
+                });
             }
             self.admit(command, now)?;
             let epoch = advance(proof.epoch)?;
             let expires = add_time(now, PLAYER_SESSION_MS)?;
-            let closes = self.db.query("SELECT connection_id,session_id,epoch FROM game_current_connections WHERE viewer_kind=? AND principal_id=? ORDER BY connection_id LIMIT 100", &[text(PLAYER_KIND), text(proof.player)])?;
-            for row in closes {
-                let expected = [text(string(&row, 1)?), text(proof.player), int(number(&row, 2)?), int(now)];
-                let connection = text(string(&row, 0)?);
-                self.db.execute("INSERT INTO game_socket_closures VALUES(?,?,?,?,?,0) ON CONFLICT(connection_id) DO NOTHING", &[connection.clone(), expected[0].clone(), expected[1].clone(), expected[2].clone(), expected[3].clone()])?;
-                if self.db.query("SELECT session_id,player_id,epoch FROM game_socket_closures WHERE connection_id=?", &[connection])? != vec![expected[..3].to_vec()] { return Err(GameError::Storage); }
-            }
-            self.db.execute("UPDATE game_players SET session_epoch=? WHERE player_id=? AND session_epoch=?", &[int(epoch), text(proof.player), int(proof.epoch)])?;
+            self.detach_player_connections(proof.player, now)?;
+            self.db.execute(
+                "UPDATE game_players SET session_epoch=? WHERE player_id=? AND session_epoch=?",
+                &[int(epoch), text(proof.player), int(proof.epoch)],
+            )?;
             let mut after_proof = proof.clone();
             after_proof.epoch = epoch;
-            if self.recovery_proof(alias)?.as_ref() != Some(&after_proof) { return Err(GameError::Storage); }
-            self.db.execute("UPDATE game_sessions SET revoked_at=? WHERE player_id=? AND revoked_at IS NULL", &[int(now), text(proof.player)])?;
-            if !self.db.query("SELECT 1 FROM game_sessions WHERE player_id=? AND revoked_at IS NULL LIMIT 1", &[text(proof.player)])?.is_empty() { return Err(GameError::Storage); }
-            self.db.execute("INSERT INTO game_sessions VALUES(?,?,?,?,?,?,?,?,?,NULL)", &[text(sid), SqlValue::Blob(digest.to_vec()), text(r.id), text(code.as_str()), text(proof.player), int(epoch), text(LIVE_ACCESS), int(now), int(expires)])?;
-            let session = self.player_session(&token, &r, now).map_err(|_| GameError::Storage)?;
-            if session.player != proof.player || session.epoch != epoch || session.session != sid || session.expires != expires { return Err(GameError::Storage); }
+            if self.recovery_proof(alias)?.as_ref() != Some(&after_proof) {
+                return Err(GameError::Storage);
+            }
+            self.db.execute(
+                "UPDATE game_sessions SET revoked_at=? WHERE player_id=? AND revoked_at IS NULL",
+                &[int(now), text(proof.player)],
+            )?;
+            if !self
+                .db
+                .query(
+                    "SELECT 1 FROM game_sessions WHERE player_id=? AND revoked_at IS NULL LIMIT 1",
+                    &[text(proof.player)],
+                )?
+                .is_empty()
+            {
+                return Err(GameError::Storage);
+            }
+            self.db.execute(
+                "INSERT INTO game_sessions VALUES(?,?,?,?,?,?,?,?,?,NULL)",
+                &[
+                    text(sid),
+                    SqlValue::Blob(digest.to_vec()),
+                    text(r.id),
+                    text(code.as_str()),
+                    text(proof.player),
+                    int(epoch),
+                    text(LIVE_ACCESS),
+                    int(now),
+                    int(expires),
+                ],
+            )?;
+            let session = self
+                .player_session(&token, &r, now)
+                .map_err(|_| GameError::Storage)?;
+            if session.player != proof.player
+                || session.epoch != epoch
+                || session.session != sid
+                || session.expires != expires
+            {
+                return Err(GameError::Storage);
+            }
             let revision = advance(self.view_revision(&proof.player.to_string())?)?;
             self.set_view_revision(&proof.player.to_string(), revision)?;
             self.clear_recovery_rates(&keys)?;
-            let receipt = self.store_receipt(&player_actor(proof.player), command, fp, GameOutcome::PlayerRecovered { player_id: proof.player, view_revision: revision as u64, session_expires_at: expires }, r.id, now)?;
-            Ok(RecoveryOutcome { proof: after_proof, alias: alias.to_owned(), code: code.clone(), receipt, cookie: Some(SecretCookie { token, expires }) })
+            let receipt = self.store_receipt(
+                &player_actor(proof.player),
+                command,
+                fp,
+                GameOutcome::PlayerRecovered {
+                    player_id: proof.player,
+                    view_revision: revision as u64,
+                    session_expires_at: expires,
+                },
+                r.id,
+                now,
+            )?;
+            Ok(RecoveryOutcome {
+                proof: after_proof,
+                alias: alias.to_owned(),
+                code: code.clone(),
+                receipt,
+                cookie: Some(SecretCookie { token, expires }),
+            })
         })
     }
     /// Current player authority only; old answer proof cannot authorize this operation.
@@ -434,24 +507,35 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             Ok(receipt)
         })
     }
+    /// Reconciliation may acknowledge an already absent/closed target before its retry deadline.
     pub fn pending_recovery_socket_closes(&self) -> Result<Vec<RecoverySocketClose>, GameError> {
-        self.maintenance(|_| {
-            self.db
-                .query(SQL_CLOSES, &[])?
-                .iter()
-                .map(|row| {
-                    Ok(RecoverySocketClose {
-                        connection: string(row, 0)?.parse().map_err(|_| GameError::Storage)?,
-                        session: string(row, 1)?.parse().map_err(|_| GameError::Storage)?,
-                        player: string(row, 2)?.parse().map_err(|_| GameError::Storage)?,
-                        epoch: number(row, 3)?,
-                        next_attempt_at: number(row, 4)?,
-                        attempt_count: u32::try_from(number(row, 5)?)
-                            .map_err(|_| GameError::Storage)?,
-                    })
-                })
-                .collect()
+        self.maintenance(|_| self.socket_close_rows(SQL_CLOSES, &[int(SOCKET_CLOSE_BATCH_LIMIT)]))
+    }
+    pub fn due_recovery_socket_closes(&self) -> Result<Vec<RecoverySocketClose>, GameError> {
+        self.maintenance(|now| {
+            self.socket_close_rows(SQL_DUE_CLOSES, &[int(now), int(SOCKET_CLOSE_BATCH_LIMIT)])
         })
+    }
+    fn socket_close_rows(
+        &self,
+        sql: &str,
+        bindings: &[SqlValue],
+    ) -> Result<Vec<RecoverySocketClose>, GameError> {
+        self.db
+            .query(sql, bindings)?
+            .iter()
+            .map(|row| {
+                Ok(RecoverySocketClose {
+                    connection: string(row, 0)?.parse().map_err(|_| GameError::Storage)?,
+                    session: string(row, 1)?.parse().map_err(|_| GameError::Storage)?,
+                    player: string(row, 2)?.parse().map_err(|_| GameError::Storage)?,
+                    epoch: number(row, 3)?,
+                    next_attempt_at: number(row, 4)?,
+                    attempt_count: u32::try_from(number(row, 5)?)
+                        .map_err(|_| GameError::Storage)?,
+                })
+            })
+            .collect()
     }
     pub fn acknowledge_recovery_socket_close(
         &self,
@@ -469,10 +553,15 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         close: &RecoverySocketClose,
     ) -> Result<(), GameError> {
         self.maintenance(|now| {
+            let identity = [text(close.connection), text(close.session), text(close.player), int(close.epoch)];
+            let rows = self.db.query("SELECT next_attempt_at,attempt_count FROM game_socket_closures WHERE connection_id=? AND session_id=? AND player_id=? AND epoch=?", &identity)?;
+            if rows != vec![vec![int(close.next_attempt_at), int(i64::from(close.attempt_count))]] || close.next_attempt_at > now {
+                return Ok(());
+            }
             let attempts = close.attempt_count.saturating_add(1);
             let delay = crate::game::RETRY_INITIAL_MS.saturating_mul(1i64 << attempts.min(9)).min(crate::game::RETRY_MAX_MS);
             let next = add_time(now, delay)?;
-            self.db.execute("UPDATE game_socket_closures SET next_attempt_at=?,attempt_count=? WHERE connection_id=? AND session_id=? AND player_id=? AND epoch=? AND attempt_count=?", &[int(next), int(i64::from(attempts)), text(close.connection), text(close.session), text(close.player), int(close.epoch), int(i64::from(close.attempt_count))])?;
+            self.db.execute("UPDATE game_socket_closures SET next_attempt_at=?,attempt_count=? WHERE connection_id=? AND session_id=? AND player_id=? AND epoch=? AND attempt_count=? AND next_attempt_at=?", &[int(next), int(i64::from(attempts)), text(close.connection), text(close.session), text(close.player), int(close.epoch), int(i64::from(close.attempt_count)), int(close.next_attempt_at)])?;
             if self.db.query("SELECT next_attempt_at,attempt_count FROM game_socket_closures WHERE connection_id=? AND session_id=? AND player_id=? AND epoch=?", &[text(close.connection), text(close.session), text(close.player), int(close.epoch)])? != vec![vec![int(next), int(i64::from(attempts))]] { return Err(GameError::Storage); }
             Ok(())
         })

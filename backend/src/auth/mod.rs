@@ -53,6 +53,8 @@ pub use game_authority::{GameAccountAuthority, GameSocketCloseWork};
 mod management;
 #[cfg(test)]
 pub(crate) use management::test_support;
+#[cfg(any(test, target_arch = "wasm32"))]
+mod output;
 mod rate;
 mod receipts;
 mod records;
@@ -61,6 +63,8 @@ pub use management::{
     ManagementError, ManagementPrincipal, RemovalGateGrant, RemovalPhase, RemovalReleaseAck,
     RemovalWork,
 };
+#[cfg(target_arch = "wasm32")]
+pub(crate) use output::AuthOutputAuthority;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AuthPolicy {

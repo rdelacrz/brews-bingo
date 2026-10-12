@@ -3,7 +3,10 @@ mod owner;
 mod reservation_lookup;
 pub(super) mod wire;
 
-use self::wire::*;
+use self::wire::{
+    DISCOVERY_REPLY_MAX_BYTES, DiscoveryAction, DiscoveryDirectoryReply, DiscoveryDirectoryRequest,
+    DiscoveryOutcome, DiscoveryOwnerReply, DiscoveryOwnerRequest, ObservedDiscoveryExpiry,
+};
 use super::{edge, game_peers};
 use crate::{
     api::{self, ApiError, AvailabilityView, DiscoveryCommand},

@@ -328,13 +328,8 @@ impl GameObject {
                 }
             };
             if self.fenced_player_socket(&hint, service)? {
-                // Detachment is durable; a failing provider close is pending work.
-                if ws
-                    .close(Some(CloseCode::Policy.value()), Some("session unavailable"))
-                    .is_err()
-                {
-                    self.transport_retry.set(true);
-                }
+                // Captured closure work alone controls physical retry timing.
+                self.dispatch_fenced_player_socket_close(service, &ws)?;
                 continue;
             }
             if matches!(hint.viewer, Viewer::Player(_)) {
@@ -424,14 +419,11 @@ impl GameObject {
                 && old_hint.session_id == hint.session_id
                 && old_hint.viewer == hint.viewer
             {
-                let closed =
-                    old.close(Some(CloseCode::Policy.value()), Some("connection replaced"));
                 if self.fenced_player_socket(&old_hint, &service)? {
-                    if closed.is_err() {
-                        self.transport_retry.set(true);
-                    }
+                    self.dispatch_fenced_player_socket_close(&service, &old)?;
                 } else {
-                    closed.map_err(|_| GameError::Storage)?;
+                    old.close(Some(CloseCode::Policy.value()), Some("connection replaced"))
+                        .map_err(|_| GameError::Storage)?;
                 }
                 DeliveryService::new(&db, &rt)
                     .map_err(|_| GameError::Storage)?
@@ -586,13 +578,8 @@ impl GameObject {
             if let Ok(hint) = Attachment::read(&ws)
                 && self.fenced_player_socket(&hint, service)?
             {
-                // No delivery/presence authority survives this captured tuple.
-                if ws
-                    .close(Some(CloseCode::Policy.value()), Some("session unavailable"))
-                    .is_err()
-                {
-                    self.transport_retry.set(true);
-                }
+                // No delivery/presence authority survives; the due dispatcher owns closure.
+                self.dispatch_fenced_player_socket_close(service, &ws)?;
                 continue;
             }
             if ready_state(&ws)? == 2 {
@@ -623,11 +610,20 @@ impl GameObject {
         db: &OwnerDatabase,
         code: CloseCode,
     ) -> Result<(), GameError> {
+        let hint = Attachment::read(ws).ok();
+        // Message/error callbacks must honor captured predecessor retry timing too.
+        if let Some(hint) = &hint
+            && self.fenced_player_socket(hint, service)?
+        {
+            self.dispatch_fenced_player_socket_close(service, ws)?;
+            if ready_state(ws)? != 3 {
+                return self.persist(service, db).await;
+            }
+        }
         if ready_state(ws)? != 3 {
             ws.close(Some(code.value()), Some("resynchronize"))
                 .map_err(|_| GameError::Storage)?;
         }
-        let hint = Attachment::read(ws).ok();
         if let Some(hint) = &hint {
             match hint.viewer {
                 Viewer::Player(_) => match service.player_connection(hint.connection_id) {

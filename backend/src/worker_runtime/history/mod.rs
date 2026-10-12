@@ -60,7 +60,7 @@ async fn current(env: &Env, token: &str) -> Result<GameAccountAuthority, History
         .await
         .map_err(peer_error)
 }
-fn same_authority(a: &GameAccountAuthority, b: &GameAccountAuthority) -> bool {
+pub(super) fn same_authority(a: &GameAccountAuthority, b: &GameAccountAuthority) -> bool {
     a.account_id() == b.account_id()
         && a.session_id() == b.session_id()
         && a.role() == b.role()
@@ -153,6 +153,12 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, HistoryError>
             match outcome {
                 HistoryOwnerOutcome::Detail { history } => {
                     let now = super::WorkerRuntime.now_ms();
+                    if proof.expires_at() <= now {
+                        game_peers::fence_discovery_account_expiry(env, token, &proof, now)
+                            .await
+                            .map_err(peer_error)?;
+                        return Err(HistoryError::Unauthorized);
+                    }
                     wire::validate_history(&history, now).map_err(peer_error)?;
                     if history.expires_at <= now {
                         confirm_expiry_denial(env, token, game_id).await?;
@@ -259,6 +265,12 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, HistoryError>
                     return Err(HistoryError::Unauthorized);
                 }
                 let now = super::WorkerRuntime.now_ms();
+                if proof.expires_at() <= now {
+                    game_peers::fence_discovery_account_expiry(env, token, &proof, now)
+                        .await
+                        .map_err(peer_error)?;
+                    return Err(HistoryError::Unauthorized);
+                }
                 for s in &games {
                     wire::validate_summary(s, now).map_err(peer_error)?;
                 }

@@ -401,7 +401,8 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         let account = self
             .account(session.account_id)?
             .ok_or(AuthError::Unauthorized)?;
-        if session.scope != SessionScope::Normal || !session.eligible(&account, self.now()?) {
+        let now = self.observe_clock()?;
+        if session.scope != SessionScope::Normal || !session.eligible(&account, now) {
             return Err(AuthError::Unauthorized);
         }
         GameAccountAuthority::from_trusted_peer(

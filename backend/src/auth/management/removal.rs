@@ -109,7 +109,9 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         if let Some(response) = self.pending_removal_response(actor, command_id, command)? {
             return Ok(response);
         }
-        if let Some(receipt) = self.management_receipt(actor, command_id, command, self.now()?)? {
+        if let Some(receipt) =
+            self.management_receipt(actor, command_id, command, self.observe_clock()?)?
+        {
             return Ok(ManagementResponse::Committed { receipt });
         }
         self.removal_target(account_id, actor)?;
@@ -271,7 +273,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                     };
                 }
                 let receipt = self
-                    .management_receipt(actor, command_id, command, self.now()?)?
+                    .management_receipt(actor, command_id, command, self.observe_clock()?)?
                     .ok_or(ManagementError::Conflict)?;
                 let rows = self.db.query(
                     "SELECT operation_id FROM management_receipts WHERE actor=? AND command_id=?",

@@ -392,10 +392,99 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             }
         }
         GameOwnerResponse::Rejected { code } => rejected(*code),
-        GameOwnerResponse::Synced { response } => json_response(
-            200,
-            response.encode_json().map_err(|_| ApiError::Unavailable)?,
-        ),
+        GameOwnerResponse::Synced {
+            response,
+            valid_until,
+            authority,
+            player_authority,
+        } => {
+            let valid_until = valid_until.ok_or(ApiError::Unavailable)?;
+            let token = ingress
+                .session_token
+                .as_deref()
+                .ok_or(ApiError::Unavailable)?;
+            // Preserve expiry observed at receipt before any account reauthorization await.
+            let observed_at = super::WorkerRuntime.now_ms();
+            if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+                return Err(ApiError::Unavailable);
+            }
+            if observed_at >= valid_until {
+                fence_recovery_output(env, &ingress, valid_until, observed_at).await?;
+                if let Some(authority) = authority {
+                    let proof = authority
+                        .denial_authority()
+                        .map_err(|_| ApiError::Unavailable)?;
+                    if observed_at >= proof.expires_at() {
+                        game_peers::fence_discovery_account_expiry(env, token, &proof, observed_at)
+                            .await
+                            .map_err(|_| ApiError::Unavailable)?;
+                    }
+                }
+                return rejected(GameRejection::Unauthorized);
+            }
+            let proof = if ingress.view == Some(super::game_wire::ViewSelector::Account) {
+                let proof = game_peers::authorize_account(env, token)
+                    .await
+                    .map_err(|_| ApiError::Unavailable)?;
+                if authority.as_ref() != Some(&super::game_wire::SyncAccountAuthority::from(&proof))
+                {
+                    return Err(ApiError::Unavailable);
+                }
+                Some(proof)
+            } else {
+                if authority.is_some() {
+                    return Err(ApiError::Unavailable);
+                }
+                let binding = player_authority.as_ref().ok_or(ApiError::Unavailable)?;
+                let release = super::game_wire::PlayerSyncReleaseRequest {
+                    token: token.to_owned(),
+                    authority: binding.clone(),
+                };
+                let checked: super::game_wire::PlayerSyncReleaseReply = game_peers::call(
+                    env,
+                    "GAMES",
+                    &game_id.to_string(),
+                    "/sync-player-release",
+                    &release,
+                    super::game_wire::GAME_WIRE_MAX_BYTES,
+                )
+                .await
+                .map_err(|_| ApiError::Unavailable)?;
+                // Sample the original deadline before inspecting the release ACK.
+                let observed_at = super::WorkerRuntime.now_ms();
+                if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+                    return Err(ApiError::Unavailable);
+                }
+                if observed_at >= valid_until {
+                    fence_recovery_output(env, &ingress, valid_until, observed_at).await?;
+                    return rejected(GameRejection::Unauthorized);
+                }
+                checked
+                    .validate_for(binding)
+                    .map_err(|_| ApiError::Unavailable)?;
+                if let super::game_wire::PlayerSyncReleaseReply::Rejected { code } = checked {
+                    return rejected(code);
+                }
+                None
+            };
+            let observed_at = super::WorkerRuntime.now_ms();
+            if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+                return Err(ApiError::Unavailable);
+            }
+            if observed_at >= valid_until {
+                fence_recovery_output(env, &ingress, valid_until, observed_at).await?;
+                if let Some(proof) = proof.filter(|p| p.expires_at() <= observed_at) {
+                    game_peers::fence_discovery_account_expiry(env, token, &proof, observed_at)
+                        .await
+                        .map_err(|_| ApiError::Unavailable)?;
+                }
+                return rejected(GameRejection::Unauthorized);
+            }
+            json_response(
+                200,
+                response.encode_json().map_err(|_| ApiError::Unavailable)?,
+            )
+        }
         GameOwnerResponse::Success { response, cookie } => {
             let bytes = response.encode_json().map_err(|_| ApiError::Unavailable)?;
             let mut output = json_response(response.status(), bytes)?;
@@ -490,13 +579,24 @@ async fn fence_recovery_output(
     let game = ingress.game_id.ok_or(ApiError::Unavailable)?;
     let request = super::discovery::wire::DiscoveryOwnerRequest {
         game_id: game,
-        action: super::discovery::wire::DiscoveryAction::Player {
-            token: game_peers::SecretToken::new(
-                ingress
-                    .session_token
-                    .as_deref()
-                    .ok_or(ApiError::Unavailable)?,
-            ),
+        action: if ingress.view == Some(super::game_wire::ViewSelector::Account) {
+            super::discovery::wire::DiscoveryAction::Account {
+                token: game_peers::SecretToken::new(
+                    ingress
+                        .session_token
+                        .as_deref()
+                        .ok_or(ApiError::Unavailable)?,
+                ),
+            }
+        } else {
+            super::discovery::wire::DiscoveryAction::Player {
+                token: game_peers::SecretToken::new(
+                    ingress
+                        .session_token
+                        .as_deref()
+                        .ok_or(ApiError::Unavailable)?,
+                ),
+            }
         },
         expiry: Some(super::discovery::wire::ObservedDiscoveryExpiry {
             deadline,

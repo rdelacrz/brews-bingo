@@ -155,6 +155,44 @@ impl GameObject {
         gate()?;
         Ok(registry)
     }
+    async fn release_player_sync(
+        &self,
+        request: super::game_wire::PlayerSyncReleaseRequest,
+    ) -> Result<super::game_wire::PlayerSyncReleaseReply, GameError> {
+        request
+            .authority
+            .validate()
+            .map_err(|_| GameError::InvalidInput)?;
+        if !self.owns_game(request.authority.game_id)? {
+            return Err(GameError::Unauthorized);
+        }
+        let db = self.database()?;
+        let rt = WorkerRuntime;
+        let service = self.service(&db, &rt)?;
+        let binding = request.authority.binding();
+        let initial = service.release_player_sync(&request.token, &binding);
+        self.state
+            .storage()
+            .sync()
+            .await
+            .map_err(|_| GameError::Storage)?;
+        initial?;
+        let checked_at = match service.release_player_sync(&request.token, &binding) {
+            Ok(now) => now,
+            Err(error) => {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+                return Err(error);
+            }
+        };
+        Ok(super::game_wire::PlayerSyncReleaseReply::Released {
+            authority: request.authority.clone(),
+            checked_at,
+        })
+    }
     async fn recover(
         &self,
         request: &GameRecoveryRequest,
@@ -286,6 +324,55 @@ impl GameObject {
         }
         Ok(())
     }
+    fn attempt_recovery_socket_close(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        close: &crate::db::game::RecoverySocketClose,
+        ws: &worker::WebSocket,
+    ) -> Result<bool, GameError> {
+        let hint = Attachment::read(ws)?;
+        if hint.connection_id != close.connection
+            || hint.session_id != close.session
+            || hint.authentication_epoch != close.epoch
+            || hint.viewer != Viewer::Player(close.player)
+        {
+            return Err(GameError::Storage);
+        }
+        if ready_state(ws)? == 3 {
+            return Ok(true);
+        }
+        // Recheck the durable snapshot before physical attempt, including its retry schedule.
+        if !service.due_recovery_socket_closes()?.contains(close) {
+            return Ok(false);
+        }
+        if close_checked(ws, CloseCode::Policy).is_err() {
+            service.retry_recovery_socket_close(close)?;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    /// Presence and broadcast paths may dispatch a known fenced socket through this gate.
+    pub(super) fn dispatch_fenced_player_socket_close(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        ws: &worker::WebSocket,
+    ) -> Result<(), GameError> {
+        let hint = Attachment::read(ws)?;
+        let close = service
+            .pending_recovery_socket_closes()?
+            .into_iter()
+            .find(|close| close.connection == hint.connection_id);
+        let Some(close) = close else {
+            // A later bounded batch owns this fenced identity; absence here is never an ACK.
+            return Ok(());
+        };
+        if self.attempt_recovery_socket_close(service, &close, ws)? {
+            service.acknowledge_recovery_socket_close(&close)?;
+        }
+        Ok(())
+    }
+
     async fn close_recovered_sockets(
         &self,
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
@@ -294,22 +381,11 @@ impl GameObject {
         for close in service.pending_recovery_socket_closes()? {
             let mut pending = false;
             for ws in &sockets {
-                let hint = Attachment::read(ws)?;
-                if hint.connection_id == close.connection {
-                    if hint.session_id != close.session
-                        || hint.authentication_epoch != close.epoch
-                        || hint.viewer != Viewer::Player(close.player)
-                    {
-                        return Err(GameError::Storage);
-                    }
-                    if close_checked(ws, CloseCode::Policy).is_err() {
-                        pending = true;
-                    }
+                if Attachment::read(ws)?.connection_id == close.connection {
+                    pending |= !self.attempt_recovery_socket_close(service, &close, ws)?;
                 }
             }
-            if pending {
-                service.retry_recovery_socket_close(&close)?;
-            } else {
+            if !pending {
                 service.acknowledge_recovery_socket_close(&close)?;
             }
         }
@@ -376,9 +452,11 @@ impl GameObject {
             return Err(GameError::Conflict);
         }
         service.cleanup()?;
-        // Leave first captures durable current/prepared bindings, including accepted
-        // native preparations whose owner acceptance failed. Transport follows commit.
-        if ingress.operation != GameAction::LeavePlayer {
+        // Leave and Recovery capture current/prepared predecessors before best-effort transport.
+        if !matches!(
+            ingress.operation,
+            GameAction::LeavePlayer | GameAction::RecoverPlayer
+        ) {
             self.broadcast(&service, &db).await?;
         }
         // A caller cannot retarget an existing Game by supplying a different typed ID.
@@ -663,9 +741,9 @@ impl GameObject {
             }
             (GameAction::Sync, GamePayload::Empty) => {
                 self.persist(&service, &db).await?;
-                let response = match ingress.view {
+                let initial = match ingress.view {
                     Some(super::game_wire::ViewSelector::Player) => {
-                        service.sync_player(token, ingress.known_revision)?
+                        service.sync_player(token, ingress.known_revision)
                     }
                     Some(super::game_wire::ViewSelector::Account) => {
                         let authority = game_peers::authorize_account(&self.env, token)
@@ -675,30 +753,77 @@ impl GameObject {
                             authority,
                             ingress.known_revision,
                             &self.observed(&service)?,
-                        )?
+                        )
                     }
                     None => return Err(GameError::InvalidInput),
                 };
-                response.encode_json().map_err(|_| GameError::Storage)?;
                 self.persist(&service, &db).await?;
-                let response = match ingress.view {
+                initial?.encode_json().map_err(|_| GameError::Storage)?;
+                // Flush maintenance, then derive the protected response without another success await.
+                let (response, valid_until, authority, player_authority) = match ingress.view {
                     Some(super::game_wire::ViewSelector::Player) => {
-                        service.sync_player(token, ingress.known_revision)?
+                        let cut = service.sync_player_output(token, ingress.known_revision);
+                        let (response, deadline) = match cut {
+                            Ok(cut) => cut,
+                            Err(error) => {
+                                self.state
+                                    .storage()
+                                    .sync()
+                                    .await
+                                    .map_err(|_| GameError::Storage)?;
+                                return Err(error);
+                            }
+                        };
+                        // Make the cut durable, then recheck its exact original binding.
+                        let gate = service.release_player_sync(token, &deadline);
+                        self.state
+                            .storage()
+                            .sync()
+                            .await
+                            .map_err(|_| GameError::Storage)?;
+                        gate?;
+                        if let Err(error) = service.release_player_sync(token, &deadline) {
+                            self.state
+                                .storage()
+                                .sync()
+                                .await
+                                .map_err(|_| GameError::Storage)?;
+                            return Err(error);
+                        }
+                        (response, deadline.valid_until, None, Some(deadline.into()))
                     }
                     Some(super::game_wire::ViewSelector::Account) => {
                         let authority = game_peers::authorize_account(&self.env, token)
                             .await
                             .map_err(peer_error)?;
-                        service.sync_account(
+                        let wire = super::game_wire::SyncAccountAuthority::from(&authority);
+                        let cut = service.sync_account_output(
                             authority,
                             ingress.known_revision,
                             &self.observed(&service)?,
-                        )?
+                        );
+                        let (response, deadline) = match cut {
+                            Ok(cut) => cut,
+                            Err(error) => {
+                                self.state
+                                    .storage()
+                                    .sync()
+                                    .await
+                                    .map_err(|_| GameError::Storage)?;
+                                return Err(error);
+                            }
+                        };
+                        (response, deadline, Some(wire), None)
                     }
                     None => return Err(GameError::InvalidInput),
                 };
                 response.encode_json().map_err(|_| GameError::Storage)?;
-                Ok(GameOwnerResponse::Synced { response })
+                Ok(GameOwnerResponse::Synced {
+                    response,
+                    valid_until: Some(valid_until),
+                    authority,
+                    player_authority,
+                })
             }
             (GameAction::Exit, GamePayload::Empty) => {
                 let command = command.ok_or(GameError::InvalidInput)?;
@@ -896,7 +1021,15 @@ impl GameObject {
         let authority = game_peers::authorize_account(&self.env, token)
             .await
             .map_err(peer_error)?;
-        service.authorize_gameplay_response(authority)?;
+        if let Err(error) = service.authorize_gameplay_response(authority) {
+            // Expiry rejection may write a denial fence; finish durability before rejection.
+            self.state
+                .storage()
+                .sync()
+                .await
+                .map_err(|_| GameError::Storage)?;
+            return Err(error);
+        }
         Ok(success(response))
     }
     async fn finish_terminal_release(
@@ -1098,7 +1231,12 @@ impl DurableObject for GameObject {
             || request.url()?.query().is_some()
             || !matches!(
                 path.as_str(),
-                "/command" | "/recovery" | "/close-account" | "/history" | "/discovery"
+                "/command"
+                    | "/recovery"
+                    | "/close-account"
+                    | "/history"
+                    | "/discovery"
+                    | "/sync-player-release"
             )
         {
             return Response::error("invalid private game request", 400);
@@ -1113,6 +1251,20 @@ impl DurableObject for GameObject {
             .map_err(|_| worker::Error::RustError("invalid private game request".into()))?
             .to_vec(),
         );
+        if path == "/sync-player-release" {
+            let request =
+                match game_peers::decode::<super::game_wire::PlayerSyncReleaseRequest>(&bytes) {
+                    Ok(request) => request,
+                    Err(_) => return Response::error("invalid private Sync release request", 400),
+                };
+            let reply = match self.release_player_sync(request).await {
+                Ok(reply) => reply,
+                Err(error) => super::game_wire::PlayerSyncReleaseReply::Rejected {
+                    code: rejection(error),
+                },
+            };
+            return Response::from_json(&reply);
+        }
         if path == "/discovery" {
             let request =
                 match game_peers::decode::<super::discovery::wire::DiscoveryOwnerRequest>(&bytes) {

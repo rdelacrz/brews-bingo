@@ -3,6 +3,8 @@ use super::*;
 use brews_domain::games::GameState;
 #[path = "terminal_faults.rs"]
 mod faults;
+#[path = "game_storage_audit.rs"]
+mod game_storage_audit;
 #[path = "history.rs"]
 mod history;
 #[path = "prestart_maintenance.rs"]
@@ -108,7 +110,26 @@ fn gameplay_response_guard_is_read_only_and_accepts_terminal_without_new_view_gr
             f.service().authorize_gameplay_response(proof),
             Err(GameError::Unauthorized)
         );
-        assert!(all_rows(&f) == before);
+        let after = all_rows(&f);
+        for (index, table) in brews_backend::db::schema::game_schema::GAME_TABLES
+            .iter()
+            .enumerate()
+        {
+            if *table == "game_metadata" {
+                assert_ne!(after[index], before[index]);
+            } else {
+                assert_eq!(
+                    after[index], before[index],
+                    "Denial writes only its clock fence: {table}"
+                );
+            }
+        }
+        assert_eq!(
+            f.game
+                .query("SELECT last_observed_ms FROM game_metadata", &[])
+                .unwrap(),
+            vec![vec![SqlValue::Integer(f.rt.now.get())]]
+        );
     }
 }
 

@@ -123,6 +123,18 @@ pub(super) struct AccountAuthorityWire {
     #[serde(deserialize_with = "super::game_peers::positive_integer")]
     expires: i64,
 }
+impl AccountAuthorityWire {
+    pub(super) fn proof(&self) -> Result<GameAccountAuthority, GamePeerError> {
+        GameAccountAuthority::from_trusted_peer(
+            self.account_id,
+            self.session_id,
+            self.role,
+            self.epoch,
+            self.expires,
+        )
+        .map_err(|_| GamePeerError::Unavailable)
+    }
+}
 impl From<&GameAccountAuthority> for AccountAuthorityWire {
     fn from(p: &GameAccountAuthority) -> Self {
         Self {

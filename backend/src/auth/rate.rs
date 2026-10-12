@@ -12,6 +12,8 @@ use crate::{
 };
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
+
+pub(super) const ACCOUNT_LOGIN_SCOPE: &str = "account_login";
 impl<D: Database, R: Runtime> AuthService<'_, D, R> {
     pub(super) fn rate_keys(
         &self,
@@ -114,9 +116,9 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         keys: &[[u8; DIGEST_BYTES]; 2],
     ) -> Result<AuthOutcome, AuthError> {
         self.transaction(|| {
-            let now = self.now()?;
-            self.check_rate("account_login", keys, now)?;
-            self.fail_rate("account_login", keys, now)?;
+            let now = self.observe_clock()?;
+            self.check_rate(ACCOUNT_LOGIN_SCOPE, keys, now)?;
+            self.fail_rate(ACCOUNT_LOGIN_SCOPE, keys, now)?;
             Err(AuthError::InvalidCredentials)
         })
     }

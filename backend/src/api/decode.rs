@@ -168,6 +168,10 @@ pub fn decode(
 }
 
 pub(super) fn session_cookie(headers: &HeaderMap) -> Result<Option<String>, ApiError> {
+    named_cookie(headers, "__Host-brews_session")
+}
+
+pub(super) fn named_cookie(headers: &HeaderMap, name: &str) -> Result<Option<String>, ApiError> {
     if headers.get_all("cookie").iter().count() > 1 {
         return Err(ApiError::InvalidInput);
     }
@@ -183,14 +187,14 @@ pub(super) fn session_cookie(headers: &HeaderMap) -> Result<Option<String>, ApiE
         let Some((key, value)) = part.trim().split_once('=') else {
             continue;
         };
-        if key == "__Host-brews_session" {
+        if key == name {
             if found.is_some() {
                 return Err(ApiError::InvalidInput);
             }
-            found = Some(value.to_owned());
+            found = Some(value);
         }
     }
-    Ok(found)
+    Ok(found.map(str::to_owned))
 }
 
 #[cfg(test)]
@@ -406,6 +410,52 @@ mod tests {
                 ),
                 "positional JSON array accepted at {path}"
             );
+        }
+    }
+
+    #[test]
+    fn named_cookie_keeps_selection_exact_without_rewriting_values() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "cookie",
+            "other=x; other=y; selected=__Host-brews_session=value; Selected=ignored"
+                .parse()
+                .unwrap(),
+        );
+        assert_eq!(
+            named_cookie(&headers, "selected").unwrap().as_deref(),
+            Some("__Host-brews_session=value")
+        );
+        assert_eq!(named_cookie(&headers, "absent").unwrap(), None);
+        headers.insert("cookie", "selected=; selected=second".parse().unwrap());
+        assert_eq!(
+            named_cookie(&headers, "selected"),
+            Err(ApiError::InvalidInput)
+        );
+    }
+
+    #[test]
+    fn named_cookie_applies_original_header_bounds_for_every_cookie_name() {
+        for name in [
+            "__Host-brews_session",
+            super::super::PLAYER_COOKIE_NAME,
+            super::super::ADMISSION_COOKIE_NAME,
+        ] {
+            let mut headers = HeaderMap::new();
+            let value = "x".repeat(COOKIE_HEADER_MAX_BYTES - name.len() - 1);
+            headers.insert("cookie", format!("{name}={value}").parse().unwrap());
+            assert_eq!(
+                named_cookie(&headers, name).unwrap().as_deref(),
+                Some(value.as_str())
+            );
+            headers.insert("cookie", format!("{name}={value}x").parse().unwrap());
+            assert_eq!(named_cookie(&headers, name), Err(ApiError::InvalidInput));
+            headers.insert("cookie", "other=first".parse().unwrap());
+            headers.append("cookie", "other=second".parse().unwrap());
+            assert_eq!(named_cookie(&headers, name), Err(ApiError::InvalidInput));
+            headers.clear();
+            headers.insert("cookie", http::HeaderValue::from_bytes(b"\xff").unwrap());
+            assert_eq!(named_cookie(&headers, name), Err(ApiError::InvalidInput));
         }
     }
 

@@ -19,7 +19,8 @@ const SQL_RENAME_OWN_ALIAS_WITH_PREVIOUS_ALIAS: &str =
 const SQL_UPDATE_EXPLICIT_LEAVE_TIME_BY_PLAYER: &str =
     "UPDATE game_players SET last_explicit_leave_at=? WHERE player_id=?";
 const SQL_SELECT_CURRENT_PLAYER_CONNECTIONS: &str = "SELECT connection_id,session_id,epoch FROM game_current_connections WHERE viewer_kind=? AND principal_id=? ORDER BY connection_id LIMIT ?";
-const PLAYER_CLOSE_CANDIDATE_LIMIT: usize = RETAINED_PLAYER_LIMIT * 2;
+const PLAYER_CLOSE_CANDIDATE_LIMIT: usize =
+    super::OBSERVED_CONNECTION_LIMIT + super::CONNECTION_GRANT_LIMIT;
 const SQL_SELECT_CURRENT_AND_PREPARED_PLAYER_CONNECTIONS: &str = "SELECT connection_id,session_id,epoch FROM game_current_connections WHERE viewer_kind=? AND principal_id=? UNION SELECT connection_id,session_id,epoch FROM game_connection_grants WHERE viewer_kind=? AND principal_id=? AND connection_id IS NOT NULL ORDER BY connection_id LIMIT ?";
 const SQL_QUEUE_CAPTURED_PLAYER_SOCKET_CLOSE: &str =
     "INSERT INTO game_socket_closures VALUES(?,?,?,?,?,0) ON CONFLICT(connection_id) DO NOTHING";
@@ -69,6 +70,71 @@ fn fingerprint(operation: &str, value: &str) -> [u8; 32] {
     hash.finalize().into()
 }
 impl<D: Database, R: Runtime> GameService<'_, D, R> {
+    pub(super) fn detach_player_connections(
+        &self,
+        player: brews_domain::ids::PlayerId,
+        now: i64,
+    ) -> Result<(), GameError> {
+        // A grant may already have a native socket even if acceptance rolled back.
+        let closes = self.db.query(
+            SQL_SELECT_CURRENT_AND_PREPARED_PLAYER_CONNECTIONS,
+            &[
+                text(PLAYER_KIND),
+                text(player),
+                text(PLAYER_KIND),
+                text(player),
+                int((PLAYER_CLOSE_CANDIDATE_LIMIT + 1) as i64),
+            ],
+        )?;
+        if closes.len() > PLAYER_CLOSE_CANDIDATE_LIMIT {
+            return Err(GameError::Storage);
+        }
+        for row in &closes {
+            let connection = text(string(row, 0)?);
+            let identity = [text(string(row, 1)?), text(player), int(number(row, 2)?)];
+            self.db.execute(
+                SQL_QUEUE_CAPTURED_PLAYER_SOCKET_CLOSE,
+                &[
+                    connection.clone(),
+                    identity[0].clone(),
+                    identity[1].clone(),
+                    identity[2].clone(),
+                    int(now),
+                ],
+            )?;
+            if self
+                .db
+                .query(SQL_SELECT_PLAYER_SOCKET_CLOSE_IDENTITY, &[connection])?
+                != vec![identity.to_vec()]
+            {
+                return Err(GameError::Storage);
+            }
+        }
+        let viewer = [text(PLAYER_KIND), text(player)];
+        self.db
+            .execute(SQL_DELETE_CURRENT_PLAYER_CONNECTIONS, &viewer)?;
+        self.db
+            .execute(SQL_DELETE_PREPARED_PLAYER_GRANTS, &viewer)?;
+        if !self
+            .db
+            .query(
+                SQL_SELECT_CURRENT_PLAYER_CONNECTIONS,
+                &[
+                    viewer[0].clone(),
+                    viewer[1].clone(),
+                    int((RETAINED_PLAYER_LIMIT + 1) as i64),
+                ],
+            )?
+            .is_empty()
+            || !self
+                .db
+                .query(SQL_CHECK_ANY_PREPARED_PLAYER_GRANT, &viewer)?
+                .is_empty()
+        {
+            return Err(GameError::Storage);
+        }
+        Ok(())
+    }
     /// Exact durable detachment proof, independent of provider close completion.
     pub fn player_socket_is_fenced(
         &self,
@@ -221,74 +287,13 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                 &[
                     text(PLAYER_KIND),
                     text(session.player),
-                    int((RETAINED_PLAYER_LIMIT + 1) as i64),
+                    int((super::OBSERVED_CONNECTION_LIMIT + 1) as i64),
                 ],
             )?;
-            if current.len() > RETAINED_PLAYER_LIMIT {
+            if current.len() > super::OBSERVED_CONNECTION_LIMIT {
                 return Err(GameError::Storage);
             }
-            // A grant may already have a native socket even if acceptance rolled back.
-            let closes = self.db.query(
-                SQL_SELECT_CURRENT_AND_PREPARED_PLAYER_CONNECTIONS,
-                &[
-                    text(PLAYER_KIND),
-                    text(session.player),
-                    text(PLAYER_KIND),
-                    text(session.player),
-                    int((PLAYER_CLOSE_CANDIDATE_LIMIT + 1) as i64),
-                ],
-            )?;
-            if closes.len() > PLAYER_CLOSE_CANDIDATE_LIMIT {
-                return Err(GameError::Storage);
-            }
-            for row in &closes {
-                let connection = text(string(row, 0)?);
-                let identity = [
-                    text(string(row, 1)?),
-                    text(session.player),
-                    int(number(row, 2)?),
-                ];
-                self.db.execute(
-                    SQL_QUEUE_CAPTURED_PLAYER_SOCKET_CLOSE,
-                    &[
-                        connection.clone(),
-                        identity[0].clone(),
-                        identity[1].clone(),
-                        identity[2].clone(),
-                        int(now),
-                    ],
-                )?;
-                if self
-                    .db
-                    .query(SQL_SELECT_PLAYER_SOCKET_CLOSE_IDENTITY, &[connection])?
-                    != vec![identity.to_vec()]
-                {
-                    return Err(GameError::Storage);
-                }
-            }
-            let viewer = [text(PLAYER_KIND), text(session.player)];
-            self.db
-                .execute(SQL_DELETE_CURRENT_PLAYER_CONNECTIONS, &viewer)?;
-            self.db
-                .execute(SQL_DELETE_PREPARED_PLAYER_GRANTS, &viewer)?;
-            if !self
-                .db
-                .query(
-                    SQL_SELECT_CURRENT_PLAYER_CONNECTIONS,
-                    &[
-                        viewer[0].clone(),
-                        viewer[1].clone(),
-                        int((RETAINED_PLAYER_LIMIT + 1) as i64),
-                    ],
-                )?
-                .is_empty()
-                || !self
-                    .db
-                    .query(SQL_CHECK_ANY_PREPARED_PLAYER_GRANT, &viewer)?
-                    .is_empty()
-            {
-                return Err(GameError::Storage);
-            }
+            self.detach_player_connections(session.player, now)?;
             let retained = expected_state == GameState::InProgress;
             let revision =
                 if retained {

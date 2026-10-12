@@ -731,6 +731,7 @@ fn close_retry_backoff_is_durable_bounded_and_ack_ignored_write_retains_work() {
             .pending_recovery_socket_closes()
             .unwrap()
             .remove(0);
+        f.rt.now.set(close.next_attempt_at);
         f.service().retry_recovery_socket_close(&close).unwrap();
         let current = f
             .service()

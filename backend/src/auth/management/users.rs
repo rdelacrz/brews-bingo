@@ -11,7 +11,7 @@ use brews_contracts::{
 use brews_domain::ids::CommandId;
 
 impl<D: Database, R: Runtime> AuthService<'_, D, R> {
-    /// Reprove live authority after the transport's final await; never mutates state.
+    /// Reprove live authority after the final await; successful release stays read-only.
     #[cfg_attr(
         not(any(target_arch = "wasm32", test)),
         allow(dead_code, reason = "The Worker calls this final delivery guard.")
@@ -20,14 +20,10 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         &self,
         principal: &ManagementPrincipal,
     ) -> Result<(), ManagementError> {
-        self.db.transaction(|| {
-            Ok((|| {
-                if !matches!(principal, ManagementPrincipal::AdminSession(_)) {
-                    return Err(ManagementError::Forbidden);
-                }
-                self.management_actor(principal).map(|_| ())
-            })())
-        })?
+        if !matches!(principal, ManagementPrincipal::AdminSession(_)) {
+            return Err(ManagementError::Forbidden);
+        }
+        self.management_read(|now| self.management_actor_at(principal, now).map(|_| ()))
     }
     /// Project genuine removal work/completion under one live authorized read.
     #[cfg_attr(
@@ -42,11 +38,11 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
     ) -> Result<UserResponse, ManagementError> {
         use crate::db::SqlValue;
         use brews_contracts::management::ReceiptOperation;
-        let projection = || {
+        let projection = |now| {
             if !matches!(principal, ManagementPrincipal::AdminSession(_)) {
                 return Err(ManagementError::Forbidden);
             }
-            let actor = self.management_actor(principal)?;
+            let actor = self.management_actor_at(principal, now)?;
             let (account_id, operation) = match command {
                 ManagementCommand::DisableAccount { account_id } => {
                     (*account_id, ReceiptOperation::DisableAccount)
@@ -79,7 +75,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                         return Err(ManagementError::Conflict);
                     }
                     let stored = self
-                        .management_receipt(actor, receipt.command_id, command, self.now()?)?
+                        .management_receipt(actor, receipt.command_id, command, now)?
                         .ok_or(ManagementError::Conflict)?;
                     if serde_json::to_vec(&stored).map_err(|_| ManagementError::Storage)?
                         != serde_json::to_vec(&receipt).map_err(|_| ManagementError::Storage)?
@@ -139,7 +135,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                 _ => Err(ManagementError::InvalidInput),
             }
         };
-        self.db.transaction(|| Ok(projection()))?
+        self.management_read(projection)
     }
 
     /// Accept only server-derived administrator sessions, never CLI authority.
@@ -164,7 +160,9 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                 {
                     return Ok(UserResponse::Pending { operation_id });
                 }
-                if let Some(receipt) = self.management_receipt(actor, id, &command, self.now()?)? {
+                if let Some(receipt) =
+                    self.management_receipt(actor, id, &command, self.observe_clock()?)?
+                {
                     return Ok(UserResponse::Committed { receipt });
                 }
             }
@@ -468,7 +466,53 @@ mod tests {
     }
 
     #[test]
-    fn final_release_reproves_live_admin_without_writes_or_audit() {
+    fn final_release_expiry_fence_is_atomic_and_blocks_clock_rollback() {
+        for trigger in [
+            "CREATE TRIGGER deny_fence BEFORE UPDATE OF last_observed_ms ON storage_metadata BEGIN SELECT RAISE(IGNORE); END",
+            "CREATE TRIGGER deny_fence BEFORE UPDATE OF last_observed_ms ON storage_metadata BEGIN SELECT RAISE(ABORT,'fixture'); END",
+            "CREATE TRIGGER deny_fence AFTER UPDATE OF last_observed_ms ON storage_metadata BEGIN UPDATE storage_metadata SET last_observed_ms=OLD.last_observed_ms; END",
+        ] {
+            let db = Sqlite::new();
+            let rt = TestRuntime::new();
+            let (_, principal) = fixture(&db, &rt);
+            let service = AuthService::new(&db, &rt, AuthPolicy::default(), &[9; 32]).unwrap();
+            let before = db.query("SELECT * FROM storage_metadata", &[]).unwrap();
+            let rows = db
+                .query("SELECT expires_at FROM account_sessions", &[])
+                .unwrap();
+            let SqlValue::Integer(expires) = rows[0][0] else {
+                panic!("missing expiry");
+            };
+            rt.now.set(expires);
+            db.execute(trigger, &[]).unwrap();
+            assert_eq!(
+                service.authorize_users_release(&principal),
+                Err(ManagementError::Storage)
+            );
+            assert_eq!(
+                db.query("SELECT * FROM storage_metadata", &[]).unwrap(),
+                before
+            );
+            db.execute("DROP TRIGGER deny_fence", &[]).unwrap();
+            assert_eq!(
+                service.authorize_users_release(&principal),
+                Err(ManagementError::Unauthorized)
+            );
+            assert_eq!(
+                db.query("SELECT last_observed_ms FROM storage_metadata", &[])
+                    .unwrap(),
+                vec![vec![SqlValue::Integer(expires)]]
+            );
+            rt.now.set(expires - 1);
+            assert_eq!(
+                service.authorize_users_release(&principal),
+                Err(ManagementError::Crypto)
+            );
+        }
+    }
+
+    #[test]
+    fn final_release_is_read_only_on_success_and_fences_authority_denials() {
         for (sql, error) in [
             (
                 "UPDATE account_sessions SET revoked_at=issued_at",
@@ -501,8 +545,23 @@ mod tests {
             db.execute(sql, &[]).unwrap();
             rt.now.set(rt.now.get() + 1);
             let before = changes(&db);
+            let SqlValue::Integer(previous_changes) = before[0][0] else {
+                panic!("missing change count");
+            };
             assert_eq!(service.authorize_users_release(&principal), Err(error));
-            assert_eq!(changes(&db), before);
+            assert_eq!(
+                changes(&db),
+                vec![vec![SqlValue::Integer(
+                    previous_changes + i64::from(error == ManagementError::Unauthorized)
+                )]]
+            );
+            if error == ManagementError::Unauthorized {
+                assert_eq!(
+                    db.query("SELECT last_observed_ms FROM storage_metadata", &[])
+                        .unwrap(),
+                    vec![vec![SqlValue::Integer(rt.now.get())]]
+                );
+            }
             assert_eq!(
                 service.authorize_users_release(&ManagementPrincipal::DeveloperCli),
                 Err(ManagementError::Forbidden)

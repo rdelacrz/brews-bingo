@@ -1,4 +1,5 @@
 //! Cloudflare entry points; private adapters, no listening TCP server.
+mod auth_output;
 mod database;
 pub(super) mod directory;
 mod discovery;
@@ -151,7 +152,7 @@ impl AccountsObject {
                 .to_vec(),
         );
         let message: OwnerRequest =
-            serde_json::from_slice(&bytes).map_err(|_| AuthError::InvalidInput)?;
+            decode_private_json(&bytes).map_err(|_| AuthError::InvalidInput)?;
         if message.caller_identity.len() > OWNER_CALLER_IDENTITY_MAX_BYTES {
             return Err(AuthError::InvalidInput);
         }
@@ -159,7 +160,14 @@ impl AccountsObject {
         db::migrate(&db)?;
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
+        let is_current = matches!(&message.command, crate::auth::AuthCommand::Current { .. });
         let is_completion = matches!(&message.command, crate::auth::AuthCommand::Complete { .. });
+        let current_token = match &message.command {
+            crate::auth::AuthCommand::Current { token } => token
+                .as_deref()
+                .map(|value| Zeroizing::new(value.to_owned())),
+            _ => None,
+        };
         let result = service.execute(
             message.command,
             RequestContext {
@@ -174,7 +182,31 @@ impl AccountsObject {
                 observability::auth_failure(Boundary::AccountsAuth, *error);
             }
         }
-        let outcome = OwnerResponse::outcome(result);
+        let mut outcome = OwnerResponse::outcome(result);
+        let output_token = match &outcome.cookie {
+            wire::CookieWire::Set { token, .. } => Some(Zeroizing::new(token.clone())),
+            _ if outcome.body.get("authenticated") == Some(&serde_json::Value::Bool(true)) => {
+                current_token
+            }
+            _ => None,
+        };
+        if let Some(token) = &output_token {
+            match service.auth_output_authority(token) {
+                Ok(authority) => outcome.authority = Some(authority),
+                Err(error) => {
+                    self.state
+                        .storage()
+                        .sync()
+                        .await
+                        .map_err(|_| AuthError::Storage)?;
+                    return if is_current && error == AuthError::Unauthorized {
+                        Ok(OwnerResponse::anonymous())
+                    } else {
+                        Err(error)
+                    };
+                }
+            }
+        }
         self.dispatch_game_socket_closes(&service).await?;
         self.schedule(Self::combined_deadline(&service)?)
             .await
@@ -184,6 +216,34 @@ impl AccountsObject {
             observability::failure(Boundary::Durability, Failure::Storage);
             AuthError::Storage
         })?;
+        if let (Some(token), Some(authority)) = (&output_token, &outcome.authority) {
+            let observed_at = rt.now_ms();
+            if observed_at >= authority.expires_at {
+                service.fence_auth_output_expiry(token, authority, observed_at)?;
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| AuthError::Storage)?;
+                return if is_current {
+                    Ok(OwnerResponse::anonymous())
+                } else {
+                    Err(AuthError::Unauthorized)
+                };
+            }
+            if let Err(error) = service.validate_auth_output(token, authority, &outcome.body) {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| AuthError::Storage)?;
+                return if is_current && error == AuthError::Unauthorized {
+                    Ok(OwnerResponse::anonymous())
+                } else {
+                    Err(error)
+                };
+            }
+        }
         Ok(outcome)
     }
     fn combined_deadline(
@@ -222,6 +282,9 @@ impl DurableObject for AccountsObject {
     }
     async fn fetch(&self, request: Request) -> Result<Response> {
         crate::observability::init();
+        if request.path() == "/auth-output" {
+            return self.execute_auth_output_request(request).await;
+        }
         if request.path() == "/game-authority" {
             return self.execute_game_authority_request(request).await;
         }

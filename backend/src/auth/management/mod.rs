@@ -169,9 +169,41 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         });
         result.map_err(|_| fatal.get().unwrap_or(ManagementError::Storage))?
     }
+    /// Final read cuts stay write-free unless an authority/receipt expiry is denied.
+    fn management_read<T>(
+        &self,
+        operation: impl FnOnce(i64) -> Result<T, ManagementError>,
+    ) -> Result<T, ManagementError> {
+        let now = self.now()?;
+        self.db.transaction(|| {
+            let result = operation(now);
+            if matches!(
+                result,
+                Err(ManagementError::Unauthorized | ManagementError::StaleCommand)
+            ) {
+                self.observe_clock_at(now).map_err(|_| StorageError)?;
+            }
+            match result {
+                Err(ManagementError::Storage | ManagementError::Crypto) => Err(StorageError),
+                result => Ok(result),
+            }
+        })?
+    }
     fn management_actor(
         &self,
         principal: &ManagementPrincipal,
+    ) -> Result<AuditActor, ManagementError> {
+        match principal {
+            ManagementPrincipal::DeveloperCli => Ok(AuditActor::DeveloperCli),
+            ManagementPrincipal::AdminSession(_) => {
+                self.management_actor_at(principal, self.observe_clock()?)
+            }
+        }
+    }
+    fn management_actor_at(
+        &self,
+        principal: &ManagementPrincipal,
+        now: i64,
     ) -> Result<AuditActor, ManagementError> {
         match principal {
             ManagementPrincipal::DeveloperCli => Ok(AuditActor::DeveloperCli),
@@ -181,7 +213,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                     .account(session.account_id)?
                     .ok_or(ManagementError::Unauthorized)?;
                 if session.scope != brews_domain::accounts::SessionScope::Normal
-                    || !session.eligible(&account, self.now()?)
+                    || !session.eligible(&account, now)
                 {
                     return Err(ManagementError::Unauthorized);
                 }
@@ -215,7 +247,9 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
             if let Some(pending) = self.pending_removal_response(actor, id, command)? {
                 return Ok(pending);
             }
-            if let Some(receipt) = self.management_receipt(actor, id, command, self.now()?)? {
+            if let Some(receipt) =
+                self.management_receipt(actor, id, command, self.observe_clock()?)?
+            {
                 return Ok(ManagementResponse::Committed { receipt });
             }
         }

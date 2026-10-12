@@ -11,7 +11,7 @@ use brews_domain::{
     ids::{PlayerId, SessionId},
 };
 
-const FINAL_GRANT_LIMIT: usize = 100;
+const FINAL_GRANT_LIMIT: usize = super::OBSERVED_CONNECTION_LIMIT;
 const SQL_DELETE_FINAL_PLAYER_ACCESS: &str = "DELETE FROM game_terminal_views WHERE player_id=?";
 const SQL_SELECT_ANY_FINAL_PLAYER_ACCESS: &str =
     "SELECT 1 FROM game_terminal_views WHERE player_id=? LIMIT 1";
@@ -80,8 +80,8 @@ const SQL_SELECT_FINAL_PLAYER_SESSION: &str =
 const SQL_SELECT_HISTORY_CALLS: &str = "SELECT sequence_no,value FROM game_history_calls WHERE game_id=? ORDER BY sequence_no LIMIT 1001";
 const SQL_SELECT_HISTORY_PLAYERS: &str = "SELECT player_id,alias,side_length FROM game_history_players WHERE game_id=? ORDER BY player_id LIMIT 21";
 const SQL_SELECT_HISTORY_BOARD: &str = "SELECT row,column,kind,value,is_matched FROM game_history_board_cells WHERE game_id=? AND player_id=? ORDER BY row,column LIMIT 101";
-const SQL_SELECT_ALL_CONNECTION_GRANTS: &str = "SELECT grant_id,viewer_kind,session_id,principal_id,connection_id,epoch,entered_at,expires_at FROM game_connection_grants ORDER BY grant_id LIMIT 201";
-const SQL_SELECT_ALL_CURRENT_CONNECTIONS: &str = "SELECT viewer_kind,session_id,principal_id,connection_id,epoch,expires_at FROM game_current_connections ORDER BY viewer_kind,session_id LIMIT 101";
+const SQL_SELECT_ALL_CONNECTION_GRANTS: &str = "SELECT grant_id,viewer_kind,session_id,principal_id,connection_id,epoch,entered_at,expires_at FROM game_connection_grants ORDER BY grant_id LIMIT ?";
+const SQL_SELECT_ALL_CURRENT_CONNECTIONS: &str = "SELECT viewer_kind,session_id,principal_id,connection_id,epoch,expires_at FROM game_current_connections ORDER BY viewer_kind,session_id LIMIT ?";
 const SQL_SELECT_CONNECTION_GRANT: &str = "SELECT 1 FROM game_connection_grants WHERE grant_id=?";
 const SQL_SELECT_CURRENT_CONNECTION: &str = "SELECT 1 FROM game_current_connections WHERE viewer_kind=? AND session_id=? AND connection_id=?";
 
@@ -110,6 +110,10 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     let record = record.ok_or(GameError::NotFound)?;
                     super::authorize_mutation(&authority, &record, now)
                 });
+                if matches!(result, Err(GameError::Unauthorized)) && now >= authority.expires_at() {
+                    self.fence_read_deadline(now)
+                        .map_err(|_| super::StorageError)?;
+                }
                 match result {
                     Err(GameError::Storage) => Err(super::StorageError),
                     result => Ok(result),
@@ -638,8 +642,11 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         record: &Record,
         now: i64,
     ) -> Result<(), GameError> {
-        let grants = self.db.query(SQL_SELECT_ALL_CONNECTION_GRANTS, &[])?;
-        if grants.len() > FINAL_GRANT_LIMIT * 2 {
+        let grants = self.db.query(
+            SQL_SELECT_ALL_CONNECTION_GRANTS,
+            &[int((super::CONNECTION_GRANT_LIMIT + 1) as i64)],
+        )?;
+        if grants.len() > super::CONNECTION_GRANT_LIMIT {
             return Err(GameError::Storage);
         }
         // Anchors are retained independently of socket preparations; no new anchor is minted.
@@ -675,7 +682,10 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                 self.delete_final_connection_grant(string(row, 0)?)?;
             }
         }
-        let connections = self.db.query(SQL_SELECT_ALL_CURRENT_CONNECTIONS, &[])?;
+        let connections = self.db.query(
+            SQL_SELECT_ALL_CURRENT_CONNECTIONS,
+            &[int((super::OBSERVED_CONNECTION_LIMIT + 1) as i64)],
+        )?;
         if connections.len() > FINAL_GRANT_LIMIT {
             return Err(GameError::Storage);
         }

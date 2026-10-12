@@ -96,6 +96,21 @@ async fn dispatch(env: &Env, request: AxumRequest) -> Result<AxumResponse, ApiEr
         ApiError::Unavailable
     })?;
     let status = response.status_code();
+    let initial = if matches!(status, 200 | 202) {
+        let encoded = response
+            .headers()
+            .get("X-Brews-Users-Authority")
+            .map_err(|_| ApiError::Unavailable)?
+            .ok_or(ApiError::Unavailable)?;
+        if encoded.len() > super::game_peers::GAME_PEER_MAX_BYTES {
+            return Err(ApiError::Unavailable);
+        }
+        let authority: super::game_accounts::AccountAuthorityWire =
+            super::decode_private_json(encoded.as_bytes()).map_err(|_| ApiError::Unavailable)?;
+        Some(authority.proof().map_err(|_| ApiError::Unavailable)?)
+    } else {
+        None
+    };
     let http: worker::HttpResponse = response.try_into().map_err(|_| ApiError::Unavailable)?;
     let content = Zeroizing::new(
         to_bytes(Body::new(http.into_body()), MANAGEMENT_RESPONSE_MAX_BYTES)
@@ -103,13 +118,54 @@ async fn dispatch(env: &Env, request: AxumRequest) -> Result<AxumResponse, ApiEr
             .map_err(|_| ApiError::Unavailable)?
             .to_vec(),
     );
+    let mut link_deadline = None;
     if matches!(status, 200 | 202) {
         let typed = UserResponse::decode_json(&content).map_err(|_| ApiError::Unavailable)?;
+        link_deadline = match &typed {
+            UserResponse::Created {
+                link_expires_at, ..
+            }
+            | UserResponse::EnrollmentLink {
+                link_expires_at, ..
+            }
+            | UserResponse::PasswordReset {
+                link_expires_at, ..
+            } => Some(*link_expires_at),
+            _ => None,
+        };
         if typed.status() != status {
             return Err(ApiError::Unavailable);
         }
     } else {
         validate_error(&content, status)?;
+    }
+    if matches!(status, 200 | 202) {
+        use crate::auth::Runtime;
+        let initial = initial.as_ref().ok_or(ApiError::Unavailable)?;
+        let token = message.session_token.as_str();
+        let observed_at = WorkerRuntime.now_ms();
+        if observed_at >= initial.expires_at() {
+            super::game_peers::fence_discovery_account_expiry(env, token, initial, observed_at)
+                .await
+                .map_err(|_| ApiError::Unavailable)?;
+            return Err(ApiError::Unavailable);
+        }
+        let current = super::game_peers::authorize_account(env, token)
+            .await
+            .map_err(|_| ApiError::Unavailable)?;
+        if !super::history::same_authority(initial, &current) {
+            return Err(ApiError::Unavailable);
+        }
+        let observed_at = WorkerRuntime.now_ms();
+        if observed_at >= initial.expires_at() {
+            super::game_peers::fence_discovery_account_expiry(env, token, initial, observed_at)
+                .await
+                .map_err(|_| ApiError::Unavailable)?;
+            return Err(ApiError::Unavailable);
+        }
+        if link_deadline.is_some_and(|deadline| deadline <= observed_at) {
+            return Err(ApiError::Unavailable);
+        }
     }
     http::Response::builder()
         .status(status)
@@ -206,6 +262,7 @@ impl AccountsObject {
         );
         let mut message: OwnerUsersRequest =
             super::decode_private_json(&bytes).map_err(|_| ManagementError::InvalidInput)?;
+        let output_token = Zeroizing::new(message.session_token.clone());
         let principal =
             ManagementPrincipal::AdminSession(std::mem::take(&mut message.session_token));
         let db = OwnerDatabase::new(self.state.storage());
@@ -213,6 +270,17 @@ impl AccountsObject {
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
         let cfg = get_backend_config(&self.env).map_err(|_| ManagementError::Crypto)?;
+        let initial = match service.authorize_game_account(&output_token) {
+            Ok(authority) => authority,
+            Err(error) => {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| ManagementError::Storage)?;
+                return Err(management_auth_error(error));
+            }
+        };
         let outcome = service.execute_users(
             message.command.clone(),
             &principal,
@@ -254,11 +322,54 @@ impl AccountsObject {
             ManagementError::Storage
         })?;
         let outcome = outcome?;
-        service.authorize_users_release(&principal)?;
+        use crate::auth::Runtime;
+        let observed_at = rt.now_ms();
+        if observed_at >= initial.expires_at() {
+            service
+                .fence_game_account_expiry(&output_token, &initial, observed_at)
+                .map_err(|_| ManagementError::Storage)?;
+            self.state
+                .storage()
+                .sync()
+                .await
+                .map_err(|_| ManagementError::Storage)?;
+            return Err(ManagementError::Unauthorized);
+        }
+        let release = service.authorize_users_release(&principal);
+        if let Err(error) = release {
+            self.state
+                .storage()
+                .sync()
+                .await
+                .map_err(|_| ManagementError::Storage)?;
+            return Err(error);
+        }
+        let current = match service.authorize_game_account(&output_token) {
+            Ok(authority) => authority,
+            Err(error) => {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| ManagementError::Storage)?;
+                return Err(management_auth_error(error));
+            }
+        };
+        if !super::history::same_authority(&initial, &current) {
+            return Err(ManagementError::Unauthorized);
+        }
         let mut response = Response::from_json(&outcome)
             .map_err(|_| ManagementError::Storage)?
             .with_status(outcome.status());
         safe_response_headers(&mut response).map_err(|_| ManagementError::Storage)?;
+        response
+            .headers_mut()
+            .set(
+                "X-Brews-Users-Authority",
+                &serde_json::to_string(&super::game_accounts::AccountAuthorityWire::from(&current))
+                    .map_err(|_| ManagementError::Storage)?,
+            )
+            .map_err(|_| ManagementError::Storage)?;
         if let Some(operation_id) = operation_id
             && matches!(
                 outcome,
@@ -269,6 +380,14 @@ impl AccountsObject {
         }
         log_delivery(&outcome, &message);
         Ok(response)
+    }
+}
+fn management_auth_error(error: crate::auth::AuthError) -> ManagementError {
+    match error {
+        crate::auth::AuthError::Unauthorized | crate::auth::AuthError::InvalidCredentials => {
+            ManagementError::Unauthorized
+        }
+        _ => ManagementError::Storage,
     }
 }
 fn safe_response_headers(response: &mut Response) -> worker::Result<()> {

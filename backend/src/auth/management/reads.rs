@@ -1,17 +1,20 @@
 use super::ManagementError;
+use crate::limits::{MANAGEMENT_DEFAULT_PAGE_SIZE, MANAGEMENT_MAX_PAGE_SIZE};
 use crate::{
     auth::{AuthService, Runtime, records::Account},
     db::{Database, SqlValue},
 };
 use brews_contracts::{SafeAccount, management::ManagementResponse};
 use brews_domain::ids::AccountId;
-pub(super) const MAX_PAGE_SIZE: u32 = 100;
-pub(super) const DEFAULT_PAGE_SIZE: u32 = 50;
 pub(super) fn page_size(limit: u32) -> Result<u32, ManagementError> {
-    if limit > MAX_PAGE_SIZE {
+    if limit > MANAGEMENT_MAX_PAGE_SIZE {
         return Err(ManagementError::InvalidInput);
     }
-    Ok(if limit == 0 { DEFAULT_PAGE_SIZE } else { limit })
+    Ok(if limit == 0 {
+        MANAGEMENT_DEFAULT_PAGE_SIZE
+    } else {
+        limit
+    })
 }
 pub(super) fn safe(a: Account) -> SafeAccount {
     SafeAccount {
@@ -68,18 +71,15 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                 "developer_cli" => AuditActor::DeveloperCli,
                 id => AuditActor::Account(id.parse().map_err(|_| ManagementError::Storage)?),
             };
-            let parse_enum = |index| {
-                serde_json::from_value::<serde_json::Value>(serde_json::Value::String(
-                    text(&row, index)?.into(),
-                ))
-                .map_err(|_| ManagementError::Storage)
+            let enum_tag = |index| -> Result<serde_json::Value, ManagementError> {
+                Ok(serde_json::Value::String(text(&row, index)?.into()))
             };
             events.push(AuditEvent {
                 audit_id: text(&row, 0)?
                     .parse()
                     .map_err(|_| ManagementError::Storage)?,
                 actor,
-                operation: serde_json::from_value(parse_enum(2)?)
+                operation: serde_json::from_value(enum_tag(2)?)
                     .map_err(|_| ManagementError::Storage)?,
                 target: match (text(&row, 3)?, optional_text(&row, 4)?) {
                     ("account", Some(id)) => {
@@ -88,7 +88,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                     ("accounts_owner", None) => AuditTarget::AccountsOwner,
                     _ => return Err(ManagementError::Storage),
                 },
-                outcome: serde_json::from_value(parse_enum(5)?)
+                outcome: serde_json::from_value(enum_tag(5)?)
                     .map_err(|_| ManagementError::Storage)?,
                 occurred_at: integer(&row, 6)?,
                 expires_at: integer(&row, 7)?,

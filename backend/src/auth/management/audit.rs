@@ -58,7 +58,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
                     return Ok(None);
                 };
                 Ok(session
-                    .eligible(&account, self.now()?)
+                    .eligible(&account, self.observe_clock()?)
                     .then_some(AuditActor::Account(account.id)))
             }
         }

@@ -1,6 +1,21 @@
 //! Read-only Game discovery cuts. Successful cuts allocate only bounded projections.
-use super::*;
+use super::{
+    GameService, OBSERVED_CONNECTION_LIMIT, RETAINED_PLAYER_LIMIT, Record,
+    SQL_SELECT_GAME_METADATA_LAST_OBSERVED_MS_COMMAND_FLOOR_MS, SQL_SELECT_GAME_PLAYERS_COUNT,
+    authorize, int, number, parse_connection, text, validate_schema,
+};
+use crate::{
+    auth::{GameAccountAuthority, Runtime},
+    db::{Database, StorageError},
+    game::{ConnectionGrant, GameError, HOST_VIEW, PLAYER_KIND},
+    limits::JS_SAFE_INTEGER_MAX,
+};
 use brews_contracts::discovery::{CurrentGameSummary, GameAvailability, GameEntry};
+use brews_domain::{
+    accounts::AccountRole,
+    games::{GameCode, GameState},
+    ids::GameId,
+};
 
 const SQL_SELECT_DISCOVERY_PLAYER_CONNECTIONS: &str = "SELECT c.session_id,c.principal_id,c.connection_id,c.epoch,c.expires_at FROM game_current_connections c WHERE c.viewer_kind=? ORDER BY c.session_id LIMIT ?";
 
@@ -244,7 +259,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             })
             .map_err(|_| GameError::Storage)?
     }
-    fn discovery_clock(&self) -> Result<i64, GameError> {
+    pub(super) fn discovery_clock(&self) -> Result<i64, GameError> {
         let rows = self.db.query(
             SQL_SELECT_GAME_METADATA_LAST_OBSERVED_MS_COMMAND_FLOOR_MS,
             &[],
