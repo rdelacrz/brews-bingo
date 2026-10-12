@@ -69,6 +69,9 @@ impl DurableObject for GameDirectoryObject {
         if request.path() == "/discovery" {
             return self.execute_discovery_directory(request).await;
         }
+        if request.path() == "/host-transfer" {
+            return self.execute_operator_directory(request).await;
+        }
         if request.path() == "/games" {
             return self.execute_games_request(request).await;
         }
@@ -107,6 +110,7 @@ impl GameDirectoryObject {
             .cleanup()
             .map_err(|_| worker::Error::RustError("Directory cleanup failed".into()))?;
         self.recover_game_creations(&service).await?;
+        self.recover_operator_transfers(&service).await?;
         self.schedule_cleanup().await?;
         self.state.storage().sync().await?;
         Response::empty()

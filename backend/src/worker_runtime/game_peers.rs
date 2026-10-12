@@ -212,7 +212,14 @@ pub(super) async fn call<T: serde::de::DeserializeOwned>(
         .id_from_name(name)
         .and_then(|id| id.get_stub())
         .map_err(|_| GamePeerError::Unavailable)?;
-    let body = encode(message)?;
+    let body = if matches!(path, "/operator-release" | "/operator-expiry-denial") {
+        encode_limit(
+            message,
+            brews_contracts::games::GAME_FRAME_MAX_BYTES + super::game_wire::GAME_WIRE_MAX_BYTES,
+        )?
+    } else {
+        encode(message)?
+    };
     let body = std::str::from_utf8(&body).map_err(|_| GamePeerError::Unavailable)?;
     let mut init = RequestInit::new();
     init.with_method(Method::Post).with_body(Some(body.into()));

@@ -13,7 +13,13 @@ mod history;
 #[allow(dead_code, reason = "Scoped tests share backend constants.")]
 mod limits;
 mod support;
-use brews_backend::{auth, db};
+use brews_backend::{auth, db, security};
+#[path = "../src/game/mod.rs"]
+#[allow(
+    dead_code,
+    reason = "Exact-source Directory transfer metadata shares private Game types."
+)]
+mod game;
 use brews_domain::games::{GameCode, GameState};
 use brews_domain::ids::{AccountId, CommandId, OperationId};
 use db::{Database, SqlValue};
@@ -1893,10 +1899,22 @@ fn ignored_publication_writes_never_acknowledge_uncommitted_metadata() {
         let code = svc.allocate_game_code(ack).unwrap();
         let before = index_row(&db, ack.game_id());
         let pending = svc.creation_work(ack.game_id()).unwrap();
+        let guarded_host = if trigger.contains("ON directory_hosted_nonterminal_games") {
+            // A missing earlier projection must be repaired even when the index
+            // assignment is unchanged. Ignoring that repair cannot yield an ACK.
+            db.execute(
+                "UPDATE directory_hosted_nonterminal_games SET designated_host_id=?",
+                &[sql_text(account(2))],
+            )
+            .unwrap();
+            account(2)
+        } else {
+            account(1)
+        };
         db.execute(trigger, &[]).unwrap();
         let lobby = projection(
             ack.game_id(),
-            account(2),
+            account(1),
             fingerprint(),
             GameState::AwaitingPlayers,
             1,
@@ -1919,7 +1937,7 @@ fn ignored_publication_writes_never_acknowledge_uncommitted_metadata() {
                 &[]
             )
             .unwrap(),
-            vec![vec![sql_text(account(1))]]
+            vec![vec![sql_text(guarded_host)]]
         );
         db.execute("DROP TRIGGER suppress_publication", &[])
             .unwrap();
@@ -2228,4 +2246,125 @@ fn discovery_directory_clock_and_sql_faults_do_not_claim_a_free_slot() {
         service.discovery_route().err(),
         Some(directory::DirectoryError::Storage)
     );
+}
+
+struct MigrationWriteCounter<'a> {
+    db: &'a Sqlite,
+    writes: std::cell::Cell<usize>,
+}
+impl Database for MigrationWriteCounter<'_> {
+    fn query(&self, sql: &str, params: &[SqlValue]) -> Result<Vec<db::Row>, db::StorageError> {
+        self.db.query(sql, params)
+    }
+    fn execute(&self, sql: &str, params: &[SqlValue]) -> Result<(), db::StorageError> {
+        self.writes.set(self.writes.get() + 1);
+        self.db.execute(sql, params)
+    }
+    fn transaction<T>(
+        &self,
+        action: impl FnOnce() -> Result<T, db::StorageError>,
+    ) -> Result<T, db::StorageError> {
+        self.db.transaction(action)
+    }
+}
+#[test]
+fn operator_directory_forward_migration_validates_every_legacy_definition_before_any_write() {
+    for version in [1, 2, 3] {
+        let definitions = db::schema::directory_schema::removal_statements()
+            .into_iter()
+            .chain(if version >= 2 {
+                db::schema::directory_schema::game_coordination_statements()
+            } else {
+                vec![]
+            })
+            .chain(if version == 3 {
+                db::schema::directory_schema::host_transfer_statements()
+            } else {
+                vec![]
+            })
+            .collect::<Vec<_>>();
+        for changed in &definitions {
+            let fixture = Sqlite::new();
+            for ddl in &definitions {
+                let altered = if ddl == changed {
+                    if ddl.starts_with("CREATE TABLE") {
+                        ddl.replace(" STRICT", "")
+                    } else {
+                        ddl.replace("CREATE UNIQUE INDEX", "CREATE INDEX")
+                            .replace(')', ",fixture_missing_column)")
+                    }
+                } else {
+                    ddl.clone()
+                };
+                // Index drift is installed through catalog mutation, retaining its
+                // actual physical structure so SQL errors do not hide validation.
+                fixture
+                    .execute(
+                        if ddl.starts_with("CREATE TABLE") {
+                            &altered
+                        } else {
+                            ddl
+                        },
+                        &[],
+                    )
+                    .unwrap();
+            }
+            fixture
+                .execute(
+                    "INSERT INTO directory_metadata VALUES(1,?,0,0)",
+                    &[SqlValue::Integer(version)],
+                )
+                .unwrap();
+            if changed.contains("INDEX") {
+                fixture
+                    .conn
+                    .borrow()
+                    .execute_batch("PRAGMA writable_schema=ON")
+                    .unwrap();
+                fixture
+                    .execute(
+                        "UPDATE sqlite_master SET sql=sql || ' /* altered index */' WHERE sql=?",
+                        &[SqlValue::Text(changed.clone())],
+                    )
+                    .unwrap();
+                fixture
+                    .conn
+                    .borrow()
+                    .execute_batch("PRAGMA writable_schema=OFF")
+                    .unwrap();
+            }
+            let counted = MigrationWriteCounter {
+                db: &fixture,
+                writes: std::cell::Cell::new(0),
+            };
+            assert_eq!(
+                migrate_directory(&counted),
+                Err(directory::DirectoryError::Storage),
+                "version {version}: {changed}"
+            );
+            assert_eq!(
+                counted.writes.get(),
+                0,
+                "unknown shape must not attempt migration writes"
+            );
+        }
+        let fixture = Sqlite::new();
+        for ddl in &definitions {
+            fixture.execute(ddl, &[]).unwrap();
+        }
+        fixture
+            .execute(
+                "INSERT INTO directory_metadata VALUES(1,?,0,0)",
+                &[SqlValue::Integer(version)],
+            )
+            .unwrap();
+        if version >= 2 {
+            fixture
+                .execute("INSERT INTO directory_global_reservation VALUES(NULL)", &[])
+                .unwrap();
+        }
+        migrate_directory(&fixture).unwrap();
+        migrate_directory(&fixture).unwrap();
+        assert!(DirectoryService::new(&fixture, &TestRuntime::new()).is_ok());
+    }
 }

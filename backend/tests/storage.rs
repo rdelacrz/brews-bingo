@@ -356,7 +356,11 @@ fn current_game_schema_rejects_unknown_columns_in_every_core_and_optional_delive
             }
         }
     }
-    assert_eq!(cases, 126);
+    assert_eq!(
+        cases,
+        brews_backend::db::schema::game_schema::GAME_TABLES.len() * 4
+            + brews_backend::db::schema::game_schema::DELIVERY_TABLES.len() * 2
+    );
 }
 
 #[test]
@@ -369,6 +373,12 @@ fn previous_gameplay_and_recovery_sources_reject_unknown_columns_in_every_table(
                 .into_iter()
                 .filter(|name| {
                     !name.starts_with("game_spectator")
+                        && ![
+                            "game_admin_audit",
+                            "game_host_transfers",
+                            "game_operator_identity",
+                        ]
+                        .contains(name)
                         && !(version == 2
                             && ["game_recovery_buckets", "game_socket_closures"].contains(name))
                 })
@@ -376,7 +386,13 @@ fn previous_gameplay_and_recovery_sources_reject_unknown_columns_in_every_table(
             for table in tables {
                 let db = current_game_database(true, include_delivery);
                 for name in GAME_TABLES.into_iter().filter(|name| {
-                    name.starts_with("game_spectator")
+                    (name.starts_with("game_spectator")
+                        || [
+                            "game_admin_audit",
+                            "game_host_transfers",
+                            "game_operator_identity",
+                        ]
+                        .contains(name))
                         || (version == 2
                             && ["game_recovery_buckets", "game_socket_closures"].contains(name))
                 }) {
@@ -544,7 +560,7 @@ fn current_game_schema_rejects_full_column_and_constraint_drift_with_indexes_int
             cases += 1;
         }
     }
-    assert_eq!(cases, 264);
+    assert_eq!(cases, (GAME_TABLES.len() + DELIVERY_TABLES.len()) * 8);
 }
 
 #[test]

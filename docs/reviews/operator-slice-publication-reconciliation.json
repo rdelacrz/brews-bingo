@@ -1,0 +1,17 @@
+{
+  "scope": "Slice 5 publication-only reconciliation; original local review evidence remains immutable",
+  "change": "Removed two trailing spaces from the otherwise empty line 174 in backend/worker-tests/operator.test.js",
+  "path": "backend/worker-tests/operator.test.js",
+  "reviewed_sha256": "f22087005e0006b2c36db18205629555253bf35808ade6c39e6cdb0bd337d87b",
+  "publication_sha256": "c05028e27b993d9d444115920fac3b4c1e1f12e3c035972c05ed37492beea15a",
+  "reverse_transform_matched_reviewed_bytes": true,
+  "all_other_code_sql_worker_artifact_hashes_unchanged": true,
+  "code_graph_source_hashes_refreshed_and_verified": true,
+  "rerun": {
+    "command": "npm run test:worker -- worker-tests/operator.test.js --reporter=json",
+    "passed": 16,
+    "failed": 0,
+    "pending": 0,
+    "result_sha256": "e195e7872b1010baa94a22a1781bf81f04deb72495cedf1bae1368fd9968c470"
+  }
+}

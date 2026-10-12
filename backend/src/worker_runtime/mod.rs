@@ -14,6 +14,8 @@ mod game_wire;
 mod games;
 mod history;
 mod management;
+mod operator_peers;
+mod operator_runtime;
 mod removals;
 mod runtime;
 mod users;
@@ -284,6 +286,9 @@ impl DurableObject for AccountsObject {
         crate::observability::init();
         if request.path() == "/auth-output" {
             return self.execute_auth_output_request(request).await;
+        }
+        if request.path() == "/operator-accounts" {
+            return self.execute_operator_accounts(request).await;
         }
         if request.path() == "/game-authority" {
             return self.execute_game_authority_request(request).await;

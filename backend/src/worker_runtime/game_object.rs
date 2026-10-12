@@ -534,6 +534,11 @@ impl GameObject {
         self.persist_recovery(&service, &db).await?;
         let socket_result = self.broadcast(&service, &db).await;
         let close_result = self.close_recovered_sockets(&service).await;
+        for work in service.host_transfer_work()? {
+            if work.next_attempt_at() <= rt.now_ms() || terminal.is_some() {
+                let _ = self.recover_host_transfer(&service, &db, &work, true).await;
+            }
+        }
         let due = service.pending_work(RECOVERY_BATCH_LIMIT)?;
         for snapshot in due {
             if snapshot.next_attempt_at() > rt.now_ms()
@@ -580,6 +585,15 @@ impl GameObject {
             return Err(GameError::Conflict);
         }
         service.cleanup()?;
+        if matches!(
+            ingress.operation,
+            GameAction::Configuration
+                | GameAction::Resume
+                | GameAction::HostTransfer
+                | GameAction::HostTransferTargets
+        ) {
+            return self.execute_operator(ingress, &service, &db).await;
+        }
         // Leave and Recovery capture current/prepared predecessors before best-effort transport.
         if !matches!(
             ingress.operation,
@@ -760,7 +774,6 @@ impl GameObject {
                         .ok_or(GameError::Conflict)?;
                     let projection = service.directory_projection()?;
                     if creation.game_id() != projection.game_id()
-                        || creation.account_id() != projection.designated_host_id()
                         || creation.fingerprint() != projection.fingerprint()
                         || creation.created_at() != projection.created_at()
                     {
@@ -1289,6 +1302,9 @@ impl GameObject {
         db: &OwnerDatabase,
         response: GameResponse,
     ) -> Result<GameResponse, GameError> {
+        for work in service.host_transfer_work()? {
+            self.recover_host_transfer(service, db, &work, true).await?;
+        }
         let pending = service
             .pending_work(100)?
             .into_iter()
@@ -1425,7 +1441,7 @@ fn success(response: GameResponse) -> GameOwnerResponse {
         cookie: GameCookieWire::None,
     }
 }
-fn rejection(error: GameError) -> GameRejection {
+pub(super) fn rejection(error: GameError) -> GameRejection {
     match error {
         GameError::InvalidRecovery => GameRejection::InvalidRecovery,
         GameError::RecoveryBlocked => GameRejection::RecoveryBlocked,
@@ -1452,6 +1468,34 @@ impl DurableObject for GameObject {
     }
     async fn fetch(&self, request: Request) -> worker::Result<Response> {
         let path = request.path();
+        if matches!(
+            path.as_str(),
+            "/operator-transfer-probe" | "/operator-transfer-ack"
+        ) && request.method() == Method::Post
+            && request.url()?.query().is_none()
+        {
+            return self
+                .execute_transfer_recovery(request, path == "/operator-transfer-ack")
+                .await;
+        }
+        if path == "/operator-expiry-denial" {
+            if request.method() != worker::Method::Post || request.url()?.query().is_some() {
+                return worker::Response::error("invalid operator denial", 400);
+            }
+            return self.execute_operator_expiry_denial(request).await;
+        }
+        if path == "/operator-transport-rejection" {
+            if request.method() != worker::Method::Post || request.url()?.query().is_some() {
+                return worker::Response::error("invalid operator rejection", 400);
+            }
+            return self.execute_operator_transport_rejection(request).await;
+        }
+        if path == "/operator-release"
+            && request.method() == Method::Post
+            && request.url()?.query().is_none()
+        {
+            return self.execute_operator_release(request).await;
+        }
         if request.method() == Method::Get
             && path == "/command"
             && request.url()?.query().is_none()

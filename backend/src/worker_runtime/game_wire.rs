@@ -260,6 +260,20 @@ impl SyncSpectatorAuthority {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "owner_result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum GameOwnerResponse {
+    Operator {
+        #[serde(deserialize_with = "object")]
+        response: GameResponse,
+        #[serde(deserialize_with = "object")]
+        authority: SyncAccountAuthority,
+        valid_until: i64,
+    },
+    HostTransferTargets {
+        #[serde(deserialize_with = "object")]
+        response: brews_contracts::games::HostTransferTargets,
+        #[serde(deserialize_with = "object")]
+        authority: SyncAccountAuthority,
+        valid_until: i64,
+    },
     Audience {
         #[serde(deserialize_with = "object")]
         response: GameResponse,
@@ -315,6 +329,85 @@ pub(super) enum GameOwnerResponse {
 }
 impl GameOwnerResponse {
     pub(super) fn validate_for(&self, request: &GameIngress) -> Result<(), ()> {
+        if let Self::Operator {
+            response,
+            authority,
+            valid_until,
+        } = self
+        {
+            let receipt = match response {
+                GameResponse::ConfigurationUpdated { receipt, .. }
+                    if request.operation == GameAction::Configuration =>
+                {
+                    receipt
+                }
+                GameResponse::Resumed { receipt, .. }
+                    if request.operation == GameAction::Resume =>
+                {
+                    receipt
+                }
+                GameResponse::HostTransferred { receipt }
+                    if request.operation == GameAction::HostTransfer =>
+                {
+                    receipt
+                }
+                GameResponse::Committed { receipt } => receipt,
+                _ => return Err(()),
+            };
+            response.validate().map_err(|_| ())?;
+            if Some(receipt.command_id) != request.command_id
+                || Some(receipt.game_id) != request.game_id
+                || !(1..=authority.expires_at.min(receipt.expires_at)).contains(valid_until)
+            {
+                return Err(());
+            }
+            let coherent = match (request.operation, &receipt.outcome) {
+                (
+                    GameAction::Configuration,
+                    brews_contracts::games::GameOutcome::ConfigurationUpdated { .. },
+                )
+                | (GameAction::Resume, brews_contracts::games::GameOutcome::Resumed { .. }) => true,
+                (
+                    GameAction::HostTransfer,
+                    brews_contracts::games::GameOutcome::HostTransferred {
+                        designated_host_id,
+                        host_assignment_revision,
+                        ..
+                    },
+                ) => {
+                    matches!(request.payload()?,GamePayload::HostTransfer(input) if input.target_account_id==*designated_host_id && input.expected_host_assignment_revision.checked_add(1)==Some(*host_assignment_revision))
+                }
+                _ => false,
+            };
+            return if coherent { Ok(()) } else { Err(()) };
+        }
+        if let Self::HostTransferTargets {
+            response,
+            authority,
+            valid_until,
+        } = self
+        {
+            response.validate().map_err(|_| ())?;
+            if request.operation != GameAction::HostTransferTargets
+                || Some(response.game_id) != request.game_id
+                || !(1..=authority.expires_at).contains(valid_until)
+            {
+                return Err(());
+            }
+            if let GamePayload::HostTransferTargets(query) = request.payload()? {
+                if response.targets.len() > query.limit as usize
+                    || response
+                        .targets
+                        .iter()
+                        .any(|t| query.cursor.is_some_and(|c| t.account_id <= c))
+                {
+                    return Err(());
+                }
+            } else {
+                return Err(());
+            }
+            return Ok(());
+        }
         if let Self::AudienceSynced {
             response,
             authority,
@@ -836,6 +929,26 @@ impl GameOwnerResponse {
         }
         let value: Self = serde_json::from_slice(bytes).map_err(|_| ())?;
         match &value {
+            Self::Operator {
+                response,
+                authority,
+                valid_until,
+            } => {
+                response.validate().map_err(|_| ())?;
+                if !(1..=authority.expires_at).contains(valid_until) {
+                    return Err(());
+                }
+            }
+            Self::HostTransferTargets {
+                response,
+                authority,
+                valid_until,
+            } => {
+                response.validate().map_err(|_| ())?;
+                if !(1..=authority.expires_at).contains(valid_until) {
+                    return Err(());
+                }
+            }
             Self::Membership {
                 response,
                 valid_until,
@@ -924,6 +1037,10 @@ impl GameOwnerResponse {
 #[serde(rename_all = "snake_case")]
 pub(super) enum GameAction {
     Create,
+    Configuration,
+    Resume,
+    HostTransfer,
+    HostTransferTargets,
     Lobby,
     Start,
     CallRandom,
@@ -954,6 +1071,10 @@ impl From<GameOperation> for GameAction {
     fn from(operation: GameOperation) -> Self {
         match operation {
             GameOperation::Create => Self::Create,
+            GameOperation::Configuration => Self::Configuration,
+            GameOperation::Resume => Self::Resume,
+            GameOperation::HostTransfer => Self::HostTransfer,
+            GameOperation::HostTransferTargets => Self::HostTransferTargets,
             GameOperation::Lobby => Self::Lobby,
             GameOperation::Start => Self::Start,
             GameOperation::CallRandom => Self::CallRandom,
@@ -1027,7 +1148,12 @@ impl GameIngress {
             session_token: request.session_token.take(),
             admission_token: request.admission_token.take(),
             recovery_caller: None,
-            body: std::str::from_utf8(body).map_err(|_| ())?.to_owned(),
+            body: match &request.payload {
+                GamePayload::HostTransferTargets(query) => {
+                    serde_json::to_string(query).map_err(|_| ())?
+                }
+                _ => std::str::from_utf8(body).map_err(|_| ())?.to_owned(),
+            },
         };
         value.validate()?;
         Ok(value)
@@ -1051,6 +1177,21 @@ impl GameIngress {
             return Err(());
         }
         match self.operation {
+            GameAction::Configuration => {
+                brews_contracts::games::ConfigurationPatch::decode_json(bytes)
+                    .map(GamePayload::Configuration)
+                    .map_err(|_| ())
+            }
+            GameAction::HostTransfer => {
+                brews_contracts::games::HostTransferInput::decode_json(bytes)
+                    .map(GamePayload::HostTransfer)
+                    .map_err(|_| ())
+            }
+            GameAction::HostTransferTargets => {
+                brews_contracts::games::HostTransferTargetsQuery::decode_json(bytes)
+                    .map(GamePayload::HostTransferTargets)
+                    .map_err(|_| ())
+            }
             GameAction::RenameAlias
             | GameAction::RenameAliasOutput
             | GameAction::RenameAliasReceiptOutput => {
@@ -1101,7 +1242,7 @@ impl GameIngress {
             GameAction::JoinPlayer | GameAction::SwitchToPlayer => JoinPlayer::decode_json(bytes)
                 .map(GamePayload::JoinPlayer)
                 .map_err(|_| ()),
-            GameAction::Exit | GameAction::SwitchToSpectator => {
+            GameAction::Exit | GameAction::SwitchToSpectator | GameAction::Resume => {
                 crate::api::decode_empty_game_body(bytes)
                     .map(|()| GamePayload::Empty)
                     .map_err(|_| ())
@@ -1118,6 +1259,9 @@ impl GameIngress {
         let retry_sensitive = matches!(
             self.operation,
             GameAction::Create
+                | GameAction::Configuration
+                | GameAction::Resume
+                | GameAction::HostTransfer
                 | GameAction::Lobby
                 | GameAction::Start
                 | GameAction::JoinPlayer

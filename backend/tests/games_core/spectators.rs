@@ -494,7 +494,7 @@ fn spectator_owner_schema_forward_migration_preserves_existing_rows_and_rejects_
         let code = f.open(&GameConfiguration::default());
         let p = f.player(&code, 30, "Retained");
         let before = contents(&f);
-        f.game.conn.borrow().execute_batch("DROP TABLE game_spectator_terminal_work; DROP TABLE game_spectator_notices; DROP TABLE game_spectator_contexts; DROP TABLE game_spectator_sessions; DROP TABLE game_spectators; UPDATE game_metadata SET schema_version=3;").unwrap();
+        f.game.conn.borrow().execute_batch("DROP TABLE game_admin_audit; DROP TABLE game_host_transfers; DROP TABLE game_operator_identity; DROP TABLE game_spectator_terminal_work; DROP TABLE game_spectator_notices; DROP TABLE game_spectator_contexts; DROP TABLE game_spectator_sessions; DROP TABLE game_spectators; UPDATE game_metadata SET schema_version=3;").unwrap();
         if fault {
             f.game.conn.borrow().execute_batch("CREATE TRIGGER fault BEFORE UPDATE OF schema_version ON game_metadata BEGIN SELECT RAISE(IGNORE); END").unwrap();
             assert_eq!(
@@ -567,12 +567,14 @@ fn spectator_migration_accepts_sqlite_renamed_identifiers_from_previous_owner_mi
         .execute_batch(include_str!("../fixtures/game-schema-v1.sql"))
         .unwrap();
     brews_backend::db::game::migrate_game(&db).unwrap();
-    db.conn.borrow().execute_batch("DROP TABLE game_spectator_terminal_work; DROP TABLE game_spectator_notices; DROP TABLE game_spectator_contexts; DROP TABLE game_spectator_sessions; DROP TABLE game_spectators; UPDATE game_metadata SET schema_version=3;").unwrap();
+    db.conn.borrow().execute_batch("DROP TABLE game_admin_audit; DROP TABLE game_host_transfers; DROP TABLE game_operator_identity; DROP TABLE game_spectator_terminal_work; DROP TABLE game_spectator_notices; DROP TABLE game_spectator_contexts; DROP TABLE game_spectator_sessions; DROP TABLE game_spectators; UPDATE game_metadata SET schema_version=3;").unwrap();
     brews_backend::db::game::migrate_game(&db).unwrap();
     assert_eq!(
         db.query("SELECT schema_version FROM game_metadata", &[])
             .unwrap(),
-        vec![vec![SqlValue::Integer(4)]]
+        vec![vec![SqlValue::Integer(
+            brews_backend::db::schema::game_schema::GAME_SCHEMA_VERSION
+        )]]
     );
 }
 

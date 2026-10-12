@@ -89,15 +89,17 @@ References: API D6/D8/D9/D12/G1–G3/H4/H5/H9; DO-047/053–055/067–068/073/09
 
 Goal: complete nonterminal operator workflows without recreating games or weakening assignment/removal coordination.
 
-- [ ] Finalize C7 patch omission/null/replacement semantics, revision guards, receipts and error contract.
-- [ ] Implement C7 configuration editing only in New, validating and persisting the complete effective configuration atomically.
-- [ ] Finalize and implement C9 intentional open/resume, restoring existing state without replacement codes/boards; only qualifying current designated-host activity renews the pre-start idle deadline.
-- [ ] Finalize C10 target-confirmation and expected-host-assignment-revision transport, plus safe eligible-target discovery for ordinary hosts without exposing admin-only Users data.
-- [ ] Implement C10 nonterminal host transfer with current actor/target revalidation, target Directory gate fencing, once-only checked revision increments and actor-scoped receipts.
-- [ ] Coordinate assignment/index changes and retries without clearing the global reservation or allowing transfer to race past account removal; the new host inherits the existing idle deadline.
-- [ ] Add relevant owner-local queries/migrations and native/Worker race, rollback, replay, timeout and revocation tests; integrate Slice 8 privileged auditing.
+- [x] Finalize C7 patch omission/null/replacement semantics, revision guards, receipts and error contract.
+- [x] Implement C7 configuration editing only in New, validating and persisting the complete effective configuration atomically.
+- [x] Finalize and implement C9 intentional open/resume, restoring existing state without replacement codes/boards; only qualifying current designated-host activity renews the pre-start idle deadline.
+- [x] Finalize C10 target-confirmation and expected-host-assignment-revision transport, plus safe eligible-target discovery for ordinary hosts without exposing admin-only Users data.
+- [x] Implement C10 nonterminal host transfer with current actor/target revalidation, target Directory gate fencing, once-only checked revision increments and actor-scoped receipts.
+- [x] Coordinate assignment/index changes and retries without clearing the global reservation or allowing transfer to race past account removal; the new host inherits the authoritative resulting idle deadline.
+- [x] Add relevant owner-local queries/migrations and native/Worker race, rollback, replay, timeout and revocation tests; integrate the necessary Slice 8 privileged auditing for these operators.
 
-References: API C7/C9/C10; DO-018/039–044. Creation-time configuration overrides and passive sync/reconnect already work; they do not implement configuration editing or the intentional activity-renewing resume operation.
+**Completed locally:** C7/C9/C10, bounded safe discovery, exact transfer/removal coordination, Game-owned Slice 5 audit capture/90-day cleanup and strict migrations. Final frozen gates pass: 882 native tests in each profile, 12 doctests, strict native/Wasm Clippy, 544 Workerd tests across 31 suites and 208 actual local HTTPS/WSS checks. Bounded independent Core/runtime reviews and final repair follow-up have no remaining blocking findings; final source/SQL/artifact hashes reconcile. See [review and evidence](../reviews/operator-slice-2026-10-12.md), [local transport choices](api-design.md#local-slice-5-operator-transport-and-coordination-choices) and LLD Section 3.18 for scope, failure provenance and limitations. Slice 2's older independent-review item remains unchanged; Slice 8 older-operation integration and CLI audit reads remain pending. No staging or publication is authorized or performed for Slice 5.
+
+References: API C7/C9/C10; DO-018/039–044/076–090. The completed local slice adds configuration editing, intentional resume and host transfer to the published creation/passive-sync foundation. Production/release gates remain separate.
 
 ## Slice 6 — Dedicated authorized read APIs
 
@@ -135,7 +137,7 @@ Goal: complete the game-owned portion of auditing alongside privileged game oper
 - [ ] Extend restricted developer-CLI reads to authorized game-owned audit records without adding an app audit endpoint or UI.
 - [ ] Add migration, attribution, replay, failure-path, retention and redaction tests.
 
-References: API H12; DO-088–090. Account-management audit storage, retention and developer-only reads already exist; game-side audit integration does not.
+References: API H12; DO-088–090. Account-management audit storage, retention and developer-only reads already exist. Slice 5 adds Game-owned storage, fixed 90-day cleanup and capture for configuration, resume, host transfer and target discovery only, with local migrations/tests. The unchecked items above track completion across the older game operations and restricted CLI reads; this partial integration does not close Slice 8.
 
 ## Slice 9 — Production database/runtime and release gates
 

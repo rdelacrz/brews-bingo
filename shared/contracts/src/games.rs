@@ -110,6 +110,137 @@ map_struct!(ConfigurationOverrides {
     #[serde(default,deserialize_with="non_null_option")] spectator_capacity:Option<u8>,
     #[serde(default,deserialize_with="non_null_option")] winning_pattern:Option<WinningPattern>,
 });
+map_struct!(pub ConfigurationPatch {
+    #[serde(deserialize_with="safe_revision")] expected_revision:u64,
+    #[serde(default,deserialize_with="non_null_option")] numeric_upper_bound:Option<u32>,
+    #[serde(default,deserialize_with="non_null_option")] board_side_length:Option<u8>,
+    #[serde(default,deserialize_with="non_null_option")] free_cells_enabled:Option<bool>,
+    #[serde(default,deserialize_with="positions")] free_cell_positions:Option<Vec<CellPosition>>,
+    #[serde(default,deserialize_with="non_null_option")] player_capacity:Option<u8>,
+    #[serde(default,deserialize_with="non_null_option")] spectator_capacity:Option<u8>,
+    #[serde(default,deserialize_with="non_null_option")] winning_pattern:Option<WinningPattern>,
+});
+impl ConfigurationPatch {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        decode(bytes, GAME_BODY_MAX_BYTES)
+    }
+    pub fn apply(&self, current: &GameConfiguration) -> Result<GameConfiguration, GameDecodeError> {
+        let result = GameConfiguration {
+            numeric_upper_bound: self
+                .numeric_upper_bound
+                .unwrap_or(current.numeric_upper_bound),
+            board_side_length: self.board_side_length.unwrap_or(current.board_side_length),
+            free_cells_enabled: self
+                .free_cells_enabled
+                .unwrap_or(current.free_cells_enabled),
+            free_cell_positions: self
+                .free_cell_positions
+                .clone()
+                .unwrap_or_else(|| current.free_cell_positions.clone()),
+            player_capacity: self.player_capacity.unwrap_or(current.player_capacity),
+            spectator_capacity: self
+                .spectator_capacity
+                .unwrap_or(current.spectator_capacity),
+            winning_pattern: self.winning_pattern.unwrap_or(current.winning_pattern),
+        };
+        result.validate().map_err(|_| GameDecodeError)?;
+        Ok(result)
+    }
+}
+pub const HOST_TRANSFER_TARGET_LIMIT_MAX: u32 = 100;
+pub const HOST_TRANSFER_TARGET_LIMIT_DEFAULT: u32 = 50;
+map_struct!(pub HostTransferTarget {account_id:AccountId, username:String});
+map_struct!(pub HostTransferTargetsQuery {limit:u32,#[serde(deserialize_with="nullable_value")] cursor:Option<AccountId>});
+impl HostTransferTargetsQuery {
+    pub fn decode_query(query: Option<&str>) -> Result<Self, GameDecodeError> {
+        let mut limit = None;
+        let mut cursor = None;
+        if let Some(query) = query {
+            if query.is_empty() || query.len() > 128 || !query.is_ascii() {
+                return Err(GameDecodeError);
+            }
+            for field in query.split('&') {
+                let (key, value) = field.split_once('=').ok_or(GameDecodeError)?;
+                match key {
+                    "limit" if limit.is_none() => {
+                        if value.is_empty()
+                            || !value.bytes().all(|b| b.is_ascii_digit())
+                            || (value.len() > 1 && value.starts_with('0'))
+                        {
+                            return Err(GameDecodeError);
+                        }
+                        limit = Some(value.parse().map_err(|_| GameDecodeError)?);
+                    }
+                    "cursor" if cursor.is_none() => {
+                        cursor = Some(value.parse().map_err(|_| GameDecodeError)?)
+                    }
+                    _ => return Err(GameDecodeError),
+                }
+            }
+        }
+        let result = Self {
+            limit: limit.unwrap_or(HOST_TRANSFER_TARGET_LIMIT_DEFAULT),
+            cursor,
+        };
+        result.validate()?;
+        Ok(result)
+    }
+    pub fn validate(&self) -> Result<(), GameDecodeError> {
+        if (1..=HOST_TRANSFER_TARGET_LIMIT_MAX).contains(&self.limit) {
+            Ok(())
+        } else {
+            Err(GameDecodeError)
+        }
+    }
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        let result: Self = decode(bytes, GAME_BODY_MAX_BYTES)?;
+        result.validate()?;
+        Ok(result)
+    }
+}
+map_struct!(pub HostTransferTargets {
+    game_id:GameId,
+    #[serde(deserialize_with="safe_revision")] host_assignment_revision:u64,
+    targets:Vec<HostTransferTarget>,
+    #[serde(deserialize_with="nullable_value")] next_cursor:Option<AccountId>,
+});
+impl HostTransferTargets {
+    pub fn validate(&self) -> Result<(), GameDecodeError> {
+        if self.targets.len() > HOST_TRANSFER_TARGET_LIMIT_MAX as usize {
+            return Err(GameDecodeError);
+        }
+        for target in &self.targets {
+            if brews_domain::accounts::validate_username(&target.username)
+                .map_err(|_| GameDecodeError)?
+                != target.username
+            {
+                return Err(GameDecodeError);
+            }
+        }
+        if self
+            .targets
+            .windows(2)
+            .any(|pair| pair[0].account_id >= pair[1].account_id)
+        {
+            return Err(GameDecodeError);
+        }
+        Ok(())
+    }
+}
+map_struct!(pub HostTransferInput {
+    target_account_id:AccountId,
+    confirmed:bool,
+    #[serde(deserialize_with="safe_revision")] expected_host_assignment_revision:u64,
+});
+impl HostTransferInput {
+    pub fn decode_json(bytes: &[u8]) -> Result<Self, GameDecodeError> {
+        let result: Self = decode(bytes, GAME_BODY_MAX_BYTES)?;
+        if !result.confirmed {
+            return Err(GameDecodeError);
+        }
+        Ok(result)
+    }
+}
 impl ConfigurationOverrides {
     fn resolve(self) -> Result<GameConfiguration, GameDecodeError> {
         let defaults = GameConfiguration::default();
@@ -368,6 +499,13 @@ pub const GAME_RECEIPT_RETENTION_MS: i64 = 86_400_000;
 const PRE_START_IDLE_MS: i64 = 86_400_000;
 const PLAYER_SESSION_LIFETIME_MS: i64 = 86_400_000;
 pub const MAX_SAFE_TIMESTAMP: i64 = 9_007_199_254_740_991;
+fn validate_revision(value: u64) -> Result<(), GameDecodeError> {
+    if value > MAX_SAFE_REVISION {
+        Err(GameDecodeError)
+    } else {
+        Ok(())
+    }
+}
 fn validate_timestamp(value: i64) -> Result<(), GameDecodeError> {
     if !(0..=MAX_SAFE_TIMESTAMP).contains(&value) {
         return Err(GameDecodeError);
@@ -519,6 +657,9 @@ map_enum!(pub GameOutcome, "operation", {
         #[serde(deserialize_with = "safe_revision")]
         view_revision: u64,
     },
+    ConfigurationUpdated { view_revision:u64, changed:bool },
+    Resumed { view_revision:u64 },
+    HostTransferred { view_revision:u64, designated_host_id:AccountId, host_assignment_revision:u64 },
     Exited {},
     Created {
         #[serde(deserialize_with = "safe_revision")]
@@ -638,6 +779,19 @@ impl GameReceipt {
                         }
                     }
                     _ => return Err(GameDecodeError),
+                }
+                *view_revision
+            }
+            GameOutcome::ConfigurationUpdated { view_revision, .. }
+            | GameOutcome::Resumed { view_revision } => *view_revision,
+            GameOutcome::HostTransferred {
+                view_revision,
+                host_assignment_revision,
+                ..
+            } => {
+                validate_revision(*host_assignment_revision)?;
+                if *host_assignment_revision == 0 {
+                    return Err(GameDecodeError);
                 }
                 *view_revision
             }
@@ -818,6 +972,12 @@ map_struct!(pub GameSummary {
     view_revision: u64
 });
 map_enum!(pub GameResponse, "result", {
+    ConfigurationUpdated {
+        #[serde(deserialize_with="configuration")] configuration:GameConfiguration,
+        receipt:GameReceipt,
+    },
+    Resumed { game:GameView, can_mutate:bool, host_assignment_revision:u64, receipt:GameReceipt },
+    HostTransferred { receipt:GameReceipt },
     ParticipantChanged { receipt: GameReceipt },
     Exited {
         game_id: GameId,
@@ -918,6 +1078,29 @@ impl GameResponse {
     /// Validates acknowledgement coherence, not actor authority or current owner state.
     pub fn validate(&self) -> Result<(), GameDecodeError> {
         let coherent = match self {
+            Self::ConfigurationUpdated {
+                configuration,
+                receipt,
+            } => {
+                configuration.validate().map_err(|_| GameDecodeError)?;
+                receipt.validate()?;
+                matches!(receipt.outcome, GameOutcome::ConfigurationUpdated { .. })
+            }
+            Self::Resumed {
+                game,
+                host_assignment_revision,
+                receipt,
+                ..
+            } => {
+                game.validate()?;
+                validate_revision(*host_assignment_revision)?;
+                receipt.validate()?;
+                matches!(receipt.outcome,GameOutcome::Resumed {view_revision} if view_revision==game.view_revision())
+            }
+            Self::HostTransferred { receipt } => {
+                receipt.validate()?;
+                matches!(receipt.outcome, GameOutcome::HostTransferred { .. })
+            }
             Self::ParticipantChanged { receipt } => {
                 receipt.validate()?;
                 matches!(receipt.outcome, GameOutcome::ParticipantChanged { .. })

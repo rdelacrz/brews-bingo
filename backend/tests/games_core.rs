@@ -5,6 +5,8 @@
 )]
 #[path = "games_core/discovery.rs"]
 mod discovery;
+#[path = "games_core/operator.rs"]
+mod operator;
 #[path = "games_core/player_lifecycle.rs"]
 mod player_lifecycle;
 #[path = "games_core/player_lifecycle_review.rs"]
@@ -2854,7 +2856,13 @@ fn current_schema_migration_preserves_populated_prior_origins_and_actor_roundtri
                         serde_json::to_value(f.service().player_view(player.token()).unwrap())
                             .unwrap();
                     for table in GAME_TABLES.into_iter().filter(|name| {
-                        name.starts_with("game_spectator")
+                        (name.starts_with("game_spectator")
+                            || [
+                                "game_admin_audit",
+                                "game_host_transfers",
+                                "game_operator_identity",
+                            ]
+                            .contains(name))
                             || (version == 2
                                 && ["game_recovery_buckets", "game_socket_closures"].contains(name))
                     }) {
@@ -2871,6 +2879,12 @@ fn current_schema_migration_preserves_populated_prior_origins_and_actor_roundtri
                         .filter(|name| {
                             *name != "game_metadata"
                                 && !name.starts_with("game_spectator")
+                                && ![
+                                    "game_admin_audit",
+                                    "game_host_transfers",
+                                    "game_operator_identity",
+                                ]
+                                .contains(name)
                                 && !(version == 2
                                     && ["game_recovery_buckets", "game_socket_closures"]
                                         .contains(name))

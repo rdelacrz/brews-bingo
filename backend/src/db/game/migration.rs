@@ -12,6 +12,8 @@ use crate::db::schema::game_schema::{
 use brews_domain::games::GameState;
 #[path = "../schema/previous_admission_schema.rs"]
 mod previous_admission_schema;
+#[path = "../schema/previous_gameplay_schema.rs"]
+mod previous_gameplay_schema;
 
 const MINIFLARE_OWNER_METADATA_TABLE: &str = "__miniflare_do_name";
 const CLOUDFLARE_OWNER_METADATA_TABLE: &str = "_cf_METADATA";
@@ -88,6 +90,7 @@ pub(super) fn validate_schema<D: Database>(db: &D) -> Result<(), StorageError> {
     for statement in game_schema::recovery_coordination_statements()
         .into_iter()
         .chain(game_schema::spectator_statements())
+        .chain(crate::db::schema::game_operator_schema::statements())
     {
         let (kind, prefix) = if statement.starts_with("CREATE TABLE") {
             ("table", "CREATE TABLE ")
@@ -336,6 +339,12 @@ fn migrate_previous_game_schema<D: Database>(db: &D) -> Result<(), StorageError>
     {
         db.execute(&statement, &[])?;
     }
+    for statement in crate::db::schema::game_operator_schema::statements()
+        .into_iter()
+        .filter(|s| s.starts_with("CREATE INDEX"))
+    {
+        db.execute(&statement, &[])?;
+    }
     db.execute(
         SQL_UPDATE_GAME_SCHEMA_VERSION,
         &[int(GAME_SCHEMA_VERSION), int(PREVIOUS_GAME_SCHEMA_VERSION)],
@@ -392,7 +401,46 @@ fn retained_schema_matches(table: &str, actual: &str, tables: &[&str], expected:
     normalized == legacy
 }
 fn validate_retained_schema<D: Database>(db: &D, tables: &[&str]) -> Result<(), StorageError> {
-    let current_statements = game_schema::statements();
+    let statements = game_schema::statements();
+    validate_table_definitions(
+        db,
+        tables,
+        &statements.iter().map(String::as_str).collect::<Vec<_>>(),
+    )
+}
+fn validate_historical_schema<D: Database>(
+    db: &D,
+    tables: &[&str],
+    statements: &[&str],
+) -> Result<(), StorageError> {
+    validate_table_definitions(db, tables, statements)?;
+    let mut expected = statements
+        .iter()
+        .filter(|s| s.starts_with("CREATE INDEX") || s.starts_with("CREATE UNIQUE INDEX"))
+        .copied()
+        .collect::<Vec<_>>();
+    if DELIVERY_TABLES.iter().all(|t| tables.contains(t)) {
+        expected.extend(previous_gameplay_schema::DELIVERY_INDEX_STATEMENTS);
+    }
+    let catalog = db.query("SELECT name,sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL ORDER BY name LIMIT ?", &[int(expected.len() as i64 + DELIVERY_TABLES.len() as i64 + 1)])?;
+    if catalog.len() != expected.len() {
+        return Err(StorageError);
+    }
+    for statement in expected {
+        let name = statement
+            .strip_prefix("CREATE INDEX ")
+            .or_else(|| statement.strip_prefix("CREATE UNIQUE INDEX "))
+            .and_then(|s| s.split(['(', ' ']).next())
+            .ok_or(StorageError)?;
+        if !catalog.iter().any(|row| matches!(row.as_slice(), [SqlValue::Text(n),SqlValue::Text(sql)] if n == name && sql.replace(&format!("\"{name}\""), name) == statement)) { return Err(StorageError); }
+    }
+    Ok(())
+}
+fn validate_table_definitions<D: Database>(
+    db: &D,
+    tables: &[&str],
+    statements: &[&str],
+) -> Result<(), StorageError> {
     let catalog = db.query(
         SQL_SELECT_TABLE_DDL_CATALOG,
         &[
@@ -414,9 +462,9 @@ fn validate_retained_schema<D: Database>(db: &D, tables: &[&str]) -> Result<(), 
                 .copied()
                 .find(|statement| statement.starts_with(&prefix))
         } else {
-            current_statements
+            statements
                 .iter()
-                .map(String::as_str)
+                .copied()
                 .find(|statement| statement.starts_with(&prefix))
         }
         .ok_or(StorageError)?;
@@ -497,19 +545,16 @@ fn repair_completed_line_board_reference<D: Database>(db: &D) -> Result<(), Stor
     Ok(())
 }
 fn migrate_recovery_coordination<D: Database>(db: &D) -> Result<(), StorageError> {
-    let old = GAME_TABLES
-        .iter()
-        .copied()
-        .filter(|name| {
-            !matches!(*name, "game_recovery_buckets" | "game_socket_closures")
-                && !name.starts_with("game_spectator")
-        })
-        .collect::<Vec<_>>();
+    let old = previous_gameplay_schema::GAMEPLAY_TABLES;
     let actual = inventory(db)?;
     if actual != migration_table_set(&old, false) && actual != migration_table_set(&old, true) {
         return Err(StorageError);
     }
-    validate_retained_schema(db, &actual.iter().map(String::as_str).collect::<Vec<_>>())?;
+    validate_historical_schema(
+        db,
+        &actual.iter().map(String::as_str).collect::<Vec<_>>(),
+        &previous_gameplay_schema::GAMEPLAY_STATEMENTS,
+    )?;
     repair_completed_line_board_reference(db)?;
     for statement in game_schema::recovery_coordination_statements() {
         db.execute(&statement, &[])?;
@@ -520,6 +565,9 @@ fn migrate_recovery_coordination<D: Database>(db: &D) -> Result<(), StorageError
     )?;
     for statement in game_schema::spectator_statements() {
         db.execute(&statement, &[])?;
+    }
+    for sql in crate::db::schema::game_operator_schema::statements() {
+        db.execute(&sql, &[])?;
     }
     validate_schema(db)?;
     for name in ["game_recovery_bucket_expiry", "game_socket_closure_retry"] {
@@ -534,16 +582,16 @@ fn migrate_recovery_coordination<D: Database>(db: &D) -> Result<(), StorageError
     Ok(())
 }
 fn migrate_spectator_authority<D: Database>(db: &D) -> Result<(), StorageError> {
-    let old = GAME_TABLES
-        .iter()
-        .copied()
-        .filter(|name| !name.starts_with("game_spectator"))
-        .collect::<Vec<_>>();
+    let old = previous_gameplay_schema::RECOVERY_TABLES;
     let actual = inventory(db)?;
     if actual != migration_table_set(&old, false) && actual != migration_table_set(&old, true) {
         return Err(StorageError);
     }
-    validate_retained_schema(db, &actual.iter().map(String::as_str).collect::<Vec<_>>())?;
+    validate_historical_schema(
+        db,
+        &actual.iter().map(String::as_str).collect::<Vec<_>>(),
+        &previous_gameplay_schema::RECOVERY_STATEMENTS,
+    )?;
     repair_completed_line_board_reference(db)?;
     for sql in game_schema::spectator_statements() {
         db.execute(&sql, &[])?;
@@ -551,6 +599,46 @@ fn migrate_spectator_authority<D: Database>(db: &D) -> Result<(), StorageError> 
     db.execute(
         SQL_UPDATE_GAME_SCHEMA_VERSION,
         &[int(GAME_SCHEMA_VERSION), int(3)],
+    )?;
+    for sql in crate::db::schema::game_operator_schema::statements() {
+        db.execute(&sql, &[])?;
+    }
+    validate_schema(db)
+}
+fn migrate_saved_operator_workflows<D: Database>(db: &D) -> Result<(), StorageError> {
+    let old = previous_gameplay_schema::SPECTATOR_TABLES;
+    let actual = inventory(db)?;
+    if actual != migration_table_set(&old, false) && actual != migration_table_set(&old, true) {
+        return Err(StorageError);
+    }
+    validate_historical_schema(
+        db,
+        &actual.iter().map(String::as_str).collect::<Vec<_>>(),
+        &previous_gameplay_schema::SPECTATOR_STATEMENTS,
+    )?;
+    for statement in game_schema::recovery_coordination_statements()
+        .into_iter()
+        .chain(game_schema::spectator_statements())
+        .filter(|s| s.starts_with("CREATE INDEX"))
+    {
+        let name = statement
+            .strip_prefix("CREATE INDEX ")
+            .and_then(|s| s.split(['(', ' ']).next())
+            .ok_or(StorageError)?;
+        if db.query(
+            "SELECT sql FROM sqlite_master WHERE type='index' AND name=?",
+            &[text(name)],
+        )? != vec![vec![text(&statement)]]
+        {
+            return Err(StorageError);
+        }
+    }
+    for sql in crate::db::schema::game_operator_schema::statements() {
+        db.execute(&sql, &[])?;
+    }
+    db.execute(
+        SQL_UPDATE_GAME_SCHEMA_VERSION,
+        &[int(GAME_SCHEMA_VERSION), int(4)],
     )?;
     validate_schema(db)
 }
@@ -591,6 +679,8 @@ pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
                 migrate_recovery_coordination(db)?;
             } else if version == 3 {
                 migrate_spectator_authority(db)?;
+            } else if version == 4 {
+                migrate_saved_operator_workflows(db)?;
             } else if version != GAME_SCHEMA_VERSION {
                 return Err(StorageError);
             }
@@ -1017,5 +1107,208 @@ mod tests {
             ordered,
             vec![vec![SqlValue::Integer(1), SqlValue::Text("1".into())]]
         );
+    }
+
+    struct WriteCounter<'a> {
+        inner: &'a Sqlite,
+        writes: std::cell::Cell<usize>,
+    }
+    impl Database for WriteCounter<'_> {
+        fn query(
+            &self,
+            sql: &str,
+            params: &[SqlValue],
+        ) -> Result<Vec<crate::db::Row>, StorageError> {
+            self.inner.query(sql, params)
+        }
+        fn execute(&self, sql: &str, params: &[SqlValue]) -> Result<(), StorageError> {
+            self.writes.set(self.writes.get() + 1);
+            self.inner.execute(sql, params)
+        }
+        fn transaction<T>(
+            &self,
+            operation: impl FnOnce() -> Result<T, StorageError>,
+        ) -> Result<T, StorageError> {
+            self.inner.transaction(operation)
+        }
+    }
+    fn spectator_schema_database(delivery: bool) -> Sqlite {
+        let db = Sqlite::new();
+        for statement in previous_gameplay_schema::SPECTATOR_STATEMENTS {
+            db.execute(statement, &[]).unwrap();
+        }
+        db.execute(SQL_INSERT_GAME_METADATA, &[int(4)]).unwrap();
+        if delivery {
+            crate::db::game_delivery::migrate_game_delivery(&db).unwrap();
+        }
+        db
+    }
+    #[test]
+    fn operator_migration_from_spectator_counter_preserves_optional_delivery_and_rejects_every_unknown_shape_before_writes()
+     {
+        for delivery in [false, true] {
+            let db = spectator_schema_database(delivery);
+            migrate_game(&db).unwrap();
+            validate_schema(&db).unwrap();
+            assert_eq!(
+                db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])
+                    .unwrap(),
+                vec![vec![int(GAME_SCHEMA_VERSION)]]
+            );
+            for table in previous_gameplay_schema::SPECTATOR_TABLES
+                .iter()
+                .copied()
+                .chain(if delivery {
+                    DELIVERY_TABLES.to_vec()
+                } else {
+                    vec![]
+                })
+            {
+                let db = spectator_schema_database(delivery);
+                db.execute(
+                    &format!("ALTER TABLE {table} ADD COLUMN unknown_shape TEXT"),
+                    &[],
+                )
+                .unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage), "{table}");
+                assert_eq!(counted.writes.get(), 0, "{table}");
+            }
+            let db = spectator_schema_database(delivery);
+            db.execute("DROP INDEX game_spectator_session_expiry", &[])
+                .unwrap();
+            let counted = WriteCounter {
+                inner: &db,
+                writes: std::cell::Cell::new(0),
+            };
+            assert_eq!(migrate_game(&counted), Err(GameError::Storage));
+            assert_eq!(counted.writes.get(), 0);
+        }
+    }
+    #[test]
+    fn historical_gameplay_recovery_spectator_inventories_reject_future_shapes_without_writes() {
+        for (version, statements, tables) in [
+            (
+                2,
+                previous_gameplay_schema::GAMEPLAY_STATEMENTS.as_slice(),
+                previous_gameplay_schema::GAMEPLAY_TABLES.as_slice(),
+            ),
+            (
+                3,
+                previous_gameplay_schema::RECOVERY_STATEMENTS.as_slice(),
+                previous_gameplay_schema::RECOVERY_TABLES.as_slice(),
+            ),
+            (
+                4,
+                previous_gameplay_schema::SPECTATOR_STATEMENTS.as_slice(),
+                previous_gameplay_schema::SPECTATOR_TABLES.as_slice(),
+            ),
+        ] {
+            for delivery in [false, true] {
+                let origin = || {
+                    let db = Sqlite::new();
+                    for statement in statements {
+                        db.execute(statement, &[]).unwrap();
+                    }
+                    db.execute(SQL_INSERT_GAME_METADATA, &[int(version)])
+                        .unwrap();
+                    if delivery {
+                        crate::db::game_delivery::migrate_game_delivery(&db).unwrap();
+                    }
+                    db
+                };
+                let valid = origin();
+                migrate_game(&valid).unwrap();
+                validate_schema(&valid).unwrap();
+                for table in tables {
+                    let db = origin();
+                    db.execute(
+                        &format!("ALTER TABLE {table} ADD COLUMN future_shape TEXT"),
+                        &[],
+                    )
+                    .unwrap();
+                    let counted = WriteCounter {
+                        inner: &db,
+                        writes: std::cell::Cell::new(0),
+                    };
+                    assert_eq!(
+                        migrate_game(&counted),
+                        Err(GameError::Storage),
+                        "{version}/{delivery}/{table}"
+                    );
+                    assert_eq!(counted.writes.get(), 0);
+                }
+                for drift in [
+                    "unknown_table",
+                    "unknown_index",
+                    "index_shape",
+                    "constraint",
+                    "foreign_key",
+                ] {
+                    let db = origin();
+                    match drift {
+                        "unknown_table" => db
+                            .execute(
+                                "CREATE TABLE game_future_origin(id TEXT PRIMARY KEY) STRICT",
+                                &[],
+                            )
+                            .unwrap(),
+                        "unknown_index" => db
+                            .execute(
+                                "CREATE INDEX game_future_index ON game_metadata(last_observed_ms)",
+                                &[],
+                            )
+                            .unwrap(),
+                        "index_shape" => {
+                            if version == 2 {
+                                db.execute("CREATE INDEX game_recovery_bucket_expiry ON game_recovery(player_id)", &[]).unwrap();
+                            } else {
+                                db.execute("DROP INDEX game_recovery_bucket_expiry", &[])
+                                    .unwrap();
+                                db.execute("CREATE INDEX game_recovery_bucket_expiry ON game_recovery_buckets(attempt_count)", &[]).unwrap();
+                            }
+                        }
+                        "constraint" => {
+                            db.execute("DROP TABLE game_free_cells", &[]).unwrap();
+                            let ddl = statements
+                                .iter()
+                                .find(|s| s.starts_with("CREATE TABLE game_free_cells("))
+                                .unwrap()
+                                .replace(
+                                    "row INTEGER NOT NULL",
+                                    "row INTEGER NOT NULL CHECK(row>0)",
+                                );
+                            db.execute(&ddl, &[]).unwrap();
+                        }
+                        "foreign_key" => {
+                            db.execute("DROP TABLE game_free_cells", &[]).unwrap();
+                            let ddl = statements
+                                .iter()
+                                .find(|s| s.starts_with("CREATE TABLE game_free_cells("))
+                                .unwrap()
+                                .replace(
+                                    "row INTEGER NOT NULL",
+                                    "row INTEGER NOT NULL REFERENCES game_metadata(singleton)",
+                                );
+                            db.execute(&ddl, &[]).unwrap();
+                        }
+                        _ => unreachable!(),
+                    }
+                    let counted = WriteCounter {
+                        inner: &db,
+                        writes: std::cell::Cell::new(0),
+                    };
+                    assert_eq!(
+                        migrate_game(&counted),
+                        Err(GameError::Storage),
+                        "{version}/{delivery}/{drift}"
+                    );
+                    assert_eq!(counted.writes.get(), 0);
+                }
+            }
+        }
     }
 }

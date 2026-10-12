@@ -20,6 +20,8 @@ pub(crate) use games::decode_empty_game_body;
     reason = "Private Worker wire is also compiled by native boundary tests."
 )]
 pub(crate) use games::decode_recovery_input;
+#[cfg(target_arch = "wasm32")]
+pub(crate) use games::operator_rejection_context;
 pub use games::{
     ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameViewSelector, GamesRequest,
     PLAYER_COOKIE_NAME, RecoverPlayerInput, RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME,

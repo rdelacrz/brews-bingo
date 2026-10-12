@@ -8,6 +8,10 @@
 )]
 #[path = "directory_games.rs"]
 mod game_sql;
+#[path = "directory_host_transfer.rs"]
+mod host_transfer_sql;
+#[path = "schema/previous_coordination_schema.rs"]
+pub(super) mod previous_coordination_schema;
 use crate::directory::{DirectoryError, RemovalGrant, RemovalReleaseAck};
 use crate::{
     auth::Runtime,
@@ -40,8 +44,16 @@ pub fn migrate_directory<D: Database>(db: &D) -> Result<(), DirectoryError> {
         } else { schema_version(db)? };
         if version == REMOVAL_SCHEMA_VERSION {
             validate_inventory(db, &REMOVAL_TABLES)?;
+            validate_directory_definitions(db, REMOVAL_SCHEMA_VERSION)?;
             directory_schema::add_game_coordination(db)?;
+            directory_schema::add_host_transfer_coordination(db)?;
             db.execute("UPDATE directory_metadata SET schema_version=? WHERE singleton=1 AND schema_version=?", &[SqlValue::Integer(DIRECTORY_SCHEMA_VERSION), SqlValue::Integer(REMOVAL_SCHEMA_VERSION)])?;
+        } else if version == 2 {
+            let previous=previous_coordination_schema::COORDINATION_TABLES;
+            validate_inventory(db,&previous)?;
+            validate_directory_definitions(db, 2)?;
+            directory_schema::add_host_transfer_coordination(db)?;
+            db.execute("UPDATE directory_metadata SET schema_version=? WHERE singleton=1 AND schema_version=?",&[SqlValue::Integer(DIRECTORY_SCHEMA_VERSION),SqlValue::Integer(2)])?;
         } else if version != DIRECTORY_SCHEMA_VERSION { return Err(StorageError); }
         validate_schema(db).map_err(|_| StorageError)?;
         Ok(())
@@ -79,8 +91,64 @@ fn validate_inventory<D: Database>(db: &D, expected: &[&str]) -> Result<(), Stor
 }
 fn validate_schema<D: Database>(db: &D) -> Result<(), DirectoryError> {
     validate_inventory(db, &DIRECTORY_TABLES)?;
+    validate_directory_definitions(db, DIRECTORY_SCHEMA_VERSION)?;
     if schema_version(db)? != DIRECTORY_SCHEMA_VERSION {
         return Err(DirectoryError::Storage);
+    }
+    Ok(())
+}
+
+fn validate_directory_definitions<D: Database>(db: &D, version: i64) -> Result<(), StorageError> {
+    let mut statements = if version == 2 {
+        previous_coordination_schema::COORDINATION_STATEMENTS
+            .map(str::to_owned)
+            .to_vec()
+    } else {
+        directory_schema::removal_statements()
+    };
+    if version > 2 {
+        statements.extend(directory_schema::game_coordination_statements());
+    }
+    if version >= DIRECTORY_SCHEMA_VERSION {
+        statements.extend(directory_schema::host_transfer_statements());
+    }
+    // One bounded catalog cut preserves all DDL checks without per-table reads.
+    let catalog=db.query("SELECT type,name,sql FROM sqlite_master WHERE type IN ('table','index') AND sql IS NOT NULL AND name NOT GLOB 'sqlite_*' AND name NOT IN (?,?) ORDER BY type,name LIMIT ?",&[SqlValue::Text(MINIFLARE_METADATA_TABLE.into()),SqlValue::Text(WORKERD_METADATA_TABLE.into()),SqlValue::Integer((statements.len()+1) as i64)])?;
+    if catalog.len() != statements.len() {
+        return Err(StorageError);
+    }
+    for expected in statements {
+        let words = expected.split_whitespace().collect::<Vec<_>>();
+        let (kind, name) = if words.get(1) == Some(&"UNIQUE") {
+            ("index", words.get(3))
+        } else {
+            (
+                if words.get(1) == Some(&"TABLE") {
+                    "table"
+                } else {
+                    "index"
+                },
+                words.get(2),
+            )
+        };
+        let name = name
+            .ok_or(StorageError)?
+            .split('(')
+            .next()
+            .ok_or(StorageError)?;
+        let mut matches=catalog.iter().filter(|row|matches!(row.as_slice(),[SqlValue::Text(actual_kind),SqlValue::Text(actual_name),SqlValue::Text(_)] if actual_kind==kind && actual_name==name));
+        let row = matches.next().ok_or(StorageError)?;
+        if matches.next().is_some() {
+            return Err(StorageError);
+        }
+        let [_, _, SqlValue::Text(actual)] = row.as_slice() else {
+            return Err(StorageError);
+        };
+        // SQLite quotes a renamed table identifier; accept only that known spelling.
+        let actual = actual.replace(&format!("\"{name}\""), name);
+        if actual != expected {
+            return Err(StorageError);
+        }
     }
     Ok(())
 }
@@ -150,6 +218,7 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
     pub fn next_deadline(&self) -> Result<Option<i64>, DirectoryError> {
         self.transaction_before_compaction(|now| {
             let mut deadline = self.next_creation_deadline(now)?;
+            if let Some(at)=self.next_host_transfer_deadline()? {deadline=Some(deadline.map_or(at,|prior|prior.min(at)));}
             if let Some(expires) = self.next_history_deadline(now)? {
                 deadline = Some(deadline.map_or(expires, |earliest| earliest.min(expires)));
             }
@@ -176,7 +245,10 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
     /// # Errors
     /// Invalid clock/metadata, malformed due rows and SQL failures roll back all work.
     pub fn cleanup(&self) -> Result<(), DirectoryError> {
-        self.transaction_before_compaction(|now| self.compact_completions(now))
+        self.transaction_before_compaction(|now| {
+            self.compact_completions(now)?;
+            self.compact_host_transfer_receipts(now)
+        })
     }
     /// Acquire before the hosted-game check; keep the grant until Accounts has
     /// committed its authorized removal intent. Matching active retries replay it.
@@ -203,7 +275,7 @@ impl<'a, D: Database, R: Runtime> DirectoryService<'a, D, R> {
             }
             self.db.execute("INSERT INTO account_assignment_gates(account_id) VALUES(?)", &[SqlValue::Text(account_id.to_string())])?;
             self.db.execute("INSERT INTO directory_removal_pending(operation_id,account_id,created_at) VALUES(?,?,?)", &[SqlValue::Text(operation_id.to_string()),SqlValue::Text(account_id.to_string()),SqlValue::Integer(now)])?;
-            if !self.db.query("SELECT game_id FROM directory_hosted_nonterminal_games WHERE designated_host_id=? LIMIT 1", &[SqlValue::Text(account_id.to_string())])?.is_empty() {
+            if !self.db.query("SELECT game_id FROM directory_hosted_nonterminal_games WHERE designated_host_id=? UNION ALL SELECT game_id FROM directory_host_transfers WHERE phase=? AND (old_host_id=? OR target_account_id=?) LIMIT 1", &[SqlValue::Text(account_id.to_string()),SqlValue::Text(crate::game::TransferPhase::Prepared.tag().into()),SqlValue::Text(account_id.to_string()),SqlValue::Text(account_id.to_string())])?.is_empty() {
                 self.db.execute("DELETE FROM directory_removal_pending WHERE operation_id=?", &[SqlValue::Text(operation_id.to_string())])?;
                 self.db.execute("DELETE FROM account_assignment_gates WHERE account_id=?", &[SqlValue::Text(account_id.to_string())])?;
                 self.db.execute("INSERT INTO directory_removal_rejections(operation_id,account_id,completed_at) VALUES(?,?,?)", &[SqlValue::Text(operation_id.to_string()),SqlValue::Text(account_id.to_string()),SqlValue::Integer(now)])?;

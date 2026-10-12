@@ -1,8 +1,13 @@
 //! Game owner rules and private coordination types; SQL lives in db::game.
+mod host_transfer;
+pub(crate) use host_transfer::{HOST_TRANSFER_RETRY_MAX_SHIFT, host_transfer_retry_delay};
 pub(crate) mod recovery_answers;
 use crate::directory::games::{CreationFingerprint, CreationReadyProof};
 use brews_contracts::games::GameResponse;
 use brews_domain::games::GameConfiguration;
+pub use host_transfer::{
+    HostTransferAck, HostTransferGrant, HostTransferProof, HostTransferWork, TransferPhase,
+};
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum GameError {
     #[error("game storage unavailable")]
@@ -251,6 +256,7 @@ impl AccountConnectionGrant {
 }
 
 pub const HOST_VIEW: &str = "host";
+pub const GAME_ADMIN_AUDIT_RETENTION_MS: i64 = 90 * crate::limits::MILLISECONDS_PER_DAY;
 pub const HOST_IDLE_MS: i64 = 86_400_000;
 pub const RECEIPT_MS: i64 = 86_400_000;
 pub const PLAYER_SESSION_MS: i64 = 86_400_000;

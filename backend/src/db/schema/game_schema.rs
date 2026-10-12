@@ -1,7 +1,7 @@
 //! Normalized, isolated Game-owner schema. No authoritative JSON collections.
 use crate::limits::JS_SAFE_INTEGER_MAX;
 use brews_domain::games::GameState;
-pub const GAME_SCHEMA_VERSION: i64 = 4;
+pub const GAME_SCHEMA_VERSION: i64 = 5;
 pub const PREVIOUS_GAME_SCHEMA_VERSION: i64 = 1;
 pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_admission_contexts",
@@ -21,7 +21,8 @@ pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_sessions",
     "game_view_revisions",
 ];
-pub const GAME_TABLES: [&str; 30] = [
+pub const GAME_TABLES: [&str; 33] = [
+    "game_admin_audit",
     "game_admission_contexts",
     "game_board_cells",
     "game_boards",
@@ -35,7 +36,9 @@ pub const GAME_TABLES: [&str; 30] = [
     "game_history_board_cells",
     "game_history_calls",
     "game_history_players",
+    "game_host_transfers",
     "game_metadata",
+    "game_operator_identity",
     "game_pending_work",
     "game_players",
     "game_receipts",
@@ -143,6 +146,7 @@ pub fn statements() -> Vec<String> {
     }
     statements.extend(recovery_coordination_statements());
     statements.extend(spectator_statements());
+    statements.extend(super::game_operator_schema::statements());
     statements
 }
 

@@ -397,7 +397,10 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         })
     }
 
-    fn game_authority(&self, session: &Session) -> Result<GameAccountAuthority, AuthError> {
+    pub(super) fn game_authority(
+        &self,
+        session: &Session,
+    ) -> Result<GameAccountAuthority, AuthError> {
         let account = self
             .account(session.account_id)?
             .ok_or(AuthError::Unauthorized)?;

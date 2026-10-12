@@ -1,5 +1,14 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
 mod connection_capacity;
+mod operator;
+pub(crate) use operator::OperatorAuditOutcome;
+pub use operator::{OperatorPurpose, TransferPreparation};
+#[cfg(target_arch = "wasm32")]
+pub(crate) use operator::{patch_fingerprint, transfer_fingerprint};
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn resume_fingerprint() -> [u8; 32] {
+    command_fingerprint("resume", 0)
+}
 mod discovery;
 mod gameplay;
 mod history;
@@ -143,7 +152,7 @@ const SQL_SELECT_GAME_BOARD_PLAYER_IDS: &str =
 const SQL_CANCEL_UNSTARTED_GAME: &str = "UPDATE game_record SET state=?,revision=?,idle_due=NULL,ended_at=?,cancellation_reason=?,terminal_actor_kind=?,terminal_actor_id=?,published_at=NULL,lobby_opened_at=NULL,last_host_activity=created_at WHERE singleton=1 AND state=? AND revision=?";
 const SQL_DELETE_PLAYER_VIEW_REVISIONS: &str = "DELETE FROM game_view_revisions WHERE view_key<>? AND NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key)";
 const SQL_SELECT_ANY_PLAYER_VIEW_REVISION: &str = "SELECT 1 FROM game_view_revisions WHERE view_key<>? AND NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key) LIMIT 1";
-const SQL_SELECT_GAME_RECEIPTS_ACTOR_COMMAND_ID_FINGERPRINT: &str = "SELECT actor,command_id,fingerprint,outcome,completed_at,expires_at FROM game_receipts r WHERE expires_at<=? AND NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id) ORDER BY expires_at LIMIT ?";
+const SQL_SELECT_GAME_RECEIPTS_ACTOR_COMMAND_ID_FINGERPRINT: &str = "SELECT actor,command_id,fingerprint,outcome,completed_at,expires_at FROM game_receipts r WHERE expires_at<=? AND NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id) AND NOT EXISTS(SELECT 1 FROM game_host_transfers t WHERE r.actor='account:'||t.actor_account_id AND r.command_id=t.command_id) ORDER BY expires_at LIMIT ?";
 const SQL_DELETE_RECEIPT_BY_ACTOR_AND_COMMAND: &str =
     "DELETE FROM game_receipts WHERE actor=? AND command_id=?";
 const SQL_CHECK_RECEIPT_EXISTS_FOR_ACTOR_AND_COMMAND: &str =
@@ -160,9 +169,9 @@ const SQL_SELECT_GAME_CONNECTION_GRANTS_GRANT_ID: &str =
     "SELECT grant_id FROM game_connection_grants WHERE expires_at<=? ORDER BY expires_at LIMIT ?";
 const SQL_CHECK_CONNECTION_GRANT_EXISTS_BY_ID: &str =
     "SELECT 1 FROM game_connection_grants WHERE grant_id=?";
-const GAME_DEADLINE_SOURCE_COUNT: usize = 16;
+const GAME_DEADLINE_SOURCE_COUNT: usize = 18;
 // Scalar aggregates avoid Workerd's bounded compound-SELECT terms.
-const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record), (SELECT min(expires_at) FROM game_recovery_buckets), (SELECT min(next_attempt_at) FROM game_socket_closures), (SELECT min(grace_expires_at) FROM game_spectators WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(expires_at) FROM game_spectator_sessions WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(retain_until) FROM game_spectator_contexts WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(expires_at) FROM game_spectator_notices WHERE EXISTS(SELECT 1 FROM game_spectator_terminal_work WHERE attempted=0)), (SELECT min(next_attempt_at) FROM game_spectator_terminal_work)";
+const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id) AND NOT EXISTS(SELECT 1 FROM game_host_transfers t WHERE r.actor='account:'||t.actor_account_id AND r.command_id=t.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record), (SELECT min(expires_at) FROM game_recovery_buckets), (SELECT min(next_attempt_at) FROM game_socket_closures), (SELECT min(grace_expires_at) FROM game_spectators WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(expires_at) FROM game_spectator_sessions WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(retain_until) FROM game_spectator_contexts WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(expires_at) FROM game_spectator_notices WHERE EXISTS(SELECT 1 FROM game_spectator_terminal_work WHERE attempted=0)), (SELECT min(next_attempt_at) FROM game_spectator_terminal_work), (SELECT min(expires_at) FROM game_admin_audit), (SELECT min(next_attempt_at) FROM game_host_transfers)";
 const SQL_UPDATE_PENDING_WORK_RETRY: &str =
     "UPDATE game_pending_work SET attempt_count=?,next_attempt_at=? WHERE operation_id=?";
 const SQL_INSERT_CANCELLED_GAME_RECORD: &str = "INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,ended_at,cancellation_reason,terminal_actor_kind,terminal_actor_id) VALUES(1,?,?,?,?,?,0,?,1,?,?,?,?,'system',NULL)";
@@ -358,6 +367,13 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             if self.view_revision(HOST_VIEW)? != 0 {
                 return Err(GameError::Storage);
             }
+            self.db.execute(
+                "INSERT INTO game_operator_identity VALUES(1,?)",
+                &[text(work.game_id())],
+            )?;
+            if self.operator_game_identity()? != Some(work.game_id()) {
+                return Err(GameError::Storage);
+            }
             let receipt = self.store_receipt(
                 &account_actor(work.account_id()),
                 work.command_id(),
@@ -432,6 +448,9 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 if pending.fingerprint != fp {
                     return Err(GameError::Conflict);
                 }
+                if !self.host_transfer_work()?.is_empty() {
+                    return Err(GameError::Conflict);
+                }
                 return Ok(LobbyPreparation::Ready(pending));
             }
             if let Some(receipt) = self.receipt(&actor, command, fp, now)? {
@@ -445,7 +464,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 return Err(GameError::StaleRevision);
             }
             ensure_before_idle(&record, now)?;
-            if !self.all_work(1)?.is_empty() {
+            if !self.all_work(1)?.is_empty() || !self.host_transfer_work()?.is_empty() {
                 return Err(GameError::Conflict);
             }
             let work = PendingWork {
@@ -501,7 +520,8 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                     operation_id: current.operation,
                 });
             }
-            if record.state != GameState::New
+            if !self.host_transfer_work()?.is_empty()
+                || record.state != GameState::New
                 || record.revision != current.fence
                 || self.view_revision(HOST_VIEW)? != current.expected
             {
@@ -1464,6 +1484,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
     pub fn cleanup(&self) -> Result<Option<TerminalProof>, GameError> {
         self.maintenance(|now| {
             self.compact(now)?;
+            self.cleanup_operator_audit(now)?;
             self.terminal_inner()
         })
     }

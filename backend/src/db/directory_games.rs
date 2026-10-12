@@ -332,6 +332,19 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         now: i64,
     ) -> Result<CodeGrant, DirectoryError> {
         self.require_reserved(ack.game_id())?;
+        if !self
+            .db
+            .query(
+                "SELECT 1 FROM directory_host_transfers WHERE game_id=? AND phase=? LIMIT 1",
+                &[
+                    text(ack.game_id()),
+                    text(crate::game::TransferPhase::Prepared.tag()),
+                ],
+            )?
+            .is_empty()
+        {
+            return Err(DirectoryError::Busy);
+        }
         let work = self
             .load_creation(ack.game_id(), now)?
             .ok_or(DirectoryError::UnknownGame)?;
@@ -350,7 +363,7 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         if let Some(code) = stored.game_code() {
             return Ok(CodeGrant::new(ack, code.clone()));
         }
-        if stored.state() != GameState::New || stored.source_revision() != proof.source_revision() {
+        if stored.state() != GameState::New || stored.source_revision() < proof.source_revision() {
             return Err(DirectoryError::ProofMismatch);
         }
         for _ in 0..GAME_CODE_MAX_CANDIDATES {
@@ -471,6 +484,8 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             {
                 return Err(DirectoryError::AssignmentBlocked);
             }
+            // Assignment changes require the dedicated durable transfer proof.
+            return Err(DirectoryError::ProofMismatch);
         }
         self.db.execute("UPDATE directory_game_index SET designated_host_id=?,state=?,source_revision=?,publication_state=?,started_at=?,ended_at=?,history_expires_at=? WHERE game_id=?", &[text(projection.designated_host_id()),text(projection.state()),integer(projection.source_revision()),text(PUBLICATION_PUBLISHED),optional_integer(projection.started_at()),optional_integer(projection.ended_at()),optional_integer(projection.history_expires_at()),text(projection.game_id())])?;
         if matches!(
@@ -614,6 +629,19 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         now: i64,
     ) -> Result<ReleaseAck, DirectoryError> {
         let p = proof.projection();
+        if !self
+            .db
+            .query(
+                "SELECT 1 FROM directory_host_transfers WHERE game_id=? AND phase=? LIMIT 1",
+                &[
+                    text(p.game_id()),
+                    text(crate::game::TransferPhase::Prepared.tag()),
+                ],
+            )?
+            .is_empty()
+        {
+            return Err(DirectoryError::Busy);
+        }
         validate_projection(p, now)?;
         if !matches!(p.state(), GameState::Cancelled | GameState::Resolved) {
             return Err(DirectoryError::ProofMismatch);
@@ -627,7 +655,6 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             // A hidden allocation may not have reached the Game before cancellation.
             let uncommitted_code = !published
                 && stored.state() == GameState::New
-                && stored.source_revision() == 0
                 && stored.game_code().is_some()
                 && p.game_code().is_none()
                 && p.state() == GameState::Cancelled
@@ -982,7 +1009,7 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             None,
         ))
     }
-    fn reserved_game(&self) -> Result<Option<GameId>, DirectoryError> {
+    pub(super) fn reserved_game(&self) -> Result<Option<GameId>, DirectoryError> {
         let rows = self
             .db
             .query("SELECT game_id FROM directory_global_reservation", &[])?;
@@ -997,7 +1024,7 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
             _ => Err(DirectoryError::Storage),
         }
     }
-    fn require_reserved(&self, game: GameId) -> Result<(), DirectoryError> {
+    pub(super) fn require_reserved(&self, game: GameId) -> Result<(), DirectoryError> {
         if self.reserved_game()? != Some(game) {
             return Err(DirectoryError::ProofMismatch);
         }
@@ -1057,5 +1084,78 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
                 read.map_err(|_| StorageError)
             })
             .map_err(|_| DirectoryError::Storage)
+    }
+}
+
+impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
+    pub(super) fn apply_host_transfer_projection(
+        &self,
+        p: &GameProjection,
+        work: &crate::game::HostTransferWork,
+        now: i64,
+    ) -> Result<(), DirectoryError> {
+        validate_projection(p, now)?;
+        let (stored, published) = self
+            .load_index(work.game, now)?
+            .ok_or(DirectoryError::UnknownGame)?;
+        let hidden_code = !published
+            && stored.state() == GameState::New
+            && stored.game_code().is_some()
+            && p.game_code().is_none()
+            && matches!(p.state(), GameState::New | GameState::Cancelled)
+            && p.started_at().is_none()
+            && p.history_expires_at().is_none()
+            && self.load_creation(work.game, now)?.is_some_and(|creation| {
+                creation.ready_revision() == Some(0)
+                    && creation.fingerprint() == p.fingerprint()
+                    && creation.created_at() == p.created_at()
+            });
+        if stored.designated_host_id() != work.old_host
+            || stored.source_revision() > p.source_revision()
+            || stored.fingerprint() != p.fingerprint()
+            || stored.created_at() != p.created_at()
+            || (stored.game_code() != p.game_code() && !hidden_code)
+        {
+            return Err(DirectoryError::ProofMismatch);
+        }
+        self.require_reserved(work.game)?;
+        // Keep an uncommitted hidden association until publication or terminal release.
+        let expected = if hidden_code {
+            GameProjection::new(
+                p.game_id(),
+                p.designated_host_id(),
+                p.fingerprint(),
+                GameState::New,
+                SourceRevision::try_from(if p.state() == GameState::New {
+                    p.source_revision()
+                } else {
+                    stored.source_revision()
+                })
+                .map_err(|_| DirectoryError::ProofMismatch)?,
+                stored.game_code().cloned(),
+                p.created_at(),
+                None,
+                None,
+                None,
+            )
+        } else {
+            p.clone()
+        };
+        self.db.execute("UPDATE directory_game_index SET designated_host_id=?,state=?,source_revision=?,started_at=?,ended_at=?,history_expires_at=? WHERE game_id=?",&[text(expected.designated_host_id()),text(expected.state()),integer(expected.source_revision()),optional_integer(expected.started_at()),optional_integer(expected.ended_at()),optional_integer(expected.history_expires_at()),text(work.game)])?;
+        self.db.execute(
+            "UPDATE directory_hosted_nonterminal_games SET designated_host_id=? WHERE game_id=?",
+            &[text(p.designated_host_id()), text(work.game)],
+        )?;
+        if self.load_index(work.game, now)? != Some((expected, published)) {
+            return Err(DirectoryError::Storage);
+        }
+        if self.db.query(
+            "SELECT designated_host_id FROM directory_hosted_nonterminal_games WHERE game_id=?",
+            &[text(work.game)],
+        )? != vec![vec![text(p.designated_host_id())]]
+        {
+            return Err(DirectoryError::Storage);
+        }
+        Ok(())
     }
 }

@@ -15,7 +15,13 @@ mod directory_db;
 )]
 mod limits;
 mod support;
-use brews_backend::{auth, db};
+use brews_backend::{auth, db, security};
+#[path = "../src/game/mod.rs"]
+#[allow(
+    dead_code,
+    reason = "Exact-source Directory transfer metadata shares the private Game types."
+)]
+mod game;
 use brews_domain::ids::{AccountId, OperationId};
 use db::{Database, SqlValue};
 use directory::RemovalGrant;
@@ -445,7 +451,10 @@ fn lost_gate_metadata_cannot_produce_a_grant_or_completion_ack() {
 
 #[test]
 fn unsupported_schema_versions_fail_closed_even_for_an_existing_service_handle() {
-    for version in [0, 3] {
+    for version in [
+        0,
+        db::schema::directory_schema::DIRECTORY_SCHEMA_VERSION + 1,
+    ] {
         let db = Sqlite::new();
         let rt = TestRuntime::new();
         migrate_directory(&db).unwrap();
@@ -1926,7 +1935,9 @@ fn fresh_directory_migration_ignores_only_verified_miniflare_name_metadata() {
     assert_eq!(
         db.query("SELECT schema_version FROM directory_metadata", &[])
             .unwrap(),
-        vec![vec![SqlValue::Integer(2)]]
+        vec![vec![SqlValue::Integer(
+            brews_backend::db::schema::directory_schema::DIRECTORY_SCHEMA_VERSION
+        )]]
     );
 }
 
@@ -2349,7 +2360,10 @@ fn retention_methods_fail_closed_for_invalid_clocks_and_owner_metadata() {
                 let update = match corrupt {
                     "missing" => "DELETE FROM directory_metadata".to_owned(),
                     "older_schema" => "UPDATE directory_metadata SET schema_version=0".to_owned(),
-                    "higher_schema" => "UPDATE directory_metadata SET schema_version=3".to_owned(),
+                    "higher_schema" => format!(
+                        "UPDATE directory_metadata SET schema_version={}",
+                        db::schema::directory_schema::DIRECTORY_SCHEMA_VERSION + 1
+                    ),
                     "negative_last" => {
                         "UPDATE directory_metadata SET last_observed_ms=-1".to_owned()
                     }
@@ -2635,4 +2649,129 @@ fn matching_acquire_retry_survives_service_restart() {
             .unwrap(),
         vec![vec![SqlValue::Integer(1)]]
     );
+}
+
+use directory_db::previous_coordination_schema;
+#[test]
+fn historical_directory_coordination_inventory_preserves_prior_rows_and_rejects_future_shapes_without_writes()
+ {
+    struct CountWrites<'a> {
+        inner: &'a Sqlite,
+        writes: std::cell::Cell<usize>,
+    }
+    impl Database for CountWrites<'_> {
+        fn query(&self, sql: &str, p: &[SqlValue]) -> Result<Vec<db::Row>, db::StorageError> {
+            self.inner.query(sql, p)
+        }
+        fn execute(&self, sql: &str, p: &[SqlValue]) -> Result<(), db::StorageError> {
+            self.writes.set(self.writes.get() + 1);
+            self.inner.execute(sql, p)
+        }
+        fn transaction<T>(
+            &self,
+            f: impl FnOnce() -> Result<T, db::StorageError>,
+        ) -> Result<T, db::StorageError> {
+            self.inner.transaction(f)
+        }
+    }
+    let origin = || {
+        let db = Sqlite::new();
+        for statement in previous_coordination_schema::COORDINATION_STATEMENTS {
+            db.execute(statement, &[]).unwrap();
+        }
+        db.execute("INSERT INTO directory_metadata VALUES(1,2,1000,0)", &[])
+            .unwrap();
+        db.execute("INSERT INTO directory_global_reservation VALUES(NULL)", &[])
+            .unwrap();
+        db.execute("INSERT INTO directory_removal_receipts VALUES('01890f3e-53b7-7d28-9b05-4f65092d5709','01890f3e-53b7-7d28-9b05-4f65092d5708',1000)", &[]).unwrap();
+        db
+    };
+    let valid = origin();
+    let preserved = valid
+        .query("SELECT * FROM directory_removal_receipts", &[])
+        .unwrap();
+    migrate_directory(&valid).unwrap();
+    assert_eq!(
+        valid
+            .query("SELECT * FROM directory_removal_receipts", &[])
+            .unwrap(),
+        preserved
+    );
+    for table in previous_coordination_schema::COORDINATION_TABLES {
+        let db = origin();
+        db.execute(
+            &format!("ALTER TABLE {table} ADD COLUMN future_shape TEXT"),
+            &[],
+        )
+        .unwrap();
+        let counted = CountWrites {
+            inner: &db,
+            writes: std::cell::Cell::new(0),
+        };
+        assert_eq!(
+            migrate_directory(&counted),
+            Err(directory::DirectoryError::Storage)
+        );
+        assert_eq!(counted.writes.get(), 0);
+    }
+    for drift in [
+        "unknown_table",
+        "unknown_index",
+        "constraint",
+        "foreign_key",
+        "index_shape",
+    ] {
+        let db = origin();
+        match drift {
+            "unknown_table" => db
+                .execute(
+                    "CREATE TABLE directory_future_origin(id TEXT PRIMARY KEY) STRICT",
+                    &[],
+                )
+                .unwrap(),
+            "unknown_index" => db
+                .execute(
+                    "CREATE INDEX directory_future_index ON directory_metadata(last_observed_ms)",
+                    &[],
+                )
+                .unwrap(),
+            "index_shape" => {
+                db.execute("DROP INDEX directory_game_index_by_host", &[])
+                    .unwrap();
+                db.execute(
+                    "CREATE INDEX directory_game_index_by_host ON directory_game_index(state)",
+                    &[],
+                )
+                .unwrap();
+            }
+            "constraint" | "foreign_key" => {
+                db.execute("DROP TABLE directory_retired_creations", &[])
+                    .unwrap();
+                let original = previous_coordination_schema::COORDINATION_STATEMENTS
+                    .iter()
+                    .find(|s| s.starts_with("CREATE TABLE directory_retired_creations("))
+                    .unwrap();
+                let ddl = original.replace(
+                    "completed_at INTEGER NOT NULL",
+                    if drift == "constraint" {
+                        "completed_at INTEGER NOT NULL CHECK(completed_at>0)"
+                    } else {
+                        "completed_at INTEGER NOT NULL REFERENCES directory_metadata(singleton)"
+                    },
+                );
+                db.execute(&ddl, &[]).unwrap();
+            }
+            _ => unreachable!(),
+        }
+        let counted = CountWrites {
+            inner: &db,
+            writes: std::cell::Cell::new(0),
+        };
+        assert_eq!(
+            migrate_directory(&counted),
+            Err(directory::DirectoryError::Storage),
+            "{drift}"
+        );
+        assert_eq!(counted.writes.get(), 0);
+    }
 }

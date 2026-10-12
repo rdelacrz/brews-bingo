@@ -50,20 +50,42 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         return Err(ApiError::Forbidden);
     }
     let (parts, body) = request.into_parts();
-    let bytes = Zeroizing::new(
-        to_bytes(body, api::BODY_LIMIT)
-            .await
-            .map_err(|_| ApiError::PayloadTooLarge)?
-            .to_vec(),
-    );
-    let mut decoded = api::decode_games(
+    let bytes = match to_bytes(body, api::BODY_LIMIT).await {
+        Ok(bytes) => Zeroizing::new(bytes.to_vec()),
+        Err(_) => {
+            if let Ok(context) = api::operator_rejection_context(
+                &parts.method,
+                parts.uri.path(),
+                &parts.headers,
+                &cfg.application_origin,
+            ) {
+                super::operator_runtime::audit_rejected_transport(env, context).await?;
+            }
+            return Err(ApiError::PayloadTooLarge);
+        }
+    };
+    let decoded = api::decode_games(
         &parts.method,
         parts.uri.path(),
         parts.uri.query(),
         &parts.headers,
         &bytes,
         &cfg.application_origin,
-    )?;
+    );
+    let mut decoded = match decoded {
+        Ok(decoded) => decoded,
+        Err(error) => {
+            if let Ok(context) = api::operator_rejection_context(
+                &parts.method,
+                parts.uri.path(),
+                &parts.headers,
+                &cfg.application_origin,
+            ) {
+                super::operator_runtime::audit_rejected_transport(env, context).await?;
+            }
+            return Err(error);
+        }
+    };
     let mut ingress =
         GameIngress::from_decoded(&mut decoded, &bytes).map_err(|_| ApiError::InvalidInput)?;
     if ingress.operation == GameAction::RecoverPlayer {
@@ -195,6 +217,28 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .validate_for(&ingress)
         .map_err(|_| ApiError::Unavailable)?;
     match &result {
+        GameOwnerResponse::Operator { response, .. } => {
+            if let Some(failure) =
+                super::operator_runtime::release_edge(env, &ingress, &result).await?
+            {
+                return rejected(failure);
+            }
+            json_response(
+                200,
+                response.encode_json().map_err(|_| ApiError::Unavailable)?,
+            )
+        }
+        GameOwnerResponse::HostTransferTargets { response, .. } => {
+            if let Some(failure) =
+                super::operator_runtime::release_edge(env, &ingress, &result).await?
+            {
+                return rejected(failure);
+            }
+            json_response(
+                200,
+                serde_json::to_vec(response).map_err(|_| ApiError::Unavailable)?,
+            )
+        }
         GameOwnerResponse::AudienceSynced {
             response,
             authority,

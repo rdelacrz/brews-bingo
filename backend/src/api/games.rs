@@ -19,6 +19,10 @@ pub const GAME_HEADERS_MAX_FIELDS: usize = 64;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GameOperation {
     Create,
+    Configuration,
+    Resume,
+    HostTransfer,
+    HostTransferTargets,
     Lobby,
     Start,
     CallRandom,
@@ -49,6 +53,9 @@ pub enum GameViewSelector {
 }
 pub enum GamePayload {
     Create(CreateGame),
+    Configuration(brews_contracts::games::ConfigurationPatch),
+    HostTransfer(brews_contracts::games::HostTransferInput),
+    HostTransferTargets(brews_contracts::games::HostTransferTargetsQuery),
     Revision(RevisionCommand),
     CallManual(CallManualInput),
     Winner(WinnerInput),
@@ -132,6 +139,43 @@ pub fn game_cookie_path(id: GameId) -> String {
     format!("/api/games/{id}")
 }
 
+/// Minimal context for rejected operator transport, never submitted content.
+/// This does not authenticate the cookie; only the Game/Accounts owners do that.
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn operator_rejection_context(
+    method: &Method,
+    path: &str,
+    headers: &HeaderMap,
+    origin: &str,
+) -> Result<(GameId, crate::db::game::OperatorPurpose, String), ApiError> {
+    let (operation, game) = route(path)?;
+    let purpose = match (operation, method) {
+        (GameOperation::Configuration, &Method::PATCH) => {
+            crate::db::game::OperatorPurpose::Configuration
+        }
+        (GameOperation::Resume, &Method::POST) => crate::db::game::OperatorPurpose::Resume,
+        (GameOperation::HostTransfer, &Method::POST) => {
+            crate::db::game::OperatorPurpose::HostTransfer
+        }
+        (GameOperation::HostTransferTargets, &Method::GET) => {
+            crate::db::game::OperatorPurpose::HostTransferTargets
+        }
+        _ => return Err(ApiError::InvalidInput),
+    };
+    validate_headers(headers)?;
+    if (method != Method::GET || headers.contains_key("origin"))
+        && (headers.get_all("origin").iter().count() != 1
+            || headers.get("origin").and_then(|v| v.to_str().ok()) != Some(origin))
+    {
+        return Err(ApiError::Forbidden);
+    }
+    Ok((
+        game.ok_or(ApiError::InvalidInput)?,
+        purpose,
+        super::decode::session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
+    ))
+}
+
 pub fn decode_games(
     method: &Method,
     path: &str,
@@ -144,11 +188,17 @@ pub fn decode_games(
     if operation == GameOperation::PutRecoveryAnswer && method == Method::DELETE {
         operation = GameOperation::DeleteRecoveryAnswer;
     }
-    let read = matches!(operation, GameOperation::Sync | GameOperation::Stream);
+    let read = matches!(
+        operation,
+        GameOperation::Sync | GameOperation::Stream | GameOperation::HostTransferTargets
+    );
     if method
         != if read {
             Method::GET
-        } else if operation == GameOperation::RenameAlias {
+        } else if matches!(
+            operation,
+            GameOperation::RenameAlias | GameOperation::Configuration
+        ) {
             Method::PATCH
         } else if operation == GameOperation::PutRecoveryAnswer {
             Method::PUT
@@ -167,7 +217,9 @@ pub fn decode_games(
     {
         return Err(ApiError::Forbidden);
     }
-    let (view, known_revision) = if read || operation == GameOperation::Exit {
+    let (view, known_revision) = if operation == GameOperation::HostTransferTargets {
+        (None, None)
+    } else if read || operation == GameOperation::Exit {
         read_query(query, headers, operation == GameOperation::Sync)?
     } else {
         if query.is_some() {
@@ -199,6 +251,18 @@ pub fn decode_games(
         }
     }
     let payload = match operation {
+        GameOperation::Configuration => GamePayload::Configuration(
+            brews_contracts::games::ConfigurationPatch::decode_json(body)
+                .map_err(|_| ApiError::InvalidInput)?,
+        ),
+        GameOperation::HostTransfer => GamePayload::HostTransfer(
+            brews_contracts::games::HostTransferInput::decode_json(body)
+                .map_err(|_| ApiError::InvalidInput)?,
+        ),
+        GameOperation::HostTransferTargets => GamePayload::HostTransferTargets(
+            brews_contracts::games::HostTransferTargetsQuery::decode_query(query)
+                .map_err(|_| ApiError::InvalidInput)?,
+        ),
         GameOperation::RenameAlias => GamePayload::RenameAlias(
             brews_contracts::games::RenameAliasInput::decode_json(body)
                 .map_err(|_| ApiError::InvalidInput)?,
@@ -240,7 +304,7 @@ pub fn decode_games(
         GameOperation::Cancel => GamePayload::Cancel(
             CancelGameInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
-        GameOperation::Exit | GameOperation::SwitchToSpectator => {
+        GameOperation::Exit | GameOperation::SwitchToSpectator | GameOperation::Resume => {
             decode_empty_game_body(body)?;
             GamePayload::Empty
         }
@@ -422,6 +486,10 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
         .ok_or(ApiError::NotFound)?;
     let id = id.parse().map_err(|_| ApiError::NotFound)?;
     let operation = match action {
+        "configuration" => GameOperation::Configuration,
+        "resume" => GameOperation::Resume,
+        "host-transfer" => GameOperation::HostTransfer,
+        "host-transfer-targets" => GameOperation::HostTransferTargets,
         "lobby" => GameOperation::Lobby,
         "start" => GameOperation::Start,
         "calls/random" => GameOperation::CallRandom,

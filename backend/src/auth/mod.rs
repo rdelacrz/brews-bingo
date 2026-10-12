@@ -93,3 +93,6 @@ pub use error::AuthError;
 
 #[cfg(test)]
 mod tests;
+
+mod host_recipient;
+pub use host_recipient::HostRecipientAuthority;
