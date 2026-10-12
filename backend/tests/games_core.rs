@@ -13,6 +13,8 @@ mod player_lifecycle_review;
 mod player_recovery;
 #[path = "games_core/publication_receipt.rs"]
 mod publication_receipt;
+#[path = "games_core/spectators.rs"]
+mod spectators;
 mod support;
 #[path = "games_core/terminal.rs"]
 mod terminal;
@@ -2239,6 +2241,11 @@ fn delivery_inventory_is_exact_complete_group_or_none_and_checked_each_transacti
         .unwrap();
     db.execute("CREATE TABLE game_delivery_pending(value INTEGER)", &[])
         .unwrap();
+    assert!(GameService::new(&db, &rt, AuthPolicy::default(), &[9; 32]).is_err());
+    for table in brews_backend::db::schema::game_schema::DELIVERY_TABLES {
+        db.execute(&format!("DROP TABLE {table}"), &[]).unwrap();
+    }
+    brews_backend::db::game_delivery::migrate_game_delivery(&db).unwrap();
     let service = GameService::new(&db, &rt, AuthPolicy::default(), &[9; 32]).unwrap();
     assert!(service.next_deadline().unwrap().is_none());
     db.execute("CREATE TABLE unrelated(value INTEGER)", &[])
@@ -2780,4 +2787,145 @@ fn fresh_game_schema_is_normalized_and_rejects_unrelated_owner_tables() {
             .unwrap()
             .is_empty()
     );
+}
+
+#[test]
+fn current_schema_migration_preserves_populated_prior_origins_and_actor_roundtrips() {
+    use brews_backend::db::schema::game_schema::{GAME_SCHEMA_VERSION, GAME_TABLES};
+    use brews_domain::games::GameState;
+    let mut cases = 0;
+    for from_admission in [false, true] {
+        for include_delivery in [false, true] {
+            for version in [2, 3] {
+                for state in [
+                    GameState::AwaitingPlayers,
+                    GameState::InProgress,
+                    GameState::Cancelled,
+                ] {
+                    let f = Fixture::new();
+                    if from_admission {
+                        let connection = rusqlite::Connection::open_in_memory().unwrap();
+                        connection.execute_batch("PRAGMA foreign_keys=ON").unwrap();
+                        connection
+                            .execute_batch(include_str!("fixtures/game-schema-v1.sql"))
+                            .unwrap();
+                        drop(f.game.conn.replace(connection));
+                        brews_backend::db::game::migrate_game(&f.game).unwrap();
+                    }
+                    if include_delivery {
+                        brews_backend::db::game_delivery::migrate_game_delivery(&f.game).unwrap();
+                    }
+                    let player = if state == GameState::AwaitingPlayers {
+                        let code = f.open(&GameConfiguration::default());
+                        let player = f.player(&code, 100, "Preserved");
+                        let grant = f
+                            .service()
+                            .prepare_player_connection(
+                                player.token(),
+                                id(&f.rt, 101).parse().unwrap(),
+                            )
+                            .unwrap();
+                        f.service().accept_player_connection(&grant).unwrap();
+                        player
+                    } else {
+                        let (_, departing, retained, _) = f.start_two_player_game();
+                        f.service()
+                            .leave_player(f.command(100), departing.token(), GameState::InProgress)
+                            .unwrap();
+                        if state == GameState::Cancelled {
+                            f.service()
+                                .cancel_game(
+                                    f.auth().authorize_game_account(&f.token).unwrap(),
+                                    f.command(101),
+                                    GameState::InProgress,
+                                    true,
+                                )
+                                .unwrap();
+                        }
+                        retained
+                    };
+                    let account_view = serde_json::to_value(
+                        f.service()
+                            .account_view(f.auth().authorize_game_account(&f.token).unwrap(), &[])
+                            .unwrap(),
+                    )
+                    .unwrap();
+                    let player_view =
+                        serde_json::to_value(f.service().player_view(player.token()).unwrap())
+                            .unwrap();
+                    for table in GAME_TABLES.into_iter().filter(|name| {
+                        name.starts_with("game_spectator")
+                            || (version == 2
+                                && ["game_recovery_buckets", "game_socket_closures"].contains(name))
+                    }) {
+                        f.game.execute(&format!("DROP TABLE {table}"), &[]).unwrap();
+                    }
+                    f.game
+                        .execute(
+                            "UPDATE game_metadata SET schema_version=?",
+                            &[SqlValue::Integer(version)],
+                        )
+                        .unwrap();
+                    let retained = GAME_TABLES
+                        .into_iter()
+                        .filter(|name| {
+                            *name != "game_metadata"
+                                && !name.starts_with("game_spectator")
+                                && !(version == 2
+                                    && ["game_recovery_buckets", "game_socket_closures"]
+                                        .contains(name))
+                        })
+                        .chain(
+                            brews_backend::db::schema::game_schema::DELIVERY_TABLES
+                                .into_iter()
+                                .filter(|_| include_delivery),
+                        )
+                        .collect::<Vec<_>>();
+                    let snapshot = || {
+                        retained
+                            .iter()
+                            .map(|table| {
+                                f.game
+                                    .query(&format!("SELECT * FROM {table} ORDER BY 1"), &[])
+                                    .unwrap()
+                            })
+                            .collect::<Vec<_>>()
+                    };
+                    let before = snapshot();
+                    brews_backend::db::game::migrate_game(&f.game).unwrap();
+                    assert_eq!(
+                        snapshot(),
+                        before,
+                        "{from_admission}/{include_delivery}/{version}/{state}"
+                    );
+                    assert_eq!(
+                        f.game
+                            .query("SELECT schema_version FROM game_metadata", &[])
+                            .unwrap(),
+                        vec![vec![SqlValue::Integer(GAME_SCHEMA_VERSION)]]
+                    );
+                    assert_eq!(
+                        serde_json::to_value(
+                            f.service()
+                                .account_view(
+                                    f.auth().authorize_game_account(&f.token).unwrap(),
+                                    &[]
+                                )
+                                .unwrap()
+                        )
+                        .unwrap(),
+                        account_view
+                    );
+                    assert_eq!(
+                        serde_json::to_value(f.service().player_view(player.token()).unwrap())
+                            .unwrap(),
+                        player_view
+                    );
+                    brews_backend::db::game::migrate_game(&f.game).unwrap();
+                    cases += 1;
+                }
+            }
+        }
+    }
+    assert_eq!(cases, 24);
 }

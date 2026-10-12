@@ -95,8 +95,8 @@ test("unknown codes never contact or initialize Game and codes normalize through
     expect(await runInDurableObject(owner(f.id), instance => instance.discoveryCalls)).toBe(0);
     const code = await lobby(f);
     const entry = await value(`/api/game-codes/%20${code.toLowerCase()}%20`);
-    expect(entry).toEqual({ game_id: f.id, game_code: code, state: "awaiting_players", can_join_player: true, can_join_spectator: false });
-    expect(await value(`/api/games/${f.id}/availability?view=entry&game_code=${code}`)).toEqual({ view: "entry", state: "awaiting_players", can_join_player: true, can_join_spectator: false });
+    expect(entry).toEqual({ game_id: f.id, game_code: code, state: "awaiting_players", can_join_player: true, can_join_spectator: true });
+    expect(await value(`/api/games/${f.id}/availability?view=entry&game_code=${code}`)).toEqual({ view: "entry", state: "awaiting_players", can_join_player: true, can_join_spectator: true });
     expect((await get(`/api/games/${f.id}/availability?view=entry&game_code=ABCD1234`)).status).toBe(404);
   } finally { await runInDurableObject(owner(f.id), instance => { instance.fetch = instance.discoverySavedFetch; delete instance.discoverySavedFetch; }); }
 });
@@ -146,9 +146,9 @@ test("availability counts only valid connected players, capacities and ownership
   try {
     const before = await rows(f.id);
     const path = `/api/games/${f.id}/availability?view=account`;
-    expect(await value(path, f.actor.session)).toEqual({ view: "account", state: "awaiting_players", can_join_player: false, can_join_spectator: false, player_count: 2, connected_player_count: 2, player_capacity: 2, spectator_count: 0, spectator_capacity: 5, can_start: true });
+    expect(await value(path, f.actor.session)).toEqual({ view: "account", state: "awaiting_players", can_join_player: false, can_join_spectator: true, player_count: 2, connected_player_count: 2, player_capacity: 2, spectator_count: 0, spectator_capacity: 5, can_start: true });
     expect((await value(path, peer.session)).can_start).toBe(false);
-    expect(await value(`/api/games/${f.id}/availability?view=player`, `${f.actor.session}; ${players[0]}`)).toEqual({ view: "player", state: "awaiting_players", can_join_player: false, can_join_spectator: false });
+    expect(await value(`/api/games/${f.id}/availability?view=player`, `${f.actor.session}; ${players[0]}`)).toEqual({ view: "player", state: "awaiting_players", can_join_player: false, can_join_spectator: true });
     expect(await rows(f.id)).toEqual(before);
     expect((await get(`/api/games/${f.id}/availability?view=player`, "__Secure-brews-player=invalid-selected")).status).toBe(401);
     // Invalid-player denial may only fence metadata; capture after it for stable reads.

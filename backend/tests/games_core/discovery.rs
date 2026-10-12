@@ -143,7 +143,7 @@ fn discovery_availability_counts_valid_observed_connections_without_reconciliati
         assert_eq!(connected_player_count, expected);
         assert_eq!(can_start, expected == 2);
         assert!(!can_join_player);
-        assert!(!can_join_spectator);
+        assert!(can_join_spectator);
     }
     let cut = f
         .service()

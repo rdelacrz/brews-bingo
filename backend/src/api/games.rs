@@ -9,6 +9,8 @@ use http::{HeaderMap, Method};
 use zeroize::Zeroize as _;
 
 pub const PLAYER_COOKIE_NAME: &str = "__Secure-brews-player";
+pub const SPECTATOR_COOKIE_NAME: &str = "__Secure-brews-spectator";
+pub const SPECTATOR_ADMISSION_COOKIE_NAME: &str = "__Secure-brews-audience-admission";
 pub const ADMISSION_COOKIE_NAME: &str = "__Secure-brews-admission";
 pub const GAME_PATH_MAX_BYTES: usize = 128;
 pub const GAME_QUERY_MAX_BYTES: usize = 512;
@@ -26,6 +28,11 @@ pub enum GameOperation {
     Exit,
     AdmissionContext,
     JoinPlayer,
+    SpectatorContext,
+    JoinSpectator,
+    SwitchToSpectator,
+    SwitchToPlayer,
+    LeaveSpectator,
     RecoverPlayer,
     RenameAlias,
     LeavePlayer,
@@ -38,6 +45,7 @@ pub enum GameOperation {
 pub enum GameViewSelector {
     Account,
     Player,
+    Spectator,
 }
 pub enum GamePayload {
     Create(CreateGame),
@@ -180,12 +188,22 @@ pub fn decode_games(
     } else {
         require_json(headers)?;
     }
+    if operation == GameOperation::LeavePlayer {
+        let player = named_cookie(headers, PLAYER_COOKIE_NAME)?;
+        let spectator = named_cookie(headers, SPECTATOR_COOKIE_NAME)?;
+        if player.is_some() && spectator.is_some() {
+            return Err(ApiError::InvalidInput);
+        }
+        if spectator.is_some() {
+            operation = GameOperation::LeaveSpectator;
+        }
+    }
     let payload = match operation {
         GameOperation::RenameAlias => GamePayload::RenameAlias(
             brews_contracts::games::RenameAliasInput::decode_json(body)
                 .map_err(|_| ApiError::InvalidInput)?,
         ),
-        GameOperation::LeavePlayer => GamePayload::LeavePlayer(
+        GameOperation::LeavePlayer | GameOperation::LeaveSpectator => GamePayload::LeavePlayer(
             brews_contracts::games::LeavePlayerInput::decode_json(body)
                 .map_err(|_| ApiError::InvalidInput)?,
         ),
@@ -205,10 +223,12 @@ pub fn decode_games(
                 RevisionCommand::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
             )
         }
-        GameOperation::AdmissionContext => GamePayload::AdmissionContext(
+        GameOperation::AdmissionContext
+        | GameOperation::SpectatorContext
+        | GameOperation::JoinSpectator => GamePayload::AdmissionContext(
             AdmissionContextInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
-        GameOperation::JoinPlayer => GamePayload::JoinPlayer(
+        GameOperation::JoinPlayer | GameOperation::SwitchToPlayer => GamePayload::JoinPlayer(
             JoinPlayer::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
         GameOperation::CallManual => GamePayload::CallManual(
@@ -220,13 +240,17 @@ pub fn decode_games(
         GameOperation::Cancel => GamePayload::Cancel(
             CancelGameInput::decode_json(body).map_err(|_| ApiError::InvalidInput)?,
         ),
-        GameOperation::Exit => {
+        GameOperation::Exit | GameOperation::SwitchToSpectator => {
             decode_empty_game_body(body)?;
             GamePayload::Empty
         }
         GameOperation::Sync | GameOperation::Stream => GamePayload::Empty,
     };
-    let command_id = if operation == GameOperation::AdmissionContext || read {
+    let command_id = if matches!(
+        operation,
+        GameOperation::AdmissionContext | GameOperation::SpectatorContext
+    ) || read
+    {
         if headers.contains_key("idempotency-key") {
             return Err(ApiError::InvalidInput);
         }
@@ -235,6 +259,20 @@ pub fn decode_games(
         Some(command_id(headers)?)
     };
     let (session_token, admission_token) = if matches!(
+        operation,
+        GameOperation::SpectatorContext | GameOperation::JoinSpectator
+    ) {
+        (
+            named_cookie(headers, SPECTATOR_COOKIE_NAME)?,
+            named_cookie(headers, SPECTATOR_ADMISSION_COOKIE_NAME)?,
+        )
+    } else if matches!(
+        operation,
+        GameOperation::SwitchToPlayer | GameOperation::LeaveSpectator
+    ) || view == Some(GameViewSelector::Spectator)
+    {
+        (named_cookie(headers, SPECTATOR_COOKIE_NAME)?, None)
+    } else if matches!(
         operation,
         GameOperation::AdmissionContext | GameOperation::JoinPlayer
     ) {
@@ -250,6 +288,7 @@ pub fn decode_games(
             | GameOperation::DeleteRecoveryAnswer
             | GameOperation::RenameAlias
             | GameOperation::LeavePlayer
+            | GameOperation::SwitchToSpectator
     ) || view == Some(GameViewSelector::Player)
     {
         (named_cookie(headers, PLAYER_COOKIE_NAME)?, None)
@@ -323,6 +362,7 @@ fn read_query(
                     view = Some(match value {
                         GAME_VIEW_ACCOUNT => GameViewSelector::Account,
                         GAME_VIEW_PLAYER => GameViewSelector::Player,
+                        brews_contracts::games::GAME_VIEW_SPECTATOR => GameViewSelector::Spectator,
                         _ => return Err(ApiError::InvalidInput),
                     })
                 }
@@ -342,19 +382,23 @@ fn read_query(
     }
     let mut account = false;
     let mut player = false;
+    let mut spectator = false;
     if let Some(raw) = headers.get("cookie") {
         for part in raw.to_str().map_err(|_| ApiError::InvalidInput)?.split(';') {
             if let Some((key, _)) = part.trim().split_once('=') {
                 account |= key == "__Host-brews_session";
                 player |= key == PLAYER_COOKIE_NAME;
+                spectator |= key == SPECTATOR_COOKIE_NAME;
             }
         }
     }
     if view.is_none() {
-        if account && player {
+        if u8::from(account) + u8::from(player) + u8::from(spectator) > 1 {
             return Err(ApiError::InvalidInput);
         }
-        view = Some(if player {
+        view = Some(if spectator {
+            GameViewSelector::Spectator
+        } else if player {
             GameViewSelector::Player
         } else {
             GameViewSelector::Account
@@ -387,6 +431,10 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
         "exit" => GameOperation::Exit,
         "admission-context" => GameOperation::AdmissionContext,
         "players" => GameOperation::JoinPlayer,
+        "spectator-admission-context" => GameOperation::SpectatorContext,
+        "spectators" => GameOperation::JoinSpectator,
+        "membership/spectator" => GameOperation::SwitchToSpectator,
+        "membership/player" => GameOperation::SwitchToPlayer,
         "membership/alias" => GameOperation::RenameAlias,
         "membership/leave" => GameOperation::LeavePlayer,
         "membership/recovery-answer" => GameOperation::PutRecoveryAnswer,

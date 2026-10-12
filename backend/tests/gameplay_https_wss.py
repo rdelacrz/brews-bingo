@@ -60,7 +60,7 @@ class SocketClient:
         masked = bytes(byte ^ mask[index % 4] for index, byte in enumerate(content))
         self.socket.sendall(prefix + mask + masked)
 
-    def frame(self, *, allow_close=False) -> dict:
+    def frame(self, *, allow_close=False, allow_terminal=False) -> dict:
         while True:
             first, second = self.read_exact(2)
             check(first & 128 and not first & 112, 'unexpected fragmented/compressed WSS frame')
@@ -82,6 +82,9 @@ class SocketClient:
                 return {'transport_close_code': struct.unpack('!H', data[:2])[0]}
             check(opcode == 1, 'expected JSON snapshot frame')
             value = json.loads(data)
+            if allow_terminal and value.get('kind') == 'terminal_notice':
+                check(value.get('version') == 1 and 'board' not in value and 'players' not in value and 'history_expires_at' not in value, 'terminal audience notice leaked protected state')
+                return value
             check(value.get('version') == 1 and value.get('kind') == 'snapshot', 'invalid snapshot envelope')
             check(list(value)[-1] == 'delivery_id', 'delivery ID is not final serialized field')
             self.send(1, json.dumps({'version': 1, 'kind': 'snapshot_ack', 'connection_id': value['connection_id'], 'delivery_id': value['delivery_id'], 'view_revision': value['view_revision']}, separators=(',', ':')).encode('utf8'))
@@ -95,7 +98,7 @@ class SocketClient:
         self.socket.close()
 
 
-with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMPDIR']) as directory:
+with tempfile.TemporaryDirectory(prefix='brews-spectator-followup-https-', dir=os.environ['TMPDIR']) as directory:
     scratch = Path(directory)
     os.chmod(scratch, 0o700)
     cert, key = scratch / 'localhost.pem', scratch / 'localhost-key.pem'
@@ -220,9 +223,37 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             check(lobby['result'] == 'lobby_opened' and lobby['state'] == 'awaiting_players', 'lobby lifecycle mismatch')
             code = lobby['game_code']
             entry, _ = call('discovery-normalized-code-over-TLS', '/api/game-codes/%20' + code.lower() + '%20', method='GET', retry=False)
-            check(entry == {'game_id': game_id, 'game_code': code, 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'limited normalized code projection mismatch')
+            check(entry == {'game_id': game_id, 'game_code': code, 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': True}, 'limited normalized code projection mismatch')
             availability, _ = call('discovery-public-availability-over-TLS', base + '/availability?view=entry&game_code=' + code, method='GET', retry=False)
-            check(availability == {'view': 'entry', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'public availability leaked detail')
+            check(availability == {'view': 'entry', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': True}, 'public availability leaked detail')
+            spectator_context, audience_context_cookie = call('spectator-context-over-TLS', base + '/spectator-admission-context', body={'game_code': code}, retry=False, cookie_effect=True)
+            audience_command = str(uuid.uuid7())
+            joined_audience, audience_cookie = call('spectator-admission-over-TLS', base + '/spectators', body={'game_code': code}, session=audience_context_cookie, command=audience_command, cookie_effect=True)
+            audience_expiry = joined_audience['receipt']['outcome']['session_expires_at']
+            for index, selected in enumerate([audience_cookie, audience_context_cookie + '; ' + audience_cookie, audience_cookie + '; ' + audience_context_cookie]):
+                reused, _ = call('spectator-current-preflight-natural-cookies-' + str(index), base + '/spectator-admission-context', body={'game_code': code}, session=selected, retry=False)
+                check(reused == {'result': 'admission_context', 'expires_at': audience_expiry}, 'current spectator preflight changed absolute expiry')
+            value_start = audience_cookie.index('=') + 1
+            bad_audience = audience_cookie[:value_start] + ('B' if audience_cookie[value_start] == 'A' else 'A') + audience_cookie[value_start + 1:]
+            for index, selected in enumerate([bad_audience, bad_audience + '; ' + audience_context_cookie]):
+                denied, cleared = call('spectator-invalid-selected-preflight-proof-' + str(index), base + '/spectator-admission-context', body={'game_code': code}, session=selected, retry=False, expected=401, cookie_effect=True)
+                check(set(denied) == {'error'} and cleared == '__Secure-brews-spectator=', 'invalid spectator proof granted authority or cleared another cookie')
+            repeated_audience, _ = call('spectator-retry-no-cookie-over-TLS', base + '/spectators', body={'game_code': code}, session=audience_context_cookie, command=audience_command)
+            check(repeated_audience == {'result': 'committed', 'receipt': joined_audience['receipt']}, 'audience receipt replay mismatch')
+            call('spectator-anonymous-retry-denied-over-TLS', base + '/spectators', body={'game_code': code}, command=audience_command, expected=401)
+            call('spectator-mixed-cookie-selector-required-over-TLS', base + '/sync', method='GET', session=host + '; ' + audience_cookie, retry=False, expected=400)
+            own_audience, _ = call('spectator-explicit-selector-over-TLS', base + '/sync?view=spectator', method='GET', session=host + '; ' + audience_cookie, retry=False)
+            check(own_audience['snapshot']['role'] == 'spectator' and all(key not in own_audience['snapshot'] for key in ['board', 'players', 'alias', 'player_id']), 'audience private isolation failed')
+            promoted, promoted_cookie = call('spectator-to-player-over-TLS', base + '/membership/player', body={'game_code': code, 'alias': 'SwitchTemporary', 'recovery_answer': secrets.token_urlsafe(18)}, session=audience_cookie, cookie_effect=True)
+            check(promoted['receipt']['outcome']['session_expires_at'] == audience_expiry, 'spectator to player renewed absolute expiry')
+            call('switched-old-spectator-cookie-denied-over-TLS', base + '/sync?view=spectator', method='GET', session=audience_cookie, retry=False, expected=401)
+            demoted, audience_cookie = call('player-to-spectator-over-TLS', base + '/membership/spectator', body={}, session=promoted_cookie, cookie_effect=True)
+            check(demoted['receipt']['outcome']['session_expires_at'] == audience_expiry, 'player to spectator renewed absolute expiry')
+            call('switched-old-player-cookie-denied-over-TLS', base + '/sync?view=player', method='GET', session=promoted_cookie, retry=False, expected=401)
+            audience_socket = SocketClient('localhost', port, tls, base + '/stream?view=spectator', origin, audience_cookie)
+            audience_first = audience_socket.frame()
+            check(audience_first['view']['role'] == 'spectator' and audience_first['view']['calls'] == [], 'audience WSS initial projection mismatch')
+            completed.append('spectator-real-WSS-initial-projection')
             call('Start-needs-real-presence', base + '/start', body={'expected_revision': lobby['view_revision']}, session=host, expected=409)
 
             def join(alias, answer=None, *, label=None):
@@ -308,7 +339,7 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             availability, _ = call('discovery-connected-Start-availability-over-TLS', base + '/availability?view=account', method='GET', session=host, retry=False)
             check(availability['can_start'] and availability['connected_player_count'] == 2 and availability['player_count'] == 3, 'discovery Start eligibility does not reflect real sockets/retained members')
             own_availability, _ = call('discovery-player-availability-over-TLS', base + '/availability?view=player', method='GET', session=alice_cookie, retry=False)
-            check(own_availability == {'view': 'player', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': False}, 'player availability leaked account details')
+            check(own_availability == {'view': 'player', 'state': 'awaiting_players', 'can_join_player': True, 'can_join_spectator': True}, 'player availability leaked account details')
             start_id = str(uuid.uuid7())
             started, _ = call('Start-InProgress', base + '/start', body={'expected_revision': current['view_revision']}, session=host, command=start_id)
             check(started['result'] == 'started' and started['state'] == 'in_progress', 'Start did not commit')
@@ -331,6 +362,28 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             final, _ = call('host-retained-roster-boards', base + '/sync?view=account', method='GET', session=host, retry=False)
             boards_before = {player['player_id']: player['board'] for player in final['snapshot']['players']}
             check(set(boards_before) == {alice['player_id'], bob['player_id'], retained['player_id']}, 'disconnected retained player lost Start board')
+            running_context, running_context_cookie = call('running-spectator-context-over-TLS', base + '/spectator-admission-context', body={'game_code': code}, retry=False, cookie_effect=True)
+            running_audience, running_cookie = call('running-spectator-admission-over-TLS', base + '/spectators', body={'game_code': code}, session=running_context_cookie, cookie_effect=True)
+            call('running-spectator-switch-denied-over-TLS', base + '/membership/player', body={'game_code': code, 'alias': 'LateSwitch'}, session=running_cookie, expected=409)
+            call('spectator-delayed-lobby-Leave-conflict-over-TLS', base + '/membership/leave', body={'expected_state': 'awaiting_players'}, session=running_cookie, expected=409)
+            left_audience, cleared_audience = call('spectator-running-explicit-Leave-over-TLS', base + '/membership/leave', body={'expected_state': 'in_progress'}, session=running_cookie, cookie_effect=True)
+            check(left_audience['receipt']['outcome']['change'] == 'left' and cleared_audience == '__Secure-brews-spectator=', 'spectator Leave cleanup cookie mismatch')
+            call('spectator-Leave-old-cookie-denied-over-TLS', base + '/sync?view=spectator', method='GET', session=running_cookie, retry=False, expected=401)
+            # Model a lost Leave response: the browser still carries both old cookies.
+            if not isinstance(host, str) or not isinstance(running_context_cookie, str) or not isinstance(running_cookie, str):
+                raise RuntimeError('spectator reentry cookie fixture missing')
+            denied_entry, stale_cookie_clear = call('spectator-stale-browser-entry-denial-clears-cookie-over-TLS', base + '/spectator-admission-context', body={'game_code': code}, session=host + '; ' + running_context_cookie + '; ' + running_cookie, retry=False, expected=401, cookie_effect=True)
+            check(set(denied_entry) == {'error'} and stale_cookie_clear == '__Secure-brews-spectator=', 'stale cookie denial issued authority or cleared another cookie')
+            _, fresh_context_cookie = call('spectator-browser-fresh-context-after-clearing-over-TLS', base + '/spectator-admission-context', body={'game_code': code}, session=host + '; ' + running_context_cookie, retry=False, cookie_effect=True)
+            if not isinstance(fresh_context_cookie, str):
+                raise RuntimeError('fresh spectator context cookie missing')
+            fresh_audience, fresh_audience_cookie = call('spectator-browser-fresh-admission-after-clearing-over-TLS', base + '/spectators', body={'game_code': code}, session=host + '; ' + fresh_context_cookie, cookie_effect=True)
+            if not isinstance(fresh_audience_cookie, str):
+                raise RuntimeError('fresh spectator session cookie missing')
+            check(fresh_audience['receipt']['outcome']['identity']['spectator_id'] != running_audience['receipt']['outcome']['identity']['spectator_id'], 'stale cookie reentry resurrected deleted spectator identity')
+            fresh_view, _ = call('spectator-browser-fresh-role-private-isolation-over-TLS', base + '/sync?view=spectator', method='GET', session=host + '; ' + fresh_audience_cookie, retry=False)
+            check(fresh_view['snapshot']['role'] == 'spectator' and all(key not in fresh_view['snapshot'] for key in ['players', 'board', 'alias', 'recovery_answer', 'qualifiers']), 'fresh spectator entry disclosed private data')
+            call('spectator-browser-fresh-role-Leave-over-TLS', base + '/membership/leave', body={'expected_state': 'in_progress'}, session=fresh_audience_cookie, cookie_effect=True)
             replay, _ = call('Start-receipt-only', base + '/start', body={'expected_revision': current['view_revision']}, session=host, command=start_id)
             check(set(replay) == {'result', 'receipt'} and replay['result'] == 'committed', 'Start retry exposed assignments')
             final_again, _ = call('Start-retry-does-not-regenerate', base + '/sync?view=account', method='GET', session=host, retry=False)
@@ -422,6 +475,16 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             resolved, _ = call('winner-commits-Resolved', base + '/winner', body=winner_input, session=host, command=winner_id)
             check(resolved['state'] == 'resolved' and resolved['winner'] == {'player_id': retained['player_id'], 'alias': 'alice'}, 'selected winner mismatch')
             check(resolved['history_available'] and resolved['history_expires_at'] > resolved['ended_at'], 'terminal History deadline missing')
+            for _ in range(30):
+                public_frame = audience_socket.frame(allow_terminal=True)
+                if public_frame.get('kind') == 'terminal_notice':
+                    check(public_frame['state'] == 'resolved' and public_frame['winner'] == resolved['winner'] and {item['value'] for item in public_frame['calls']} == called, 'audience terminal public outcome mismatch')
+                    break
+            else:
+                raise RuntimeError('spectator terminal notice did not arrive within bounded backlog')
+            completed.append('spectator-terminal-notice-over-real-WSS')
+            audience_socket.close()
+            call('spectator-terminal-sync-denied-over-TLS', base + '/sync?view=spectator', method='GET', session=audience_cookie, retry=False, expected=401)
             call('discovery-terminal-code-denied-over-TLS', '/api/game-codes/' + code, method='GET', retry=False, expected=404)
             free, _ = call('discovery-terminal-release-over-TLS', '/api/games/current', method='GET', session=host, retry=False)
             check(free == {'slot': 'free', 'game': None}, 'terminal discovery reservation not released')
@@ -466,6 +529,8 @@ with tempfile.TemporaryDirectory(prefix='brews-game-https-', dir=os.environ['TMP
             check(len(completed) == len(set(completed)), 'acceptance labels are duplicated')
             print(json.dumps({'actual_https_wss_game_checks': 'passed', 'checks': completed, 'check_count': len(completed), 'genuine_connected_players': 2, 'retained_boards': len(boards_before), 'board_replay': False, 'cookie_replay': False, 'deployment': 'none'}))
         finally:
+            if 'audience_socket' in locals():
+                audience_socket.close()
             for stream in sockets:
                 stream.close()
             process.terminate()

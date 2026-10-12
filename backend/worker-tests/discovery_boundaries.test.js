@@ -40,13 +40,13 @@ test("discovery normalizes approved lowercase codes and percent-encoded outer sp
   for (const spelling of [code.toLowerCase(), `%20${code.toLowerCase()}%20`, code]) {
     const response = await get(`/api/game-codes/${spelling}`);
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ game_id: id, game_code: code, state: "awaiting_players", can_join_spectator: false });
+    expect(await response.json()).toMatchObject({ game_id: id, game_code: code, state: "awaiting_players", can_join_spectator: true });
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(response.headers.has("Set-Cookie")).toBe(false);
   }
   const availability = await get(`/api/games/${id}/availability?view=entry&game_code=%20${code.toLowerCase()}%20`);
   expect(availability.status).toBe(200);
-  expect(await availability.json()).toEqual({ view: "entry", state: "awaiting_players", can_join_player: true, can_join_spectator: false });
+  expect(await availability.json()).toEqual({ view: "entry", state: "awaiting_players", can_join_player: true, can_join_spectator: true });
 });
 
 test("discovery accepts harmless browser and tracing metadata while rejecting bearer authority", async () => {
@@ -97,7 +97,7 @@ test("public entry projection has no private occupancy or membership and never s
   }
   const own = await get(`/api/games/${id}/availability?view=player`, player);
   expect(own.status).toBe(200);
-  expect(await own.json()).toEqual({ view: "player", state: "awaiting_players", can_join_player: true, can_join_spectator: false });
+  expect(await own.json()).toEqual({ view: "player", state: "awaiting_players", can_join_player: true, can_join_spectator: true });
   const invalid = await get(`/api/games/${id}/availability?game_code=${code}`, "__Host-brews_session=invalid-selected-session");
   expect([400, 401]).toContain(invalid.status);
   const selected = await get(`/api/games/${id}/availability?view=account`, "__Host-brews_session=invalid-selected-session");

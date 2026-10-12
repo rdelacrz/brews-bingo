@@ -216,6 +216,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             {
                 return Err(GameError::Conflict);
             }
+            self.terminal_spectators(&record, GameState::Cancelled, None, now)?;
             let game_revision = advance(record.revision)?;
             let host_revision = advance(self.view_revision(HOST_VIEW)?)?;
             self.db.execute(
@@ -362,6 +363,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             None if state == GameState::Cancelled => None,
             None => return Err(GameError::InvalidInput),
         };
+        self.terminal_spectators(record, state, winner.as_ref(), now)?;
         let history_expires = add_three_calendar_months(now)?;
         let game_revision = advance(record.revision)?;
         let host_revision = advance(expected_host_revision)?;

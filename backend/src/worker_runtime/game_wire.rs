@@ -42,6 +42,8 @@ pub(super) enum GameCookieWire {
     None,
     Admission { token: String, expires_at: i64 },
     Player { token: String, expires_at: i64 },
+    SpectatorAdmission { token: String, expires_at: i64 },
+    Spectator { token: String, expires_at: i64 },
 }
 impl<'de> Deserialize<'de> for GameCookieWire {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
@@ -53,18 +55,27 @@ impl<'de> Deserialize<'de> for GameCookieWire {
             None {},
             Admission { token: String, expires_at: i64 },
             Player { token: String, expires_at: i64 },
+            SpectatorAdmission { token: String, expires_at: i64 },
+            Spectator { token: String, expires_at: i64 },
         }
         Ok(match CookieObject::deserialize(deserializer)? {
             CookieObject::None {} => Self::None,
             CookieObject::Admission { token, expires_at } => Self::Admission { token, expires_at },
             CookieObject::Player { token, expires_at } => Self::Player { token, expires_at },
+            CookieObject::SpectatorAdmission { token, expires_at } => {
+                Self::SpectatorAdmission { token, expires_at }
+            }
+            CookieObject::Spectator { token, expires_at } => Self::Spectator { token, expires_at },
         })
     }
 }
 impl Drop for GameCookieWire {
     fn drop(&mut self) {
         match self {
-            Self::Admission { token, .. } | Self::Player { token, .. } => token.zeroize(),
+            Self::Admission { token, .. }
+            | Self::Player { token, .. }
+            | Self::Spectator { token, .. }
+            | Self::SpectatorAdmission { token, .. } => token.zeroize(),
             Self::None => {}
         }
     }
@@ -210,9 +221,61 @@ impl PlayerSyncReleaseReply {
         Ok(())
     }
 }
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct SyncSpectatorAuthority {
+    pub game_id: GameId,
+    pub session_id: brews_domain::ids::SessionId,
+    pub spectator_id: brews_domain::ids::SpectatorId,
+    pub epoch: i64,
+    pub session_expires_at: i64,
+    pub valid_until: i64,
+}
+#[cfg(target_arch = "wasm32")]
+impl From<crate::db::game::SpectatorAuthority> for SyncSpectatorAuthority {
+    fn from(a: crate::db::game::SpectatorAuthority) -> Self {
+        Self {
+            game_id: a.game_id,
+            session_id: a.session_id,
+            spectator_id: a.spectator_id,
+            epoch: a.epoch,
+            session_expires_at: a.session_expires_at,
+            valid_until: a.valid_until,
+        }
+    }
+}
+#[cfg(target_arch = "wasm32")]
+impl SyncSpectatorAuthority {
+    pub(super) fn binding(&self) -> crate::db::game::SpectatorAuthority {
+        crate::db::game::SpectatorAuthority {
+            game_id: self.game_id,
+            session_id: self.session_id,
+            spectator_id: self.spectator_id,
+            epoch: self.epoch,
+            session_expires_at: self.session_expires_at,
+            valid_until: self.valid_until,
+        }
+    }
+}
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "owner_result", rename_all = "snake_case", deny_unknown_fields)]
 pub(super) enum GameOwnerResponse {
+    Audience {
+        #[serde(deserialize_with = "object")]
+        response: GameResponse,
+        #[serde(deserialize_with = "object")]
+        cookie: GameCookieWire,
+        #[serde(deserialize_with = "membership_nullable")]
+        valid_until: Option<i64>,
+        clear_player_cookie: bool,
+        clear_spectator_cookie: bool,
+    },
+    AudienceSynced {
+        #[serde(deserialize_with = "object")]
+        response: SyncResponse,
+        #[serde(deserialize_with = "object")]
+        authority: SyncSpectatorAuthority,
+    },
     Membership {
         #[serde(deserialize_with = "object")]
         response: GameResponse,
@@ -252,6 +315,137 @@ pub(super) enum GameOwnerResponse {
 }
 impl GameOwnerResponse {
     pub(super) fn validate_for(&self, request: &GameIngress) -> Result<(), ()> {
+        if let Self::AudienceSynced {
+            response,
+            authority,
+        } = self
+        {
+            if request.operation != GameAction::Sync
+                || request.view != Some(ViewSelector::Spectator)
+                || Some(authority.game_id) != request.game_id
+                || authority.valid_until <= 0
+                || authority.valid_until > authority.session_expires_at
+                || authority.epoch < 0
+                || authority.epoch > brews_contracts::games::MAX_SAFE_REVISION as i64
+                || authority.session_expires_at > brews_contracts::games::MAX_SAFE_TIMESTAMP
+                || (response.up_to_date && request.known_revision != Some(response.view_revision))
+            {
+                return Err(());
+            }
+            response.encode_json().map_err(|_| ())?;
+            if let Some(view) = &response.snapshot
+                && !matches!(view,brews_contracts::games::GameView::Spectator{game_id,spectator_id,..} if *game_id==authority.game_id && *spectator_id==authority.spectator_id)
+            {
+                return Err(());
+            }
+            return Ok(());
+        }
+        if let Self::Audience {
+            response,
+            cookie,
+            valid_until,
+            clear_player_cookie,
+            clear_spectator_cookie,
+        } = self
+        {
+            response.validate().map_err(|_| ())?;
+            if request.operation == GameAction::SpectatorContext {
+                if *clear_player_cookie || *clear_spectator_cookie || valid_until.is_none() {
+                    return Err(());
+                }
+                return match (response, cookie) {
+                    (
+                        GameResponse::AdmissionContext { expires_at },
+                        GameCookieWire::SpectatorAdmission {
+                            token,
+                            expires_at: expiry,
+                        },
+                    ) if expires_at == expiry && valid_until.is_some_and(|d| d <= *expiry) => {
+                        crate::security::token_digest(token).map_err(|_| ())?;
+                        Ok(())
+                    }
+                    (GameResponse::AdmissionContext { expires_at }, GameCookieWire::None)
+                        if valid_until.is_some_and(|d| d <= *expires_at) =>
+                    {
+                        Ok(())
+                    }
+                    _ => Err(()),
+                };
+            }
+            let receipt = match response {
+                GameResponse::ParticipantChanged { receipt }
+                | GameResponse::Committed { receipt } => receipt,
+                _ => return Err(()),
+            };
+            if Some(receipt.game_id) != request.game_id
+                || Some(receipt.command_id) != request.command_id
+            {
+                return Err(());
+            }
+            let brews_contracts::games::GameOutcome::ParticipantChanged {
+                change,
+                identity,
+                session_expires_at,
+                ..
+            } = &receipt.outcome
+            else {
+                return Err(());
+            };
+            use brews_contracts::games::{ParticipantChange, ParticipantIdentity};
+            let valid = match (request.operation, change, identity) {
+                (
+                    GameAction::JoinSpectator,
+                    ParticipantChange::Admitted | ParticipantChange::Reconnected,
+                    ParticipantIdentity::Spectator { .. },
+                ) => !*clear_player_cookie && !*clear_spectator_cookie,
+                (
+                    GameAction::SwitchToSpectator,
+                    ParticipantChange::Switched,
+                    ParticipantIdentity::Spectator { .. },
+                ) => *clear_player_cookie && !*clear_spectator_cookie,
+                (
+                    GameAction::SwitchToPlayer,
+                    ParticipantChange::Switched,
+                    ParticipantIdentity::Player { alias, .. },
+                ) => {
+                    !*clear_player_cookie
+                        && *clear_spectator_cookie
+                        && matches!(request.payload()?,GamePayload::JoinPlayer(input) if input.alias==*alias)
+                }
+                (
+                    GameAction::LeaveSpectator,
+                    ParticipantChange::Left,
+                    ParticipantIdentity::Spectator { .. },
+                ) => !*clear_player_cookie && *clear_spectator_cookie,
+                _ => false,
+            };
+            if !valid
+                || valid_until.is_none() != (*change == ParticipantChange::Left)
+                || valid_until.is_some_and(|d| d <= receipt.completed_at || d > receipt.expires_at)
+            {
+                return Err(());
+            }
+            match (identity, cookie, session_expires_at) {
+                (
+                    ParticipantIdentity::Spectator { .. },
+                    GameCookieWire::Spectator { token, expires_at },
+                    Some(e),
+                )
+                | (
+                    ParticipantIdentity::Player { .. },
+                    GameCookieWire::Player { token, expires_at },
+                    Some(e),
+                ) if e == expires_at => {
+                    crate::security::token_digest(token).map_err(|_| ())?;
+                }
+                (_, GameCookieWire::None, _)
+                    if matches!(response, GameResponse::Committed { .. })
+                        || *change == ParticipantChange::Left => {}
+                _ => return Err(()),
+            }
+            return Ok(());
+        }
+
         if let Self::Membership {
             response,
             valid_until,
@@ -714,6 +908,12 @@ impl GameOwnerResponse {
                     game.validate().map_err(|_| ())?;
                 }
             }
+            Self::Audience { response, .. } => {
+                response.validate().map_err(|_| ())?;
+            }
+            Self::AudienceSynced { response, .. } => {
+                response.encode_json().map_err(|_| ())?;
+            }
             Self::Rejected { .. } => {}
         }
         Ok(value)
@@ -733,6 +933,11 @@ pub(super) enum GameAction {
     Exit,
     AdmissionContext,
     JoinPlayer,
+    SpectatorContext,
+    JoinSpectator,
+    SwitchToSpectator,
+    SwitchToPlayer,
+    LeaveSpectator,
     RecoverPlayer,
     RecoveryOutput,
     RenameAlias,
@@ -758,6 +963,11 @@ impl From<GameOperation> for GameAction {
             GameOperation::Exit => Self::Exit,
             GameOperation::AdmissionContext => Self::AdmissionContext,
             GameOperation::JoinPlayer => Self::JoinPlayer,
+            GameOperation::SpectatorContext => Self::SpectatorContext,
+            GameOperation::JoinSpectator => Self::JoinSpectator,
+            GameOperation::SwitchToSpectator => Self::SwitchToSpectator,
+            GameOperation::SwitchToPlayer => Self::SwitchToPlayer,
+            GameOperation::LeaveSpectator => Self::LeaveSpectator,
             GameOperation::RecoverPlayer => Self::RecoverPlayer,
             GameOperation::RenameAlias => Self::RenameAlias,
             GameOperation::LeavePlayer => Self::LeavePlayer,
@@ -773,12 +983,14 @@ impl From<GameOperation> for GameAction {
 pub(super) enum ViewSelector {
     Account,
     Player,
+    Spectator,
 }
 impl From<GameViewSelector> for ViewSelector {
     fn from(value: GameViewSelector) -> Self {
         match value {
             GameViewSelector::Account => Self::Account,
             GameViewSelector::Player => Self::Player,
+            GameViewSelector::Spectator => Self::Spectator,
         }
     }
 }
@@ -846,7 +1058,9 @@ impl GameIngress {
                     .map(GamePayload::RenameAlias)
                     .map_err(|_| ())
             }
-            GameAction::LeavePlayer | GameAction::LeavePlayerOutput => {
+            GameAction::LeavePlayer
+            | GameAction::LeavePlayerOutput
+            | GameAction::LeaveSpectator => {
                 brews_contracts::games::LeavePlayerInput::decode_json(bytes)
                     .map(GamePayload::LeavePlayer)
                     .map_err(|_| ())
@@ -879,15 +1093,19 @@ impl GameIngress {
             GameAction::Cancel => CancelGameInput::decode_json(bytes)
                 .map(GamePayload::Cancel)
                 .map_err(|_| ()),
-            GameAction::AdmissionContext => AdmissionContextInput::decode_json(bytes)
+            GameAction::AdmissionContext
+            | GameAction::SpectatorContext
+            | GameAction::JoinSpectator => AdmissionContextInput::decode_json(bytes)
                 .map(GamePayload::AdmissionContext)
                 .map_err(|_| ()),
-            GameAction::JoinPlayer => JoinPlayer::decode_json(bytes)
+            GameAction::JoinPlayer | GameAction::SwitchToPlayer => JoinPlayer::decode_json(bytes)
                 .map(GamePayload::JoinPlayer)
                 .map_err(|_| ()),
-            GameAction::Exit => crate::api::decode_empty_game_body(bytes)
-                .map(|()| GamePayload::Empty)
-                .map_err(|_| ()),
+            GameAction::Exit | GameAction::SwitchToSpectator => {
+                crate::api::decode_empty_game_body(bytes)
+                    .map(|()| GamePayload::Empty)
+                    .map_err(|_| ())
+            }
             GameAction::Stream | GameAction::Sync if bytes.is_empty() => Ok(GamePayload::Empty),
             _ => Err(()),
         }
@@ -903,6 +1121,10 @@ impl GameIngress {
                 | GameAction::Lobby
                 | GameAction::Start
                 | GameAction::JoinPlayer
+                | GameAction::JoinSpectator
+                | GameAction::SwitchToSpectator
+                | GameAction::SwitchToPlayer
+                | GameAction::LeaveSpectator
                 | GameAction::RecoverPlayer
                 | GameAction::RecoveryOutput
                 | GameAction::RenameAlias
@@ -931,7 +1153,10 @@ impl GameIngress {
                 .is_some_and(|value| value > brews_contracts::games::MAX_SAFE_REVISION)
             || (!matches!(
                 self.operation,
-                GameAction::AdmissionContext | GameAction::JoinPlayer
+                GameAction::AdmissionContext
+                    | GameAction::JoinPlayer
+                    | GameAction::SpectatorContext
+                    | GameAction::JoinSpectator
             ) && self.admission_token.is_some())
         {
             return Err(());
@@ -1278,5 +1503,305 @@ mod tests {
         };
         let missing = GameOwnerResponse::decode_json(br#"{"owner_result":"synced","valid_until":100,"response":{"up_to_date":true,"view_revision":2,"snapshot":null}}"#).unwrap();
         assert!(missing.validate_for(&request).is_err());
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "release", rename_all = "snake_case", deny_unknown_fields)]
+pub(super) enum AudienceReleaseRequest {
+    Sync {
+        token: String,
+        #[serde(deserialize_with = "object")]
+        authority: SyncSpectatorAuthority,
+    },
+    Receipt {
+        token: Option<String>,
+        context: Option<String>,
+        #[serde(deserialize_with = "object")]
+        receipt: brews_contracts::games::GameReceipt,
+    },
+    Context {
+        token: String,
+        game_code: brews_domain::games::GameCode,
+        game_id: GameId,
+        expires_at: i64,
+    },
+}
+const AUDIENCE_RELEASE_CHALLENGE_BYTES: usize = 32;
+
+// Per-call non-bearer challenge: never Debug, persisted, or exposed publicly.
+#[derive(Serialize, Deserialize)]
+#[serde(transparent)]
+struct AudienceReleaseChallenge([u8; AUDIENCE_RELEASE_CHALLENGE_BYTES]);
+impl Drop for AudienceReleaseChallenge {
+    fn drop(&mut self) {
+        self.0.zeroize();
+    }
+}
+
+#[derive(Serialize)]
+pub(super) struct AudienceReleaseAttempt {
+    challenge: AudienceReleaseChallenge,
+    pub(super) request: AudienceReleaseRequest,
+}
+impl<'de> Deserialize<'de> for AudienceReleaseAttempt {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Fields {
+            challenge: AudienceReleaseChallenge,
+            #[serde(deserialize_with = "object")]
+            request: AudienceReleaseRequest,
+        }
+        let fields: Fields = object(deserializer)?;
+        Ok(Self {
+            challenge: fields.challenge,
+            request: fields.request,
+        })
+    }
+}
+impl AudienceReleaseAttempt {
+    pub(super) fn new(
+        request: AudienceReleaseRequest,
+        runtime: &impl crate::auth::Runtime,
+        observed_at: i64,
+    ) -> Result<Self, ()> {
+        if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed_at) {
+            return Err(());
+        }
+        let mut challenge = zeroize::Zeroizing::new([0; AUDIENCE_RELEASE_CHALLENGE_BYTES]);
+        runtime.fill_random(challenge.as_mut()).map_err(|_| ())?;
+        Ok(Self {
+            challenge: AudienceReleaseChallenge(*challenge),
+            request,
+        })
+    }
+
+    pub(super) fn binding(&self) -> Result<AudienceReleaseBinding, ()> {
+        use sha2::{Digest as _, Sha256};
+        let encoded = zeroize::Zeroizing::new(serde_json::to_vec(self).map_err(|_| ())?);
+        let mut digest = Sha256::new();
+        digest.update(b"brews-audience-release-attempt\0");
+        digest.update(encoded.as_slice());
+        Ok(AudienceReleaseBinding(digest.finalize().into()))
+    }
+}
+
+// Credential-derived private ACK proof: never Debug, persisted, or public JSON.
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
+#[serde(transparent)]
+pub(super) struct AudienceReleaseBinding([u8; 32]);
+impl Drop for AudienceReleaseBinding {
+    fn drop(&mut self) {
+        self.0.zeroize();
+    }
+}
+
+impl Drop for AudienceReleaseRequest {
+    fn drop(&mut self) {
+        match self {
+            Self::Sync { token, .. } | Self::Context { token, .. } => token.zeroize(),
+            Self::Receipt { token, context, .. } => {
+                token.zeroize();
+                context.zeroize();
+            }
+        }
+    }
+}
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "release_result", rename_all = "snake_case", deny_unknown_fields)]
+pub(super) enum AudienceReleaseReply {
+    Released {
+        binding: AudienceReleaseBinding,
+        valid_until: i64,
+        checked_at: i64,
+    },
+    Rejected {
+        binding: AudienceReleaseBinding,
+        code: GameRejection,
+    },
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "Exact private wire tests fail fast.")]
+mod audience_release_tests {
+    use super::*;
+    use crate::auth::Runtime as _;
+
+    struct AttemptRuntime {
+        now: i64,
+        draws: std::cell::Cell<u8>,
+        rng_fails: bool,
+    }
+    impl crate::auth::Runtime for AttemptRuntime {
+        fn now_ms(&self) -> i64 {
+            self.now
+        }
+        fn fill_random(&self, bytes: &mut [u8]) -> Result<(), crate::auth::AuthError> {
+            let draw = self.draws.get() + 1;
+            self.draws.set(draw);
+            bytes.fill(draw);
+            if self.rng_fails {
+                Err(crate::auth::AuthError::Crypto)
+            } else {
+                Ok(())
+            }
+        }
+    }
+    fn context_request() -> AudienceReleaseRequest {
+        serde_json::from_value(serde_json::json!({"release":"context", "token":"test-only-context", "game_code":"ABCDEFGH", "game_id":"01890f3e-53b7-7d28-9b05-4f65092d5711", "expires_at":100})).unwrap()
+    }
+
+    #[test]
+    fn audience_release_attempt_new_draws_fresh_challenge_for_identical_requests() {
+        let runtime = AttemptRuntime {
+            now: 1,
+            draws: std::cell::Cell::new(0),
+            rng_fails: false,
+        };
+        let first =
+            AudienceReleaseAttempt::new(context_request(), &runtime, runtime.now_ms()).unwrap();
+        let second =
+            AudienceReleaseAttempt::new(context_request(), &runtime, runtime.now_ms()).unwrap();
+        assert!(first.binding().unwrap() != second.binding().unwrap());
+        assert_eq!(runtime.draws.get(), 2);
+        assert!(
+            serde_json::to_vec(&first.request).unwrap()
+                == serde_json::to_vec(&second.request).unwrap()
+        );
+    }
+
+    #[test]
+    fn audience_release_attempt_new_fails_closed_on_clock_or_partial_rng_failure() {
+        for now in [-1, crate::limits::JS_SAFE_INTEGER_MAX + 1] {
+            let runtime = AttemptRuntime {
+                now,
+                draws: std::cell::Cell::new(0),
+                rng_fails: false,
+            };
+            assert!(
+                AudienceReleaseAttempt::new(context_request(), &runtime, runtime.now_ms()).is_err()
+            );
+            assert_eq!(runtime.draws.get(), 0);
+        }
+        let runtime = AttemptRuntime {
+            now: 1,
+            draws: std::cell::Cell::new(0),
+            rng_fails: true,
+        };
+        assert!(
+            AudienceReleaseAttempt::new(context_request(), &runtime, runtime.now_ms()).is_err()
+        );
+        assert_eq!(runtime.draws.get(), 1);
+    }
+
+    #[test]
+    fn audience_release_attempt_wire_requires_closed_object_and_exact_challenge_width() {
+        let original = serde_json::json!({"challenge":vec![1u8;32],"request":context_request()});
+        let parsed: AudienceReleaseAttempt = serde_json::from_value(original.clone()).unwrap();
+        let mut changed = original.clone();
+        changed["challenge"][0] = 2.into();
+        let changed: AudienceReleaseAttempt = serde_json::from_value(changed).unwrap();
+        assert!(parsed.binding().unwrap() != changed.binding().unwrap());
+        for key in ["challenge", "request"] {
+            let mut missing = original.clone();
+            missing.as_object_mut().unwrap().remove(key);
+            assert!(serde_json::from_value::<AudienceReleaseAttempt>(missing).is_err());
+            let mut null = original.clone();
+            null[key] = serde_json::Value::Null;
+            assert!(serde_json::from_value::<AudienceReleaseAttempt>(null).is_err());
+        }
+        for challenge in [
+            serde_json::json!([]),
+            serde_json::json!(vec![1u8; 31]),
+            serde_json::json!(vec![1u8; 33]),
+            serde_json::json!(vec![256u16; 32]),
+            serde_json::json!("untyped"),
+        ] {
+            let mut changed = original.clone();
+            changed["challenge"] = challenge;
+            assert!(serde_json::from_value::<AudienceReleaseAttempt>(changed).is_err());
+        }
+        let mut unknown = original.clone();
+        unknown["extra"] = 1.into();
+        assert!(serde_json::from_value::<AudienceReleaseAttempt>(unknown).is_err());
+        assert!(
+            serde_json::from_value::<AudienceReleaseAttempt>(serde_json::json!([
+                original["challenge"],
+                original["request"]
+            ]))
+            .is_err()
+        );
+        let encoded = serde_json::to_string(&original).unwrap();
+        let duplicate = encoded.replacen("\"challenge\":", "\"challenge\":[],\"challenge\":", 1);
+        assert!(serde_json::from_str::<AudienceReleaseAttempt>(&duplicate).is_err());
+        assert!(
+            serde_json::from_value::<AudienceReleaseAttempt>(original["request"].clone()).is_err()
+        );
+        for reply in [
+            serde_json::json!({"release_result":"released","valid_until":100,"checked_at":1}),
+            serde_json::json!({"release_result":"rejected","code":"unauthorized"}),
+        ] {
+            assert!(serde_json::from_value::<AudienceReleaseReply>(reply).is_err());
+        }
+    }
+
+    #[test]
+    fn audience_ack_proof_binds_every_original_request_field() {
+        let sync = serde_json::json!({"release":"sync", "token":"test-only-high-entropy-proof", "authority":{"game_id":"01890f3e-53b7-7d28-9b05-4f65092d5711", "session_id":"01890f3e-53b7-7d28-9b05-4f65092d5711", "spectator_id":"01890f3e-53b7-7d28-9b05-4f65092d5711", "epoch":1, "session_expires_at":200, "valid_until":100}});
+        let context = serde_json::json!({"release":"context", "token":"test-only-context", "game_code":"ABCDEFGH", "game_id":"01890f3e-53b7-7d28-9b05-4f65092d5711", "expires_at":100});
+        let receipt = serde_json::json!({"release":"receipt", "token":"test-only-session", "context":"test-only-context", "receipt":{"version":1,"game_id":"01890f3e-53b7-7d28-9b05-4f65092d5711","command_id":"01890f3e-53b7-7d28-9b05-4f65092d5711","outcome":{"operation":"started","view_revision":1,"started_at":1},"completed_at":1,"expires_at":86400001}});
+        for original in [sync, context, receipt] {
+            let request: AudienceReleaseAttempt = serde_json::from_value(
+                serde_json::json!({"challenge":vec![1u8;32],"request":original}),
+            )
+            .unwrap();
+            let proof = request.binding().unwrap();
+            let roundtrip: AudienceReleaseAttempt =
+                serde_json::from_slice(&serde_json::to_vec(&request).unwrap()).unwrap();
+            assert!(proof == roundtrip.binding().unwrap());
+            let mut paths = Vec::new();
+            for (key, value) in original.as_object().unwrap() {
+                if key == "release" {
+                    continue;
+                }
+                if let Some(object) = value.as_object() {
+                    for child in object.keys() {
+                        if child != "outcome" && child != "version" {
+                            paths.push(vec![key.clone(), child.clone()]);
+                        }
+                    }
+                } else {
+                    paths.push(vec![key.clone()]);
+                }
+            }
+            for path in paths {
+                let mut changed = original.clone();
+                let mut target = &mut changed;
+                for key in &path {
+                    target = &mut target[key];
+                }
+                *target = if target.is_number() {
+                    serde_json::json!(3)
+                } else if path.last().unwrap().ends_with("_id") {
+                    serde_json::json!("01890f3e-53b7-7d28-9b05-4f65092d5712")
+                } else {
+                    serde_json::json!("different-private-proof")
+                };
+                if path.last().unwrap() == "game_code" {
+                    *target = serde_json::json!("BCDEFGHJ");
+                }
+                if path == ["receipt", "completed_at"] || path == ["receipt", "expires_at"] {
+                    changed["receipt"]["completed_at"] = 3.into();
+                    changed["receipt"]["expires_at"] = 86400003.into();
+                    changed["receipt"]["outcome"]["started_at"] = 3.into();
+                }
+                let changed: AudienceReleaseAttempt = serde_json::from_value(
+                    serde_json::json!({"challenge":vec![1u8;32],"request":changed}),
+                )
+                .unwrap();
+                assert!(proof != changed.binding().unwrap(), "{path:?}");
+            }
+        }
     }
 }

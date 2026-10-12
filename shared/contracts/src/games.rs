@@ -10,6 +10,7 @@ pub const GAME_QUERY_KNOWN_REVISION: &str = "known_revision";
 pub const GAME_QUERY_VIEW: &str = "view";
 pub const GAME_VIEW_ACCOUNT: &str = "account";
 pub const GAME_VIEW_PLAYER: &str = "player";
+pub const GAME_VIEW_SPECTATOR: &str = "spectator";
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 #[error("Invalid game JSON.")]
 pub struct GameDecodeError;
@@ -353,7 +354,7 @@ impl JoinPlayer {
 }
 use brews_domain::{
     games::GameState,
-    ids::{AccountId, CommandId, GameId, OperationId, PlayerId},
+    ids::{AccountId, CommandId, GameId, OperationId, PlayerId, SpectatorId},
 };
 fn canonical_alias<'de, D: serde::Deserializer<'de>>(d: D) -> Result<String, D::Error> {
     let alias = String::deserialize(d)?;
@@ -496,7 +497,28 @@ impl LeavePlayerInput {
     }
 }
 
+map_enum!(pub ParticipantIdentity, "role", {
+    Player { player_id: PlayerId, #[serde(deserialize_with = "canonical_alias")] alias: String },
+    Spectator { spectator_id: SpectatorId },
+});
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ParticipantChange {
+    Admitted,
+    Reconnected,
+    Switched,
+    Left,
+}
+
 map_enum!(pub GameOutcome, "operation", {
+    ParticipantChanged {
+        change: ParticipantChange,
+        identity: ParticipantIdentity,
+        #[serde(deserialize_with = "nullable_value")]
+        session_expires_at: Option<i64>,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+    },
     Exited {},
     Created {
         #[serde(deserialize_with = "safe_revision")]
@@ -591,6 +613,34 @@ impl GameReceipt {
             return Err(GameDecodeError);
         }
         let revision = match &self.outcome {
+            GameOutcome::ParticipantChanged {
+                change,
+                identity,
+                session_expires_at,
+                view_revision,
+            } => {
+                match change {
+                    ParticipantChange::Left
+                        if matches!(identity, ParticipantIdentity::Spectator { .. })
+                            && session_expires_at.is_none() => {}
+                    ParticipantChange::Admitted
+                    | ParticipantChange::Switched
+                    | ParticipantChange::Reconnected => {
+                        let expiry = session_expires_at.ok_or(GameDecodeError)?;
+                        validate_timestamp(expiry)?;
+                        if expiry <= self.completed_at
+                            || expiry > self.expires_at
+                            || (*change == ParticipantChange::Admitted
+                                && (expiry != self.expires_at
+                                    || !matches!(identity, ParticipantIdentity::Spectator { .. })))
+                        {
+                            return Err(GameDecodeError);
+                        }
+                    }
+                    _ => return Err(GameDecodeError),
+                }
+                *view_revision
+            }
             GameOutcome::Exited {} => 0,
             GameOutcome::Created {
                 view_revision,
@@ -768,6 +818,7 @@ map_struct!(pub GameSummary {
     view_revision: u64
 });
 map_enum!(pub GameResponse, "result", {
+    ParticipantChanged { receipt: GameReceipt },
     Exited {
         game_id: GameId,
         receipt: GameReceipt,
@@ -867,6 +918,10 @@ impl GameResponse {
     /// Validates acknowledgement coherence, not actor authority or current owner state.
     pub fn validate(&self) -> Result<(), GameDecodeError> {
         let coherent = match self {
+            Self::ParticipantChanged { receipt } => {
+                receipt.validate()?;
+                matches!(receipt.outcome, GameOutcome::ParticipantChanged { .. })
+            }
             Self::Exited { game_id, receipt } => {
                 receipt.validate()?;
                 *game_id == receipt.game_id && matches!(receipt.outcome, GameOutcome::Exited {})
@@ -1145,6 +1200,22 @@ map_struct!(pub FinalBoardView {
     board: BoardView
 });
 map_enum!(pub GameView, "role", {
+    Spectator {
+        game_id: GameId,
+        state: GameState,
+        #[serde(deserialize_with = "configuration")]
+        configuration: GameConfiguration,
+        game_code: brews_domain::games::GameCode,
+        #[serde(deserialize_with = "nullable_value")]
+        started_at: Option<i64>,
+        #[serde(deserialize_with = "safe_revision")]
+        view_revision: u64,
+        spectator_id: SpectatorId,
+        calls: Vec<CallView>,
+        #[serde(deserialize_with = "nullable_value")]
+        latest_call: Option<CallView>,
+        exhausted: bool,
+    },
     Host {
         game: GameSummary,
         #[serde(deserialize_with = "configuration")]
@@ -1221,7 +1292,8 @@ impl GameView {
     pub const fn game_id(&self) -> GameId {
         match self {
             Self::Host { game, .. } => game.game_id,
-            Self::Player { game_id, .. }
+            Self::Spectator { game_id, .. }
+            | Self::Player { game_id, .. }
             | Self::FinalHost { game_id, .. }
             | Self::FinalPlayer { game_id, .. } => *game_id,
         }
@@ -1229,7 +1301,8 @@ impl GameView {
     pub const fn view_revision(&self) -> u64 {
         match self {
             Self::Host { game, .. } => game.view_revision,
-            Self::Player { view_revision, .. }
+            Self::Spectator { view_revision, .. }
+            | Self::Player { view_revision, .. }
             | Self::FinalHost { view_revision, .. }
             | Self::FinalPlayer { view_revision, .. } => *view_revision,
         }
@@ -1242,6 +1315,28 @@ impl GameView {
             return Err(GameDecodeError);
         }
         match self {
+            Self::Spectator {
+                state,
+                configuration,
+                started_at,
+                calls,
+                latest_call,
+                exhausted,
+                ..
+            } => {
+                configuration.validate().map_err(|_| GameDecodeError)?;
+                validate_call_ledger(calls, configuration.numeric_upper_bound)?;
+                if !matches!(state, GameState::AwaitingPlayers | GameState::InProgress) {
+                    return Err(GameDecodeError);
+                }
+                validate_lifecycle(*state, true, *started_at, None)?;
+                if *exhausted != (calls.len() == configuration.numeric_upper_bound as usize)
+                    || serde_json::to_vec(latest_call).map_err(|_| GameDecodeError)?
+                        != serde_json::to_vec(&calls.last()).map_err(|_| GameDecodeError)?
+                {
+                    return Err(GameDecodeError);
+                }
+            }
             Self::Host {
                 game,
                 configuration,

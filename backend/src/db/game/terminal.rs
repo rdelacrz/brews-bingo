@@ -37,6 +37,8 @@ const SQL_DELETE_FINAL_PLAYER_GRANTS: &str = "DELETE FROM game_terminal_views";
 const SQL_SELECT_ANY_FINAL_PLAYER_GRANT: &str = "SELECT 1 FROM game_terminal_views LIMIT 1";
 const SQL_DELETE_VIEW_REVISIONS: &str = "DELETE FROM game_view_revisions";
 const SQL_SELECT_ANY_VIEW_REVISION: &str = "SELECT 1 FROM game_view_revisions LIMIT 1";
+const SQL_DELETE_PRESTART_NONSPECTATOR_REVISIONS: &str = "DELETE FROM game_view_revisions WHERE NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key)";
+const SQL_SELECT_ANY_PRESTART_NONSPECTATOR_REVISION: &str = "SELECT 1 FROM game_view_revisions WHERE NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key) LIMIT 1";
 const SQL_DELETE_LIVE_RECORD: &str = "DELETE FROM game_record";
 const SQL_SELECT_ANY_LIVE_RECORD: &str = "SELECT 1 FROM game_record LIMIT 1";
 const EXPIRED_HISTORY_PURGE: [(&str, &str); 10] = [
@@ -71,7 +73,7 @@ const SQL_SELECT_EXPIRED_FINAL_PLAYER_SESSIONS: &str = "SELECT session_id FROM g
 const SQL_DELETE_FINAL_PLAYER_SESSION: &str = "DELETE FROM game_terminal_views WHERE session_id=?";
 const SQL_SELECT_ANY_FINAL_PLAYER_SESSION: &str =
     "SELECT 1 FROM game_terminal_views WHERE session_id=?";
-const SQL_SELECT_UNUSED_FINAL_VIEW_COUNTERS: &str = "SELECT view_key FROM game_view_revisions WHERE (view_key=? AND NOT EXISTS(SELECT 1 FROM game_connection_grants WHERE viewer_kind=? AND connection_id IS NULL AND expires_at>?)) OR (view_key<>? AND NOT EXISTS(SELECT 1 FROM game_terminal_views WHERE player_id=view_key AND expires_at>?)) ORDER BY view_key LIMIT 22";
+const SQL_SELECT_UNUSED_FINAL_VIEW_COUNTERS: &str = "SELECT view_key FROM game_view_revisions WHERE (view_key=? AND NOT EXISTS(SELECT 1 FROM game_connection_grants WHERE viewer_kind=? AND connection_id IS NULL AND expires_at>?)) OR (view_key<>? AND NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key) AND NOT EXISTS(SELECT 1 FROM game_terminal_views WHERE player_id=view_key AND expires_at>?)) ORDER BY view_key LIMIT 22";
 const SQL_DELETE_FINAL_VIEW_COUNTER: &str = "DELETE FROM game_view_revisions WHERE view_key=?";
 const SQL_SELECT_ANY_FINAL_VIEW_COUNTER: &str =
     "SELECT 1 FROM game_view_revisions WHERE view_key=?";
@@ -233,8 +235,13 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
     }
 
     pub(super) fn retire_prestart_counters(&self) -> Result<(), GameError> {
-        self.db.execute(SQL_DELETE_VIEW_REVISIONS, &[])?;
-        if !self.db.query(SQL_SELECT_ANY_VIEW_REVISION, &[])?.is_empty() {
+        self.db
+            .execute(SQL_DELETE_PRESTART_NONSPECTATOR_REVISIONS, &[])?;
+        if !self
+            .db
+            .query(SQL_SELECT_ANY_PRESTART_NONSPECTATOR_REVISION, &[])?
+            .is_empty()
+        {
             return Err(GameError::Storage);
         }
         Ok(())

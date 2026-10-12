@@ -107,6 +107,7 @@ impl GameObject {
             }
             DiscoveryAction::Entry { game_code } => DiscoveryViewer::Entry(game_code),
             DiscoveryAction::Player { token } => DiscoveryViewer::Player(token.as_str()),
+            DiscoveryAction::Spectator { token } => DiscoveryViewer::Spectator(token.as_str()),
         };
         let first_code = match &request.action {
             DiscoveryAction::Entry { game_code } => Some(game_code),
@@ -158,6 +159,7 @@ impl GameObject {
                 }
                 DiscoveryAction::Entry { game_code } => DiscoveryViewer::Entry(game_code),
                 DiscoveryAction::Player { token } => DiscoveryViewer::Player(token.as_str()),
+                DiscoveryAction::Spectator { token } => DiscoveryViewer::Spectator(token.as_str()),
             };
             let observed = if matches!(request.action, DiscoveryAction::Account { .. }) {
                 self.discovery_observed()?

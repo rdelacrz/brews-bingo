@@ -3,7 +3,7 @@
 #[path = "../src/worker_runtime/game_wire.rs"]
 mod game_wire;
 
-pub use brews_backend::security;
+pub use brews_backend::{auth, security};
 #[path = "../src/api/mod.rs"]
 #[allow(
     dead_code,
@@ -200,4 +200,63 @@ fn private_ingress_rejects_duplicate_and_nonobject_commands() {
     );
     assert!(GameIngress::decode_json(duplicate.as_bytes()).is_err());
     assert!(GameIngress::decode_json(b"[]").is_err());
+}
+
+#[test]
+fn spectator_sync_release_wire_is_closed_and_binds_role_identity_and_deadline() {
+    use game_wire::{AudienceReleaseAttempt, AudienceReleaseReply, GameOwnerResponse};
+    let id = "01890f3e-53b7-7d28-9b05-4f65092d5711";
+    let binding = serde_json::json!({"game_id":id,"session_id":id,"spectator_id":id,"epoch":0,"session_expires_at":86400001,"valid_until":300001});
+    let release = serde_json::json!({"challenge":vec![1u8;32],"request":{"release":"sync","token":"A".repeat(brews_backend::security::TOKEN_ENCODED_LEN),"authority":binding}});
+    let parsed: AudienceReleaseAttempt = serde_json::from_value(release.clone()).unwrap();
+    let acknowledgement_binding = serde_json::to_value(parsed.binding().unwrap()).unwrap();
+    let _: AudienceReleaseReply = serde_json::from_value(
+        serde_json::json!({"release_result":"released","binding":acknowledgement_binding,"valid_until":300001,"checked_at":1}),
+    )
+    .unwrap();
+    assert!(
+        serde_json::from_value::<AudienceReleaseReply>(
+            serde_json::json!({"release_result":"released","valid_until":300001,"checked_at":1})
+        )
+        .is_err()
+    );
+    let mut positional = release.clone();
+    positional["request"]["authority"] = serde_json::json!([id, id, id, 0, 86400001, 300001]);
+    assert!(serde_json::from_value::<AudienceReleaseAttempt>(positional).is_err());
+    let mut unknown = release;
+    unknown["capabilities"] = serde_json::json!([]);
+    assert!(serde_json::from_value::<AudienceReleaseAttempt>(unknown).is_err());
+    let reply = serde_json::json!({"owner_result":"audience_synced","authority":binding,"response":{"up_to_date":true,"view_revision":1,"snapshot":null}});
+    assert!(GameOwnerResponse::decode_json(&serde_json::to_vec(&reply).unwrap()).is_ok());
+    let mut positional = reply.clone();
+    positional["authority"] = serde_json::json!([id, id, id, 0, 86400001, 300001]);
+    assert!(GameOwnerResponse::decode_json(&serde_json::to_vec(&positional).unwrap()).is_err());
+    let request = game_wire::GameIngress {
+        operation: game_wire::GameAction::Sync,
+        game_id: Some(id.parse().unwrap()),
+        command_id: None,
+        view: Some(game_wire::ViewSelector::Spectator),
+        known_revision: Some(1),
+        session_token: None,
+        admission_token: None,
+        recovery_caller: None,
+        body: String::new(),
+    };
+    for (key, value) in [
+        ("epoch", -1),
+        ("valid_until", 86400002),
+        (
+            "session_expires_at",
+            brews_contracts::games::MAX_SAFE_TIMESTAMP + 1,
+        ),
+    ] {
+        let mut invalid = reply.clone();
+        invalid["authority"][key] = value.into();
+        assert!(
+            GameOwnerResponse::decode_json(&serde_json::to_vec(&invalid).unwrap())
+                .unwrap()
+                .validate_for(&request)
+                .is_err()
+        );
+    }
 }

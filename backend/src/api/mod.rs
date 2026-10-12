@@ -22,7 +22,8 @@ pub(crate) use games::decode_empty_game_body;
 pub(crate) use games::decode_recovery_input;
 pub use games::{
     ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameViewSelector, GamesRequest,
-    PLAYER_COOKIE_NAME, RecoverPlayerInput, RecoveryAnswerInput, decode_games, game_cookie_path,
+    PLAYER_COOKIE_NAME, RecoverPlayerInput, RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME,
+    SPECTATOR_COOKIE_NAME, decode_games, game_cookie_path,
 };
 
 mod discovery;

@@ -13,17 +13,17 @@ use crate::{
         game::GameService,
         game_delivery::{DeliveryBinding, DeliveryError, DeliveryService},
     },
-    game::{AccountConnectionGrant, ConnectionGrant, GameError},
+    game::{AccountConnectionGrant, ConnectionGrant, GameError, SpectatorConnectionGrant},
 };
 use brews_contracts::games::{DeliveryId, GameView, SnapshotAck, SnapshotFrame, SnapshotKind};
-use brews_domain::ids::{AccountId, ConnectionId, GameId, PlayerId, SessionId};
+use brews_domain::ids::{AccountId, ConnectionId, GameId, PlayerId, SessionId, SpectatorId};
 use js_sys::{Array, Function, Reflect};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::{JsCast, JsValue};
 use worker::{Response, WebSocket, WebSocketIncomingMessage, WebSocketPair};
 
 const ATTACHMENT_MAX_BYTES: usize = 512;
-const SOCKET_LIMIT: usize = 100;
+const SOCKET_LIMIT: usize = crate::game::GAME_CURRENT_CONNECTION_LIMIT;
 #[derive(Clone, Copy)]
 #[repr(u16)]
 pub(super) enum CloseCode {
@@ -43,6 +43,7 @@ const SIZE_PLACEHOLDER: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 pub(super) enum Viewer {
     Account(AccountId),
     Player(PlayerId),
+    Spectator(SpectatorId),
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -70,6 +71,27 @@ impl Attachment {
             view: grant.player_id().to_string(),
             last_sent_revision: None,
         }
+    }
+    fn spectator(grant: &SpectatorConnectionGrant) -> Self {
+        Self {
+            version: 1,
+            game_id: grant.game_id(),
+            connection_id: grant.connection_id(),
+            session_id: grant.session_id(),
+            viewer: Viewer::Spectator(grant.spectator_id()),
+            authentication_epoch: grant.epoch(),
+            session_expires_at: grant.expires_at(),
+            view: grant.spectator_id().to_string(),
+            last_sent_revision: None,
+        }
+    }
+    fn matches_spectator(&self, grant: &SpectatorConnectionGrant) -> bool {
+        self.game_id == grant.game_id()
+            && self.connection_id == grant.connection_id()
+            && self.session_id == grant.session_id()
+            && self.viewer == Viewer::Spectator(grant.spectator_id())
+            && self.authentication_epoch == grant.epoch()
+            && self.session_expires_at == grant.expires_at()
     }
     fn account(grant: &AccountConnectionGrant) -> Self {
         Self {
@@ -102,6 +124,7 @@ impl Attachment {
             || match value.viewer {
                 Viewer::Account(_) => value.view != "host",
                 Viewer::Player(p) => value.view != p.to_string(),
+                Viewer::Spectator(p) => value.view != p.to_string(),
             }
         {
             return Err(GameError::Unauthorized);
@@ -304,6 +327,17 @@ impl GameObject {
                 player,
                 hint.authentication_epoch,
             ),
+            Viewer::Spectator(spectator) => {
+                if !self.owns_game(hint.game_id)? {
+                    return Err(GameError::Unauthorized);
+                }
+                service.spectator_socket_is_fenced(
+                    hint.connection_id,
+                    hint.session_id,
+                    spectator,
+                    hint.authentication_epoch,
+                )
+            }
             Viewer::Account(_) => Ok(false),
         }
     }
@@ -331,6 +365,19 @@ impl GameObject {
                 // Captured closure work alone controls physical retry timing.
                 self.dispatch_fenced_player_socket_close(service, &ws)?;
                 continue;
+            }
+            if matches!(hint.viewer, Viewer::Spectator(_)) {
+                match service.spectator_connection(hint.connection_id) {
+                    Ok(Some(grant)) if hint.matches_spectator(&grant) => {
+                        out.push(hint.connection_id)
+                    }
+                    Ok(_)
+                    | Err(GameError::Unauthorized | GameError::Expired | GameError::NotFound) => {
+                        ws.close(Some(CloseCode::Policy.value()), Some("session unavailable"))
+                            .map_err(|_| GameError::Storage)?;
+                    }
+                    Err(error) => return Err(error),
+                }
             }
             if matches!(hint.viewer, Viewer::Player(_)) {
                 match service.player_connection(hint.connection_id) {
@@ -364,6 +411,23 @@ impl GameObject {
         let connection = connection_id()?;
         let pair = WebSocketPair::new().map_err(|_| GameError::Storage)?;
         let hint = match ingress.view {
+            Some(ViewSelector::Spectator) => {
+                let grant = service.prepare_spectator_connection(token, connection)?;
+                self.persist(&service, &db).await?;
+                service.spectator_view(token)?;
+                let hint = Attachment::spectator(&grant);
+                hint.write(&pair.server)?;
+                service.validate_prepared_spectator_connection(&grant)?;
+                self.accept_socket(&pair.server)?;
+                if let Err(error) = service.accept_spectator_connection(&grant) {
+                    let _ = pair.server.close(
+                        Some(CloseCode::Resynchronize.value()),
+                        Some("resynchronize"),
+                    );
+                    return Err(error);
+                }
+                hint
+            }
             Some(ViewSelector::Player) => {
                 let grant = service.prepare_player_connection(token, connection)?;
                 self.persist(&service, &db).await?;
@@ -451,6 +515,15 @@ impl GameObject {
         db: &OwnerDatabase,
     ) -> Result<GameView, GameError> {
         match hint.viewer {
+            Viewer::Spectator(_) => {
+                let grant = service
+                    .spectator_connection(hint.connection_id)?
+                    .ok_or(GameError::Unauthorized)?;
+                if !hint.matches_spectator(&grant) {
+                    return Err(GameError::Unauthorized);
+                }
+                service.spectator_connection_view(&grant)
+            }
             Viewer::Player(_) => {
                 let grant = service
                     .player_connection(hint.connection_id)?
@@ -572,6 +645,7 @@ impl GameObject {
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         db: &OwnerDatabase,
     ) -> Result<(), GameError> {
+        self.deliver_spectator_notices(service).await?;
         service.reconcile_connections(&self.observed(service)?)?;
         self.persist(service, db).await?;
         for ws in self.sockets()? {
@@ -603,6 +677,54 @@ impl GameObject {
         }
         self.persist(service, db).await
     }
+    async fn deliver_spectator_notices(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+    ) -> Result<(), GameError> {
+        let attempted = async {
+            let notices = service.begin_spectator_terminal_attempt()?;
+            if notices.is_empty() {
+                return Ok(());
+            }
+            // Terminal denial, release intent and attempt consumption are durable before send.
+            self.state
+                .storage()
+                .sync()
+                .await
+                .map_err(|_| GameError::Storage)?;
+            let sockets = self.sockets()?;
+            for notice in notices {
+                for ws in &sockets {
+                    let hint = match Attachment::read(ws) {
+                        Ok(hint) if hint.matches_spectator(&notice.connection) => hint,
+                        _ => continue,
+                    };
+                    if ready_state(ws)? == 1
+                        && Attachment::read(ws)?.same_authority(&hint)
+                        && service.validate_spectator_notice_delivery(&notice).is_ok()
+                    {
+                        let _ = ws.send_with_str(&notice.notice);
+                    }
+                    break;
+                }
+            }
+            Ok::<_, GameError>(())
+        }
+        .await;
+        // Transport uncertainty never skips physical identity deletion; no ACK is consulted.
+        let cleanup = service.finish_spectator_terminal_attempt();
+        if cleanup.is_err() {
+            let _ = service.retry_spectator_terminal_cleanup();
+            self.transport_retry.set(true);
+        }
+        self.state
+            .storage()
+            .sync()
+            .await
+            .map_err(|_| GameError::Storage)?;
+        cleanup.and(attempted)
+    }
+
     pub(super) async fn retire_socket(
         &self,
         ws: &WebSocket,
@@ -620,9 +742,23 @@ impl GameObject {
                 return self.persist(service, db).await;
             }
         }
-        if ready_state(ws)? != 3 {
-            ws.close(Some(code.value()), Some("resynchronize"))
-                .map_err(|_| GameError::Storage)?;
+        // A matching spectator callback revokes presence before provider close;
+        // a failed physical close must not keep or renew its occupied connection.
+        if let Some(hint) = &hint
+            && matches!(hint.viewer, Viewer::Spectator(_))
+        {
+            match service.spectator_connection(hint.connection_id) {
+                Ok(Some(grant)) if hint.matches_spectator(&grant) => {
+                    service.disconnect_spectator(&grant)?
+                }
+                Ok(_) | Err(GameError::NotFound | GameError::Expired | GameError::Unauthorized) => {
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        if ready_state(ws)? != 3 && ws.close(Some(code.value()), Some("resynchronize")).is_err() {
+            self.persist(service, db).await?;
+            return Err(GameError::Storage);
         }
         if let Some(hint) = &hint {
             match hint.viewer {
@@ -634,6 +770,7 @@ impl GameObject {
                     | Err(GameError::NotFound | GameError::Expired | GameError::Unauthorized) => {}
                     Err(error) => return Err(error),
                 },
+                Viewer::Spectator(_) => {}
                 Viewer::Account(_) => {
                     let identity = hint.identity()?;
                     let work = crate::auth::GameSocketCloseWork::from_trusted_peer(
@@ -656,7 +793,11 @@ impl GameObject {
         }
         service.reconcile_connections(&self.observed(service)?)?;
         self.persist(service, db).await?;
-        if ready_state(ws)? != 3 {
+        let closing_spectator = hint
+            .as_ref()
+            .is_some_and(|hint| matches!(hint.viewer, Viewer::Spectator(_)))
+            && ready_state(ws)? == 2;
+        if ready_state(ws)? != 3 && !closing_spectator {
             return Err(GameError::Storage);
         }
         if let Some(hint) = &hint {

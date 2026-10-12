@@ -612,7 +612,7 @@ fn slice_one_schema_forward_migration_preserves_rows_and_rejects_missing_or_alte
     for alteration in ["none", "missing", "altered"] {
         let (f, _, _, _) = prepared();
         let players = f.game.query("SELECT * FROM game_players", &[]).unwrap();
-        f.game.conn.borrow().execute_batch("DROP TABLE game_recovery_buckets; DROP TABLE game_socket_closures; UPDATE game_metadata SET schema_version=2").unwrap();
+        f.game.conn.borrow().execute_batch("DROP TABLE game_spectator_terminal_work; DROP TABLE game_spectator_notices; DROP TABLE game_spectator_contexts; DROP TABLE game_spectator_sessions; DROP TABLE game_spectators; DROP TABLE game_recovery_buckets; DROP TABLE game_socket_closures; UPDATE game_metadata SET schema_version=2").unwrap();
         match alteration {
             "missing" => f
                 .game

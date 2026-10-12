@@ -48,6 +48,7 @@ typed_id!(
     CommandId,
     GameId,
     PlayerId,
+    SpectatorId,
     ConnectionId,
     OperationId,
     AuditId

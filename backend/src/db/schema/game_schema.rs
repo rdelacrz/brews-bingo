@@ -1,7 +1,7 @@
 //! Normalized, isolated Game-owner schema. No authoritative JSON collections.
 use crate::limits::JS_SAFE_INTEGER_MAX;
 use brews_domain::games::GameState;
-pub const GAME_SCHEMA_VERSION: i64 = 3;
+pub const GAME_SCHEMA_VERSION: i64 = 4;
 pub const PREVIOUS_GAME_SCHEMA_VERSION: i64 = 1;
 pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_admission_contexts",
@@ -21,7 +21,7 @@ pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_sessions",
     "game_view_revisions",
 ];
-pub const GAME_TABLES: [&str; 25] = [
+pub const GAME_TABLES: [&str; 30] = [
     "game_admission_contexts",
     "game_board_cells",
     "game_boards",
@@ -44,6 +44,11 @@ pub const GAME_TABLES: [&str; 25] = [
     "game_recovery_buckets",
     "game_sessions",
     "game_socket_closures",
+    "game_spectator_contexts",
+    "game_spectator_notices",
+    "game_spectator_sessions",
+    "game_spectator_terminal_work",
+    "game_spectators",
     "game_terminal_route",
     "game_terminal_views",
     "game_view_revisions",
@@ -137,6 +142,7 @@ pub fn statements() -> Vec<String> {
         }
     }
     statements.extend(recovery_coordination_statements());
+    statements.extend(spectator_statements());
     statements
 }
 
@@ -152,5 +158,34 @@ pub fn recovery_coordination_statements() -> Vec<String> {
         ),
         "CREATE INDEX game_recovery_bucket_expiry ON game_recovery_buckets(expires_at)".into(),
         "CREATE INDEX game_socket_closure_retry ON game_socket_closures(next_attempt_at)".into(),
+    ]
+}
+
+/// Additive owner migration keeps existing player sessions and their final grants intact.
+pub fn spectator_statements() -> Vec<String> {
+    let max = JS_SAFE_INTEGER_MAX;
+    let grace = crate::game::SPECTATOR_GRACE_MS;
+    let session_lifetime = crate::game::PLAYER_SESSION_MS;
+    let admission_lifetime = crate::game::ADMISSION_MS;
+    let receipt_retention = crate::game::RECEIPT_MS;
+    let notice_bytes = brews_contracts::games::GAME_FRAME_MAX_BYTES;
+    vec![
+        format!(
+            "CREATE TABLE game_spectators(spectator_id TEXT PRIMARY KEY,joined_at INTEGER NOT NULL CHECK(joined_at BETWEEN 0 AND {max}),session_epoch INTEGER NOT NULL CHECK(session_epoch BETWEEN 0 AND {max}),disconnected_at INTEGER CHECK(disconnected_at IS NULL OR disconnected_at BETWEEN 0 AND {max}),grace_expires_at INTEGER CHECK(grace_expires_at IS NULL OR grace_expires_at BETWEEN 0 AND {max}),CHECK((disconnected_at IS NULL AND grace_expires_at IS NULL) OR (disconnected_at IS NOT NULL AND grace_expires_at IS NOT NULL AND grace_expires_at=disconnected_at+{grace})),UNIQUE(spectator_id,session_epoch)) STRICT"
+        ),
+        format!(
+            "CREATE TABLE game_spectator_sessions(session_id TEXT PRIMARY KEY,token_verifier BLOB NOT NULL UNIQUE CHECK(length(token_verifier)=32),game_id TEXT NOT NULL,game_code TEXT NOT NULL,spectator_id TEXT NOT NULL UNIQUE REFERENCES game_spectators(spectator_id),session_epoch INTEGER NOT NULL CHECK(session_epoch BETWEEN 0 AND {max}),issued_at INTEGER NOT NULL CHECK(issued_at BETWEEN 0 AND {max}),expires_at INTEGER NOT NULL CHECK(expires_at BETWEEN 0 AND {max}),CHECK(expires_at>issued_at AND expires_at<=issued_at+{session_lifetime}),FOREIGN KEY(spectator_id,session_epoch) REFERENCES game_spectators(spectator_id,session_epoch)) STRICT"
+        ),
+        format!(
+            "CREATE TABLE game_spectator_contexts(spectator_id TEXT PRIMARY KEY,token_verifier BLOB NOT NULL UNIQUE CHECK(length(token_verifier)=32),game_code TEXT NOT NULL,issued_at INTEGER NOT NULL CHECK(issued_at BETWEEN 0 AND {max}),expires_at INTEGER NOT NULL CHECK(expires_at BETWEEN 0 AND {max}),retain_until INTEGER NOT NULL CHECK(retain_until BETWEEN 0 AND {max}),consumed_command TEXT,CHECK(expires_at=issued_at+{admission_lifetime} AND retain_until>=expires_at AND retain_until<=expires_at+{receipt_retention}),CHECK(consumed_command IS NOT NULL OR retain_until=expires_at)) STRICT"
+        ),
+        format!(
+            "CREATE TABLE game_spectator_notices(connection_id TEXT PRIMARY KEY,session_id TEXT NOT NULL,spectator_id TEXT NOT NULL,epoch INTEGER NOT NULL CHECK(epoch BETWEEN 0 AND {max}),session_expires_at INTEGER NOT NULL CHECK(session_expires_at BETWEEN 0 AND {max}),notice TEXT NOT NULL CHECK(length(CAST(notice AS BLOB))<={notice_bytes}),expires_at INTEGER NOT NULL CHECK(expires_at BETWEEN 0 AND {max})) STRICT"
+        ),
+        format!(
+            "CREATE TABLE game_spectator_terminal_work(singleton INTEGER PRIMARY KEY CHECK(singleton=1),attempt_deadline INTEGER NOT NULL CHECK(attempt_deadline BETWEEN 0 AND {max}),attempted INTEGER NOT NULL CHECK(attempted IN (0,1)),next_attempt_at INTEGER NOT NULL CHECK(next_attempt_at BETWEEN 0 AND {max})) STRICT"
+        ),
+        "CREATE INDEX game_spectator_grace_deadline ON game_spectators(grace_expires_at)".into(),
+        "CREATE INDEX game_spectator_session_expiry ON game_spectator_sessions(expires_at)".into(),
     ]
 }

@@ -2,12 +2,12 @@
 
 ## Status and use
 
-Backlog assessed against the planning documents and implementation at commit `594adcb` (History APIs). Slice 1 is implemented, verified locally and published as `968747c`; see [LLD Section 3.14](lld.md#314-local-game-discovery-and-availability-implementation-slice). Slice 2 implementation/local gates pass, but final independent review remains pending; see [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Slice 3 is implemented, verified locally and independently reviewed; see [LLD Section 3.16](lld.md#316-local-player-alias-and-explicit-leave-checkpoint). Later slice statuses are unchanged. Slice grouping does not authorize later implementation, deployment or publication.
+Backlog assessed against the planning documents and implementation at commit `594adcb` (History APIs). Slice 1 is implemented, verified locally and published as `968747c`; see [LLD Section 3.14](lld.md#314-local-game-discovery-and-availability-implementation-slice). Slice 2 implementation/local gates pass, but final independent review remains pending; see [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Slice 3 is implemented, verified locally and independently reviewed; see [LLD Section 3.16](lld.md#316-local-player-alias-and-explicit-leave-checkpoint). Slice 4 is implemented, verified locally and independently reviewed within documented bounded scopes, with no remaining blocking findings; see [LLD Section 3.17](lld.md#317-local-spectators-and-pre-start-role-switching-checkpoint). Later slice statuses are unchanged. Slice grouping does not authorize later implementation, deployment or publication.
 
 - `[ ]` means pending implementation or verification; `[x]` means completed and verified locally, not publication or production certification.
 - Mark a pending item complete only after implementation and relevant native/Worker verification. Approval of a design is not implementation evidence.
 - All DO-001–DO-107 design decisions are approved; no schema-policy approvals remain pending. Unfinished wire details and production measurements remain distinct from those approvals.
-- Follow later approved decisions and the completion notes in [LLD Sections 3.9–3.16](lld.md), rather than treating every older generic “TBD” statement as a missing feature.
+- Follow later approved decisions and the completion notes in [LLD Sections 3.9–3.17](lld.md), rather than treating every older generic “TBD” statement as a missing feature.
 - Frontend work is outside this backend checklist. New implementation scope and commit/push need separate authorization; deployment, infrastructure/account creation and secret provisioning remain unauthorized.
 
 Sources: [requirements](requirements.md), [HLD](hld.md), [LLD](lld.md), [API operation catalog](api-design.md#operation-catalog), [Durable Object design](durable-object-design.md#outstanding-decisions), and [provider research](research.md).
@@ -68,18 +68,22 @@ References: API D7/D10/D11; DO-045–048/055. Role switching depends on spectato
 
 Goal: support audience admission and delivery independently of player identity, private boards and Start eligibility.
 
-- [ ] Finalize spectator admission/retry identity, cookie selection and audience projection contracts.
-- [ ] Implement D6 spectator admission in Awaiting Players/In Progress, enforcing separate capacity and rejecting terminal admission.
-- [ ] Add spectator records and spectator-capable participant session bindings, receipts, view revisions and owner-local migrations.
-- [ ] Extend G1/G2/G3 and H4 for audience-only sync/WSS, presence reconstruction, connection replacement and stale-close fencing; spectators must never count toward the connected-player Start minimum.
-- [ ] Implement five-minute accidental-disconnect grace and H5 expiry: retain occupancy during grace, reconnect without renewal, and release/delete on expiry.
-- [ ] Implement D12 spectator Leave with immediate occupancy/session removal and no disconnect grace.
-- [ ] Implement D8 player-to-spectator and D9 spectator-to-player switching atomically before Start, preserving original session expiry; capacity failure must preserve the original role/seat/proof.
-- [ ] Delete player recovery proof on switch to spectator; create fresh player identity and optional fresh proof on switch to player.
-- [ ] Implement best-effort terminal spectator notice followed by identity/session deletion without waiting for application ACK; no terminal spectator reconnect or result-fetch authority.
-- [ ] Test capacity, switch/Start/termination races, grace boundaries, hibernation, stale events, delivery failure and private-data isolation.
+The user authorized complete local Slice 4 at `50249d3`, with no commit/push or later scope. Implementation, repairs, final integrated gates and bounded independent follow-ups are complete locally with no remaining blocking findings. [API choices](api-design.md#local-slice-4-spectator-and-role-switch-transport-choices), [LLD 3.17](lld.md#317-local-spectators-and-pre-start-role-switching-checkpoint) and [the review/evidence report](../reviews/spectator-slice-2026-10-12.md) record the scope and limitations.
 
-References: API D6/D8/D9/D12/G1–G3/H4/H5/H9; DO-047/053–055/067–068/073/091–095. Current sync/stream projections support accounts and players, not spectators.
+- [x] Finalize spectator admission/retry identity, cookie selection and audience projection contracts.
+- [x] Implement D6 spectator admission in Awaiting Players/In Progress, enforcing separate capacity and rejecting terminal admission.
+- [x] Add spectator records and spectator-capable participant session bindings, receipts, view revisions and owner-local migrations.
+- [x] Extend G1/G2/G3 and H4 for audience-only sync/WSS, presence reconstruction, connection replacement and stale-close fencing; spectators must never count toward the connected-player Start minimum.
+- [x] Implement five-minute accidental-disconnect grace and H5 expiry: retain occupancy during grace, reconnect without renewal, and release/delete on expiry.
+- [x] Implement D12 spectator Leave with immediate occupancy/session removal and no disconnect grace.
+- [x] Implement D8 player-to-spectator and D9 spectator-to-player switching atomically before Start, preserving original session expiry; capacity failure must preserve the original role/seat/proof.
+- [x] Delete player recovery proof on switch to spectator; create fresh player identity and optional fresh proof on switch to player.
+- [x] Implement best-effort terminal spectator notice followed by identity/session deletion without waiting for application ACK; no terminal spectator reconnect or result-fetch authority.
+- [x] Test capacity, switch/Start/termination races, grace boundaries, hibernation, stale events, delivery failure and private-data isolation. Final gates pass: 850 native tests per profile, 12 doctests, 498 Workerd cases in 29 suites and 154 real HTTPS/WSS checks.
+
+- [x] Complete independent review sign-off within the documented frozen-source scopes; no remaining blocking findings. Production/artifact hashes match, and post-review stress-fixture changes are timeout-only with full-suite verification.
+
+References: API D6/D8/D9/D12/G1–G3/H4/H5/H9; DO-047/053–055/067–068/073/091–095. Account/player/spectator sync and stream now share the existing connection and delivery boundaries.
 
 ## Slice 5 — Saved-game setup, intentional resume and host transfer
 

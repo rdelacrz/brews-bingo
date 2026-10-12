@@ -61,6 +61,11 @@ pub enum GameAvailability {
         can_join_player: bool,
         can_join_spectator: bool,
     },
+    Spectator {
+        state: GameState,
+        can_join_player: bool,
+        can_join_spectator: bool,
+    },
     Player {
         state: GameState,
         can_join_player: bool,

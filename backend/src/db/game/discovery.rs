@@ -26,6 +26,7 @@ pub enum DiscoveryViewer<'a> {
     Entry(&'a GameCode),
     Account(&'a GameAccountAuthority),
     Player(&'a str),
+    Spectator(&'a str),
 }
 pub struct DiscoveryCut {
     pub checked_at: i64,
@@ -61,6 +62,8 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     return Err(StorageError);
                 }
                 self.fence_read_deadline(observed_at)
+                    .map_err(|_| StorageError)?;
+                self.expire_spectators(observed_at)
                     .map_err(|_| StorageError)
             })
             .map_err(|_| GameError::Storage)
@@ -81,6 +84,9 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             .transaction(|| {
                 validate_schema(self.db)?;
                 let now = self.discovery_clock().map_err(|_| StorageError)?;
+                let expired_audience = self
+                    .expire_discovered_spectators(now)
+                    .map_err(|_| StorageError)?;
                 let result = (|| {
                     let account = match &viewer {
                         DiscoveryViewer::Summary(a) | DiscoveryViewer::Account(a) => Some(*a),
@@ -187,6 +193,10 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                         let s = self.player_session(token, &r, now)?;
                         valid_until = Some(valid_until.map_or(s.expires, |t| t.min(s.expires)));
                     }
+                    if let DiscoveryViewer::Spectator(token) = viewer {
+                        let (_, proof) = self.spectator_discovery_authority(token, &r, now)?;
+                        valid_until = Some(valid_until.map_or(proof, |t| t.min(proof)));
+                    }
                     let configuration = self.configuration()?;
                     let rows = self.db.query(SQL_SELECT_GAME_PLAYERS_COUNT, &[])?;
                     let [row] = rows.as_slice() else {
@@ -196,6 +206,8 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     if count > configuration.player_capacity {
                         return Err(GameError::Storage);
                     }
+                    let spectator_count = self.spectator_count()?;
+                    let can_join_spectator = spectator_count < configuration.spectator_capacity;
                     let can_join_player = r.state == GameState::AwaitingPlayers
                         && count < configuration.player_capacity;
                     let value = match viewer {
@@ -205,13 +217,20 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                             game_code: code.clone(),
                             state: r.state,
                             can_join_player,
-                            can_join_spectator: false,
+                            can_join_spectator,
                         }),
+                        DiscoveryViewer::Spectator(_) => {
+                            DiscoveryValue::Availability(GameAvailability::Spectator {
+                                state: r.state,
+                                can_join_player,
+                                can_join_spectator,
+                            })
+                        }
                         DiscoveryViewer::Player(_) => {
                             DiscoveryValue::Availability(GameAvailability::Player {
                                 state: r.state,
                                 can_join_player,
-                                can_join_spectator: false,
+                                can_join_spectator,
                             })
                         }
                         DiscoveryViewer::Account(a) => {
@@ -226,11 +245,11 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                             DiscoveryValue::Availability(GameAvailability::Account {
                                 state: r.state,
                                 can_join_player,
-                                can_join_spectator: false,
+                                can_join_spectator,
                                 player_count: count,
                                 connected_player_count: connected,
                                 player_capacity: configuration.player_capacity,
-                                spectator_count: 0,
+                                spectator_count,
                                 spectator_capacity: configuration.spectator_capacity,
                                 can_start,
                             })
@@ -250,7 +269,10 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                         self.fence_read_deadline(now).map_err(|_| StorageError)?;
                         Err(GameError::Unauthorized)
                     }
-                    result => result,
+                    result => result.map(|mut cut| {
+                        cut.requires_sync |= expired_audience;
+                        cut
+                    }),
                 };
                 match result {
                     Err(GameError::Storage) => Err(StorageError),

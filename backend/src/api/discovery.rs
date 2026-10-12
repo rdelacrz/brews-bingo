@@ -14,6 +14,7 @@ pub enum AvailabilityView {
     Entry,
     Account,
     Player,
+    Spectator,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DiscoveryCommand {
@@ -161,6 +162,10 @@ pub fn decode_discovery(
         headers,
         super::PLAYER_COOKIE_NAME,
     )?);
+    let spectator = Zeroizing::new(super::decode::named_cookie(
+        headers,
+        super::SPECTATOR_COOKIE_NAME,
+    )?);
     let (command, token) = if path == "/api/games" {
         let mut state = None;
         for (key, value) in query_fields(query)? {
@@ -195,6 +200,7 @@ pub fn decode_discovery(
                         "entry" => AvailabilityView::Entry,
                         "account" => AvailabilityView::Account,
                         "player" => AvailabilityView::Player,
+                        "spectator" => AvailabilityView::Spectator,
                         _ => return Err(ApiError::InvalidInput),
                     })
                 }
@@ -204,10 +210,16 @@ pub fn decode_discovery(
         }
         let view = match view {
             Some(view) => view,
-            None => match (account.is_some(), player.is_some(), game_code.is_some()) {
-                (true, false, false) => AvailabilityView::Account,
-                (false, true, false) => AvailabilityView::Player,
-                (false, false, true) => AvailabilityView::Entry,
+            None => match (
+                account.is_some(),
+                player.is_some(),
+                spectator.is_some(),
+                game_code.is_some(),
+            ) {
+                (true, false, false, false) => AvailabilityView::Account,
+                (false, true, false, false) => AvailabilityView::Player,
+                (false, false, false, true) => AvailabilityView::Entry,
+                (false, false, true, false) => AvailabilityView::Spectator,
                 _ => return Err(ApiError::InvalidInput),
             },
         };
@@ -218,6 +230,7 @@ pub fn decode_discovery(
             AvailabilityView::Entry => None,
             AvailabilityView::Account => account.as_ref().cloned(),
             AvailabilityView::Player => player.as_ref().cloned(),
+            AvailabilityView::Spectator => spectator.as_ref().cloned(),
         };
         (
             DiscoveryCommand::Availability {

@@ -22,6 +22,7 @@ pub use player_recovery::{RecoveryOutcome, RecoverySocketClose};
 mod sync_output;
 #[cfg(target_arch = "wasm32")]
 pub(crate) use sync_output::SyncPlayerBinding;
+mod spectators;
 mod terminal;
 use super::{Database, SqlValue, StorageError};
 use crate::auth::{AuthPolicy, GameAccountAuthority, Runtime};
@@ -48,6 +49,7 @@ use brews_domain::{
     games::{CellPosition, GameCode, GameState},
     ids::{AccountId, CommandId, GameId},
 };
+pub use spectators::{AudienceMutation, SpectatorAuthority, SpectatorTerminalNotice};
 
 // Fixed owner-local statements, shared only inside this Game SQL service.
 const SQL_SELECT_GAME_RECOVERY_ANSWER_VERIFIER_NORMALIZATION_VERSION_UPDATED_AT: &str =
@@ -139,9 +141,8 @@ const SQL_SELECT_GAME_PLAYERS_ALIAS: &str = "SELECT alias FROM game_players WHER
 const SQL_SELECT_GAME_BOARD_PLAYER_IDS: &str =
     "SELECT player_id FROM game_boards ORDER BY player_id LIMIT 21";
 const SQL_CANCEL_UNSTARTED_GAME: &str = "UPDATE game_record SET state=?,revision=?,idle_due=NULL,ended_at=?,cancellation_reason=?,terminal_actor_kind=?,terminal_actor_id=?,published_at=NULL,lobby_opened_at=NULL,last_host_activity=created_at WHERE singleton=1 AND state=? AND revision=?";
-const SQL_DELETE_PLAYER_VIEW_REVISIONS: &str = "DELETE FROM game_view_revisions WHERE view_key<>?";
-const SQL_SELECT_ANY_PLAYER_VIEW_REVISION: &str =
-    "SELECT 1 FROM game_view_revisions WHERE view_key<>? LIMIT 1";
+const SQL_DELETE_PLAYER_VIEW_REVISIONS: &str = "DELETE FROM game_view_revisions WHERE view_key<>? AND NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key)";
+const SQL_SELECT_ANY_PLAYER_VIEW_REVISION: &str = "SELECT 1 FROM game_view_revisions WHERE view_key<>? AND NOT EXISTS(SELECT 1 FROM game_spectators WHERE spectator_id=view_key) LIMIT 1";
 const SQL_SELECT_GAME_RECEIPTS_ACTOR_COMMAND_ID_FINGERPRINT: &str = "SELECT actor,command_id,fingerprint,outcome,completed_at,expires_at FROM game_receipts r WHERE expires_at<=? AND NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id) ORDER BY expires_at LIMIT ?";
 const SQL_DELETE_RECEIPT_BY_ACTOR_AND_COMMAND: &str =
     "DELETE FROM game_receipts WHERE actor=? AND command_id=?";
@@ -159,9 +160,9 @@ const SQL_SELECT_GAME_CONNECTION_GRANTS_GRANT_ID: &str =
     "SELECT grant_id FROM game_connection_grants WHERE expires_at<=? ORDER BY expires_at LIMIT ?";
 const SQL_CHECK_CONNECTION_GRANT_EXISTS_BY_ID: &str =
     "SELECT 1 FROM game_connection_grants WHERE grant_id=?";
-const GAME_DEADLINE_SOURCE_COUNT: usize = 11;
+const GAME_DEADLINE_SOURCE_COUNT: usize = 16;
 // Scalar aggregates avoid Workerd's bounded compound-SELECT terms.
-const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record), (SELECT min(expires_at) FROM game_recovery_buckets), (SELECT min(next_attempt_at) FROM game_socket_closures)";
+const SQL_SELECT_GAME_DEADLINES: &str = "SELECT (SELECT min(idle_due) FROM game_record), (SELECT min(next_attempt_at) FROM game_pending_work), (SELECT min(retain_until) FROM game_admission_contexts), (SELECT min(expires_at) FROM game_receipts r WHERE NOT EXISTS(SELECT 1 FROM game_pending_work p WHERE p.actor=r.actor AND p.command_id=r.command_id)), (SELECT min(expires_at) FROM game_current_connections), (SELECT min(expires_at) FROM game_connection_grants), (SELECT min(expires_at) FROM game_sessions), (SELECT min(expires_at) FROM game_terminal_views), (SELECT min(history_expires_at) FROM game_record), (SELECT min(expires_at) FROM game_recovery_buckets), (SELECT min(next_attempt_at) FROM game_socket_closures), (SELECT min(grace_expires_at) FROM game_spectators WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(expires_at) FROM game_spectator_sessions WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(retain_until) FROM game_spectator_contexts WHERE NOT EXISTS(SELECT 1 FROM game_spectator_terminal_work)), (SELECT min(expires_at) FROM game_spectator_notices WHERE EXISTS(SELECT 1 FROM game_spectator_terminal_work WHERE attempted=0)), (SELECT min(next_attempt_at) FROM game_spectator_terminal_work)";
 const SQL_UPDATE_PENDING_WORK_RETRY: &str =
     "UPDATE game_pending_work SET attempt_count=?,next_attempt_at=? WHERE operation_id=?";
 const SQL_INSERT_CANCELLED_GAME_RECORD: &str = "INSERT INTO game_record(singleton,game_id,creator_id,creation_command,fingerprint,host_id,host_assignment_revision,state,revision,created_at,last_host_activity,ended_at,cancellation_reason,terminal_actor_kind,terminal_actor_id) VALUES(1,?,?,?,?,?,0,?,1,?,?,?,?,'system',NULL)";
@@ -196,7 +197,7 @@ const SQL_DELETE_GAME_CONNECTION_GRANTS_ALL: &str = "DELETE FROM game_connection
 const SQL_SELECT_ANY_GAME_CONNECTION_GRANT: &str = "SELECT 1 FROM game_connection_grants LIMIT 1";
 
 const SYSTEM_ACTOR: &str = "system";
-const OBSERVED_CONNECTION_LIMIT: usize = 100;
+const OBSERVED_CONNECTION_LIMIT: usize = crate::game::GAME_CURRENT_CONNECTION_LIMIT;
 // Shared storage budget for account anchors and both kinds of socket preparation.
 const CONNECTION_GRANT_LIMIT: usize = OBSERVED_CONNECTION_LIMIT * 2;
 const RETAINED_PLAYER_LIMIT: usize = 20;
@@ -1423,8 +1424,8 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             players,
             calls: call_views,
             connected_player_count: count,
-            spectator_count: 0,
-            connected_spectator_count: 0,
+            spectator_count: self.spectator_count()?,
+            connected_spectator_count: self.connected_spectator_count(now)?,
         })
     }
     pub fn player_view(&self, token: &str) -> Result<GameView, GameError> {
@@ -1484,6 +1485,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         {
             return Ok(false);
         }
+        self.terminal_spectators(&r, GameState::Cancelled, None, now)?;
         let rev = advance(r.revision)?;
         let host_view_revision = advance(self.view_revision(HOST_VIEW)?)?;
         self.db.execute(
@@ -2068,6 +2070,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
                 .filter(|r| r.state != GameState::Cancelled)
             {
                 self.reconcile_presence(observed, &r, now)?;
+                self.reconcile_spectators(observed, now)?;
             }
             Ok(())
         })
@@ -2107,6 +2110,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             .transaction(|| {
                 validate_schema(self.db)?;
                 let now = self.observe_clock().map_err(|_| StorageError)?;
+                self.expire_spectators(now).map_err(|_| StorageError)?;
                 let expired = self.expire_due(now).map_err(|_| StorageError)?;
                 if expired && reject_expired {
                     return Ok(Err(GameError::Expired));

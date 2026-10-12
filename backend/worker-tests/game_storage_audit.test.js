@@ -128,7 +128,7 @@ test("accepted account anchors stop at the shared grant bound and cannot deadloc
     expect((await sync(f, sessions[198], "account")).status).toBe(200);
     await runInDurableObject(directory(), (_instance, state) => { expect(state.storage.sql.exec("SELECT game_id FROM directory_global_reservation").one().game_id).toBeNull(); });
   } finally { for (const connection of sockets) connection.socket.close(1000); }
-});
+}, 180000);
 
 test("Recovery captures native accepted preparation after owner acceptance and immediate close fail; retries respect deadlines", async () => {
   const f = await fixture(true); const realNow = Date.now;

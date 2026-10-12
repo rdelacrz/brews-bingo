@@ -267,3 +267,37 @@ pub const TERMINAL_ACTOR_ACCOUNT: &str = "account";
 pub const TERMINAL_ACTOR_SYSTEM: &str = "system";
 
 pub const START_CONNECTED_PLAYER_MIN: u8 = 2;
+
+pub(crate) const SPECTATOR_NOTICE_ATTEMPT_MS: i64 = 30_000;
+pub(crate) const GAME_CURRENT_CONNECTION_LIMIT: usize = 100;
+pub const SPECTATOR_KIND: &str = "spectator";
+pub const SPECTATOR_GRACE_MS: i64 = 300_000;
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SpectatorConnectionGrant {
+    pub(crate) game: GameId,
+    pub(crate) session: SessionId,
+    pub(crate) spectator: brews_domain::ids::SpectatorId,
+    pub(crate) connection: ConnectionId,
+    pub(crate) epoch: i64,
+    pub(crate) expires: i64,
+}
+impl SpectatorConnectionGrant {
+    pub fn game_id(&self) -> GameId {
+        self.game
+    }
+    pub fn session_id(&self) -> SessionId {
+        self.session
+    }
+    pub fn spectator_id(&self) -> brews_domain::ids::SpectatorId {
+        self.spectator
+    }
+    pub fn connection_id(&self) -> ConnectionId {
+        self.connection
+    }
+    pub fn epoch(&self) -> i64 {
+        self.epoch
+    }
+    pub fn expires_at(&self) -> i64 {
+        self.expires
+    }
+}

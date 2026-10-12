@@ -212,6 +212,14 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
                             .ok_or(DiscoveryError::Unauthorized)?,
                     ),
                 },
+                AvailabilityView::Spectator => DiscoveryAction::Spectator {
+                    token: game_peers::SecretToken::new(
+                        decoded
+                            .session_token
+                            .as_deref()
+                            .ok_or(DiscoveryError::Unauthorized)?,
+                    ),
+                },
                 AvailabilityView::Player => DiscoveryAction::Player {
                     token: game_peers::SecretToken::new(
                         decoded

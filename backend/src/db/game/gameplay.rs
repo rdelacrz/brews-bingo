@@ -176,6 +176,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                 &[text(GameState::InProgress), int(rev), int(commit_now)],
             )?;
             self.set_view_revision(HOST_VIEW, view)?;
+            self.advance_audience_views()?;
             let receipt = self.store_receipt(
                 &actor,
                 command,
@@ -415,6 +416,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             }
             self.advance_pending_start_projection(record.revision, next_game_revision)?;
             self.set_view_revision(HOST_VIEW, next_host_revision)?;
+            self.advance_audience_views()?;
             for player in &players {
                 let key = player.to_string();
                 let next = advance(self.view_revision(&key)?)?;

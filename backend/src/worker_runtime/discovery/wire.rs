@@ -17,6 +17,7 @@ pub(in crate::worker_runtime) enum DiscoveryAction {
     Entry { game_code: GameCode },
     Account { token: SecretToken },
     Player { token: SecretToken },
+    Spectator { token: SecretToken },
 }
 #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -73,8 +74,8 @@ pub(in crate::worker_runtime) struct DiscoveryOwnerReply {
 fn live(state: GameState) -> bool {
     matches!(state, GameState::AwaitingPlayers | GameState::InProgress)
 }
-fn flags(state: GameState, player: bool, spectator: bool) -> bool {
-    !spectator && (!player || state == GameState::AwaitingPlayers)
+fn flags(state: GameState, player: bool, _spectator: bool) -> bool {
+    !player || state == GameState::AwaitingPlayers
 }
 pub(in crate::worker_runtime) fn verify(
     request: &DiscoveryOwnerRequest,
@@ -155,13 +156,29 @@ pub(in crate::worker_runtime) fn verify(
                 && (2..=brews_domain::games::PLAYER_CAPACITY_MAX).contains(player_capacity)
                 && player_count <= player_capacity
                 && connected_player_count <= player_count
-                && *spectator_count == 0
+                && spectator_count <= spectator_capacity
+                && *can_join_spectator == (spectator_count < spectator_capacity)
                 && *spectator_capacity <= brews_domain::games::SPECTATOR_CAPACITY_MAX
                 && (!*can_start
                     || (*state == GameState::AwaitingPlayers
                         && *connected_player_count >= crate::game::START_CONNECTED_PLAYER_MIN))
                 && *can_join_player
                     == (*state == GameState::AwaitingPlayers && player_count < player_capacity)
+        }
+        (
+            DiscoveryAction::Spectator { .. },
+            DiscoveryOutcome::Availability {
+                availability:
+                    GameAvailability::Spectator {
+                        state,
+                        can_join_player,
+                        can_join_spectator,
+                    },
+            },
+        ) => {
+            reply.valid_until.is_some()
+                && live(*state)
+                && flags(*state, *can_join_player, *can_join_spectator)
         }
         (
             DiscoveryAction::Player { .. },
@@ -321,7 +338,7 @@ mod tests {
         if let DiscoveryOutcome::Entry { entry } = &mut reply.outcome {
             entry.can_join_spectator = true;
         }
-        assert!(verify(&request, &reply, 1000).is_err());
+        assert!(verify(&request, &reply, 1000).is_ok());
     }
 
     #[test]

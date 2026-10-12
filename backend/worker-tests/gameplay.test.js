@@ -346,7 +346,7 @@ test("lost genuine terminal release ACK remains Pending and alarm retry cannot r
   for (const connection of connections) connection.socket.close(1000);
 });
 
-test("native registry uncertainty schedules exact durable recovery and releases after hibernation while enumeration still fails", async () => {
+test("native registry uncertainty releases immediately and schedules exact transport recovery through hibernation", async () => {
   const { id, actor, connections } = await startedGame();
   await expect.poll(() => runInDurableObject(owner(id), (_instance, state) =>
     state.storage.sql.exec("SELECT count(*) AS count FROM game_delivery_pending").one().count), { timeout: 5000 }).toBe(0);
@@ -392,11 +392,13 @@ test("native registry uncertainty schedules exact durable recovery and releases 
     expect(mutation.genuineRegistryArray).toBe(true);
     expect(mutation.registryCalls).toBeGreaterThan(1);
     expect(mutation.state).toBe("cancelled");
-    expect(mutation.pending).toEqual([{ kind: "release", next_attempt_at: expect.any(Number) }]);
+    expect(mutation.pending).toEqual([]);
+    const immediatelyReleased = await runInDurableObject(env.GAME_DIRECTORY.get(env.GAME_DIRECTORY.idFromName("directory")), (_instance, state) =>
+      [...state.storage.sql.exec("SELECT game_id FROM directory_global_reservation WHERE game_id=?", id)]);
+    expect(immediatelyReleased).toEqual([]);
     expect(mutation.credit).toEqual(creditBefore);
-    const coreDue = mutation.pending[0].next_attempt_at;
-    const due = coreDue <= fixedNow ? fixedNow + 1000 : coreDue;
-    expect.soft(mutation.alarm).toBe(due);
+    const due = fixedNow + 1000;
+    expect(mutation.alarm).toBe(due);
     // Reconstruct the actual owner: the Rust memory retry flag cannot be the recovery authority.
     await evictDurableObject(owner(id));
     Date.now = () => due;

@@ -155,6 +155,130 @@ impl GameObject {
         gate()?;
         Ok(registry)
     }
+    async fn audience_output(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        ingress: &GameIngress,
+        out: crate::db::game::AudienceMutation,
+    ) -> Result<GameOwnerResponse, GameError> {
+        let gate = || {
+            service
+                .audience_mutation_deadline(
+                    &out,
+                    ingress.admission_token.as_deref(),
+                    ingress.session_token.as_deref(),
+                )
+                .map(|_| ())
+        };
+        let _ = self.broadcast(service, db).await;
+        let persisted = async {
+            gate()?;
+            self.persist_recovery_with_gate(service, db, gate).await?;
+            service.audience_mutation_deadline(
+                &out,
+                ingress.admission_token.as_deref(),
+                ingress.session_token.as_deref(),
+            )
+        }
+        .await;
+        let valid_until = match persisted {
+            Ok(deadline) => deadline,
+            Err(error) => {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+                return Err(error);
+            }
+        };
+        let cookie = out
+            .participant
+            .cookie
+            .as_ref()
+            .map_or(GameCookieWire::None, |cookie| {
+                if out.clears_spectator_cookie {
+                    GameCookieWire::Player {
+                        token: cookie.token().to_owned(),
+                        expires_at: cookie.expires_at(),
+                    }
+                } else {
+                    GameCookieWire::Spectator {
+                        token: cookie.token().to_owned(),
+                        expires_at: cookie.expires_at(),
+                    }
+                }
+            });
+        Ok(GameOwnerResponse::Audience {
+            response: out.participant.response,
+            cookie,
+            valid_until,
+            clear_player_cookie: out.clears_player_cookie,
+            clear_spectator_cookie: out.clears_spectator_cookie,
+        })
+    }
+    async fn release_audience(
+        &self,
+        attempt: super::game_wire::AudienceReleaseAttempt,
+    ) -> Result<super::game_wire::AudienceReleaseReply, GameError> {
+        use super::game_wire::AudienceReleaseRequest;
+        let request = &attempt.request;
+        let game = match request {
+            AudienceReleaseRequest::Sync { authority, .. } => authority.game_id,
+            AudienceReleaseRequest::Receipt { receipt, .. } => receipt.game_id,
+            AudienceReleaseRequest::Context { game_id, .. } => *game_id,
+        };
+        if !self.owns_game(game)? {
+            return Err(GameError::Unauthorized);
+        }
+        let db = self.database()?;
+        let rt = WorkerRuntime;
+        let service = self.service(&db, &rt)?;
+        let gate = || match request {
+            AudienceReleaseRequest::Sync { token, authority } => service
+                .release_spectator_output(token, &authority.binding())
+                .map(|cut| (cut.valid_until, cut.checked_at)),
+            AudienceReleaseRequest::Receipt {
+                token,
+                context,
+                receipt,
+            } => service
+                .release_audience_receipt(receipt, token.as_deref(), context.as_deref())
+                .map(|deadline| (deadline, rt.now_ms())),
+            AudienceReleaseRequest::Context {
+                token,
+                game_code,
+                game_id,
+                expires_at,
+            } => service
+                .release_spectator_context(token, *game_id, game_code, *expires_at)
+                .map(|deadline| (deadline, rt.now_ms())),
+        };
+        let initial = gate();
+        self.state
+            .storage()
+            .sync()
+            .await
+            .map_err(|_| GameError::Storage)?;
+        let (original_cap, _) = initial?;
+        let (deadline, checked_at) = match gate() {
+            Ok(d) => d,
+            Err(e) => {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+                return Err(e);
+            }
+        };
+        Ok(super::game_wire::AudienceReleaseReply::Released {
+            binding: attempt.binding().map_err(|_| GameError::Storage)?,
+            valid_until: deadline.min(original_cap),
+            checked_at,
+        })
+    }
     async fn release_player_sync(
         &self,
         request: super::game_wire::PlayerSyncReleaseRequest,
@@ -334,7 +458,11 @@ impl GameObject {
         if hint.connection_id != close.connection
             || hint.session_id != close.session
             || hint.authentication_epoch != close.epoch
-            || hint.viewer != Viewer::Player(close.player)
+            || !match hint.viewer {
+                Viewer::Player(p) => p == close.player,
+                Viewer::Spectator(s) => s.to_string() == close.player.to_string(),
+                Viewer::Account(_) => false,
+            }
         {
             return Err(GameError::Storage);
         }
@@ -404,8 +532,8 @@ impl GameObject {
             .map_err(|_| GameError::Storage)?;
         // Required SQL/peer recovery is independent of best-effort transport.
         self.persist_recovery(&service, &db).await?;
-        let close_result = self.close_recovered_sockets(&service).await;
         let socket_result = self.broadcast(&service, &db).await;
+        let close_result = self.close_recovered_sockets(&service).await;
         let due = service.pending_work(RECOVERY_BATCH_LIMIT)?;
         for snapshot in due {
             if snapshot.next_attempt_at() > rt.now_ms()
@@ -455,7 +583,11 @@ impl GameObject {
         // Leave and Recovery capture current/prepared predecessors before best-effort transport.
         if !matches!(
             ingress.operation,
-            GameAction::LeavePlayer | GameAction::RecoverPlayer
+            GameAction::LeavePlayer
+                | GameAction::RecoverPlayer
+                | GameAction::LeaveSpectator
+                | GameAction::SwitchToPlayer
+                | GameAction::SwitchToSpectator
         ) {
             self.broadcast(&service, &db).await?;
         }
@@ -469,6 +601,115 @@ impl GameObject {
         let command = ingress.command_id;
         let payload = ingress.payload().map_err(|_| GameError::InvalidInput)?;
         match (ingress.operation, payload) {
+            (GameAction::SpectatorContext, GamePayload::AdmissionContext(input)) => {
+                let outcome = service.spectator_admission_context(
+                    &input.game_code,
+                    ingress.admission_token.as_deref(),
+                    ingress.session_token.as_deref(),
+                )?;
+                self.persist(&service, &db).await?;
+                let expires = match outcome.response {
+                    GameResponse::AdmissionContext { expires_at } => expires_at,
+                    _ => return Err(GameError::Storage),
+                };
+                let selected = outcome
+                    .cookie
+                    .as_ref()
+                    .map(crate::game::SecretCookie::token)
+                    .or(ingress.session_token.as_deref())
+                    .or(ingress.admission_token.as_deref())
+                    .ok_or(GameError::Unauthorized)?;
+                let deadline = match service.release_spectator_context(
+                    selected,
+                    id,
+                    &input.game_code,
+                    expires,
+                ) {
+                    Ok(deadline) => deadline,
+                    Err(error) => {
+                        self.state
+                            .storage()
+                            .sync()
+                            .await
+                            .map_err(|_| GameError::Storage)?;
+                        return Err(error);
+                    }
+                };
+                let cookie = outcome
+                    .cookie
+                    .as_ref()
+                    .map_or(GameCookieWire::None, |cookie| {
+                        GameCookieWire::SpectatorAdmission {
+                            token: cookie.token().to_owned(),
+                            expires_at: cookie.expires_at(),
+                        }
+                    });
+                Ok(GameOwnerResponse::Audience {
+                    response: outcome.response,
+                    cookie,
+                    valid_until: Some(deadline),
+                    clear_player_cookie: false,
+                    clear_spectator_cookie: false,
+                })
+            }
+            (GameAction::JoinSpectator, GamePayload::AdmissionContext(input)) => {
+                let out = service.join_spectator(
+                    command.ok_or(GameError::InvalidInput)?,
+                    ingress.admission_token.as_deref().unwrap_or(""),
+                    ingress.session_token.as_deref(),
+                    &input.game_code,
+                )?;
+                self.audience_output(&service, &db, ingress, out).await
+            }
+            (GameAction::SwitchToSpectator, GamePayload::Empty) => {
+                let out =
+                    service.switch_to_spectator(command.ok_or(GameError::InvalidInput)?, token)?;
+                self.audience_output(&service, &db, ingress, out).await
+            }
+            (GameAction::SwitchToPlayer, GamePayload::JoinPlayer(input)) => {
+                let out = service.switch_to_player(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    input,
+                )?;
+                self.audience_output(&service, &db, ingress, out).await
+            }
+            (GameAction::LeaveSpectator, GamePayload::LeavePlayer(input)) => {
+                let out = service.leave_spectator(
+                    command.ok_or(GameError::InvalidInput)?,
+                    token,
+                    input.expected_state,
+                )?;
+                self.audience_output(&service, &db, ingress, out).await
+            }
+            (GameAction::Sync, GamePayload::Empty)
+                if ingress.view == Some(super::game_wire::ViewSelector::Spectator) =>
+            {
+                let (response, mut authority) =
+                    service.sync_spectator(token, ingress.known_revision)?;
+                let initial = service.release_spectator_output(token, &authority);
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+                authority.valid_until = authority.valid_until.min(initial?.valid_until);
+                match service.release_spectator_output(token, &authority) {
+                    Ok(cut) => authority.valid_until = authority.valid_until.min(cut.valid_until),
+                    Err(error) => {
+                        self.state
+                            .storage()
+                            .sync()
+                            .await
+                            .map_err(|_| GameError::Storage)?;
+                        return Err(error);
+                    }
+                }
+                Ok(GameOwnerResponse::AudienceSynced {
+                    response,
+                    authority: authority.into(),
+                })
+            }
             (GameAction::Create, GamePayload::Create(input)) => {
                 self.persist(&service, &db).await?;
                 let work = game_peers::creation_work(&self.env, id)
@@ -755,7 +996,9 @@ impl GameObject {
                             &self.observed(&service)?,
                         )
                     }
-                    None => return Err(GameError::InvalidInput),
+                    Some(super::game_wire::ViewSelector::Spectator) | None => {
+                        return Err(GameError::InvalidInput);
+                    }
                 };
                 self.persist(&service, &db).await?;
                 initial?.encode_json().map_err(|_| GameError::Storage)?;
@@ -815,7 +1058,9 @@ impl GameObject {
                         };
                         (response, deadline, Some(wire), None)
                     }
-                    None => return Err(GameError::InvalidInput),
+                    Some(super::game_wire::ViewSelector::Spectator) | None => {
+                        return Err(GameError::InvalidInput);
+                    }
                 };
                 response.encode_json().map_err(|_| GameError::Storage)?;
                 Ok(GameOwnerResponse::Synced {
@@ -839,7 +1084,9 @@ impl GameObject {
                         let account = authority.account_id();
                         (service.exit_account(authority, command)?, Some(account))
                     }
-                    None => return Err(GameError::InvalidInput),
+                    Some(super::game_wire::ViewSelector::Spectator) | None => {
+                        return Err(GameError::InvalidInput);
+                    }
                 };
                 // The owner has revoked every same-principal binding before physical closure.
                 self.persist(&service, &db).await?;
@@ -1007,8 +1254,12 @@ impl GameObject {
         response: GameResponse,
         terminal: bool,
     ) -> Result<GameOwnerResponse, GameError> {
-        // Schedule durable recovery before any post-commit peer/output await.
-        self.persist(service, db).await?;
+        // Terminal cleanup/release proceed even when native socket enumeration is unavailable.
+        if terminal {
+            self.persist_recovery(service, db).await?;
+        } else {
+            self.persist(service, db).await?;
+        }
         let delivery = self.broadcast(service, db).await;
         let response = if terminal {
             // Final delivery is best-effort; viewer ACK/Exit never gates release.
@@ -1237,6 +1488,7 @@ impl DurableObject for GameObject {
                     | "/history"
                     | "/discovery"
                     | "/sync-player-release"
+                    | "/audience-release"
             )
         {
             return Response::error("invalid private game request", 400);
@@ -1251,6 +1503,24 @@ impl DurableObject for GameObject {
             .map_err(|_| worker::Error::RustError("invalid private game request".into()))?
             .to_vec(),
         );
+        if path == "/audience-release" {
+            let request =
+                match game_peers::decode::<super::game_wire::AudienceReleaseAttempt>(&bytes) {
+                    Ok(r) => r,
+                    Err(_) => return Response::error("invalid audience release", 400),
+                };
+            let binding = request
+                .binding()
+                .map_err(|_| worker::Error::RustError("invalid audience release".into()))?;
+            let reply = match self.release_audience(request).await {
+                Ok(r) => r,
+                Err(e) => super::game_wire::AudienceReleaseReply::Rejected {
+                    binding,
+                    code: rejection(e),
+                },
+            };
+            return Response::from_json(&reply);
+        }
         if path == "/sync-player-release" {
             let request =
                 match game_peers::decode::<super::game_wire::PlayerSyncReleaseRequest>(&bytes) {
@@ -1309,12 +1579,37 @@ impl DurableObject for GameObject {
                 if ingress.operation == GameAction::Stream {
                     match self.upgrade(&ingress).await {
                         Ok(response) => return Ok(response),
-                        Err(error) => GameOwnerResponse::Rejected {
-                            code: rejection(error),
-                        },
+                        Err(error) => {
+                            if ingress.view == Some(super::game_wire::ViewSelector::Spectator)
+                                && self.state.storage().sync().await.is_err()
+                            {
+                                return Response::from_json(&GameOwnerResponse::Rejected {
+                                    code: GameRejection::Unavailable,
+                                });
+                            }
+                            GameOwnerResponse::Rejected {
+                                code: rejection(error),
+                            }
+                        }
                     }
                 } else {
-                    self.execute(&ingress).await.unwrap_or_else(|error| {
+                    let result = self.execute(&ingress).await;
+                    if result.is_err()
+                        && (matches!(
+                            ingress.operation,
+                            GameAction::SpectatorContext
+                                | GameAction::JoinSpectator
+                                | GameAction::SwitchToSpectator
+                                | GameAction::SwitchToPlayer
+                                | GameAction::LeaveSpectator
+                        ) || ingress.view == Some(super::game_wire::ViewSelector::Spectator))
+                        && self.state.storage().sync().await.is_err()
+                    {
+                        return Response::from_json(&GameOwnerResponse::Rejected {
+                            code: GameRejection::Unavailable,
+                        });
+                    }
+                    result.unwrap_or_else(|error| {
                         use crate::observability::{
                             PlayerLifecycleOperation, player_lifecycle_failure,
                         };

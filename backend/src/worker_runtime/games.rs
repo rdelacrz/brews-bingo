@@ -195,6 +195,132 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         .validate_for(&ingress)
         .map_err(|_| ApiError::Unavailable)?;
     match &result {
+        GameOwnerResponse::AudienceSynced {
+            response,
+            authority,
+        } => {
+            let release = super::game_wire::AudienceReleaseRequest::Sync {
+                token: ingress
+                    .session_token
+                    .as_deref()
+                    .ok_or(ApiError::Unavailable)?
+                    .to_owned(),
+                authority: authority.clone(),
+            };
+            if let Some(failure) =
+                release_audience_output(env, &ingress, release, authority.valid_until).await?
+            {
+                return Ok(failure);
+            }
+            json_response(
+                200,
+                response.encode_json().map_err(|_| ApiError::Unavailable)?,
+            )
+        }
+        GameOwnerResponse::Audience {
+            response,
+            cookie,
+            valid_until,
+            clear_player_cookie,
+            clear_spectator_cookie,
+        } => {
+            if let Some(deadline) = valid_until {
+                let release =
+                    if let brews_contracts::games::GameResponse::AdmissionContext { expires_at } =
+                        response
+                    {
+                        let GamePayload::AdmissionContext(input) =
+                            ingress.payload().map_err(|_| ApiError::Unavailable)?
+                        else {
+                            return Err(ApiError::Unavailable);
+                        };
+                        let token = match cookie {
+                            GameCookieWire::SpectatorAdmission { token, .. } => token.as_str(),
+                            _ => ingress
+                                .session_token
+                                .as_deref()
+                                .or(ingress.admission_token.as_deref())
+                                .ok_or(ApiError::Unavailable)?,
+                        };
+                        super::game_wire::AudienceReleaseRequest::Context {
+                            token: token.to_owned(),
+                            game_code: input.game_code,
+                            game_id,
+                            expires_at: *expires_at,
+                        }
+                    } else {
+                        let receipt = match response {
+                            brews_contracts::games::GameResponse::ParticipantChanged {
+                                receipt,
+                            }
+                            | brews_contracts::games::GameResponse::Committed { receipt } => {
+                                receipt
+                            }
+                            _ => return Err(ApiError::Unavailable),
+                        };
+                        let current = match cookie {
+                            GameCookieWire::Spectator { token, .. }
+                            | GameCookieWire::Player { token, .. } => Some(token.clone()),
+                            _ => ingress.session_token.clone(),
+                        };
+                        super::game_wire::AudienceReleaseRequest::Receipt {
+                            token: current,
+                            context: ingress.admission_token.clone(),
+                            receipt: receipt.clone(),
+                        }
+                    };
+                if let Some(failure) =
+                    release_audience_output(env, &ingress, release, *deadline).await?
+                {
+                    return Ok(failure);
+                }
+            }
+            let mut output = json_response(
+                200,
+                response.encode_json().map_err(|_| ApiError::Unavailable)?,
+            )?;
+            match cookie {
+                GameCookieWire::Spectator { token, expires_at } => set_cookie(
+                    &mut output,
+                    api::SPECTATOR_COOKIE_NAME,
+                    game_id,
+                    token,
+                    *expires_at,
+                )?,
+                GameCookieWire::SpectatorAdmission { token, expires_at } => set_cookie(
+                    &mut output,
+                    api::SPECTATOR_ADMISSION_COOKIE_NAME,
+                    game_id,
+                    token,
+                    *expires_at,
+                )?,
+                GameCookieWire::Player { token, expires_at } => set_cookie(
+                    &mut output,
+                    api::PLAYER_COOKIE_NAME,
+                    game_id,
+                    token,
+                    *expires_at,
+                )?,
+                GameCookieWire::None => {}
+                _ => return Err(ApiError::Unavailable),
+            }
+            for (clear, name) in [
+                (*clear_player_cookie, api::PLAYER_COOKIE_NAME),
+                (*clear_spectator_cookie, api::SPECTATOR_COOKIE_NAME),
+            ] {
+                if clear {
+                    output.headers_mut().append(
+                        "set-cookie",
+                        HeaderValue::from_str(&format!(
+                            "{name}=; Secure; HttpOnly; Path={}; SameSite=Strict; Max-Age=0",
+                            api::game_cookie_path(game_id)
+                        ))
+                        .map_err(|_| ApiError::Unavailable)?,
+                    );
+                }
+            }
+            Ok(output)
+        }
         GameOwnerResponse::Membership {
             response,
             valid_until,
@@ -391,7 +517,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                 recovery_output(game_id, receipt, game.as_ref(), None)
             }
         }
-        GameOwnerResponse::Rejected { code } => rejected(*code),
+        GameOwnerResponse::Rejected { code } => rejected_spectator_entry(&ingress, *code),
         GameOwnerResponse::Synced {
             response,
             valid_until,
@@ -489,6 +615,9 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             let bytes = response.encode_json().map_err(|_| ApiError::Unavailable)?;
             let mut output = json_response(response.status(), bytes)?;
             match cookie {
+                GameCookieWire::Spectator { .. } | GameCookieWire::SpectatorAdmission { .. } => {
+                    return Err(ApiError::Unavailable);
+                }
                 GameCookieWire::None => {}
                 GameCookieWire::Admission { token, expires_at } => set_cookie(
                     &mut output,
@@ -570,6 +699,75 @@ fn recovery_output(
     }
     Ok(response)
 }
+async fn release_audience_output(
+    env: &Env,
+    ingress: &GameIngress,
+    request: super::game_wire::AudienceReleaseRequest,
+    deadline: i64,
+) -> Result<Option<Response>, ApiError> {
+    let game = ingress.game_id.ok_or(ApiError::Unavailable)?;
+    let before = super::WorkerRuntime.now_ms();
+    if before < 0 {
+        return Err(ApiError::Unavailable);
+    }
+    if before >= deadline {
+        fence_recovery_output(env, ingress, deadline, before).await?;
+        return rejected(GameRejection::Unauthorized).map(Some);
+    }
+    let attempt =
+        super::game_wire::AudienceReleaseAttempt::new(request, &super::WorkerRuntime, before)
+            .map_err(|_| ApiError::Unavailable)?;
+    let binding = attempt.binding().map_err(|_| ApiError::Unavailable)?;
+    let checked: super::game_wire::AudienceReleaseReply = game_peers::call(
+        env,
+        "GAMES",
+        &game.to_string(),
+        "/audience-release",
+        &attempt,
+        super::game_wire::GAME_WIRE_MAX_BYTES,
+    )
+    .await
+    .map_err(|_| ApiError::Unavailable)?;
+    match &checked {
+        super::game_wire::AudienceReleaseReply::Released { binding: ack, .. }
+        | super::game_wire::AudienceReleaseReply::Rejected { binding: ack, .. } => {
+            if ack != &binding {
+                return Err(ApiError::Unavailable);
+            }
+        }
+    }
+    let now = super::WorkerRuntime.now_ms();
+    if now < 0 {
+        return Err(ApiError::Unavailable);
+    }
+    if now >= deadline {
+        fence_recovery_output(env, ingress, deadline, now).await?;
+        return rejected(GameRejection::Unauthorized).map(Some);
+    }
+    match checked {
+        super::game_wire::AudienceReleaseReply::Rejected { code, .. } => rejected(code).map(Some),
+        super::game_wire::AudienceReleaseReply::Released {
+            valid_until,
+            checked_at,
+            binding: ack,
+        } => {
+            if ack != binding
+                || checked_at > now
+                || valid_until <= 0
+                || valid_until > deadline
+                || checked_at < 0
+                || checked_at >= valid_until
+            {
+                return Err(ApiError::Unavailable);
+            }
+            if now >= valid_until {
+                fence_recovery_output(env, ingress, valid_until, now).await?;
+                return rejected(GameRejection::Unauthorized).map(Some);
+            }
+            Ok(None)
+        }
+    }
+}
 async fn fence_recovery_output(
     env: &Env,
     ingress: &GameIngress,
@@ -594,7 +792,8 @@ async fn fence_recovery_output(
                     ingress
                         .session_token
                         .as_deref()
-                        .ok_or(ApiError::Unavailable)?,
+                        .or(ingress.admission_token.as_deref())
+                        .unwrap_or(""),
                 ),
             }
         },
@@ -659,6 +858,34 @@ fn json_response(status: u16, bytes: Vec<u8>) -> Result<Response, ApiError> {
         .body(Body::from(bytes))
         .map_err(|_| ApiError::Unavailable)
 }
+fn rejected_spectator_entry(
+    ingress: &GameIngress,
+    code: GameRejection,
+) -> Result<Response, ApiError> {
+    let mut response = rejected(code)?;
+    if matches!(code, GameRejection::Unauthorized)
+        && matches!(
+            ingress.operation,
+            GameAction::SpectatorContext | GameAction::JoinSpectator
+        )
+        && ingress.session_token.is_some()
+    {
+        // An expired grace seat leaves a longer-lived HttpOnly browser cookie.
+        // Clear only that selected credential; retry still requires fresh code proof.
+        let game = ingress.game_id.ok_or(ApiError::Unavailable)?;
+        response.headers_mut().insert(
+            "set-cookie",
+            HeaderValue::from_str(&format!(
+                "{}=; Secure; HttpOnly; Path={}; SameSite=Strict; Max-Age=0",
+                api::SPECTATOR_COOKIE_NAME,
+                api::game_cookie_path(game)
+            ))
+            .map_err(|_| ApiError::Unavailable)?,
+        );
+    }
+    Ok(response)
+}
+
 pub(super) fn rejected(code: GameRejection) -> Result<Response, ApiError> {
     let (status, code, message) = match code {
         GameRejection::InvalidInput => (400, "invalid_input", "invalid game command"),
