@@ -27977,6 +27977,206 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tests_local_readiness",
+      "label": "local_readiness.rs",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_measureddb",
+      "label": "MeasuredDb",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L37",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_sqlite",
+      "label": "Sqlite",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_cell",
+      "label": "Cell",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_refcell",
+      "label": "RefCell",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_vec",
+      "label": "Vec",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "json",
+      "label": "Json",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_binding",
+      "label": "binding()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L43",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_value",
+      "label": "Value",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_measureddb_query",
+      "label": ".query()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_result",
+      "label": "Result",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_row",
+      "label": "Row",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_measureddb_execute",
+      "label": ".execute()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L104",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_measureddb_transaction",
+      "label": ".transaction()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_fnonce",
+      "label": "FnOnce",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_t",
+      "label": "T",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_osruntime",
+      "label": "OsRuntime",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L114",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_osruntime_now_ms",
+      "label": ".now_ms()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L116",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_osruntime_fill_random",
+      "label": ".fill_random()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L124",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_timed",
+      "label": "timed()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L130",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_history_measurements",
+      "label": "history_measurements()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L137",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_fresh_command",
+      "label": "fresh_command()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L230",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_rs_commandid",
+      "label": "CommandId",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_recovery_owner",
+      "label": "recovery_owner()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L238",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_local_readiness_local_slice9_measurements",
+      "label": "local_slice9_measurements()",
+      "file_type": "code",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L352",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tests_operator_https_wss",
       "label": "operator_https_wss.py",
       "file_type": "code",
@@ -29129,6 +29329,454 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tools_release_gate",
+      "label": "release_gate.py",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_gateerror",
+      "label": "GateError",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L32",
+      "_origin": "ast"
+    },
+    {
+      "id": "exception",
+      "label": "Exception",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_kill_group",
+      "label": "kill_group()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L41",
+      "_origin": "ast"
+    },
+    {
+      "id": "popen",
+      "label": "Popen",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_cancel_children",
+      "label": "cancel_children()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L48",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_digest",
+      "label": "digest()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L55",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_save",
+      "label": "save()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L59",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_source_hashes",
+      "label": "source_hashes()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L64",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_execute",
+      "label": "execute()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L79",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_native_inventory",
+      "label": "native_inventory()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L111",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_parse_native",
+      "label": "parse_native()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L122",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_parse_doctests",
+      "label": "parse_doctests()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L126",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_parse_worker",
+      "label": "parse_worker()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L141",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_reconcile_workers",
+      "label": "reconcile_workers()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L157",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_parse_tls",
+      "label": "parse_tls()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L186",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_measurement_lines",
+      "label": "measurement_lines()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L205",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_parse_contract",
+      "label": "parse_contract()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L231",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner",
+      "label": "Runner",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L266",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_init",
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L267",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_artifacts",
+      "label": ".artifacts()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L272",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_require_artifacts",
+      "label": ".require_artifacts()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L279",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_command",
+      "label": ".command()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L286",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_native",
+      "label": ".native()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L293",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_worker",
+      "label": ".worker()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L323",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_tls",
+      "label": ".tls()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L349",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_runner_contract",
+      "label": ".contract()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L359",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_run",
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L367",
+      "_origin": "ast"
+    },
+    {
+      "id": "namespace",
+      "label": "Namespace",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_main",
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L423",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_rationale_1",
+      "label": "Provider-neutral local checks; this tool cannot authorize or certify a deploymen",
+      "file_type": "rationale",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_rationale_33",
+      "label": "A local check failed or its evidence was incomplete.",
+      "file_type": "rationale",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_release_gate_rationale_80",
+      "label": "Keep raw child output in memory, never in an automatically persisted log.",
+      "file_type": "rationale",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L80",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate",
+      "label": "test_release_gate.py",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_worker",
+      "label": "worker()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests",
+      "label": "ReporterTests",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L32",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_measurement_markers_require_the_right_target_and_safe_fields",
+      "label": ".test_measurement_markers_require_the_right_target_and_safe_fields()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_complete_native_requires_both_summary_and_physical_pass_lines",
+      "label": ".test_complete_native_requires_both_summary_and_physical_pass_lines()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L43",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_native_inventory_checks_unique_case_identity_not_only_counts",
+      "label": ".test_native_inventory_checks_unique_case_identity_not_only_counts()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L51",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_doctests_reject_ignored_filtered_failed_or_missing_targets",
+      "label": ".test_doctests_reject_ignored_filtered_failed_or_missing_targets()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L57",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_json_report_can_follow_workerd_diagnostics_but_cannot_be_ambiguous",
+      "label": ".test_json_report_can_follow_workerd_diagnostics_but_cannot_be_ambiguous()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L65",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_full_file_inventory_not_declared_nested_suite_count",
+      "label": ".test_full_file_inventory_not_declared_nested_suite_count()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L72",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_duplicate_files_or_cases_fail",
+      "label": ".test_duplicate_files_or_cases_fail()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L83",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_skips_failures_runtime_errors_empty_suites_and_count_drift_fail",
+      "label": ".test_skips_failures_runtime_errors_empty_suites_and_count_drift_fail()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L92",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_tls_must_be_unique_local_complete_and_unambiguous",
+      "label": ".test_tls_must_be_unique_local_complete_and_unambiguous()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L107",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_contract_fail_remains_a_failed_assertion_not_an_expected_pass",
+      "label": ".test_contract_fail_remains_a_failed_assertion_not_an_expected_pass()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L119",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests",
+      "label": "ExecutionTests",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L142",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_registered_parallel_children_are_cancelled_from_the_main_thread",
+      "label": ".test_registered_parallel_children_are_cancelled_from_the_main_thread()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L143",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_real_child_deadline_terminates_the_process_group",
+      "label": ".test_real_child_deadline_terminates_the_process_group()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L167",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_worker_artifact_changes_are_rejected",
+      "label": ".test_worker_artifact_changes_are_rejected()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L174",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_real_child_output_is_hashed_not_persisted",
+      "label": ".test_real_child_output_is_hashed_not_persisted()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L181",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_existing_output_directory_is_not_reused",
+      "label": ".test_existing_output_directory_is_not_reused()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L194",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_output_cannot_be_inside_the_repository",
+      "label": ".test_output_cannot_be_inside_the_repository()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L200",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_failed_contract_and_source_drift_cannot_be_green",
+      "label": ".test_failed_contract_and_source_drift_cannot_be_green()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L205",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_executiontests_test_passing_local_lane_is_not_production_certification",
+      "label": ".test_passing_local_lane_is_not_production_certification()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L220",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_release_gate_rationale_1",
+      "label": "Parser/unit fault tests; synthetic reporter fixtures are not execution evidence.",
+      "file_type": "rationale",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_vitest_config",
       "label": "vitest.config.js",
       "file_type": "code",
@@ -30030,6 +30678,30 @@
       "file_type": "code",
       "source_file": "backend/worker-tests/lifecycle.test.js",
       "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_local_readiness_test",
+      "label": "local_readiness.test.js",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_local_readiness_test_directory",
+      "label": "directory()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L7",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_local_readiness_test_owner",
+      "label": "owner()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L8",
       "_origin": "ast"
     },
     {
@@ -165541,6 +166213,761 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_local_readiness",
+      "target": "auth",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L21",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "brews_backend",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L22",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "brews_domain",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L23",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L24",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "rusqlite",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L25",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "serde_json",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "std",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L30",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "support",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L35",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_measureddb",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_rs_sqlite",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L38",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_rs_cell",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L39",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_rs_cell",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_rs_refcell",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L41",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_rs_vec",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L41",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "json",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L41",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_binding",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_binding",
+      "target": "backend_src_db_mod_sqlvalue",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L43",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_binding",
+      "target": "backend_tests_local_readiness_rs_value",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L43",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_src_db_mod_database",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_measureddb_query",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_query",
+      "target": "backend_src_db_mod_sqlvalue",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_query",
+      "target": "backend_tests_local_readiness_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_query",
+      "target": "backend_tests_local_readiness_rs_vec",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_query",
+      "target": "backend_tests_local_readiness_rs_row",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_query",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_measureddb_execute",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L104",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_execute",
+      "target": "backend_src_db_mod_sqlvalue",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L104",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_execute",
+      "target": "backend_tests_local_readiness_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L104",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_execute",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L104",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb",
+      "target": "backend_tests_local_readiness_measureddb_transaction",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_tests_local_readiness_rs_fnonce",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_tests_local_readiness_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_tests_local_readiness_rs_t",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_tests_local_readiness_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_tests_local_readiness_rs_t",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_transaction",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L107",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_osruntime",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L114",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_osruntime",
+      "target": "backend_src_auth_mod_runtime",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L115",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_osruntime",
+      "target": "backend_tests_local_readiness_osruntime_now_ms",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L116",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_osruntime",
+      "target": "backend_tests_local_readiness_osruntime_fill_random",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L124",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_osruntime_fill_random",
+      "target": "backend_tests_local_readiness_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L124",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_osruntime_fill_random",
+      "target": "backend_src_auth_error_autherror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L124",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_timed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L130",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_timed",
+      "target": "backend_tests_local_readiness_rs_fnonce",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L130",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_timed",
+      "target": "backend_tests_local_readiness_rs_t",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L130",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_timed",
+      "target": "backend_tests_local_readiness_rs_t",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L130",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_history_measurements",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L137",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_history_measurements",
+      "target": "backend_tests_local_readiness_rs_vec",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L137",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_history_measurements",
+      "target": "json",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L137",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_fresh_command",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L230",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_fresh_command",
+      "target": "backend_tests_local_readiness_osruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L230",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_fresh_command",
+      "target": "backend_tests_local_readiness_rs_commandid",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L230",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_recovery_owner",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L238",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_tests_local_readiness_osruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L238",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_tests_local_readiness_rs_sqlite",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L238",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "shared_domain_src_games_gamecode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L238",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness",
+      "target": "backend_tests_local_readiness_local_slice9_measurements",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L352",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_history_measurements",
+      "target": "backend_tests_local_readiness_measureddb_transaction",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L151",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_history_measurements",
+      "target": "backend_tests_local_readiness_measureddb_execute",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L161",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_history_measurements",
+      "target": "backend_tests_local_readiness_timed",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L191",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_fresh_command",
+      "target": "backend_tests_local_readiness_osruntime_fill_random",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L232",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_fresh_command",
+      "target": "backend_tests_local_readiness_osruntime_now_ms",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_tests_local_readiness_fresh_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L266",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_tests_local_readiness_measureddb_execute",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L286",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_local_slice9_measurements",
+      "target": "backend_tests_local_readiness_history_measurements",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L353",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_local_slice9_measurements",
+      "target": "backend_tests_local_readiness_timed",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L357",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_local_slice9_measurements",
+      "target": "backend_tests_local_readiness_osruntime_fill_random",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L367",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_local_slice9_measurements",
+      "target": "backend_tests_local_readiness_recovery_owner",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L368",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_local_slice9_measurements",
+      "target": "backend_tests_local_readiness_fresh_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L421",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_operator_https_wss",
       "target": "pathlib",
       "relation": "imports_from",
@@ -169853,6 +171280,1527 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tools_release_gate",
+      "target": "argparse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "concurrent_futures",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "hashlib",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "re",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "signal",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "subprocess",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "sys",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "time",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "tomllib",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "threading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_gateerror",
+      "target": "exception",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_kill_group",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_kill_group",
+      "target": "popen",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_cancel_children",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_save",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_save",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_source_hashes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_source_hashes",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_execute",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_native_inventory",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L111",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_parse_native",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_parse_doctests",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L126",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_parse_worker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L141",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_reconcile_workers",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L157",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_parse_tls",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L186",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_measurement_lines",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L205",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_parse_contract",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L231",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_runner",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L266",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_init",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L267",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_init",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L267",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_artifacts",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L272",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_require_artifacts",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L279",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_command",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L286",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_command",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L286",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_native",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L293",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_worker",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L323",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_tls",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L349",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner",
+      "target": "backend_tools_release_gate_runner_contract",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L359",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_run",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L367",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "namespace",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L367",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate",
+      "target": "backend_tools_release_gate_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L423",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_cancel_children",
+      "target": "backend_tools_release_gate_kill_group",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_source_hashes",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_source_hashes",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L84",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "popen",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "backend_tools_release_gate_kill_group",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "backend_tools_release_gate_save",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L104",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_execute",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_native_inventory",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_native_inventory",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L119",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_native",
+      "target": "backend_tools_release_gate_native_inventory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L123",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_doctests",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L130",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_worker",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_reconcile_workers",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L166",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_reconcile_workers",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L168",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_reconcile_workers",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_tls",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_tls",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L202",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_measurement_lines",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L225",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_contract",
+      "target": "backend_tests_auth_audit_path",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L235",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_parse_contract",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L237",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_artifacts",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L276",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_artifacts",
+      "target": "backend_tools_release_gate_digest",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L277",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_require_artifacts",
+      "target": "backend_tools_release_gate_runner_artifacts",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L280",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_require_artifacts",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L284",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_command",
+      "target": "backend_tools_release_gate_execute",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L287",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_command",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_native",
+      "target": "backend_tools_release_gate_runner_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_native",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L297",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_native",
+      "target": "backend_tools_release_gate_parse_native",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L307",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_native",
+      "target": "backend_tools_release_gate_native_inventory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L308",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_native",
+      "target": "backend_tools_release_gate_measurement_lines",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L309",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_native",
+      "target": "backend_tools_release_gate_parse_doctests",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L316",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_worker",
+      "target": "backend_tools_release_gate_runner_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L324",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_worker",
+      "target": "backend_tools_release_gate_runner_require_artifacts",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L325",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_worker",
+      "target": "backend_tools_release_gate_cancel_children",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L337",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_worker",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L342",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_worker",
+      "target": "backend_tools_release_gate_reconcile_workers",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L345",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_tls",
+      "target": "backend_tools_release_gate_runner_require_artifacts",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L350",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_tls",
+      "target": "backend_tools_release_gate_runner_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L351",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_tls",
+      "target": "backend_tools_release_gate_parse_tls",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L355",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_contract",
+      "target": "backend_tools_release_gate_runner_require_artifacts",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L360",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_contract",
+      "target": "backend_tools_release_gate_runner_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L361",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_contract",
+      "target": "backend_tools_release_gate_parse_contract",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L364",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_runner_contract",
+      "target": "backend_tools_release_gate_parse_worker",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L364",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L371",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_source_hashes",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L373",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_runner",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L375",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_runner_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L386",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_runner_require_artifacts",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L387",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_cancel_children",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L397",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_run",
+      "target": "backend_tools_release_gate_save",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L418",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_main",
+      "target": "backend_tools_release_gate_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L430",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_main",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L431",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_rationale_1",
+      "target": "backend_tools_release_gate",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_rationale_33",
+      "target": "backend_tools_release_gate_gateerror",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_release_gate_rationale_80",
+      "target": "backend_tools_release_gate_execute",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/release_gate.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "argparse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "importlib_util",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "os",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "sys",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "tempfile",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "threading",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "concurrent_futures",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "unittest_mock",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "backend_tools_tests_test_release_gate_worker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "backend_tools_tests_test_release_gate_reportertests",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_measurement_markers_require_the_right_target_and_safe_fields",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_complete_native_requires_both_summary_and_physical_pass_lines",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_native_inventory_checks_unique_case_identity_not_only_counts",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_doctests_reject_ignored_filtered_failed_or_missing_targets",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_json_report_can_follow_workerd_diagnostics_but_cannot_be_ambiguous",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_full_file_inventory_not_declared_nested_suite_count",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_duplicate_files_or_cases_fail",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_skips_failures_runtime_errors_empty_suites_and_count_drift_fail",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L92",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_tls_must_be_unique_local_complete_and_unambiguous",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_contract_fail_remains_a_failed_assertion_not_an_expected_pass",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L119",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate",
+      "target": "backend_tools_tests_test_release_gate_executiontests",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_registered_parallel_children_are_cancelled_from_the_main_thread",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L143",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_real_child_deadline_terminates_the_process_group",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L167",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_worker_artifact_changes_are_rejected",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L174",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_real_child_output_is_hashed_not_persisted",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L181",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_existing_output_directory_is_not_reused",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L194",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_output_cannot_be_inside_the_repository",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L200",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_failed_contract_and_source_drift_cannot_be_green",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L205",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_executiontests",
+      "target": "backend_tools_tests_test_release_gate_executiontests_test_passing_local_lane_is_not_production_certification",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L220",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests_test_json_report_can_follow_workerd_diagnostics_but_cannot_be_ambiguous",
+      "target": "backend_tools_tests_test_release_gate_worker",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L66",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests_test_full_file_inventory_not_declared_nested_suite_count",
+      "target": "backend_tools_tests_test_release_gate_worker",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests_test_duplicate_files_or_cases_fail",
+      "target": "backend_tools_tests_test_release_gate_worker",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests_test_skips_failures_runtime_errors_empty_suites_and_count_drift_fail",
+      "target": "backend_tools_tests_test_release_gate_worker",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests_test_contract_fail_remains_a_failed_assertion_not_an_expected_pass",
+      "target": "backend_tools_tests_test_release_gate_worker",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L121",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_rationale_1",
+      "target": "backend_tools_tests_test_release_gate",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_vitest_config",
       "target": "ref_cloudflare_vitest_plugin",
       "relation": "imports_from",
@@ -173186,6 +176134,136 @@
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/lifecycle.test.js",
       "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "ref_cloudflare_workers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "ref_cloudflare_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures_cookie",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures_enroll",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures_origin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures_password",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures_post",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_fixtures_resetstorage",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_local_readiness_test_directory",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_local_readiness_test",
+      "target": "backend_worker_tests_local_readiness_test_owner",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/local_readiness.test.js",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -202823,6 +205901,18 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_dedicated_reads_https_wss_call",
+      "target": "backend_tools_release_gate_runner_tls",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/dedicated_reads_https_wss.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_directory_initialized_directory_rejects_sqlite_prefix_lookalikes",
       "target": "backend_src_db_directory_migrate_directory",
       "relation": "calls",
@@ -204203,6 +207293,18 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_game_audit_https_wss_call",
+      "target": "backend_tools_release_gate_runner_tls",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/game_audit_https_wss.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_game_authority_enrolled",
       "target": "backend_src_db_mod_migrate",
       "relation": "calls",
@@ -204487,6 +207589,18 @@
       "confidence_score": 0.8,
       "source_file": "backend/tests/game_delivery.rs",
       "source_location": "L696",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_gameplay_https_wss_call",
+      "target": "backend_tools_release_gate_runner_tls",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/gameplay_https_wss.py",
+      "source_location": "L152",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204991,6 +208105,78 @@
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core/terminal_regressions.rs",
       "source_location": "L271",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_measureddb_query",
+      "target": "cli_tests_client_mod_server_drop",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_timed",
+      "target": "backend_tests_directory_operation",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L132",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_src_db_directory_migrate_directory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L255",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_src_db_game_migration_migrate_game",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L257",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_local_readiness_recovery_owner",
+      "target": "backend_src_game_mod_creation_fingerprint",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/local_readiness.rs",
+      "source_location": "L322",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_operator_https_wss_call",
+      "target": "backend_tools_release_gate_runner_tls",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/operator_https_wss.py",
+      "source_location": "L139",
       "weight": 1.0,
       "_origin": "ast"
     },
