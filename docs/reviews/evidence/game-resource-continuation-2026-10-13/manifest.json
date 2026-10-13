@@ -1,0 +1,46 @@
+{
+  "files": {
+    "failed-probe02-report.json": {
+      "bytes": 74695,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-final-probe-02/report.json",
+      "sha256": "644ec752650db07d6a4fbbc30c3a23eab486b6b8186798be88ea7a97afa82e5c"
+    },
+    "final-review-execution.json": {
+      "bytes": 20451,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-final-review-execution.json",
+      "sha256": "80e876932304367b75ffcdb4eab356dcc78bc2ce6935495ab0ba3599f2cad338"
+    },
+    "final-review-inventory.json": {
+      "bytes": 113989,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-final-review-inventory.json",
+      "sha256": "9e1f35ced4eb93e64bf116194d468ff86919e12a56b882b2f6db9f7fe60072a1"
+    },
+    "final-review.md": {
+      "bytes": 6740,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-final-review.md",
+      "sha256": "7528c4cac3dfca4d7afe217ebe5c004c2d5b6eab7d3b618ab5f2e4eb053fb067"
+    },
+    "implementation-report.md": {
+      "bytes": 6689,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-implementation-report.md",
+      "sha256": "e0a488f48f1a59966c338f36453fade565c18e64fdcdd653ada6f071a7bb0594"
+    },
+    "initial-review-execution.json": {
+      "bytes": 3971,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-review-execution.json",
+      "sha256": "97f5b19ec1832fc1f5fe9cdd1e9193d8a83c801031f9892182001150570d1111"
+    },
+    "initial-review-inventory.json": {
+      "bytes": 40540,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-review-inventory.json",
+      "sha256": "fef1d3fbeefbbb8c6b7f57e0b69220e2ed50ed363d6236584110995a682e5067"
+    },
+    "initial-review.md": {
+      "bytes": 9315,
+      "original_path": "/root/.hermes/cache/scratch/brews-game-resources-review.md",
+      "sha256": "00f95ae476848495b6b0ccc23a969d7dc199914d468be88848802bb1bcb1def1"
+    }
+  },
+  "kind": "exact_local_review_and_failure_archive_not_provider_backup",
+  "source_files_unchanged": true
+}

@@ -1,0 +1,53 @@
+{
+  "kind": "authorized_local_readiness_foundation_publication_not_production_acceptance",
+  "recorded_at_utc": "2026-10-13T13:01:58.389839+00:00",
+  "commit": "b158f1375d9de0b3308de47da1a5bdd1e9647047",
+  "subject": "test(backend): add local runtime readiness and release gates",
+  "remote_main_readback": "b158f1375d9de0b3308de47da1a5bdd1e9647047",
+  "origin_main_readback": "b158f1375d9de0b3308de47da1a5bdd1e9647047",
+  "published_paths": [
+    "backend/tests/local_readiness.rs",
+    "backend/tools/README.md",
+    "backend/tools/release_gate.py",
+    "backend/tools/tests/test_release_gate.py",
+    "backend/worker-tests/local_readiness.test.js",
+    "docs/operations/provider-limit-reference-2026-10-13.md",
+    "docs/operations/restore-and-backout.md",
+    "docs/plans/PENDING.md",
+    "docs/plans/api-design.md",
+    "docs/plans/durable-object-design.md",
+    "docs/plans/lld.md",
+    "docs/reviews/runtime-readiness-slice-2026-10-13-evidence.json",
+    "docs/reviews/runtime-readiness-slice-2026-10-13.md",
+    "graphify-out/code/GRAPH_REPORT.md",
+    "graphify-out/code/graph.html",
+    "graphify-out/code/graph.json",
+    "graphify-out/code/manifest.json",
+    "graphify-out/code/structural-extraction.json"
+  ],
+  "review_sha256": "705735cd2792b89d1ea0bae40a2665105804c20559154e64bf186885f8af85db",
+  "evidence_sha256": "4beef1b385e79efb95acd47deb8db2ced31323bca2a6da29ddf7f1a01d77ed72",
+  "frozen_input_index_and_commit_blobs_match": true,
+  "reviewed_code_delta_before_publication": "none",
+  "clean_worktree_after_remote_readback_before_continuation": true,
+  "scope": "Reviewed local Slice9 measurements, safe local runner, operations worksheets and code graph only",
+  "verified_positive_gates": {
+    "native_per_profile": 958,
+    "doctests": 12,
+    "workerd": 712,
+    "workerd_physical_suites": 37,
+    "https_wss": 373,
+    "python_runner_tests": 18
+  },
+  "actual_overall_gate_exit": 2,
+  "acceptance": {
+    "production_release": "blocked",
+    "RUNTIME-FINAL-01": "open; one retained real final-return assertion failed with HTTP200",
+    "Slice2_final_review": "open",
+    "Slice6_7": "open"
+  },
+  "production_checkboxes": "all original eight remain pending",
+  "deployment": "none",
+  "later_authorization": "Independent LOCAL maximum-configured-game resource measurement continuation; no owner forecast invented and no provider/production/response-contract decisions implied",
+  "later_work_publication_authorized": false
+}

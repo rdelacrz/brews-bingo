@@ -1,0 +1,777 @@
+{
+  "started_at": "2026-10-13T13:19:01.325910+00:00",
+  "baseline": "b158f1375d9de0b3308de47da1a5bdd1e9647047",
+  "head": "b158f1375d9de0b3308de47da1a5bdd1e9647047",
+  "files": {
+    "/home/orangepi/Workspace/brews-bingo/AGENTS.md": {
+      "before_sha256": "f99c90f3d787ee32f62cd0496d927f3e678dbd6c1837c80c6307054ad4c9f248",
+      "before_size": 8403,
+      "after_sha256": "f99c90f3d787ee32f62cd0496d927f3e678dbd6c1837c80c6307054ad4c9f248",
+      "after_size": 8403,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/docs/rust-best-practices.md": {
+      "before_sha256": "1d7d2fd0d5ea2f94d81124e16598557b0cd8e5a32aee951b8cc2a2c3adc4bab5",
+      "before_size": 54102,
+      "after_sha256": "1d7d2fd0d5ea2f94d81124e16598557b0cd8e5a32aee951b8cc2a2c3adc4bab5",
+      "after_size": 54102,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/docs/plans/PENDING.md": {
+      "before_sha256": "235c5e95606334b75006f612a48511c02d9fc72c24958f2442de62834b1dfdd4",
+      "before_size": 32937,
+      "after_sha256": "235c5e95606334b75006f612a48511c02d9fc72c24958f2442de62834b1dfdd4",
+      "after_size": 32937,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/tests/game_resources.rs": {
+      "before_sha256": "14245149500be2b494c3fab8c3780b0111bf2bffd63aa08d1f290c22a26e3491",
+      "before_size": 18798,
+      "after_sha256": "14245149500be2b494c3fab8c3780b0111bf2bffd63aa08d1f290c22a26e3491",
+      "after_size": 18798,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/worker-tests/game_resources.test.js": {
+      "before_sha256": "b58f85da273caa682ee6615b5273de01684f052f246a8125e9ad81d49d7cbc54",
+      "before_size": 11561,
+      "after_sha256": "b58f85da273caa682ee6615b5273de01684f052f246a8125e9ad81d49d7cbc54",
+      "after_size": 11561,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/tools/game_resource_probe.py": {
+      "before_sha256": "fb9a6c022d101d3cfc3510f17bb5114267eefc0cb7443ce9333f05de71e2c35d",
+      "before_size": 11817,
+      "after_sha256": "fb9a6c022d101d3cfc3510f17bb5114267eefc0cb7443ce9333f05de71e2c35d",
+      "after_size": 11817,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/tools/tests/test_game_resource_probe.py": {
+      "before_sha256": "1783d0903b895ec25dfcfbf485b42e54384fcb43ce8fd1de6bd8b6de7d498ec2",
+      "before_size": 5356,
+      "after_sha256": "1783d0903b895ec25dfcfbf485b42e54384fcb43ce8fd1de6bd8b6de7d498ec2",
+      "after_size": 5356,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/tools/release_gate.py": {
+      "before_sha256": "6da802e63bdc15fef234d8ad38409087041315d44d3f5d13206540c23289d162",
+      "before_size": 22103,
+      "after_sha256": "6da802e63bdc15fef234d8ad38409087041315d44d3f5d13206540c23289d162",
+      "after_size": 22103,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/docs/operations/game-resource-measurements.md": {
+      "before_sha256": "d9d7c5a850f45d2e5519dcc7edd89833a55e579ef66eec455e745efb99634828",
+      "before_size": 5173,
+      "after_sha256": "d9d7c5a850f45d2e5519dcc7edd89833a55e579ef66eec455e745efb99634828",
+      "after_size": 5173,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-final-probe-01/report.json": {
+      "before_sha256": "2dd265fba5a38854ae6b0b035936925f3523adb43eb2be95b781f7e62acbea80",
+      "before_size": 92291,
+      "after_sha256": "2dd265fba5a38854ae6b0b035936925f3523adb43eb2be95b781f7e62acbea80",
+      "after_size": 92291,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-implementation-report.md": {
+      "before_sha256": "e0a488f48f1a59966c338f36453fade565c18e64fdcdd653ada6f071a7bb0594",
+      "before_size": 6689,
+      "after_sha256": "e0a488f48f1a59966c338f36453fade565c18e64fdcdd653ada6f071a7bb0594",
+      "after_size": 6689,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/worker-tests/fixtures.js": {
+      "before_sha256": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
+      "before_size": 3734,
+      "context_only": true,
+      "after_sha256": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
+      "after_size": 3734,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/tests/support/mod.rs": {
+      "before_sha256": "fc744fcf29c9a205e95a569219e408bdb10215102c2a5cbb48f91b8abe1b5560",
+      "before_size": 4341,
+      "context_only": true,
+      "after_sha256": "fc744fcf29c9a205e95a569219e408bdb10215102c2a5cbb48f91b8abe1b5560",
+      "after_size": 4341,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/tools/tests/test_release_gate.py": {
+      "before_sha256": "46d7b523e14bdd155d74f294d7406ef10acaf8fe1a880d7e497ff452feb15ed3",
+      "before_size": 13689,
+      "context_only": true,
+      "after_sha256": "46d7b523e14bdd155d74f294d7406ef10acaf8fe1a880d7e497ff452feb15ed3",
+      "after_size": 13689,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/shared/domain/src/games.rs": {
+      "before_sha256": "73abfcddb0a15b0e8f66a921a84d375b7cfe3ee89ae6be16648c9ea3ae68b454",
+      "before_size": 27441,
+      "context_only": true,
+      "after_sha256": "73abfcddb0a15b0e8f66a921a84d375b7cfe3ee89ae6be16648c9ea3ae68b454",
+      "after_size": 27441,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/docs/plans/durable-object-design.md": {
+      "before_sha256": "0d7577732fb2fb2c1461c12caeedd305f88b226512f56d42aa31846211e965bd",
+      "before_size": 219705,
+      "context_only": true,
+      "after_sha256": "0d7577732fb2fb2c1461c12caeedd305f88b226512f56d42aa31846211e965bd",
+      "after_size": 219705,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-metric-summary.json": {
+      "before_sha256": "f94d84f36fd1b386f77351828d69640300595d3857a5f9a4be155455a3a45e13",
+      "before_size": 3999,
+      "evidence_only": true,
+      "after_sha256": "f94d84f36fd1b386f77351828d69640300595d3857a5f9a4be155455a3a45e13",
+      "after_size": 3999,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-final-probe-01/resources-debug.json": {
+      "before_sha256": "b028de34c4670deeef863f0bd59bfb9ce2dcfb03a2fbe3ea329db5fc8d2360a9",
+      "before_size": 477,
+      "evidence_only": true,
+      "after_sha256": "b028de34c4670deeef863f0bd59bfb9ce2dcfb03a2fbe3ea329db5fc8d2360a9",
+      "after_size": 477,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-final-probe-01/resource-workerd.json": {
+      "before_sha256": "58e1817c849f7023667828e3fe669562b954956efcf39c36febf582d94d920c4",
+      "before_size": 495,
+      "evidence_only": true,
+      "after_sha256": "58e1817c849f7023667828e3fe669562b954956efcf39c36febf582d94d920c4",
+      "after_size": 495,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-final-probe-01/resources-release-assertions.json": {
+      "before_sha256": "9b8ba6592c6201f93452b260868e16497e957c339df9edc60b769a5ec4466f42",
+      "before_size": 527,
+      "evidence_only": true,
+      "after_sha256": "9b8ba6592c6201f93452b260868e16497e957c339df9edc60b769a5ec4466f42",
+      "after_size": 527,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-final-probe-01/cargo-version.json": {
+      "before_sha256": "599207d1d36265ba617ef7f88b4944574c0434e852cdbf4ecadb3c7ae405d831",
+      "before_size": 346,
+      "evidence_only": true,
+      "after_sha256": "599207d1d36265ba617ef7f88b4944574c0434e852cdbf4ecadb3c7ae405d831",
+      "after_size": 346,
+      "unchanged": true
+    },
+    "/root/.hermes/cache/scratch/brews-game-resources-final-probe-01/resource-worker-build.json": {
+      "before_sha256": "e87f0bdc827ed47ade2aa4d792ae8f1e2aa9e3d88a2ad0bb7944ea83761ab8dd",
+      "before_size": 350,
+      "evidence_only": true,
+      "after_sha256": "e87f0bdc827ed47ade2aa4d792ae8f1e2aa9e3d88a2ad0bb7944ea83761ab8dd",
+      "after_size": 350,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/build/index.js": {
+      "before_sha256": "1078cf91d1ef5c8ce713eb8ccdd53830fa96d1e16469117a323245f3e64583e6",
+      "before_size": 34495,
+      "artifact_reconciliation_only": true,
+      "before_source": "completed-parent-probe",
+      "after_sha256": "1078cf91d1ef5c8ce713eb8ccdd53830fa96d1e16469117a323245f3e64583e6",
+      "after_size": 34495,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/build/index_bg.wasm": {
+      "before_sha256": "3dcb5b64076e96f82cd5f3a929b04512278dbc42736026aa1cc29d8318805359",
+      "before_size": 5994287,
+      "artifact_reconciliation_only": true,
+      "before_source": "completed-parent-probe",
+      "after_sha256": "3dcb5b64076e96f82cd5f3a929b04512278dbc42736026aa1cc29d8318805359",
+      "after_size": 5994287,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/backend/build/worker/shim.mjs": {
+      "before_sha256": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+      "before_size": 164,
+      "artifact_reconciliation_only": true,
+      "before_source": "completed-parent-probe",
+      "after_sha256": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+      "after_size": 164,
+      "unchanged": true
+    },
+    "/home/orangepi/Workspace/brews-bingo/target/wasm32-unknown-unknown/release/brews_backend.wasm": {
+      "before_sha256": "abbd89cc88dd6bc760900054db5f7b7c3dbc39082fe4fc3b8b0872bc638fbdf9",
+      "before_size": 8900981,
+      "artifact_reconciliation_only": true,
+      "before_source": "completed-parent-probe",
+      "after_sha256": "abbd89cc88dd6bc760900054db5f7b7c3dbc39082fe4fc3b8b0872bc638fbdf9",
+      "after_size": 8900981,
+      "unchanged": true
+    }
+  },
+  "protected_baseline_hash_comparisons": {
+    "backend/tests/account_management.rs": {
+      "baseline_sha256": "c13fc73821f7d6bd71a47b210e078f7626f9f77291ab46a7fa10e27f1308282f",
+      "current_sha256": "c13fc73821f7d6bd71a47b210e078f7626f9f77291ab46a7fa10e27f1308282f",
+      "unchanged": true
+    },
+    "backend/tests/accounts_idempotency.rs": {
+      "baseline_sha256": "6ade0245f63ea64757f8744c26d8d73b4a8bf1be029770866f638f786b2cee36",
+      "current_sha256": "6ade0245f63ea64757f8744c26d8d73b4a8bf1be029770866f638f786b2cee36",
+      "unchanged": true
+    },
+    "backend/tests/auth_audit.rs": {
+      "baseline_sha256": "8d92a09adda62cb5a40728815442d919f5149303f703d68efac93fde9332bf8b",
+      "current_sha256": "8d92a09adda62cb5a40728815442d919f5149303f703d68efac93fde9332bf8b",
+      "unchanged": true
+    },
+    "backend/tests/auth_core.rs": {
+      "baseline_sha256": "a0cc4454c9c646f881b2a81811b2e6e28a46126c741a92d8c51a7e86c48eb075",
+      "current_sha256": "a0cc4454c9c646f881b2a81811b2e6e28a46126c741a92d8c51a7e86c48eb075",
+      "unchanged": true
+    },
+    "backend/tests/crypto_constraints.rs": {
+      "baseline_sha256": "d5f38b0b5e04bd15f90a4f649e50321cb81699a655cf30b3082f7cb5dbf151ff",
+      "current_sha256": "d5f38b0b5e04bd15f90a4f649e50321cb81699a655cf30b3082f7cb5dbf151ff",
+      "unchanged": true
+    },
+    "backend/tests/dedicated_reads_https_wss.py": {
+      "baseline_sha256": "69a183cde08895426c40ba0f8d197a1f7bfacc89b8b281843b6a9db3b350bd51",
+      "current_sha256": "69a183cde08895426c40ba0f8d197a1f7bfacc89b8b281843b6a9db3b350bd51",
+      "unchanged": true
+    },
+    "backend/tests/directory.rs": {
+      "baseline_sha256": "6eb322bfb05884b05c2dc76c701c18a5490274fa471afa1ddb333244048722fd",
+      "current_sha256": "6eb322bfb05884b05c2dc76c701c18a5490274fa471afa1ddb333244048722fd",
+      "unchanged": true
+    },
+    "backend/tests/directory_games.rs": {
+      "baseline_sha256": "40045addaa829c3ead0d45ef13db1e0630b7d51154b14be300cbde86aaf980cc",
+      "current_sha256": "40045addaa829c3ead0d45ef13db1e0630b7d51154b14be300cbde86aaf980cc",
+      "unchanged": true
+    },
+    "backend/tests/directory_games/history.rs": {
+      "baseline_sha256": "14a06e0df402e361607ca617f388181f887dbef1ae5513ad6db85755e7de30c8",
+      "current_sha256": "14a06e0df402e361607ca617f388181f887dbef1ae5513ad6db85755e7de30c8",
+      "unchanged": true
+    },
+    "backend/tests/fixtures/game-schema-published-command.json": {
+      "baseline_sha256": "1695fda193c7f4a46065d66c76aa9a12e0f72a3e10cc62ea4fef91b8ffd64ee2",
+      "current_sha256": "1695fda193c7f4a46065d66c76aa9a12e0f72a3e10cc62ea4fef91b8ffd64ee2",
+      "unchanged": true
+    },
+    "backend/tests/fixtures/game-schema-published-operator.json": {
+      "baseline_sha256": "6d09fc0fc10a680055dc2ca40f5295be690c951b24c4133b79885ef64eb5c8aa",
+      "current_sha256": "6d09fc0fc10a680055dc2ca40f5295be690c951b24c4133b79885ef64eb5c8aa",
+      "unchanged": true
+    },
+    "backend/tests/fixtures/game-schema-published-read.json": {
+      "baseline_sha256": "983ed64b4cf8ce71534597e8234faa63fd3a03896e7339b5024a324872679616",
+      "current_sha256": "983ed64b4cf8ce71534597e8234faa63fd3a03896e7339b5024a324872679616",
+      "unchanged": true
+    },
+    "backend/tests/fixtures/game-schema-v1.sql": {
+      "baseline_sha256": "2b15b624a3594373738961bc69e429bf3c2b8d7396b34d080895ba27ccff4362",
+      "current_sha256": "2b15b624a3594373738961bc69e429bf3c2b8d7396b34d080895ba27ccff4362",
+      "unchanged": true
+    },
+    "backend/tests/game_audit_https_wss.py": {
+      "baseline_sha256": "0f56de3ba0c682dd9c18184ec0d1d3626cce0b81a63dc8b536f8cc83f20d229d",
+      "current_sha256": "0f56de3ba0c682dd9c18184ec0d1d3626cce0b81a63dc8b536f8cc83f20d229d",
+      "unchanged": true
+    },
+    "backend/tests/game_authority.rs": {
+      "baseline_sha256": "a169e1b77068c86cb2840d17fc88f8836a2c1c84f7c9ab0ddb879743ace714e2",
+      "current_sha256": "a169e1b77068c86cb2840d17fc88f8836a2c1c84f7c9ab0ddb879743ace714e2",
+      "unchanged": true
+    },
+    "backend/tests/game_delivery.rs": {
+      "baseline_sha256": "cea5b41081e533cf272ea4fc33c3a9a0cf51a9b74f288b37000476d079e59530",
+      "current_sha256": "cea5b41081e533cf272ea4fc33c3a9a0cf51a9b74f288b37000476d079e59530",
+      "unchanged": true
+    },
+    "backend/tests/game_wire.rs": {
+      "baseline_sha256": "3559453740e1cb6ab227eb263ed2d3cb9be5737aa9436de85f39f6ec313c707c",
+      "current_sha256": "3559453740e1cb6ab227eb263ed2d3cb9be5737aa9436de85f39f6ec313c707c",
+      "unchanged": true
+    },
+    "backend/tests/gameplay_https_wss.py": {
+      "baseline_sha256": "8ad152226789d8ab3bd0a9d79d9c68ffe0f4ad6ea34beeaf097785d4185c87d5",
+      "current_sha256": "8ad152226789d8ab3bd0a9d79d9c68ffe0f4ad6ea34beeaf097785d4185c87d5",
+      "unchanged": true
+    },
+    "backend/tests/games_core.rs": {
+      "baseline_sha256": "54421214d11ff00ceb29e74544f655e89e7a7eccd924c926bca55ab924c1b8e2",
+      "current_sha256": "54421214d11ff00ceb29e74544f655e89e7a7eccd924c926bca55ab924c1b8e2",
+      "unchanged": true
+    },
+    "backend/tests/games_core/audit_repairs.rs": {
+      "baseline_sha256": "eeaf4ece96ea8bc0c0686e703a28d3479ce85450eee7591486c00a7b6481cf58",
+      "current_sha256": "eeaf4ece96ea8bc0c0686e703a28d3479ce85450eee7591486c00a7b6481cf58",
+      "unchanged": true
+    },
+    "backend/tests/games_core/command_lookup.rs": {
+      "baseline_sha256": "86edcc20d788bb3b224cefa39f20ac1a1f33da2d7433a1d84a26ac7291914c90",
+      "current_sha256": "86edcc20d788bb3b224cefa39f20ac1a1f33da2d7433a1d84a26ac7291914c90",
+      "unchanged": true
+    },
+    "backend/tests/games_core/discovery.rs": {
+      "baseline_sha256": "1f47208b2448a462d411971316bbb2c965e78db0b267d4d21c02d4f96d8a5411",
+      "current_sha256": "1f47208b2448a462d411971316bbb2c965e78db0b267d4d21c02d4f96d8a5411",
+      "unchanged": true
+    },
+    "backend/tests/games_core/game_storage_audit.rs": {
+      "baseline_sha256": "4a50d9cabf259fec41bf919a8612ada67a4bbe3a899ff74b795fd66fe995168e",
+      "current_sha256": "4a50d9cabf259fec41bf919a8612ada67a4bbe3a899ff74b795fd66fe995168e",
+      "unchanged": true
+    },
+    "backend/tests/games_core/history.rs": {
+      "baseline_sha256": "cb4568fd411d2b7de3d3406cd5d52102784524d5b6a4f2431b86e25da9948220",
+      "current_sha256": "cb4568fd411d2b7de3d3406cd5d52102784524d5b6a4f2431b86e25da9948220",
+      "unchanged": true
+    },
+    "backend/tests/games_core/operator.rs": {
+      "baseline_sha256": "856dded03144c2915a96ceb64cde3b5f6f04d1daab3db0063abceca6f1014854",
+      "current_sha256": "856dded03144c2915a96ceb64cde3b5f6f04d1daab3db0063abceca6f1014854",
+      "unchanged": true
+    },
+    "backend/tests/games_core/player_lifecycle.rs": {
+      "baseline_sha256": "0c65be4f017fc29e17ba7067c20da35f19b47e415abaf62c7cfccee54b0a05e1",
+      "current_sha256": "0c65be4f017fc29e17ba7067c20da35f19b47e415abaf62c7cfccee54b0a05e1",
+      "unchanged": true
+    },
+    "backend/tests/games_core/player_lifecycle_review.rs": {
+      "baseline_sha256": "0195994d53a0d46d7969edc735c821c6e6252ebf310f075a79f5909af5deac83",
+      "current_sha256": "0195994d53a0d46d7969edc735c821c6e6252ebf310f075a79f5909af5deac83",
+      "unchanged": true
+    },
+    "backend/tests/games_core/player_recovery.rs": {
+      "baseline_sha256": "0a3374198c9fe40c3ee8ad787c692cda966db2f3ddf91c7110b4e27652011d85",
+      "current_sha256": "0a3374198c9fe40c3ee8ad787c692cda966db2f3ddf91c7110b4e27652011d85",
+      "unchanged": true
+    },
+    "backend/tests/games_core/prestart_maintenance.rs": {
+      "baseline_sha256": "a1195fa5887e7b46d9112c6d30234ae7ee34c04a0e0f9df3a5f46d21e8f9258c",
+      "current_sha256": "a1195fa5887e7b46d9112c6d30234ae7ee34c04a0e0f9df3a5f46d21e8f9258c",
+      "unchanged": true
+    },
+    "backend/tests/games_core/privileged_audit.rs": {
+      "baseline_sha256": "72194ca7033866cb65a360eefa8987612dd243a7173d4275bc70f3dbd14b3b91",
+      "current_sha256": "72194ca7033866cb65a360eefa8987612dd243a7173d4275bc70f3dbd14b3b91",
+      "unchanged": true
+    },
+    "backend/tests/games_core/publication_receipt.rs": {
+      "baseline_sha256": "71e57d59f5ccef9fc2de0b2a895a6882d643c0646c35762f2e9d3557f69b6252",
+      "current_sha256": "71e57d59f5ccef9fc2de0b2a895a6882d643c0646c35762f2e9d3557f69b6252",
+      "unchanged": true
+    },
+    "backend/tests/games_core/reads.rs": {
+      "baseline_sha256": "1fa6dbdd0a8913ac0bfc7f0db3028d7298aafcf928f771e9c2a0fee6664a33e5",
+      "current_sha256": "1fa6dbdd0a8913ac0bfc7f0db3028d7298aafcf928f771e9c2a0fee6664a33e5",
+      "unchanged": true
+    },
+    "backend/tests/games_core/receipt_atomicity.rs": {
+      "baseline_sha256": "ac6cbff3424199f8c4c37a72ad3089c13f71ce897e0ff888f7ad32e1c45eab50",
+      "current_sha256": "ac6cbff3424199f8c4c37a72ad3089c13f71ce897e0ff888f7ad32e1c45eab50",
+      "unchanged": true
+    },
+    "backend/tests/games_core/spectators.rs": {
+      "baseline_sha256": "2f2570f559fd9d864a49cfd96d2b16577a2c262a4059e5cb31ed67038f02ce60",
+      "current_sha256": "2f2570f559fd9d864a49cfd96d2b16577a2c262a4059e5cb31ed67038f02ce60",
+      "unchanged": true
+    },
+    "backend/tests/games_core/start_publication.rs": {
+      "baseline_sha256": "c2bc64749c7a82e277eb3a2550a17dc18988606fac9082ca2f4390e9cd152f28",
+      "current_sha256": "c2bc64749c7a82e277eb3a2550a17dc18988606fac9082ca2f4390e9cd152f28",
+      "unchanged": true
+    },
+    "backend/tests/games_core/terminal.rs": {
+      "baseline_sha256": "3e5ec403ee6b37181d933945ebee3451a16cb5759e361ac056d792fcb96155be",
+      "current_sha256": "3e5ec403ee6b37181d933945ebee3451a16cb5759e361ac056d792fcb96155be",
+      "unchanged": true
+    },
+    "backend/tests/games_core/terminal_faults.rs": {
+      "baseline_sha256": "8f43730a3e8af16a884fd3e962c4a82b85115646c38fb933578b7eab7ec3b18a",
+      "current_sha256": "8f43730a3e8af16a884fd3e962c4a82b85115646c38fb933578b7eab7ec3b18a",
+      "unchanged": true
+    },
+    "backend/tests/games_core/terminal_regressions.rs": {
+      "baseline_sha256": "182cea1c9b0bc63f1c37965e95b81f42e8a53e357066d39c01c85b0a059e8e23",
+      "current_sha256": "182cea1c9b0bc63f1c37965e95b81f42e8a53e357066d39c01c85b0a059e8e23",
+      "unchanged": true
+    },
+    "backend/tests/games_core/write_regressions.rs": {
+      "baseline_sha256": "b79a96e13dbba001b9e8c4b2666b1c560942900e8c050f724fa5b160e4b2e77d",
+      "current_sha256": "b79a96e13dbba001b9e8c4b2666b1c560942900e8c050f724fa5b160e4b2e77d",
+      "unchanged": true
+    },
+    "backend/tests/history_api.rs": {
+      "baseline_sha256": "b52ec75b79709e266b779d95eb363b004b25f1c9e51781b0b53817210646da08",
+      "current_sha256": "b52ec75b79709e266b779d95eb363b004b25f1c9e51781b0b53817210646da08",
+      "unchanged": true
+    },
+    "backend/tests/local_readiness.rs": {
+      "baseline_sha256": "77d9e3992bc3e25da145e666c22bb67c42ebeb1c8df7362b66bbfb9f2e63bbf6",
+      "current_sha256": "77d9e3992bc3e25da145e666c22bb67c42ebeb1c8df7362b66bbfb9f2e63bbf6",
+      "unchanged": true
+    },
+    "backend/tests/operator_https_wss.py": {
+      "baseline_sha256": "04b99070076a54428537501b64a3a3aa6bb7acd11af7df151dbdf74eaaa08944",
+      "current_sha256": "04b99070076a54428537501b64a3a3aa6bb7acd11af7df151dbdf74eaaa08944",
+      "unchanged": true
+    },
+    "backend/tests/security.rs": {
+      "baseline_sha256": "da89addcbbf151616feab7be4f7189e6e88f34b2b0f899e90b3525b7f69b4539",
+      "current_sha256": "da89addcbbf151616feab7be4f7189e6e88f34b2b0f899e90b3525b7f69b4539",
+      "unchanged": true
+    },
+    "backend/tests/sql_policy_tags.rs": {
+      "baseline_sha256": "c252debb3be2de8fd736473c72349d3e0a0e3e64b59f386f6efd688a55c99506",
+      "current_sha256": "c252debb3be2de8fd736473c72349d3e0a0e3e64b59f386f6efd688a55c99506",
+      "unchanged": true
+    },
+    "backend/tests/storage.rs": {
+      "baseline_sha256": "adb4265533280b5a11b81c6854e7442967af170b7caeaacebbfef076bd0dbf82",
+      "current_sha256": "adb4265533280b5a11b81c6854e7442967af170b7caeaacebbfef076bd0dbf82",
+      "unchanged": true
+    },
+    "backend/tests/storage_management.rs": {
+      "baseline_sha256": "eef4e000c9cff21d3bb2b7bb91a34a1e9c7c7295896fe5278766900875a52538",
+      "current_sha256": "eef4e000c9cff21d3bb2b7bb91a34a1e9c7c7295896fe5278766900875a52538",
+      "unchanged": true
+    },
+    "backend/tests/support/mod.rs": {
+      "baseline_sha256": "fc744fcf29c9a205e95a569219e408bdb10215102c2a5cbb48f91b8abe1b5560",
+      "current_sha256": "fc744fcf29c9a205e95a569219e408bdb10215102c2a5cbb48f91b8abe1b5560",
+      "unchanged": true
+    },
+    "backend/tests/users_core.rs": {
+      "baseline_sha256": "cd5f9d1d89e40f8c8210c54b6426ad799e52eed2096be419c835e3847b490c1c",
+      "current_sha256": "cd5f9d1d89e40f8c8210c54b6426ad799e52eed2096be419c835e3847b490c1c",
+      "unchanged": true
+    },
+    "backend/tools/tests/test_release_gate.py": {
+      "baseline_sha256": "46d7b523e14bdd155d74f294d7406ef10acaf8fe1a880d7e497ff452feb15ed3",
+      "current_sha256": "46d7b523e14bdd155d74f294d7406ef10acaf8fe1a880d7e497ff452feb15ed3",
+      "unchanged": true
+    },
+    "backend/worker-tests/alarms.test.js": {
+      "baseline_sha256": "35e3471b8bcb4d637af5d121813455697fd97459d90ef559a2073c2e5e4347a2",
+      "current_sha256": "35e3471b8bcb4d637af5d121813455697fd97459d90ef559a2073c2e5e4347a2",
+      "unchanged": true
+    },
+    "backend/worker-tests/auth_audit.test.js": {
+      "baseline_sha256": "1fd8d2508d07aa233ab110650e90cc2d0f7ad12c001ae9f1dfc34ceb4f9d17d8",
+      "current_sha256": "1fd8d2508d07aa233ab110650e90cc2d0f7ad12c001ae9f1dfc34ceb4f9d17d8",
+      "unchanged": true
+    },
+    "backend/worker-tests/command_lookup.test.js": {
+      "baseline_sha256": "383dc2109c5a0a7eeb647c534c4095108aa8eed29620f89e6973486bf89b0a5d",
+      "current_sha256": "383dc2109c5a0a7eeb647c534c4095108aa8eed29620f89e6973486bf89b0a5d",
+      "unchanged": true
+    },
+    "backend/worker-tests/command_lookup_repairs.test.js": {
+      "baseline_sha256": "f7403260215189cf343ede3a203e76531bce5fbc86356a28ebe46e0dca8125b8",
+      "current_sha256": "f7403260215189cf343ede3a203e76531bce5fbc86356a28ebe46e0dca8125b8",
+      "unchanged": true
+    },
+    "backend/worker-tests/developer.test.js": {
+      "baseline_sha256": "ae455553f7019b305ba0590db45ee42783dfb161b69a3b25982d0afb444b5d99",
+      "current_sha256": "ae455553f7019b305ba0590db45ee42783dfb161b69a3b25982d0afb444b5d99",
+      "unchanged": true
+    },
+    "backend/worker-tests/discovery.test.js": {
+      "baseline_sha256": "209b97c052fb3043a1946b2d70c92a730c9c7237235c887cfbe404a322cdebdf",
+      "current_sha256": "209b97c052fb3043a1946b2d70c92a730c9c7237235c887cfbe404a322cdebdf",
+      "unchanged": true
+    },
+    "backend/worker-tests/discovery_boundaries.test.js": {
+      "baseline_sha256": "575294b29716e163f1a453b0c2ab5274d98b87b2ac96aab8eb6510f31d2dceb8",
+      "current_sha256": "575294b29716e163f1a453b0c2ab5274d98b87b2ac96aab8eb6510f31d2dceb8",
+      "unchanged": true
+    },
+    "backend/worker-tests/discovery_deadlines.test.js": {
+      "baseline_sha256": "14bfda763be67f017de726fa542898ceb9fe7252edf0ee9b5594bbb175af1383",
+      "current_sha256": "14bfda763be67f017de726fa542898ceb9fe7252edf0ee9b5594bbb175af1383",
+      "unchanged": true
+    },
+    "backend/worker-tests/discovery_expiry.test.js": {
+      "baseline_sha256": "6fb293c6441ea1427b5bfa2c1f7d907f2105ea52e7b6eb4d6db1c8e0b4f1bfd8",
+      "current_sha256": "6fb293c6441ea1427b5bfa2c1f7d907f2105ea52e7b6eb4d6db1c8e0b4f1bfd8",
+      "unchanged": true
+    },
+    "backend/worker-tests/fixtures.js": {
+      "baseline_sha256": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
+      "current_sha256": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
+      "unchanged": true
+    },
+    "backend/worker-tests/game_audit_repairs.test.js": {
+      "baseline_sha256": "52a089e35bbc6821cca666686dac29f144ca909786746806b93f8db583ccab6e",
+      "current_sha256": "52a089e35bbc6821cca666686dac29f144ca909786746806b93f8db583ccab6e",
+      "unchanged": true
+    },
+    "backend/worker-tests/game_object.test.js": {
+      "baseline_sha256": "f0f4dfaf877b2764eee69a4a0e16556dfe1852fb97c05d993c0146e450c299b6",
+      "current_sha256": "f0f4dfaf877b2764eee69a4a0e16556dfe1852fb97c05d993c0146e450c299b6",
+      "unchanged": true
+    },
+    "backend/worker-tests/game_recovery.test.js": {
+      "baseline_sha256": "e3c75179a8c55059dd113ef016baada38f7ff434fa5ab8863ac6a94847643c43",
+      "current_sha256": "e3c75179a8c55059dd113ef016baada38f7ff434fa5ab8863ac6a94847643c43",
+      "unchanged": true
+    },
+    "backend/worker-tests/game_storage_audit.test.js": {
+      "baseline_sha256": "d03ed2fcb334cefc4e91c02699a1c47d03bbfdf068bc6d005370ca0e12a3fd77",
+      "current_sha256": "d03ed2fcb334cefc4e91c02699a1c47d03bbfdf068bc6d005370ca0e12a3fd77",
+      "unchanged": true
+    },
+    "backend/worker-tests/gameplay.test.js": {
+      "baseline_sha256": "fce52d1c5fe8a10a052e45ed73eb2c9e0ce4aefdb2c9fa949fd90d914bb9851a",
+      "current_sha256": "fce52d1c5fe8a10a052e45ed73eb2c9e0ce4aefdb2c9fa949fd90d914bb9851a",
+      "unchanged": true
+    },
+    "backend/worker-tests/games.test.js": {
+      "baseline_sha256": "51ba8501b6e32ca9f82b1c73c037f262f8f9a157b339190a063d8b75e5990d35",
+      "current_sha256": "51ba8501b6e32ca9f82b1c73c037f262f8f9a157b339190a063d8b75e5990d35",
+      "unchanged": true
+    },
+    "backend/worker-tests/lifecycle.test.js": {
+      "baseline_sha256": "066e74151dafbca6b0206c541757ec5cf2d80f5c53df2bbc532573d1e236c58e",
+      "current_sha256": "066e74151dafbca6b0206c541757ec5cf2d80f5c53df2bbc532573d1e236c58e",
+      "unchanged": true
+    },
+    "backend/worker-tests/local_readiness.test.js": {
+      "baseline_sha256": "3d36d4bf24a951abeb46ba4cb97416eace1f7df9dc79dc571d4e58cdfbe7e03f",
+      "current_sha256": "3d36d4bf24a951abeb46ba4cb97416eace1f7df9dc79dc571d4e58cdfbe7e03f",
+      "unchanged": true
+    },
+    "backend/worker-tests/logging.test.js": {
+      "baseline_sha256": "50e28b05ac251dcede0bd9b130b86419c91568c8860fcd96423b471b7f277989",
+      "current_sha256": "50e28b05ac251dcede0bd9b130b86419c91568c8860fcd96423b471b7f277989",
+      "unchanged": true
+    },
+    "backend/worker-tests/operator-repairs.test.js": {
+      "baseline_sha256": "7dc8ed0f233c0bc8139a0c39a5edf565d40ce5037f07f428e4ddc916290e8c55",
+      "current_sha256": "7dc8ed0f233c0bc8139a0c39a5edf565d40ce5037f07f428e4ddc916290e8c55",
+      "unchanged": true
+    },
+    "backend/worker-tests/operator.test.js": {
+      "baseline_sha256": "b0c5e26b2599b408a7e639fad19a6886cfcf3d7acd320c27b57c62f2bb4ddd42",
+      "current_sha256": "b0c5e26b2599b408a7e639fad19a6886cfcf3d7acd320c27b57c62f2bb4ddd42",
+      "unchanged": true
+    },
+    "backend/worker-tests/player_lifecycle.test.js": {
+      "baseline_sha256": "326cbef03d41b04dca088fda12846f70fd7701ebab8a79ab10ef53ebf216ac7d",
+      "current_sha256": "326cbef03d41b04dca088fda12846f70fd7701ebab8a79ab10ef53ebf216ac7d",
+      "unchanged": true
+    },
+    "backend/worker-tests/player_lifecycle_boundaries.test.js": {
+      "baseline_sha256": "4c36e2d8557518dffa4cbcac19dabf02b36e5c85de8149c2fd497ed72ea63f40",
+      "current_sha256": "4c36e2d8557518dffa4cbcac19dabf02b36e5c85de8149c2fd497ed72ea63f40",
+      "unchanged": true
+    },
+    "backend/worker-tests/player_recovery_boundaries.test.js": {
+      "baseline_sha256": "6923276b14ba12ebaba6e3ed666cefa81a329aee64adad32b259867a07885cce",
+      "current_sha256": "6923276b14ba12ebaba6e3ed666cefa81a329aee64adad32b259867a07885cce",
+      "unchanged": true
+    },
+    "backend/worker-tests/player_recovery_deadlines.test.js": {
+      "baseline_sha256": "bda9689d1ed17c64cd7713368b745c0fe2ba9324ebb8800d72455712efe2de7c",
+      "current_sha256": "bda9689d1ed17c64cd7713368b745c0fe2ba9324ebb8800d72455712efe2de7c",
+      "unchanged": true
+    },
+    "backend/worker-tests/player_recovery_review_regressions.test.js": {
+      "baseline_sha256": "c0ab4c808af63fa8380b74837d1840f381b54d713c11ad5181f75b442772a003",
+      "current_sha256": "c0ab4c808af63fa8380b74837d1840f381b54d713c11ad5181f75b442772a003",
+      "unchanged": true
+    },
+    "backend/worker-tests/player_sync_release.test.js": {
+      "baseline_sha256": "ce046b84590364de69ca15be7302ab792cd5977ac988e110ee5fa6ad2db422bb",
+      "current_sha256": "ce046b84590364de69ca15be7302ab792cd5977ac988e110ee5fa6ad2db422bb",
+      "unchanged": true
+    },
+    "backend/worker-tests/privileged_game_audit.test.js": {
+      "baseline_sha256": "9cb94548ec50d162c77c3dcf4f2c2b9a3b4e35f34a9cc6a9489503c13ccde369",
+      "current_sha256": "9cb94548ec50d162c77c3dcf4f2c2b9a3b4e35f34a9cc6a9489503c13ccde369",
+      "unchanged": true
+    },
+    "backend/worker-tests/read_routes.test.js": {
+      "baseline_sha256": "48d912c0996473c6d8300a746bc27e8d25dc45774726e7cd9ed07dc81242ae32",
+      "current_sha256": "48d912c0996473c6d8300a746bc27e8d25dc45774726e7cd9ed07dc81242ae32",
+      "unchanged": true
+    },
+    "backend/worker-tests/removal-recovery.test.js": {
+      "baseline_sha256": "77a42c8f802906aaa70176a3aa3d07a9de75d40ee6f6e255d25e8e3094bcd5a1",
+      "current_sha256": "77a42c8f802906aaa70176a3aa3d07a9de75d40ee6f6e255d25e8e3094bcd5a1",
+      "unchanged": true
+    },
+    "backend/worker-tests/security.test.js": {
+      "baseline_sha256": "d9e33b3027e948774b3efa18656fcb823453613828faf4ff9201dd0f0b23660d",
+      "current_sha256": "d9e33b3027e948774b3efa18656fcb823453613828faf4ff9201dd0f0b23660d",
+      "unchanged": true
+    },
+    "backend/worker-tests/spectators.test.js": {
+      "baseline_sha256": "6f3e41ead6815aa07211f91bf4253657f0bdcd5c6ea734dad90b5648ec3ba7c5",
+      "current_sha256": "6f3e41ead6815aa07211f91bf4253657f0bdcd5c6ea734dad90b5648ec3ba7c5",
+      "unchanged": true
+    },
+    "backend/worker-tests/storage_bounds.test.js": {
+      "baseline_sha256": "65909115863bcfccbd37fe53b19cf0460c0f0b846a91b2a88a913e2e93c8abf6",
+      "current_sha256": "65909115863bcfccbd37fe53b19cf0460c0f0b846a91b2a88a913e2e93c8abf6",
+      "unchanged": true
+    },
+    "backend/worker-tests/transactions.test.js": {
+      "baseline_sha256": "e8084290f07b9b4ee5b7ce17cede79b6275a781f78474c716955de65c5e32566",
+      "current_sha256": "e8084290f07b9b4ee5b7ce17cede79b6275a781f78474c716955de65c5e32566",
+      "unchanged": true
+    },
+    "backend/worker-tests/transport.test.js": {
+      "baseline_sha256": "28d48f8287109ccb6c03904de7e6f942c6de7821c8f8927eccc658d676aa893c",
+      "current_sha256": "28d48f8287109ccb6c03904de7e6f942c6de7821c8f8927eccc658d676aa893c",
+      "unchanged": true
+    },
+    "backend/worker-tests/transport_audit.test.js": {
+      "baseline_sha256": "a881e31ebae054a4e66bf2b6a27817b0b5b7da8ef2b88b083e989df295a4c190",
+      "current_sha256": "a881e31ebae054a4e66bf2b6a27817b0b5b7da8ef2b88b083e989df295a4c190",
+      "unchanged": true
+    },
+    "backend/worker-tests/transport_receiving_cut.test.js": {
+      "baseline_sha256": "875c09820f2d0cd5ab623bc58b16a9e9bc2106138181f8eea3987f9b07baf84e",
+      "current_sha256": "875c09820f2d0cd5ab623bc58b16a9e9bc2106138181f8eea3987f9b07baf84e",
+      "unchanged": true
+    },
+    "backend/worker-tests/users.test.js": {
+      "baseline_sha256": "18c256c9f4c38e9d27beb5a4d0b6140394b25c0fa21836e84a4eed6d39b8e86c",
+      "current_sha256": "18c256c9f4c38e9d27beb5a4d0b6140394b25c0fa21836e84a4eed6d39b8e86c",
+      "unchanged": true
+    },
+    "docs/reviews/backend-audit-2026-10-12-evidence.json": {
+      "baseline_sha256": "b26ac359bdfb34cfbf7153109fb14a99e2fef320a52f3f1ebcc28c222bf7dc80",
+      "current_sha256": "b26ac359bdfb34cfbf7153109fb14a99e2fef320a52f3f1ebcc28c222bf7dc80",
+      "unchanged": true
+    },
+    "docs/reviews/backend-audit-2026-10-12.md": {
+      "baseline_sha256": "2e471543781ab39a468eb9b61d71a3f111166e899ce8a7c268635052634fc9df",
+      "current_sha256": "2e471543781ab39a468eb9b61d71a3f111166e899ce8a7c268635052634fc9df",
+      "unchanged": true
+    },
+    "docs/reviews/command-lookup-slice-2026-10-12-evidence.json": {
+      "baseline_sha256": "865bee4cac8ace7760da4a405296a91ee18f5436aea1b3449d61d2d11149c25a",
+      "current_sha256": "865bee4cac8ace7760da4a405296a91ee18f5436aea1b3449d61d2d11149c25a",
+      "unchanged": true
+    },
+    "docs/reviews/command-lookup-slice-2026-10-12.md": {
+      "baseline_sha256": "d57efc12d7a43d576dcb1f5698ffddcfddb2bde46190bd84483144b79bdf5b1a",
+      "current_sha256": "d57efc12d7a43d576dcb1f5698ffddcfddb2bde46190bd84483144b79bdf5b1a",
+      "unchanged": true
+    },
+    "docs/reviews/dedicated-read-slice-2026-10-12-evidence.json": {
+      "baseline_sha256": "d6ae137f679258e3c76a8688204b176b69e5cdab658cdad5e4d4b6766a27b8b8",
+      "current_sha256": "d6ae137f679258e3c76a8688204b176b69e5cdab658cdad5e4d4b6766a27b8b8",
+      "unchanged": true
+    },
+    "docs/reviews/dedicated-read-slice-2026-10-12.md": {
+      "baseline_sha256": "b7852178b4679858134069753a58e2ea6bf840ab66333ecb694dc47401eaa532",
+      "current_sha256": "b7852178b4679858134069753a58e2ea6bf840ab66333ecb694dc47401eaa532",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/command-lookup-final-return.config.mjs": {
+      "baseline_sha256": "fa946f6c1fcec6da2e54f1c207a1ebddd9d730489121adface64bb0ea99d3355",
+      "current_sha256": "fa946f6c1fcec6da2e54f1c207a1ebddd9d730489121adface64bb0ea99d3355",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/command-lookup-final-return.test.js": {
+      "baseline_sha256": "28cec08b858f5ca8ab0335007d8a1afcf3cbd63612ace70c5f21261f86875a11",
+      "current_sha256": "28cec08b858f5ca8ab0335007d8a1afcf3cbd63612ace70c5f21261f86875a11",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/dedicated-read-core-repair.md": {
+      "baseline_sha256": "b9aae6adaf0082227eea58f229a3f35a3acc0ffd98f52339543b8accc469a20d",
+      "current_sha256": "b9aae6adaf0082227eea58f229a3f35a3acc0ffd98f52339543b8accc469a20d",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/dedicated-read-core-review.md": {
+      "baseline_sha256": "4ee1d4b54b26bc687d0c736173ae350f507228af5dfd7d5e5fcc0110157f40e4",
+      "current_sha256": "4ee1d4b54b26bc687d0c736173ae350f507228af5dfd7d5e5fcc0110157f40e4",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/dedicated-read-release-races.config.mjs": {
+      "baseline_sha256": "55737e1b895a81222b0d21dad6adbbad11e6896b488108341d219396850e3137",
+      "current_sha256": "55737e1b895a81222b0d21dad6adbbad11e6896b488108341d219396850e3137",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/dedicated-read-release-races.test.js": {
+      "baseline_sha256": "c447029b41510618e544cbd7c98ade4ac1686464a9bf088ca9b6b3d4e91bd237",
+      "current_sha256": "c447029b41510618e544cbd7c98ade4ac1686464a9bf088ca9b6b3d4e91bd237",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/dedicated-read-release-remediation.md": {
+      "baseline_sha256": "61802791d62f4783cf4fa0c924ba13ed0cfbefead6b3e6119ee45a3131e6519d",
+      "current_sha256": "61802791d62f4783cf4fa0c924ba13ed0cfbefead6b3e6119ee45a3131e6519d",
+      "unchanged": true
+    },
+    "docs/reviews/evidence/dedicated-read-runtime-review.md": {
+      "baseline_sha256": "3f3811334042ded641bf97985efc742d47c0c0396fa3eb33336d78fc457a3c14",
+      "current_sha256": "3f3811334042ded641bf97985efc742d47c0c0396fa3eb33336d78fc457a3c14",
+      "unchanged": true
+    },
+    "docs/reviews/game-audit-slice-2026-10-13-evidence.json": {
+      "baseline_sha256": "be53da89863040833fce9c33431c5200ddec40cf14d8056799e25575d7d0a16b",
+      "current_sha256": "be53da89863040833fce9c33431c5200ddec40cf14d8056799e25575d7d0a16b",
+      "unchanged": true
+    },
+    "docs/reviews/game-audit-slice-2026-10-13.md": {
+      "baseline_sha256": "ba1a7cf017fb968f329024ece846a55d8d423acb3bfdbbf32d49c5b1b17ef146",
+      "current_sha256": "ba1a7cf017fb968f329024ece846a55d8d423acb3bfdbbf32d49c5b1b17ef146",
+      "unchanged": true
+    },
+    "docs/reviews/game-audit-slice-publication-reconciliation.json": {
+      "baseline_sha256": "cca56747fac275c1ef9d4c4347711173c6f0589ac7adcf1a88478e32edb18761",
+      "current_sha256": "cca56747fac275c1ef9d4c4347711173c6f0589ac7adcf1a88478e32edb18761",
+      "unchanged": true
+    },
+    "docs/reviews/operator-slice-2026-10-12-evidence.json": {
+      "baseline_sha256": "ee81a3853ce80cde9ac8b6dfe5dc218d87edabc67522a225ab88e93db97aed25",
+      "current_sha256": "ee81a3853ce80cde9ac8b6dfe5dc218d87edabc67522a225ab88e93db97aed25",
+      "unchanged": true
+    },
+    "docs/reviews/operator-slice-2026-10-12.md": {
+      "baseline_sha256": "532f099cb1233577aaebc1a221361be76583f7f4aca7f48eec121b12e048050e",
+      "current_sha256": "532f099cb1233577aaebc1a221361be76583f7f4aca7f48eec121b12e048050e",
+      "unchanged": true
+    },
+    "docs/reviews/operator-slice-publication-reconciliation.json": {
+      "baseline_sha256": "52f16f4b81a4edb597c9a829fea0f567c13cee2a01cf8258b653ba7458094cc0",
+      "current_sha256": "52f16f4b81a4edb597c9a829fea0f567c13cee2a01cf8258b653ba7458094cc0",
+      "unchanged": true
+    },
+    "docs/reviews/runtime-readiness-slice-2026-10-13-evidence.json": {
+      "baseline_sha256": "4beef1b385e79efb95acd47deb8db2ced31323bca2a6da29ddf7f1a01d77ed72",
+      "current_sha256": "4beef1b385e79efb95acd47deb8db2ced31323bca2a6da29ddf7f1a01d77ed72",
+      "unchanged": true
+    },
+    "docs/reviews/runtime-readiness-slice-2026-10-13.md": {
+      "baseline_sha256": "705735cd2792b89d1ea0bae40a2665105804c20559154e64bf186885f8af85db",
+      "current_sha256": "705735cd2792b89d1ea0bae40a2665105804c20559154e64bf186885f8af85db",
+      "unchanged": true
+    },
+    "docs/reviews/spectator-slice-2026-10-12-evidence.json": {
+      "baseline_sha256": "856753efaa20c184f019818593c039ca5cbbd4de49c2287e348303bb5420094f",
+      "current_sha256": "856753efaa20c184f019818593c039ca5cbbd4de49c2287e348303bb5420094f",
+      "unchanged": true
+    },
+    "docs/reviews/spectator-slice-2026-10-12.md": {
+      "baseline_sha256": "580dda0b8fb807e2848ae0c8f064b2567e27831d3f7f1a109bf7c56e76d11371",
+      "current_sha256": "580dda0b8fb807e2848ae0c8f064b2567e27831d3f7f1a109bf7c56e76d11371",
+      "unchanged": true
+    }
+  },
+  "out_of_scope_concurrent_worktree_observation": [
+    "backend/tools/README.md became modified during review; no semantic review or mutation performed"
+  ],
+  "all_paired_files_unchanged": true,
+  "prior_protected_baseline_changed_count": 0,
+  "finished_at": "2026-10-13T13:25:04.610936+00:00",
+  "read_only_repo": true,
+  "parent_full_release_runner_not_executed_by_reviewer": true,
+  "review_artifacts": {
+    "/root/.hermes/cache/scratch/brews-game-resources-review.md": "00f95ae476848495b6b0ccc23a969d7dc199914d468be88848802bb1bcb1def1",
+    "/root/.hermes/cache/scratch/brews-game-resources-review-execution.json": "97f5b19ec1832fc1f5fe9cdd1e9193d8a83c801031f9892182001150570d1111"
+  }
+}

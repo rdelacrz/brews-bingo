@@ -1,0 +1,884 @@
+{
+  "bounded_in_memory_negative_probes_rejected": 130,
+  "checks": [
+    {
+      "name": "final-probe-01_source_delta",
+      "passed": true
+    },
+    {
+      "name": "final-probe-01_artifacts_unchanged",
+      "passed": true
+    },
+    {
+      "name": "final-probe-01_all_commands_exit0",
+      "passed": true
+    },
+    {
+      "name": "final-probe-02_source_delta",
+      "passed": true
+    },
+    {
+      "name": "final-probe-02_artifacts_unchanged",
+      "passed": true
+    },
+    {
+      "name": "final-probe-02_all_commands_exit0",
+      "passed": true
+    },
+    {
+      "name": "final-probe-03_source_delta",
+      "passed": true
+    },
+    {
+      "name": "final-probe-03_artifacts_unchanged",
+      "passed": true
+    },
+    {
+      "name": "final-probe-03_all_commands_exit0",
+      "passed": true
+    },
+    {
+      "name": "final-gates-01_source_delta",
+      "passed": true
+    },
+    {
+      "name": "final-gates-01_artifacts_unchanged",
+      "passed": true
+    },
+    {
+      "name": "fresh_probe03_success",
+      "passed": true
+    },
+    {
+      "name": "probe02_failure_preserved",
+      "passed": true
+    },
+    {
+      "name": "historical_full_gate_nonzero_retained",
+      "passed": true
+    },
+    {
+      "name": "original_review_deltas_only_authorized_context_or_repairs",
+      "passed": true
+    },
+    {
+      "name": "empty_zero_socket_sample",
+      "passed": true
+    },
+    {
+      "name": "wrong_role",
+      "passed": true
+    },
+    {
+      "name": "extra_socket",
+      "passed": true
+    },
+    {
+      "name": "lobby_connection_count",
+      "passed": true
+    },
+    {
+      "name": "closed_identity_int_False",
+      "passed": true
+    },
+    {
+      "name": "closed_identity_str_False",
+      "passed": true
+    },
+    {
+      "name": "closed_identity_bool_True",
+      "passed": true
+    },
+    {
+      "name": "closed_identity_NoneType_False",
+      "passed": true
+    },
+    {
+      "name": "frame_frames_bool",
+      "passed": true
+    },
+    {
+      "name": "aggregate_frames_bool",
+      "passed": true
+    },
+    {
+      "name": "frame_frames_float",
+      "passed": true
+    },
+    {
+      "name": "aggregate_frames_float",
+      "passed": true
+    },
+    {
+      "name": "frame_frames_negative",
+      "passed": true
+    },
+    {
+      "name": "aggregate_frames_negative",
+      "passed": true
+    },
+    {
+      "name": "frame_frame_bytes_bool",
+      "passed": true
+    },
+    {
+      "name": "aggregate_frame_bytes_bool",
+      "passed": true
+    },
+    {
+      "name": "frame_frame_bytes_float",
+      "passed": true
+    },
+    {
+      "name": "aggregate_frame_bytes_float",
+      "passed": true
+    },
+    {
+      "name": "frame_frame_bytes_negative",
+      "passed": true
+    },
+    {
+      "name": "aggregate_frame_bytes_negative",
+      "passed": true
+    },
+    {
+      "name": "frame_snapshots_bool",
+      "passed": true
+    },
+    {
+      "name": "aggregate_snapshots_bool",
+      "passed": true
+    },
+    {
+      "name": "frame_snapshots_float",
+      "passed": true
+    },
+    {
+      "name": "aggregate_snapshots_float",
+      "passed": true
+    },
+    {
+      "name": "frame_snapshots_negative",
+      "passed": true
+    },
+    {
+      "name": "aggregate_snapshots_negative",
+      "passed": true
+    },
+    {
+      "name": "frame_terminal_notices_bool",
+      "passed": true
+    },
+    {
+      "name": "aggregate_terminal_notices_bool",
+      "passed": true
+    },
+    {
+      "name": "frame_terminal_notices_float",
+      "passed": true
+    },
+    {
+      "name": "aggregate_terminal_notices_float",
+      "passed": true
+    },
+    {
+      "name": "frame_terminal_notices_negative",
+      "passed": true
+    },
+    {
+      "name": "aggregate_terminal_notices_negative",
+      "passed": true
+    },
+    {
+      "name": "frame_ack_frames_bool",
+      "passed": true
+    },
+    {
+      "name": "aggregate_ack_frames_bool",
+      "passed": true
+    },
+    {
+      "name": "frame_ack_frames_float",
+      "passed": true
+    },
+    {
+      "name": "aggregate_ack_frames_float",
+      "passed": true
+    },
+    {
+      "name": "frame_ack_frames_negative",
+      "passed": true
+    },
+    {
+      "name": "aggregate_ack_frames_negative",
+      "passed": true
+    },
+    {
+      "name": "frame_ack_bytes_bool",
+      "passed": true
+    },
+    {
+      "name": "aggregate_ack_bytes_bool",
+      "passed": true
+    },
+    {
+      "name": "frame_ack_bytes_float",
+      "passed": true
+    },
+    {
+      "name": "aggregate_ack_bytes_float",
+      "passed": true
+    },
+    {
+      "name": "frame_ack_bytes_negative",
+      "passed": true
+    },
+    {
+      "name": "aggregate_ack_bytes_negative",
+      "passed": true
+    },
+    {
+      "name": "no_initial_snapshot",
+      "passed": true
+    },
+    {
+      "name": "aggregate_mismatch",
+      "passed": true
+    },
+    {
+      "name": "sdk_stage_missing_0",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_accounts_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_accounts_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_accounts_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_accounts_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_accounts_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_accounts_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_directory_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_directory_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_directory_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_directory_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_directory_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_directory_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_game_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_game_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_game_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_game_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_game_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_0_game_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_stage_missing_1",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_accounts_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_accounts_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_accounts_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_accounts_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_accounts_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_accounts_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_directory_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_directory_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_directory_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_directory_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_directory_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_directory_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_game_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_game_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_game_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_game_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_game_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_1_game_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_stage_missing_2",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_accounts_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_accounts_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_accounts_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_accounts_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_accounts_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_accounts_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_directory_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_directory_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_directory_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_directory_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_directory_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_directory_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_game_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_game_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_game_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_game_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_game_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_2_game_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_stage_missing_3",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_accounts_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_accounts_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_accounts_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_accounts_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_accounts_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_accounts_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_directory_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_directory_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_directory_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_directory_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_directory_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_directory_empty_row",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_game_row_missing",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_game_false_integer",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_game_true",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_game_null",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_game_supplemented_zero_rows",
+      "passed": true
+    },
+    {
+      "name": "sdk_3_game_empty_row",
+      "passed": true
+    },
+    {
+      "name": "pending_omitted",
+      "passed": true
+    },
+    {
+      "name": "pending_label_removed",
+      "passed": true
+    },
+    {
+      "name": "pending_label_duplicate",
+      "passed": true
+    },
+    {
+      "name": "partial_missing_configuration",
+      "passed": true
+    },
+    {
+      "name": "partial_missing_sample",
+      "passed": true
+    },
+    {
+      "name": "partial_missing_stages",
+      "passed": true
+    },
+    {
+      "name": "partial_frames_object",
+      "passed": true
+    },
+    {
+      "name": "partial_sdk_row_object",
+      "passed": true
+    },
+    {
+      "name": "actual_python_suite_passed",
+      "passed": true
+    },
+    {
+      "name": "review_owned_runner_children_empty",
+      "passed": true
+    },
+    {
+      "name": "all_current_source_hashes_unchanged",
+      "passed": true
+    },
+    {
+      "name": "paired_files_unchanged",
+      "passed": true
+    }
+  ],
+  "code_graph_hash_verification": {
+    "documentation_graph_certified": false,
+    "mismatched_paths": [],
+    "source_count": 250
+  },
+  "cross_cut_reconciliation": "Only parser and parser-unit hashes differ from pre-repair gates01/probe01/probe02. Same 266 remaining mapped sources, four artifacts and baseline commit. Fresh current-parser Python suite and probe03 separately accepted; frozen fullgate remains historical and nonzero.",
+  "elapsed_wall_seconds": 1.645,
+  "finished_at": "2026-10-13T13:48:25.669798+00:00",
+  "new_native_worker_tls_builds": false,
+  "original_review_inventory_current_differences": [
+    "/home/orangepi/Workspace/brews-bingo/backend/tools/game_resource_probe.py",
+    "/home/orangepi/Workspace/brews-bingo/backend/tools/tests/test_game_resource_probe.py"
+  ],
+  "probe02_reason_provenance": "Parent-provided pending versus limits_pending diagnosis matches the inspected producer and repaired fixture; retained report independently proves GateError/exit1 after five exit0 commands, not the internal exception message.",
+  "python_suite": {
+    "duration_seconds": 1.123,
+    "exit_code": 0,
+    "raw_output_persisted": false,
+    "stderr_sha256": "fcffe89be895b21fd2bd3f50bcf30206e4c35331fdf6b0f8495cdd1d7de41941",
+    "stdout_sha256": "d87bd8cc4c6766bb03ff66570de959b1e6386ef5a0c877f2256fba83b49ae090",
+    "test_count": 27
+  },
+  "repo_graph_docs_writes": false,
+  "report_reconciliation": {
+    "final-gates-01": {
+      "artifact_count": 4,
+      "artifact_matches_current": true,
+      "changed_source_paths_since_frozen_report": [
+        "backend/tools/game_resource_probe.py",
+        "backend/tools/tests/test_game_resource_probe.py"
+      ],
+      "commands": [
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "cargo-version.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "cli-build.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "clippy-native.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "clippy-wasm.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "doctests.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "format.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "native-debug.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "native-release-assertions.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 1,
+          "raw_output_persisted": false,
+          "record": "protected-response-contract.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "tls-dedicated_reads.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "tls-game_audit.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "tls-gameplay.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "tls-operator.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "worker-build.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "worker-shard-1.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "worker-shard-2.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "worker-shard-3.json",
+          "timed_out": false
+        }
+      ],
+      "exit_code": 2,
+      "reported_artifact_unchanged": true,
+      "reported_source_unchanged": true,
+      "source_inventory_count": 268
+    },
+    "final-probe-01": {
+      "artifact_count": 4,
+      "artifact_matches_current": true,
+      "changed_source_paths_since_frozen_report": [
+        "backend/tools/game_resource_probe.py",
+        "backend/tools/tests/test_game_resource_probe.py"
+      ],
+      "commands": [
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "cargo-version.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resource-worker-build.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resource-workerd.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resources-debug.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resources-release-assertions.json",
+          "timed_out": false
+        }
+      ],
+      "current_parser_accepts_retained_observations": 3,
+      "exit_code": 0,
+      "reported_artifact_unchanged": true,
+      "reported_source_unchanged": true,
+      "source_inventory_count": 268
+    },
+    "final-probe-02": {
+      "artifact_count": 4,
+      "artifact_matches_current": true,
+      "changed_source_paths_since_frozen_report": [
+        "backend/tools/game_resource_probe.py",
+        "backend/tools/tests/test_game_resource_probe.py"
+      ],
+      "commands": [
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "cargo-version.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resource-worker-build.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resource-workerd.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resources-debug.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resources-release-assertions.json",
+          "timed_out": false
+        }
+      ],
+      "current_parser_accepts_retained_observations": 2,
+      "exit_code": 1,
+      "reported_artifact_unchanged": true,
+      "reported_source_unchanged": true,
+      "source_inventory_count": 268
+    },
+    "final-probe-03": {
+      "artifact_count": 4,
+      "artifact_matches_current": true,
+      "changed_source_paths_since_frozen_report": [],
+      "commands": [
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "cargo-version.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resource-worker-build.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resource-workerd.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resources-debug.json",
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "raw_output_persisted": false,
+          "record": "resources-release-assertions.json",
+          "timed_out": false
+        }
+      ],
+      "current_parser_accepts_retained_observations": 3,
+      "exit_code": 0,
+      "reported_artifact_unchanged": true,
+      "reported_source_unchanged": true,
+      "source_inventory_count": 268
+    }
+  },
+  "review_harness_initial_metadata_failure": {
+    "cause": "bytes output passed to text regex after suite completed; scratch harness corrected and final execution repeated",
+    "preserved_as_historical_failure": true,
+    "repo_effect": false,
+    "type": "TypeError"
+  },
+  "review_owned_live_children_at_finish": 0,
+  "scope": "read_only_parser_and_probe_review_not_provider_or_backend_acceptance",
+  "slice9_pending_checkbox_count": 8,
+  "started_at": "2026-10-13T13:48:24.149003+00:00"
+}

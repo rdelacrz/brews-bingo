@@ -24073,6 +24073,326 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tests_game_resources",
+      "label": "game_resources.rs",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_id",
+      "label": "id()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L34",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_testruntime",
+      "label": "TestRuntime",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_string",
+      "label": "String",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_cookie",
+      "label": "cookie()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L42",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture",
+      "label": "Fixture",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L48",
+      "_origin": "ast"
+    },
+    {
+      "id": "measureddb",
+      "label": "MeasuredDb",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_accountid",
+      "label": "AccountId",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_new",
+      "label": ".new()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L57",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_self",
+      "label": "Self",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_service",
+      "label": ".service()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L119",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_auth",
+      "label": ".auth()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L122",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_directory",
+      "label": ".directory()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L125",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_command",
+      "label": ".command()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L128",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_commandid",
+      "label": "CommandId",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_player",
+      "label": ".player()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L131",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_fixture_open",
+      "label": ".open()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L158",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_sqlmetrics",
+      "label": "SqlMetrics",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L213",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb",
+      "label": "MeasuredDb",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L219",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_sqlite",
+      "label": "Sqlite",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_cell",
+      "label": "Cell",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb_new",
+      "label": ".new()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L224",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb_reset",
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L230",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb_snapshot",
+      "label": ".snapshot()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L233",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_value",
+      "label": "Value",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb_query",
+      "label": ".query()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_result",
+      "label": "Result",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_vec",
+      "label": "Vec",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_row",
+      "label": "Row",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb_execute",
+      "label": ".execute()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L268",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_measureddb_transaction",
+      "label": ".transaction()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_fnonce",
+      "label": "FnOnce",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_t",
+      "label": "T",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_stage",
+      "label": "stage()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L286",
+      "_origin": "ast"
+    },
+    {
+      "id": "instant",
+      "label": "Instant",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_bytes",
+      "label": "bytes()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L295",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_rs_serialize",
+      "label": "Serialize",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_table_count",
+      "label": "table_count()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L298",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "label": "maximum_value_cell_game_resources()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L302",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tests_game_resources_finite_metrics",
+      "label": "finite_metrics()",
+      "file_type": "code",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L513",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tests_game_wire",
       "label": "game_wire.rs",
       "file_type": "code",
@@ -29329,6 +29649,62 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tools_game_resource_probe",
+      "label": "game_resource_probe.py",
+      "file_type": "code",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_game_resource_probe_summaries",
+      "label": "summaries()",
+      "file_type": "code",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_game_resource_probe_validate_sample",
+      "label": "validate_sample()",
+      "file_type": "code",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_game_resource_probe_run",
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L151",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_game_resource_probe_py_namespace",
+      "label": "Namespace",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_game_resource_probe_main",
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L220",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_game_resource_probe_rationale_1",
+      "label": "Run local maximum-configured-game observations, never a provider/forecast capaci",
+      "file_type": "rationale",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tools_release_gate",
       "label": "release_gate.py",
       "file_type": "code",
@@ -29553,7 +29929,7 @@
       "_origin": "ast"
     },
     {
-      "id": "namespace",
+      "id": "backend_tools_release_gate_py_namespace",
       "label": "Namespace",
       "file_type": "code",
       "source_file": "",
@@ -29590,6 +29966,118 @@
       "file_type": "rationale",
       "source_file": "backend/tools/release_gate.py",
       "source_location": "L80",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe",
+      "label": "test_game_resource_probe.py",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "label": "ResourceParserTests",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "label": ".text()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_safe_numeric_summary_and_target",
+      "label": ".test_safe_numeric_summary_and_target()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_missing_duplicate_marker_or_wrong_root_fails",
+      "label": ".test_missing_duplicate_marker_or_wrong_root_fails()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L30",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_negative_unsafe_nonfinite_metrics_fail",
+      "label": ".test_negative_unsafe_nonfinite_metrics_fail()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_private_fields_and_credential_like_values_fail",
+      "label": ".test_private_fields_and_credential_like_values_fail()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L41",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_resource_containers_are_bounded",
+      "label": ".test_resource_containers_are_bounded()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L50",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_single_test_nextest_summary_requires_a_real_unique_pass",
+      "label": ".test_single_test_nextest_summary_requires_a_real_unique_pass()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L61",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_native_stage_cardinality_and_storage_equations_are_checked",
+      "label": ".test_native_stage_cardinality_and_storage_equations_are_checked()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_worker_fixture",
+      "label": ".worker_fixture()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L97",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_worker_socket_inventory_closure_and_integer_accounting_are_checked",
+      "label": ".test_worker_socket_inventory_closure_and_integer_accounting_are_checked()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L125",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_worker_sdk_unavailability_cannot_be_omitted_or_replaced_with_zero_counters",
+      "label": ".test_worker_sdk_unavailability_cannot_be_omitted_or_replaced_with_zero_counters()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L144",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_tests_test_game_resource_probe_rationale_1",
+      "label": "Resource summary parser fixtures are unit data, not measured service output.",
+      "file_type": "rationale",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L1",
       "_origin": "ast"
     },
     {
@@ -30526,6 +31014,110 @@
       "file_type": "code",
       "source_file": "backend/worker-tests/game_recovery.test.js",
       "source_location": "L106",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test",
+      "label": "game_resources.test.js",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_maximum",
+      "label": "maximum()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_limits",
+      "label": "limits",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_owner",
+      "label": "owner()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L14",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_directory",
+      "label": "directory()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_bytes",
+      "label": "bytes()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_pause",
+      "label": "pause()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_jsonok",
+      "label": "jsonOK()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_sync",
+      "label": "sync()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_storage",
+      "label": "storage()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L29",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_stream",
+      "label": "stream()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L42",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_settled",
+      "label": "settled()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L64",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_worker_tests_game_resources_test_finitemetrics",
+      "label": "finiteMetrics()",
+      "file_type": "code",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L72",
       "_origin": "ast"
     },
     {
@@ -153089,6 +153681,1159 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_game_resources",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "db",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L9",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "brews_backend",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L10",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "gameresponse",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L21",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "management",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L22",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "brews_domain",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L23",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "serde_json",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L31",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "std",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L32",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "support",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L33",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_id",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_id",
+      "target": "backend_tests_game_resources_rs_testruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_id",
+      "target": "backend_tests_game_resources_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_cookie",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_cookie",
+      "target": "backend_src_auth_mod_authoutcome",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L42",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_cookie",
+      "target": "backend_tests_game_resources_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L42",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_fixture",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "measureddb",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L49",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "measureddb",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L50",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "measureddb",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L51",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_rs_testruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_rs_accountid",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L53",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L54",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_new",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_new",
+      "target": "backend_tests_game_resources_rs_self",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L57",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_service",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L119",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_service",
+      "target": "backend_src_db_game_gameservice",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L119",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_service",
+      "target": "measureddb",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L119",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_service",
+      "target": "backend_tests_game_resources_rs_testruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L119",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_auth",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_auth",
+      "target": "backend_src_auth_mod_authservice",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L122",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_auth",
+      "target": "measureddb",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L122",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_auth",
+      "target": "backend_tests_game_resources_rs_testruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L122",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_directory",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L125",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_directory",
+      "target": "backend_src_db_directory_directoryservice",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L125",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_directory",
+      "target": "measureddb",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L125",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_directory",
+      "target": "backend_tests_game_resources_rs_testruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L125",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_command",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L128",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_command",
+      "target": "backend_tests_game_resources_rs_commandid",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L128",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_player",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L131",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_player",
+      "target": "shared_domain_src_games_gamecode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L131",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_player",
+      "target": "backend_src_game_mod_secretcookie",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L131",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture",
+      "target": "backend_tests_game_resources_fixture_open",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L158",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "shared_domain_src_games_gameconfiguration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L158",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "shared_domain_src_games_gamecode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L158",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_sqlmetrics",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L213",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_measureddb",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L219",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_rs_sqlite",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L220",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_rs_cell",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L221",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_sqlmetrics",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L221",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_measureddb_new",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L224",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_new",
+      "target": "backend_tests_game_resources_rs_self",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L224",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_measureddb_reset",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L230",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_measureddb_snapshot",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_snapshot",
+      "target": "backend_tests_game_resources_rs_value",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L233",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_src_db_mod_database",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L257",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_measureddb_query",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_query",
+      "target": "backend_src_db_mod_sqlvalue",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_query",
+      "target": "backend_tests_game_resources_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_query",
+      "target": "backend_tests_game_resources_rs_vec",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_query",
+      "target": "backend_tests_game_resources_rs_row",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_query",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L258",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_measureddb_execute",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L268",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_execute",
+      "target": "backend_src_db_mod_sqlvalue",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L268",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_execute",
+      "target": "backend_tests_game_resources_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L268",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_execute",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L268",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb",
+      "target": "backend_tests_game_resources_measureddb_transaction",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_tests_game_resources_rs_fnonce",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_tests_game_resources_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_tests_game_resources_rs_t",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_tests_game_resources_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_tests_game_resources_rs_t",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_measureddb_transaction",
+      "target": "backend_src_db_error_storageerror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L279",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_stage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L286",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_stage",
+      "target": "backend_tests_game_resources_fixture",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L286",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_stage",
+      "target": "instant",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L286",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_stage",
+      "target": "backend_tests_game_resources_rs_value",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L286",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_stage",
+      "target": "backend_tests_game_resources_rs_value",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L286",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_bytes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_bytes",
+      "target": "backend_tests_game_resources_rs_serialize",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L295",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_table_count",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L298",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_table_count",
+      "target": "backend_tests_game_resources_fixture",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L298",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L302",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources",
+      "target": "backend_tests_game_resources_finite_metrics",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L513",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_finite_metrics",
+      "target": "backend_tests_game_resources_rs_value",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L513",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_new",
+      "target": "backend_tests_game_resources_measureddb_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_new",
+      "target": "backend_tests_game_resources_cookie",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L88",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_new",
+      "target": "backend_tests_game_resources_measureddb_execute",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_service",
+      "target": "backend_tests_game_resources_measureddb_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L120",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_auth",
+      "target": "backend_tests_game_resources_measureddb_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L123",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_directory",
+      "target": "backend_tests_game_resources_measureddb_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L126",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_player",
+      "target": "backend_tests_game_resources_fixture_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L137",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_player",
+      "target": "backend_tests_game_resources_fixture_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L145",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "backend_tests_game_resources_fixture_directory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L160",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "backend_tests_game_resources_fixture_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L164",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "backend_tests_game_resources_fixture_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L168",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "backend_tests_game_resources_fixture_auth",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L172",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_stage",
+      "target": "backend_tests_game_resources_measureddb_reset",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_table_count",
+      "target": "backend_tests_game_resources_measureddb_snapshot",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L299",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_measureddb_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L305",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_fixture_player",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L321",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_fixture_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L323",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_fixture_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L341",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_stage",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L365",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_fixture_auth",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L370",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_fixture_directory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L375",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_maximum_value_cell_game_resources",
+      "target": "backend_tests_game_resources_finite_metrics",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L509",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_game_wire",
       "target": "brews_backend",
       "relation": "imports_from",
@@ -171280,6 +173025,177 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tools_game_resource_probe",
+      "target": "argparse",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "re",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "subprocess",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "sys",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "release_gate",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "backend_tools_game_resource_probe_summaries",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "backend_tools_game_resource_probe_validate_sample",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "backend_tools_game_resource_probe_run",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L151",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe_run",
+      "target": "backend_tools_game_resource_probe_py_namespace",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L151",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe",
+      "target": "backend_tools_game_resource_probe_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L220",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe_run",
+      "target": "backend_tools_game_resource_probe_summaries",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L179",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe_run",
+      "target": "backend_tools_game_resource_probe_validate_sample",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L180",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe_main",
+      "target": "backend_tools_game_resource_probe_run",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L225",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_game_resource_probe_rationale_1",
+      "target": "backend_tools_game_resource_probe",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/game_resource_probe.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tools_release_gate",
       "target": "argparse",
       "relation": "imports",
@@ -171761,7 +173677,7 @@
     },
     {
       "source": "backend_tools_release_gate_run",
-      "target": "namespace",
+      "target": "backend_tools_release_gate_py_namespace",
       "relation": "references",
       "context": "parameter_type",
       "confidence": "EXTRACTED",
@@ -172401,6 +174317,279 @@
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/release_gate.py",
       "source_location": "L80",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "importlib_util",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "copy",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "json",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "pathlib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "sys",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "unittest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_safe_numeric_summary_and_target",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_missing_duplicate_marker_or_wrong_root_fails",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_negative_unsafe_nonfinite_metrics_fail",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_private_fields_and_credential_like_values_fail",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_resource_containers_are_bounded",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_single_test_nextest_summary_requires_a_real_unique_pass",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_native_stage_cardinality_and_storage_equations_are_checked",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_worker_fixture",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_worker_socket_inventory_closure_and_integer_accounting_are_checked",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L125",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_worker_sdk_unavailability_cannot_be_omitted_or_replaced_with_zero_counters",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_safe_numeric_summary_and_target",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_missing_duplicate_marker_or_wrong_root_fails",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_negative_unsafe_nonfinite_metrics_fail",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_private_fields_and_credential_like_values_fail",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_resource_containers_are_bounded",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_text",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_worker_socket_inventory_closure_and_integer_accounting_are_checked",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_worker_fixture",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L126",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_resourceparsertests_test_worker_sdk_unavailability_cannot_be_omitted_or_replaced_with_zero_counters",
+      "target": "backend_tools_tests_test_game_resource_probe_resourceparsertests_worker_fixture",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L145",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_game_resource_probe_rationale_1",
+      "target": "backend_tools_tests_test_game_resource_probe",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_game_resource_probe.py",
+      "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -175456,6 +177645,280 @@
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_recovery.test.js",
       "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "ref_cloudflare_workers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "ref_cloudflare_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "home_orangepi_workspace_brews_bingo_shared_domain_src_games_rs_raw",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_fixtures",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_fixtures_enroll",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_fixtures_post",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_fixtures_resetstorage",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_fixtures_origin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_fixtures_cookie",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_maximum",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_limits",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_owner",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_directory",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_bytes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_pause",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_jsonok",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_sync",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_storage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_stream",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_settled",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test",
+      "target": "backend_worker_tests_game_resources_test_finitemetrics",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test_sync",
+      "target": "backend_worker_tests_game_resources_test_jsonok",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test_stream",
+      "target": "backend_worker_tests_game_resources_test_pause",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test_settled",
+      "target": "backend_worker_tests_game_resources_test_owner",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L66",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test_settled",
+      "target": "backend_worker_tests_game_resources_test_pause",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -207593,6 +210056,42 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_game_resources_fixture_new",
+      "target": "backend_src_db_mod_migrate",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_new",
+      "target": "backend_src_db_directory_migrate_directory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L63",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_game_resources_fixture_open",
+      "target": "backend_src_game_mod_creation_fingerprint",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/game_resources.rs",
+      "source_location": "L165",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_gameplay_https_wss_call",
       "target": "backend_tools_release_gate_runner_tls",
       "relation": "indirect_call",
@@ -207769,6 +210268,18 @@
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
       "source_location": "L2822",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_current_schema_migration_preserves_populated_prior_origins_and_actor_roundtrips",
+      "target": "backend_tests_game_resources_measureddb_snapshot",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2916",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -208501,6 +211012,30 @@
       "confidence_score": 0.8,
       "source_file": "backend/worker-tests/game_object.test.js",
       "source_location": "L327",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test_bytes",
+      "target": "backend_worker_tests_discovery_test_value",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_worker_tests_game_resources_test_stream",
+      "target": "backend_worker_tests_game_object_test_ack",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/worker-tests/game_resources.test.js",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },

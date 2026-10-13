@@ -1,0 +1,141 @@
+{
+  "started_from_baseline": "b158f1375d9de0b3308de47da1a5bdd1e9647047",
+  "python_suite": {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "backend/tools/tests",
+      "-v"
+    ],
+    "bytecode_disabled": true,
+    "exit_code": 0,
+    "tests": 25,
+    "kind": "unit-mock-plus-bounded-process-negative-tests"
+  },
+  "parser_checks": [
+    {
+      "id": "actual-debug",
+      "kind": "reread-parent-real-probe",
+      "accepted": true
+    },
+    {
+      "id": "actual-release-assertions",
+      "kind": "reread-parent-real-probe",
+      "accepted": true
+    },
+    {
+      "id": "actual-workerd",
+      "kind": "reread-parent-real-probe",
+      "accepted": true
+    },
+    {
+      "id": "worker-aggregate-bytes",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "worker-unclosed",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "worker-ack-shortfall",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "worker-duplicate-stage",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "worker-negative-size",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "worker-page-pragmas-label",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "native-page-equation",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "native-history-call-shortfall",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "native-logical-socket-confusion",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "native-source-limit-mismatch",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": false
+    },
+    {
+      "id": "worker-empty-socket-inventory",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": true
+    },
+    {
+      "id": "worker-unavailable-observation-removed",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": true
+    },
+    {
+      "id": "worker-truthy-closure-label",
+      "kind": "unit-mutation-only-not-new-runtime-evidence",
+      "accepted": true
+    }
+  ],
+  "actual_probe_reconciled": true,
+  "native_profile_metrics_equal_excluding_timing": true,
+  "new_native_worker_tls_builds": false,
+  "production_security_acceptance": false,
+  "parent_probe_command_metadata_reconciled": [
+    {
+      "record": "cargo-version.json",
+      "exit_code": 0,
+      "elapsed_wall_seconds": 0.03292571601923555,
+      "raw_output_persisted": false
+    },
+    {
+      "record": "resource-worker-build.json",
+      "exit_code": 0,
+      "elapsed_wall_seconds": 12.412628952995874,
+      "raw_output_persisted": false
+    },
+    {
+      "record": "resource-workerd.json",
+      "exit_code": 0,
+      "elapsed_wall_seconds": 21.397546485008206,
+      "raw_output_persisted": false
+    },
+    {
+      "record": "resources-debug.json",
+      "exit_code": 0,
+      "elapsed_wall_seconds": 48.59283825699822,
+      "raw_output_persisted": false
+    },
+    {
+      "record": "resources-release-assertions.json",
+      "exit_code": 0,
+      "elapsed_wall_seconds": 15.346387576020788,
+      "raw_output_persisted": false
+    }
+  ],
+  "review_owned_live_children_at_finish": 0,
+  "cleanup_evidence": "Python suite process completed; deadline/process-group cancellation assertions passed; no native/Worker/TLS services launched by reviewer",
+  "protected_baseline_files_unchanged": true,
+  "paired_inventory_file": "/root/.hermes/cache/scratch/brews-game-resources-review-inventory.json",
+  "paired_files_unchanged": true
+}

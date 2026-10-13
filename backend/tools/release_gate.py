@@ -109,7 +109,7 @@ def execute(command: list[str], cwd: Path, target: Path, deadline: int) -> tuple
 
 
 def native_inventory(text: str) -> list[str]:
-    summaries = re.findall(r"Summary \[.*?\] (\d+) tests run: (\d+) passed(?: \([^)]*\))?, (\d+) skipped", text)
+    summaries = re.findall(r"Summary \[.*?\] (\d+) tests? run: (\d+) passed(?: \([^)]*\))?, (\d+) skipped", text)
     if len(summaries) != 1:
         raise GateError("Missing or ambiguous nextest summary")
     ran, passed, skipped = map(int, summaries[0])
