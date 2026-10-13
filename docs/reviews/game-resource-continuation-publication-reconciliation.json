@@ -1,0 +1,73 @@
+{
+  "kind": "authorized_resource_measurement_publication_not_production_acceptance",
+  "recorded_at_utc": "2026-10-13T14:03:27.081864+00:00",
+  "commit": "1f742c92b0c394864644890d8478f4563bcae5e4",
+  "subject": "test(backend): measure maximum-configured game resources",
+  "remote_main_readback": "1f742c92b0c394864644890d8478f4563bcae5e4",
+  "origin_main_readback": "1f742c92b0c394864644890d8478f4563bcae5e4",
+  "published_paths": [
+    "backend/tests/game_resources.rs",
+    "backend/tools/README.md",
+    "backend/tools/game_resource_probe.py",
+    "backend/tools/release_gate.py",
+    "backend/tools/tests/test_game_resource_probe.py",
+    "backend/worker-tests/game_resources.test.js",
+    "docs/operations/game-resource-measurements.md",
+    "docs/plans/PENDING.md",
+    "docs/plans/lld.md",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/failed-probe02-report.json",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/final-review-execution.json",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/final-review-inventory.json",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/final-review.md",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/implementation-report.md",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/initial-review-execution.json",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/initial-review-inventory.json",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/initial-review.md",
+    "docs/reviews/evidence/game-resource-continuation-2026-10-13/manifest.json",
+    "docs/reviews/game-resource-continuation-2026-10-13-evidence.json",
+    "docs/reviews/game-resource-continuation-2026-10-13.md",
+    "docs/reviews/runtime-readiness-slice-publication-reconciliation.json",
+    "graphify-out/code/GRAPH_REPORT.md",
+    "graphify-out/code/graph.html",
+    "graphify-out/code/graph.json",
+    "graphify-out/code/manifest.json",
+    "graphify-out/code/structural-extraction.json"
+  ],
+  "review_sha256": "939cdb957a829dd0fd675047a444e98b1b20efffe7755698cfd8e6cd512c7903",
+  "evidence_sha256": "f52c17203bd5fd58b0c6ca8fde62022cc1bfb5df329730d9fdf004467867ffd5",
+  "all_reviewed_current_input_index_blobs_match_evidence": true,
+  "reviewed_code_delta_before_publication": "none",
+  "current_graph_and_four_worker_artifacts_match_recorded_evidence": true,
+  "clean_worktree_after_remote_readback": true,
+  "verification_cuts": {
+    "frozen_full_gate": {
+      "native_per_profile": 959,
+      "doctests": 12,
+      "workerd": 713,
+      "workerd_physical_suites": 38,
+      "https_wss": 373,
+      "overall_exit": 2
+    },
+    "subsequent_parser_only_repairs": {
+      "python_tests": 27,
+      "fresh_native_resource_test_per_profile": 1,
+      "fresh_workerd_resource_tests": 1,
+      "resource_probe_exit": 0,
+      "independent_negative_parser_probes_rejected": 130,
+      "full_gate_not_repeated_after_parser_only_delta": true,
+      "unchanged_other_mapped_inputs": 266,
+      "unchanged_worker_artifacts": 4
+    }
+  },
+  "acceptance": {
+    "production_release": "blocked",
+    "RUNTIME-FINAL-01": "open; retained real acceptance assertion failed with held HTTP200",
+    "Slice2_final_review": "open",
+    "Slice6_7": "open",
+    "original_eight_production_checkboxes": "all pending"
+  },
+  "original_review_and_evidence": "Immutable prepublication snapshots; their unpublished labels describe that cut, not the subsequent authorized publication",
+  "documentation_followup": "Publication readback and current planning status only; no implementation or policy changes",
+  "new_implementation_authorized": false,
+  "deployment": "none"
+}
