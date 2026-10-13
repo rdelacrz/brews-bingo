@@ -1,5 +1,6 @@
 //! Cloudflare entry points; private adapters, no listening TCP server.
 mod auth_output;
+mod command_lookup;
 mod database;
 pub(super) mod directory;
 mod discovery;

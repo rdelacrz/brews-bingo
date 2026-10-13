@@ -530,6 +530,14 @@ impl GameObject {
             .map_err(|_| GameError::Storage)?
             .cleanup_expired()
             .map_err(|_| GameError::Storage)?;
+        if service.command_game_missing()?
+            && service.pending_work(1)?.is_empty()
+            && service.host_transfer_work()?.is_empty()
+            && self.sockets()?.is_empty()
+        {
+            // An audit-only owner has no game view to broadcast or command to recover.
+            return self.persist(&service, &db).await;
+        }
         // Required SQL/peer recovery is independent of best-effort transport.
         self.persist_recovery(&service, &db).await?;
         let socket_result = self.broadcast(&service, &db).await;

@@ -59,6 +59,7 @@ pub(crate) fn read_purpose(kind: ReadKind) -> OperatorPurpose {
         ReadKind::Boards => OperatorPurpose::BoardsRead,
         ReadKind::Qualification => OperatorPurpose::QualificationRead,
         ReadKind::Result => OperatorPurpose::ResultRead,
+        ReadKind::CommandLookup(_) => OperatorPurpose::CommandLookup,
     }
 }
 impl<D: Database, R: Runtime> GameService<'_, D, R> {
@@ -97,6 +98,9 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         observed: &[ConnectionId],
         now: i64,
     ) -> Result<ReadCut, GameError> {
+        if let ReadKind::CommandLookup(command) = selection.kind {
+            return self.command_lookup_at(selection, command, token, account, now);
+        }
         if observed.len() > OBSERVED_CONNECTION_LIMIT {
             return Err(GameError::Storage);
         }
@@ -461,7 +465,9 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     view_revision: rev,
                 }),
             },
-            ReadKind::Game | ReadKind::Result => return Err(GameError::Storage),
+            ReadKind::Game | ReadKind::Result | ReadKind::CommandLookup(_) => {
+                return Err(GameError::Storage);
+            }
         })
     }
     fn read_player_connected(

@@ -1,4 +1,5 @@
 //! Game-owner SQLite service; fixed statements and bounded owner-local work.
+mod command_lookup;
 mod connection_capacity;
 mod operator;
 #[cfg_attr(

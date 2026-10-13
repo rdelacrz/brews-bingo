@@ -861,6 +861,8 @@ DO-081 approves the owner-local fields/TargetRef/CoordinationPhase; `payload` is
 Local Slice 5 coordination keeps Directory host-transfer completion evidence independently of the ordinary receipt deadline. `completion_acknowledged_at` is absent until an exact settled ACK has been durably consumed by Game and confirmed through the private completion handshake (including idempotent reconstruction). Unconfirmed settled work participates in bounded alarm recovery; only acknowledged completion metadata gets bounded cleanup. The handshake carries the full existing immutable operation binding, and late ACKs never modify successor Game work. Game/Directory intent fences and narrowly validated hidden-code reconciliation preserve original creation/code association during cancellation/release races.
 
 
+Local Slice 7 G4 reads the existing Game receipt/work/transfer facts by current original actor and exact command, with the bounded closed DTO documented in the API design. Prepared coordination is pending; a local committed receipt exposes only whether matching required follow-up remains. Required work outlives the ordinary receipt window without reviving retired outcomes. Lookup performs no command execution or reconciliation. Exact unready creation intent may be read privately from Directory under current original-account proof before Game initialization. The new `command_lookup` audit-purpose vocabulary uses a strict frozen counter-6 whole-schema migration; its counter 7 is storage metadata. Existing retention/identity/History policy is unchanged. Last-hop acceptance remains the shared open `RUNTIME-FINAL-01` decision, not a new approved read lease or delivery contract.
+
 #### `RateLimitBucket`
 
 ```rust

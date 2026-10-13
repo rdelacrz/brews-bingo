@@ -17,6 +17,7 @@ pub(crate) fn statements() -> Vec<String> {
         OperatorPurpose::BoardsRead,
         OperatorPurpose::QualificationRead,
         OperatorPurpose::ResultRead,
+        OperatorPurpose::CommandLookup,
     ]
     .map(|p| format!("'{}'", p.tag()))
     .join(",");

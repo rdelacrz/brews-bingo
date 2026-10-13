@@ -7,16 +7,18 @@ use crate::{
     game::GameError,
 };
 use brews_contracts::games::{GAME_FRAME_MAX_BYTES, reads::ReadProjection};
+use brews_domain::accounts::AccountRole;
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, Zeroizing};
-const READ_PEER_MAX_BYTES: usize = GAME_FRAME_MAX_BYTES + super::game_wire::GAME_WIRE_MAX_BYTES;
+pub(super) const READ_PEER_MAX_BYTES: usize =
+    GAME_FRAME_MAX_BYTES + super::game_wire::GAME_WIRE_MAX_BYTES;
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ReadRequest {
+pub(super) struct ReadRequest {
     #[serde(deserialize_with = "game_peers::object")]
-    selection: ReadSelection,
-    token: String,
-    challenge: operator_peers::OperatorChallenge,
+    pub(super) selection: ReadSelection,
+    pub(super) token: String,
+    pub(super) challenge: operator_peers::OperatorChallenge,
 }
 impl Drop for ReadRequest {
     fn drop(&mut self) {
@@ -25,13 +27,13 @@ impl Drop for ReadRequest {
 }
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
-struct ReadDigest([u8; 32]);
+pub(super) struct ReadDigest([u8; 32]);
 impl Drop for ReadDigest {
     fn drop(&mut self) {
         self.0.zeroize();
     }
 }
-fn digest<T: Serialize>(v: &T) -> Result<ReadDigest, GameError> {
+pub(super) fn digest<T: Serialize>(v: &T) -> Result<ReadDigest, GameError> {
     use sha2::{Digest, Sha256};
     let bytes =
         game_peers::encode_limit(v, READ_PEER_MAX_BYTES * 2).map_err(|_| GameError::Storage)?;
@@ -224,7 +226,7 @@ async fn fence_edge_expiry(
     }
     Ok(())
 }
-fn clone_request(r: &ReadRequest) -> ReadRequest {
+pub(super) fn clone_request(r: &ReadRequest) -> ReadRequest {
     ReadRequest {
         selection: r.selection,
         token: r.token.clone(),
@@ -418,7 +420,7 @@ pub(super) async fn dispatch(
             .map_err(|_| ApiError::Unavailable)?,
     )
 }
-fn account_identity(a: &GameAccountAuthority) -> ReadIdentity {
+pub(super) fn account_identity(a: &GameAccountAuthority) -> ReadIdentity {
     ReadIdentity::Account {
         account_id: a.account_id(),
         session_id: a.session_id(),
@@ -428,6 +430,93 @@ fn account_identity(a: &GameAccountAuthority) -> ReadIdentity {
     }
 }
 impl GameObject {
+    async fn capture_passive_read(
+        &self,
+        service: &GameService<'_, super::OwnerDatabase, WorkerRuntime>,
+        request: &ReadRequest,
+        actor: Option<&GameAccountAuthority>,
+        audit: bool,
+    ) -> Result<ReadCut, GameError> {
+        if matches!(
+            request.selection.kind,
+            brews_contracts::games::reads::ReadKind::CommandLookup(_)
+        ) && request.selection.role == ReadRole::Account
+            && service.command_game_missing()?
+        {
+            let authority = actor.ok_or(GameError::Unauthorized)?;
+            let intent =
+                super::command_lookup::creation_pending(&self.env, request, authority).await;
+            let fresh = self
+                .read_account(service, request)
+                .await?
+                .ok_or(GameError::Unauthorized)?;
+            if account_identity(&fresh) != account_identity(authority) {
+                return Err(GameError::Unauthorized);
+            }
+            let result = match intent.and_then(|value| value.ok_or(GameError::Forbidden)) {
+                Ok(created) => {
+                    service.capture_creation_command(request.selection, &fresh, created, audit)
+                }
+                Err(error) => {
+                    if audit {
+                        self.capture_read_failure(service, Some(&fresh), request, error)?;
+                    }
+                    Err(error)
+                }
+            };
+            if audit && fresh.role() == AccountRole::Admin {
+                self.persist_creation_audit_alarm(service).await?;
+            }
+            return result;
+        }
+        let observed = match self.observed(service) {
+            Ok(v) => v,
+            Err(e) => {
+                if audit {
+                    self.capture_read_failure(service, actor, request, e)?;
+                }
+                return Err(e);
+            }
+        };
+        service.capture_read(request.selection, &request.token, actor, &observed, audit)
+    }
+    async fn release_passive_read(
+        &self,
+        service: &GameService<'_, super::OwnerDatabase, WorkerRuntime>,
+        request: &ReadRequest,
+        actor: Option<&GameAccountAuthority>,
+        binding: &ReadBinding,
+        projection: &ReadProjection,
+    ) -> Result<(i64, i64), GameError> {
+        if matches!(projection, ReadProjection::CommandLookup(v) if matches!(v.result_status, brews_contracts::games::commands::CommandResultStatus::Pending { operation: brews_contracts::games::commands::PendingCommandOperation::Creation, .. }))
+        {
+            let cut = self
+                .capture_passive_read(service, request, actor, false)
+                .await?;
+            if cut.binding.identity != binding.identity
+                || cut
+                    .projection
+                    .encode_json()
+                    .map_err(|_| GameError::Storage)?
+                    != projection.encode_json().map_err(|_| GameError::Storage)?
+            {
+                return Err(GameError::Storage);
+            }
+            return Ok((
+                cut.checked_at,
+                binding.valid_until.min(cut.binding.valid_until),
+            ));
+        }
+        let observed = self.observed(service)?;
+        service.release_read(
+            request.selection,
+            &request.token,
+            actor,
+            &observed,
+            binding,
+            projection,
+        )
+    }
     async fn check_read_deadline(
         &self,
         service: &GameService<'_, super::OwnerDatabase, WorkerRuntime>,
@@ -469,19 +558,9 @@ impl GameObject {
         let service = self.service(&db, &rt)?;
         service.bind_operator_game_identity(request.selection.game_id)?;
         let actor = self.read_account(&service, request).await?;
-        let initial = match self.observed(&service) {
-            Ok(observed) => service.capture_read(
-                request.selection,
-                &request.token,
-                actor.as_ref(),
-                &observed,
-                true,
-            ),
-            Err(error) => {
-                self.capture_read_failure(&service, actor.as_ref(), request, error)?;
-                Err(error)
-            }
-        };
+        let initial = self
+            .capture_passive_read(&service, request, actor.as_ref(), true)
+            .await;
         self.state
             .storage()
             .sync()
@@ -490,16 +569,15 @@ impl GameObject {
         let cut = initial?;
         self.check_read_deadline(&service, &cut.binding).await?;
         let actor = self.read_account(&service, request).await?;
-        let released = self.observed(&service).and_then(|observed| {
-            service.release_read(
-                request.selection,
-                &request.token,
+        let released = self
+            .release_passive_read(
+                &service,
+                request,
                 actor.as_ref(),
-                &observed,
                 &cut.binding,
                 &cut.projection,
             )
-        });
+            .await;
         match released {
             Ok((checked_at, valid_until)) => Ok(ReadCut {
                 binding: ReadBinding {
@@ -556,16 +634,15 @@ impl GameObject {
         }
         self.check_read_deadline(&service, &request.binding).await?;
         let actor = self.read_account(&service, &request.request).await?;
-        let initial = self.observed(&service).and_then(|observed| {
-            service.release_read(
-                request.request.selection,
-                &request.request.token,
+        let initial = self
+            .release_passive_read(
+                &service,
+                &request.request,
                 actor.as_ref(),
-                &observed,
                 &request.binding,
                 &request.projection,
             )
-        });
+            .await;
         if let Err(error) = initial {
             self.capture_read_failure(&service, actor.as_ref(), &request.request, error)?;
         }
@@ -577,16 +654,15 @@ impl GameObject {
         initial?;
         self.check_read_deadline(&service, &request.binding).await?;
         let actor = self.read_account(&service, &request.request).await?;
-        let final_cut = self.observed(&service).and_then(|observed| {
-            service.release_read(
-                request.request.selection,
-                &request.request.token,
+        let final_cut = self
+            .release_passive_read(
+                &service,
+                &request.request,
                 actor.as_ref(),
-                &observed,
                 &request.binding,
                 &request.projection,
             )
-        });
+            .await;
         match final_cut {
             Ok(c) => Ok(c),
             Err(e) => {

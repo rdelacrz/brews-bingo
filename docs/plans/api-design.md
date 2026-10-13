@@ -2035,7 +2035,7 @@ Requires valid authority for the original actor/game-scoped command. Read its du
 
 Proposed inputs: path `game_id: GameId` and `command_id: CommandId`; cookie providing current valid authority for the original actor/game-scoped command. There is no request body.
 
-Command ID knowledge alone grants no lookup. Post-admission/lost-cookie and post-exit/deletion recovery are **TBD**, not an anonymous receipt bypass.
+Command ID knowledge alone grants no lookup. Authorized local Slice 7 requires a current original-actor session: admission contexts, recovery answers and lost cookies are not G4 authority. Exit/deleted identity/expired original grants deny access. See the local implementation choices below.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -2044,7 +2044,7 @@ Command ID knowledge alone grants no lookup. Post-admission/lost-cookie and post
 
 Return only a bounded authorized original result. No raw bearer credentials, answer/verifier, another actor's outcome or expired private snapshot. Receipt lookup does not prolong data/access retention.
 
-Unknown, pending, expired/inadmissible and failed-command response variants/statuses are **TBD**. Absence of a receipt is not evidence that it is safe to repeat effects.
+Local Slice 7 defines closed committed/pending/unknown/expired/inadmissible results below. It does not manufacture failed-command details from absence. Absence of a receipt is not evidence that it is safe to repeat effects.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -2614,3 +2614,28 @@ F1 returns 409 `result_not_committed` for authenticated nonterminal viewers. All
 Passive reads call authorized owner projections directly, separating them from `account_view`'s intentional entry and presence reconciliation. Sync/Stream retain their existing entry semantics. The required release contract is current authority and payload recuts after owner persistence/Accounts and receiving-edge awaits, with a non-extending original cap and fail-closed changed private payloads. **That contract is not yet satisfied:** the owner recuts before its response returns, but the edge cannot observe a subsequent remote commit during its final await (`RUNTIME-FINAL-01` above). Fresh private 32-byte CSPRNG challenges bind full typed action/game/role/target/actor/session/epoch/cap/request and output on both positive and negative ACKs; this earlier-invocation replay protection is implemented, not receipt-time revocation coordination. An already observed expiry is durably fenced at its exact sampled time before fresh entropy is needed; uncertain fences withhold with 503.
 
 New authenticated Admin account-read branches capture actual actor, Game target, typed read purpose and success/rejection/durably capturable failure. Unauthenticated/ordinary Host/participant reads do not create Admin successes. Multiple internal release cuts do not duplicate Success. The minimal independent audit retains the existing fixed 90-day cleanup; configuration, filters, History payloads, credentials and recovery material are excluded. Counter 6 expands only the audit purpose CHECK using frozen published counter-5 DDL/index templates, preserving known counters 1–4 and complete optional Delivery support. Owner-witnessed later failure may append Failed after Success; the owner cannot infer unobserved receiving-edge delivery outcome. Older-operation/CLI Slice 8 remains unfinished.
+
+
+### Local Slice 7 command-result lookup implementation choices
+
+These wire choices implement the authorized local G4 slice under DO-055–058/076–084; they are not new product approvals. `GET /api/games/{game_id}/commands/{command_id}` requires canonical exact UUID-v7 path tokens, an empty body, no `Idempotency-Key`, and the existing optional closed `?view=account|player|spectator` selector. Duplicate/unknown/private query fields and ambiguous cookies are rejected. An explicitly selected invalid token never falls back; a supplied Origin must exactly match the configured origin.
+
+HTTP 200 returns the closed DTO `{version:1,game_id,command_id,result_status}` with the **entire** UTF-8 JSON bounded to 4 KiB and no-store headers/no cookie effects. `result_status` has these closed shapes:
+
+| Status | Additional fields | Meaning |
+| --- | --- | --- |
+| `committed` | `receipt` (existing validated GameReceipt), `follow_up_pending: bool` | The local effect committed. Matching required lobby/Start/host-transfer work makes the boolean true. An own terminal receipt also correlates the existing System-owned release through the exact immutable game creation/fingerprint and terminal actor/state/time/revision; it exposes only the boolean, never another actor’s pending result. This does not claim peer completion. |
+| `pending` | `operation: creation\|lobby_publication\|start_publication\|terminal_release\|host_transfer`, `state: prepared\|awaiting_acknowledgement` | Matching retained original-actor work, with no internal operation ID, actor, nonce, fingerprint, hidden target or phase payload. Prepared work is never represented as committed. |
+| `unknown` | none | No matching receipt/work within the admissible command window. This gives **no** permission or assurance to repeat effects with another command ID. |
+| `expired` | none | Present receipt at `now >= expires_at`, or absent old command at/below the durable floor. It cannot distinguish a previously executed retired command from an old command that never executed. |
+| `inadmissible` | none | An absent command timestamp is in the future. Malformed path IDs are rejected instead. |
+
+Authority derives only from a current eligible Host/Admin account session/credential epoch, or a current same-game participant session/stable identity. Admin has no cross-actor override. Current original accounts may read their own historical receipts after host transfer without fresh designated-host mutation privilege. Recovery rotates sessions but preserves the original player actor; a current recovered player can read earlier own receipts. Role switching or pre-start Leave deletes source identity authority, and alias reuse confers no receipt access. Terminal account/player access requires the original existing eligible grant and its fixed expiry; Exit, grant/membership deletion and expiry deny. Mere History permission or a fresh read-only account grants no terminal access.
+
+Game lookup validates original actor/command receipt columns, closed versioned JSON, game/command pairing, original completion/retention timestamps, size and applicable outcome actor identity; matching pending/transfer facts must agree. Corrupt/conflicting facts fail with redacted 503. Cross-actor commands in an accessible existing game have the same unknown result as an unseen command. Before initialization, an exact private Directory lookup of current original account + game + command can expose only that account's unready creation intent; absent scope is uniformly 403, without allocating a Game record. Deleted/expired game authority never serves retained private data.
+
+Ordinary receipt retirement remains 24 hours from original completion. Required work is not TTL-deleted: old outstanding work remains pending while current actor access permits it, but expired committed outcomes are not resurrected even when matching work remains. Checked JS-safe arithmetic and readback of monotonic clocks/floors fence rollback; ignored/aborted required writes fail unavailable. GET performs only clock/expiry/audit maintenance and never executes/retries effects, advances attempts, reconciles work, clears ACKs, renews activity/grants, registers sockets or returns credentials/boards/configuration/recovery material.
+
+Authenticated Admin reads use actual actor + Game target + typed `command_lookup` audit purpose, atomically captured with existing fail-closed read/audit rules and fixed 90-day retention. This is a read audit, not another successful original-command effect audit. The purpose-named audit-vocabulary migration freezes published counter-6 whole-schema templates (all 33 owner tables plus optional Delivery) and advances storage metadata to counter 7; counters are storage metadata, not application releases. Counter 1–5 fixtures remain intact. Other Slice 8 audit/CLI work stays open.
+
+**Shared acceptance dependency remains OPEN (`RUNTIME-FINAL-01`).** G4 reuses current owner/Accounts recuts, complete ingress/result/original-cap binding with fresh private per-attempt challenges, and receiving-edge durable expiry-denial fences. Those mechanisms reject substituted/older positive and negative ACKs and observed expiry rollback. They do not establish remote authority at receipt of a genuine successful ACK from the current invocation. A recovery/revocation/Exit commit during the final return can still invalidate the actor after the last owner cut. No authoritative-cut semantics, read lease, final-release lock or account guard is selected here; another RPC does not solve this shared decision. Slice 7 final acceptance awaits the user decision and parent source/artifact freeze, integrated gates and independent review. No deployment/publication is implied.

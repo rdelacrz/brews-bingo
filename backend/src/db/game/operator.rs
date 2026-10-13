@@ -25,6 +25,7 @@ pub enum OperatorPurpose {
     BoardsRead,
     QualificationRead,
     ResultRead,
+    CommandLookup,
 }
 impl OperatorPurpose {
     pub const fn tag(self) -> &'static str {
@@ -42,6 +43,7 @@ impl OperatorPurpose {
             Self::BoardsRead => "boards_read",
             Self::QualificationRead => "qualification_read",
             Self::ResultRead => "result_read",
+            Self::CommandLookup => "command_lookup",
         }
     }
 }
@@ -86,7 +88,7 @@ pub(crate) fn transfer_fingerprint(input: &HostTransferInput) -> Result<[u8; 32]
     hash.update(revision(input.expected_host_assignment_revision)?.to_be_bytes());
     Ok(hash.finalize().into())
 }
-fn parse_transfer(row: &super::super::Row) -> Result<HostTransferWork, GameError> {
+pub(super) fn parse_transfer(row: &super::super::Row) -> Result<HostTransferWork, GameError> {
     if row.len() != 13 {
         return Err(GameError::Storage);
     }

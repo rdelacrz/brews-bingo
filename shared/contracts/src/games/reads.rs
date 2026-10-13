@@ -17,6 +17,7 @@ pub enum ReadKind {
     Boards,
     Qualification,
     Result,
+    CommandLookup(CommandId),
 }
 impl ReadKind {
     pub const fn account_only(self) -> bool {
@@ -231,6 +232,7 @@ pub enum ReadProjection {
     Boards(BoardsRead),
     Qualification(QualificationRead),
     Result(ResultRead),
+    CommandLookup(super::commands::CommandResult),
 }
 impl ReadProjection {
     pub fn kind(&self) -> ReadKind {
@@ -244,6 +246,7 @@ impl ReadProjection {
             Self::Boards(_) => ReadKind::Boards,
             Self::Qualification(_) => ReadKind::Qualification,
             Self::Result(_) => ReadKind::Result,
+            Self::CommandLookup(v) => ReadKind::CommandLookup(v.command_id),
         }
     }
     pub fn encode_json(&self) -> Result<Vec<u8>, GameDecodeError> {
@@ -257,6 +260,7 @@ impl ReadProjection {
             Self::Boards(v) => v.encode_json(),
             Self::Qualification(v) => v.encode_json(),
             Self::Result(v) => v.encode_json(),
+            Self::CommandLookup(v) => v.encode_json(),
         }
     }
 }

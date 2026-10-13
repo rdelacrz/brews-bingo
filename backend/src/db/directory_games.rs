@@ -304,6 +304,29 @@ impl<D: Database, R: Runtime> DirectoryService<'_, D, R> {
         self.db.execute("UPDATE directory_game_creations SET ready_revision=?,completed_at=?,next_retry_at=NULL WHERE game_id=? AND ready_revision IS NULL", &[integer(proof.source_revision()),integer(now),text(proof.game_id())])?;
         Ok(CreationAck::new(proof))
     }
+    /// Exact original-account creation intent; never allocates or retries work.
+    pub fn command_creation_pending(
+        &self,
+        account: AccountId,
+        game: GameId,
+        command: CommandId,
+    ) -> Result<Option<i64>, DirectoryError> {
+        self.transaction_before_compaction(|now| {
+            let rows = self.db.query(
+                &format!("SELECT {CREATION_COLUMNS} FROM directory_game_creations WHERE account_id=? AND command_id=? AND game_id=?"),
+                &[text(account), text(command), text(game)],
+            )?;
+            match rows.as_slice() {
+                [] => Ok(None),
+                [row] => {
+                    let work = parse_creation(row, now)?;
+                    if work.account_id()!=account || work.game_id()!=game || work.command_id()!=command {return Err(DirectoryError::Storage);}
+                    Ok(work.ready_revision().is_none().then_some(work.created_at()))
+                },
+                _ => Err(DirectoryError::Storage),
+            }
+        })
+    }
     pub fn creation_work(&self, game: GameId) -> Result<Option<CreationWork>, DirectoryError> {
         self.transaction(|now| self.load_creation(game, now))
     }

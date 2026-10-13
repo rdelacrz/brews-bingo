@@ -23,6 +23,12 @@ mod previous_saved_game_schema;
 #[path = "../schema/previous_saved_operator_schema.rs"]
 mod previous_saved_operator_schema;
 
+#[allow(dead_code, reason = "Frozen historical schema inventory.")]
+#[path = "../schema/previous_read_game_schema.rs"]
+mod previous_read_game_schema;
+#[path = "../schema/previous_read_operator_schema.rs"]
+mod previous_read_operator_schema;
+
 const MINIFLARE_OWNER_METADATA_TABLE: &str = "__miniflare_do_name";
 const CLOUDFLARE_OWNER_METADATA_TABLE: &str = "_cf_METADATA";
 const SCHEMA_TABLE_INVENTORY_ROW_LIMIT: i64 =
@@ -716,6 +722,56 @@ fn migrate_read_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError
     )?;
     validate_schema(db)
 }
+fn migrate_command_lookup_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError> {
+    let actual = inventory(db)?;
+    let tables = actual.iter().map(String::as_str).collect::<Vec<_>>();
+    if actual != migration_table_set(&previous_read_game_schema::GAME_TABLES, false)
+        && actual != migration_table_set(&previous_read_game_schema::GAME_TABLES, true)
+    {
+        return Err(StorageError);
+    }
+    let published = previous_read_game_schema::statements();
+    validate_historical_schema(
+        db,
+        &tables,
+        &published.iter().map(String::as_str).collect::<Vec<_>>(),
+    )?;
+    let before = db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])?;
+    let ddl = schema_statement_for("game_admin_audit")?.replacen(
+        "CREATE TABLE game_admin_audit(",
+        "CREATE TABLE game_admin_audit_command_lookup_purpose(",
+        1,
+    );
+    db.execute(&ddl, &[])?;
+    db.execute(
+        "INSERT INTO game_admin_audit_command_lookup_purpose SELECT * FROM game_admin_audit",
+        &[],
+    )?;
+    if db.query(
+        "SELECT * FROM game_admin_audit_command_lookup_purpose ORDER BY audit_id",
+        &[],
+    )? != before
+    {
+        return Err(StorageError);
+    }
+    db.execute("DROP TABLE game_admin_audit", &[])?;
+    db.execute(
+        "ALTER TABLE game_admin_audit_command_lookup_purpose RENAME TO game_admin_audit",
+        &[],
+    )?;
+    db.execute(
+        "CREATE INDEX game_admin_audit_expiry ON game_admin_audit(expires_at,audit_id)",
+        &[],
+    )?;
+    if db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])? != before {
+        return Err(StorageError);
+    }
+    db.execute(
+        SQL_UPDATE_GAME_SCHEMA_VERSION,
+        &[int(GAME_SCHEMA_VERSION), int(6)],
+    )?;
+    validate_schema(db)
+}
 pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
     db.transaction(|| {
         let actual = inventory(db)?;
@@ -757,6 +813,8 @@ pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
                 migrate_saved_operator_workflows(db)?;
             } else if version == 5 {
                 migrate_read_audit_vocabulary(db)?;
+            } else if version == 6 {
+                migrate_command_lookup_audit_vocabulary(db)?;
             } else if version != GAME_SCHEMA_VERSION {
                 return Err(StorageError);
             }
@@ -1385,6 +1443,105 @@ mod tests {
                     assert_eq!(counted.writes.get(), 0);
                 }
             }
+        }
+    }
+    fn published_command_lookup_database(delivery: bool) -> Sqlite {
+        let db = Sqlite::new();
+        for sql in previous_read_game_schema::statements() {
+            db.execute(&sql, &[]).unwrap();
+        }
+        db.execute(SQL_INSERT_GAME_METADATA, &[int(6)]).unwrap();
+        db.execute("INSERT INTO game_admin_audit VALUES('01890f3e-53b7-7d28-9b05-4f65092d5701','01890f3e-53b7-7d28-9b05-4f65092d5702','01890f3e-53b7-7d28-9b05-4f65092d5703',?,?,1,7776000001)",&[text(super::super::OperatorPurpose::GameRead.tag()),text(super::super::OperatorAuditOutcome::Succeeded.tag())]).unwrap();
+        if delivery {
+            crate::db::game_delivery::migrate_game_delivery(&db).unwrap();
+        }
+        db
+    }
+    #[test]
+    fn command_lookup_migration_known_counter_six_preserves_all_tables_and_audit() {
+        let golden: Vec<String> = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/game-schema-published-read.json"
+        ))
+        .unwrap();
+        assert_eq!(golden, previous_read_game_schema::statements());
+        for delivery in [false, true] {
+            let db = published_command_lookup_database(delivery);
+            let before = db.query("SELECT * FROM game_admin_audit", &[]).unwrap();
+            migrate_game(&db).unwrap();
+            validate_schema(&db).unwrap();
+            assert_eq!(
+                db.query("SELECT * FROM game_admin_audit", &[]).unwrap(),
+                before
+            );
+            assert_eq!(
+                inventory(&db).unwrap(),
+                migration_table_set(&previous_read_game_schema::GAME_TABLES, delivery)
+            );
+        }
+    }
+    #[test]
+    fn command_lookup_migration_counter_six_rejects_every_table_column_and_index_drift_without_writes()
+     {
+        for delivery in [false, true] {
+            for table in previous_read_game_schema::GAME_TABLES {
+                let db = published_command_lookup_database(delivery);
+                db.execute(
+                    &format!("ALTER TABLE {table} ADD COLUMN unexpected TEXT"),
+                    &[],
+                )
+                .unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage), "{table}");
+                assert_eq!(counted.writes.get(), 0);
+            }
+            for sql in [
+                "DROP INDEX game_admin_audit_expiry",
+                "CREATE INDEX unexpected ON game_receipts(actor)",
+            ] {
+                let db = published_command_lookup_database(delivery);
+                db.execute(sql, &[]).unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage));
+                assert_eq!(counted.writes.get(), 0);
+            }
+        }
+    }
+    #[test]
+    fn command_lookup_migration_ignored_or_failed_counter_rolls_back_schema_and_rows() {
+        for denial in ["IGNORE", "ABORT,'blocked'"] {
+            let db = published_command_lookup_database(true);
+            let before = db.query("SELECT * FROM game_admin_audit", &[]).unwrap();
+            let ddl = db
+                .query(
+                    "SELECT sql FROM sqlite_master WHERE name='game_admin_audit'",
+                    &[],
+                )
+                .unwrap();
+            db.execute(&format!("CREATE TRIGGER deny_command_migration BEFORE UPDATE OF schema_version ON game_metadata BEGIN SELECT RAISE({denial}); END"),&[]).unwrap();
+            assert_eq!(migrate_game(&db), Err(GameError::Storage));
+            assert_eq!(
+                db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])
+                    .unwrap(),
+                vec![vec![int(6)]]
+            );
+            assert_eq!(
+                db.query("SELECT * FROM game_admin_audit", &[]).unwrap(),
+                before
+            );
+            assert_eq!(
+                db.query(
+                    "SELECT sql FROM sqlite_master WHERE name='game_admin_audit'",
+                    &[]
+                )
+                .unwrap(),
+                ddl
+            );
         }
     }
     fn published_read_audit_database(delivery: bool) -> Sqlite {

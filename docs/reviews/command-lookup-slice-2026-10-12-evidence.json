@@ -1,0 +1,3660 @@
+{
+  "kind": "local_command_lookup_implementation_and_bounded_review_not_acceptance",
+  "recorded_at_utc": "2026-10-12T23:38:13.674550+00:00",
+  "baseline_commit": "7134e6ed9d468afaf261605433740753f3cc7c88",
+  "publication": {
+    "published_previous_slice": "7134e6ed9d468afaf261605433740753f3cc7c88",
+    "verified_remote_ref": "refs/heads/main",
+    "slice7_staged": false,
+    "slice7_committed": false,
+    "slice7_pushed": false,
+    "deployment": "none"
+  },
+  "acceptance": {
+    "status": "blocked",
+    "finding": "RUNTIME-FINAL-01",
+    "authoritative_cut_semantics_approved": false,
+    "stronger_delivery_coordination_approved": false,
+    "actual_probe": {
+      "status": "OPEN",
+      "probe_assertions_unchanged": true,
+      "changed": true,
+      "releases": 4,
+      "old_session_now": 401,
+      "returned_status": 200,
+      "returned_receipt": "committed",
+      "cookie": false,
+      "assertion": "expected [401,503] to include 200 at portable test line 85"
+    }
+  },
+  "positive_integrated_gates": {
+    "base_commit": "7134e6ed9d468afaf261605433740753f3cc7c88",
+    "acceptance": "shared_final_return_contract_open",
+    "source_hashes": 234,
+    "schema_fixture_hashes": 3,
+    "native_debug": 925,
+    "native_release": 925,
+    "doctests": 12,
+    "workerd": 656,
+    "workerd_suites": 34,
+    "gameplay_https_wss": 154,
+    "operator_https_wss": 54,
+    "dedicated_read_and_lookup_https_wss": 106,
+    "lookup_checks_within_read_harness": [
+      "command-lookup-GET-body-denied",
+      "command-lookup-creation-actual-HTTPS",
+      "command-lookup-cross-actor-other",
+      "command-lookup-cross-actor-admin",
+      "command-lookup-admission-current-player",
+      "command-lookup-selector-ambiguous",
+      "command-lookup-invalid-selected-token",
+      "command-lookup-terminal-original-player",
+      "command-lookup-after-player-Exit-denied",
+      "command-lookup-after-account-Exit-denied"
+    ],
+    "combined_https_wss": 314,
+    "worker_artifact_hashes": 4,
+    "graph_diagnostics": {
+      "dangling_endpoint_edges": 893,
+      "directed_same_endpoint_collapsed_edges": 473
+    }
+  },
+  "source_sha256": {
+    "backend/src/api/decode.rs": "ddda9453830efdb508995d0f49a0337f61822bdfae1526c1f331eed7a17e8320",
+    "backend/src/api/developer.rs": "fa73fde428bf8c5833e2d2dbd22a741cbc1ae65f1c3481b909e02a96538ee2aa",
+    "backend/src/api/discovery.rs": "92079fa88e395ecf589ed4e1f05ad32649d434db4410ff8268b497b48dcb8270",
+    "backend/src/api/error.rs": "72fe28064f643c6c1a11202d39efca945abb7692f9eb31c4a57d34498cd64866",
+    "backend/src/api/game_reads.rs": "5eb46e4a01c9b63a72a68904cd771c5be9e6f3753b3f18e1dd3f73410ce26375",
+    "backend/src/api/games.rs": "9f57353868ce954a365fa695c7a9ad5e00d996970f9fbefcf7d2ab0d6c6feae4",
+    "backend/src/api/history.rs": "dcc13ec2fced065a9b5a0fc5671687c170aa7c3e64ae6b6f56c7e067c23c48a4",
+    "backend/src/api/mod.rs": "57328fbd52afba408e0f69556b01eefbe4855d00dad31a08d17a075ea2089907",
+    "backend/src/api/users.rs": "275f1f2f5840c35cea345c0dd7ee48e6c9bc5e1b0f387b14cf233671d757cce9",
+    "backend/src/auth/command.rs": "cf6ba53acbf7d3cdc00ce7945cfddc1c8c80c27991c4cab4694e7be740fd7554",
+    "backend/src/auth/error.rs": "548c982afe7f40d9c498a90f185247ff9ca376d193234628e7657b430bcc8f0f",
+    "backend/src/auth/game_authority.rs": "980d0bbcfb40c368c36f3b59051b15b9eb01354932c0f6dec3c1c501d382e632",
+    "backend/src/auth/host_recipient.rs": "64045719a4faba84e268d38c4010843992f82011aeb5f76745662d012ae8e446",
+    "backend/src/auth/management/audit.rs": "88b9c6a44169c365340bdaf64806adc6afb954848e9aeb02511f158a29ebed23",
+    "backend/src/auth/management/enable.rs": "272cb42b1fd2f49e5f5414abac318cfec9942cab3a03f1310e1cfc53ba3b0aeb",
+    "backend/src/auth/management/links.rs": "ca4f75875ccec1fd98f43f0bcbbbe002c8cfe79475c82b5157f8dd08612210fa",
+    "backend/src/auth/management/maintenance.rs": "433ea7ef2f43bacac23b066d6c1a4b3cc3081f9d5542ba6e24f896f7c6b78b98",
+    "backend/src/auth/management/mod.rs": "5f592be90d1401963f7a17b48a2e1acd54a99fb64fd59bf6abbe3374d41a391e",
+    "backend/src/auth/management/reads.rs": "38d55fdf9019317454c9ead3fecd43fbdb5be05eca1aa9edd1345142e80e7ff5",
+    "backend/src/auth/management/receipts.rs": "373a72197ebda42c76a435d939c4686a8312cbabfece0f39d0eceeb88b631b93",
+    "backend/src/auth/management/recovery.rs": "7bb2653b9e8af015b95b954063a0b815b39cde50fa1e47c811add598be842785",
+    "backend/src/auth/management/removal.rs": "939a07d89c77fb21138713f16cf4817f860a574fa72648c55e31b2b8f1bfaf24",
+    "backend/src/auth/management/test_support.rs": "0c16ede329cb247eaf49269f40e2d40fc200b97bbef676009ba0ae43c8fa58c2",
+    "backend/src/auth/management/users.rs": "dcf2dad2d1ca8d690ea1a8949ec19b0a5751169f944033b2247eadd45023570d",
+    "backend/src/auth/mod.rs": "adb54ee476018ba7c2056ee4e8c76926cf96ea2519e622e0dcdbe414511b5e5c",
+    "backend/src/auth/output.rs": "0eed9fbc8d1db70547044423bb3bb7fbc55f6c5807c6b1de6bd45c9d4d3aa9a5",
+    "backend/src/auth/rate.rs": "42bb69d445063c883937ad8f3371e71a4e0869152226b99f08adaacc4be939c4",
+    "backend/src/auth/receipts.rs": "e24b9e9daae49b0a427df27c6131e7ef1db569215d1f337eac04eac315d9ce1f",
+    "backend/src/auth/records.rs": "3abcf03768d018b9f3fde78c90e31f48e4e1cb2b950ccf0894e821089995bdd2",
+    "backend/src/auth/service.rs": "3f1ad90f65199cd4b31d6b07ff2253ddb68df3d8b3081c13c24d40d8097aa284",
+    "backend/src/auth/tests.rs": "4a11d9f5ebfa13c3603e3362dd8858ec4c84ba71732209f75a55bcdb2dc1c789",
+    "backend/src/config/mod.rs": "8e3f8a4aca47046a2019cb69b94fa618bb3444dc3d7719512093817531a160a9",
+    "backend/src/db/account_expiry.rs": "ac66bab27bca1fab6aedbc5bc360fce59ea2862c5be94ad4c561d91d00645a42",
+    "backend/src/db/directory.rs": "9166e58f7353e8dcb7c6b13ad04d08c00ecc545c497ebb71aac9998fa0d83a67",
+    "backend/src/db/directory_games.rs": "92741f94e618895de753aa002691c0323fa5a5177accf36b228fa177075c1027",
+    "backend/src/db/directory_host_transfer.rs": "801f7980e98c9ca2a8f8da81e3f5401767e9835a773df8abb255ccbe4b008202",
+    "backend/src/db/error.rs": "67d21c7c7601ff43ad8e7e2d18a2621874c08a0622d8f951de55e554386f93e8",
+    "backend/src/db/game.rs": "f80cc877429793d4bdd1b0eec756fd907ec2acfab885439eb577927d6377972b",
+    "backend/src/db/game/command_lookup.rs": "3fc7cf16b0a23e78b96a135fb2f6b03d09df964e1fe6ba2f2552c7f2b788761b",
+    "backend/src/db/game/connection_capacity.rs": "559e145be2819e07a2007a882b212276d8a3d2b29421211939ba84026d83eb6d",
+    "backend/src/db/game/discovery.rs": "16bbdace2e08b17ce6d5a9e2fb814c7a3ced7b0abd882e5a16b33ca005a558df",
+    "backend/src/db/game/gameplay.rs": "5d6e49fdf98a3ccf32d771e6d8f594271b56ac89dd94272d1f2b387c91e1caee",
+    "backend/src/db/game/history.rs": "56b59fd043ec36a643e74cc2516b1f98bd69d83d7d72ae84c6608128f7a37094",
+    "backend/src/db/game/migration.rs": "91e5211a373151c1b8a20b23fa056fcd177d3ece3224cc8f48c1eebbf71e9248",
+    "backend/src/db/game/operator.rs": "cb49f2b0b526cec0d93cfff6419860dc631e47dacc8c0d1d1c2b37402e19ed72",
+    "backend/src/db/game/player_lifecycle.rs": "6c0a5ced462421e4a48e770ae6631a1ff8b7952ddb3827ca8558cfce028b94d9",
+    "backend/src/db/game/player_recovery.rs": "c33c976b49be1373bed199dfeb5218d3a77058189a1c5a684e7654e5b926b5f6",
+    "backend/src/db/game/reads.rs": "07fa46f0ecc2e20147b859eee88ce5025f3f0a14e18feb198caf1e538f3a19ce",
+    "backend/src/db/game/resolution.rs": "bbabe852317e23189eb798443b3f163f89a635a9c7056fbc18e1bbec72753231",
+    "backend/src/db/game/spectators.rs": "eabeb2056270c3dbb39c316c4bdfe3ae41f9dcc4b99f5153146b89152b8bde76",
+    "backend/src/db/game/spectators/terminal.rs": "e9fd78e25282ab5a78ee6f5b43374beb3616a2b7ec62964ed5ed6c4e4a318dc4",
+    "backend/src/db/game/sync_output.rs": "e5ab3a98bc7d39ac669a8a384f4f50f79a2f130160ee4ea08621177c15d493cc",
+    "backend/src/db/game/terminal.rs": "dfa5e53434fe7d0caeb328f1faa8b55e5d8e2a94b701d23b9c2f117f0a3594c6",
+    "backend/src/db/game_delivery.rs": "83489a7e0957c4925e1890490f02fafe1fa5297f84b8b9c9283c905f4b327d4f",
+    "backend/src/db/mod.rs": "74d35735b0c04eceb35ceadef4e58c079a83dd8fcc39d475b55a30f50000afd7",
+    "backend/src/db/schema/auth_schema.rs": "b133b9579f5654953cd6585978dc3f69b472e944a1fb59b2d40c63f339d43e3b",
+    "backend/src/db/schema/directory_schema.rs": "ab2a82c942144067a86e7bdc620b4a263a219fadab4aa25e40665c994177ac76",
+    "backend/src/db/schema/game_delivery_schema.rs": "7fac331d52fe0eb275e0de864904bec60448211b9b7ac6c79476151ecca0a5c8",
+    "backend/src/db/schema/game_operator_schema.rs": "34a36cc84131b5c218bf7d6272cc5617a1e9df8463675d8836f995f2fc8872ef",
+    "backend/src/db/schema/game_schema.rs": "707cf54fd3ec6189327f629bbcb5228731ef63c2034da66fac2e0d047a6782e2",
+    "backend/src/db/schema/management_schema.rs": "c629bcb01818c538594f00f80b1a6c0b95618992e61634fba3e1f7e7dfd8af73",
+    "backend/src/db/schema/mod.rs": "0fe696141c3722a895c415011edd910022b34f97e5fe7c861de3c75f4c1b8c22",
+    "backend/src/db/schema/previous_admission_schema.rs": "676bd9d5975de8871c8c6920096ba4b6b44b40cdcfa4443ce166ed867c3404d5",
+    "backend/src/db/schema/previous_coordination_schema.rs": "106cac003090ece650560840ece0812056e62c7a0f0c16bab27e13ff236bbd2b",
+    "backend/src/db/schema/previous_gameplay_schema.rs": "e2e238398c37ffafa479aedef294e9f55340786239afdc293ba1c954d903ab56",
+    "backend/src/db/schema/previous_read_game_schema.rs": "e924d3d877df2cf8c948fb01553ae64c85649dc707931873ebde3c70388b7577",
+    "backend/src/db/schema/previous_read_operator_schema.rs": "68797cff5fe682dbbb2c78e3bc55db0255b1320ec8c90d801acb7dff3f5cb63c",
+    "backend/src/db/schema/previous_saved_game_schema.rs": "48d535abf62472d50c541a5f716e319e33e0faedea661fea5091d3b607d44de5",
+    "backend/src/db/schema/previous_saved_operator_schema.rs": "7573c174d965b0aba1ac53c6ed556ff62e5aef119a4b1017b958d0f803d68a2c",
+    "backend/src/directory/games.rs": "d2452669ec59f07d7f6bdae2618d277af6ebf952dd84ee0e873fa64cdabccb25",
+    "backend/src/directory/mod.rs": "bd2005e5175087ba5673912142481de141840dc323d49d926208b5a90e8c5863",
+    "backend/src/game/host_transfer.rs": "8aaa3dd5d9da2d73a8b3b81049e6df6f9f61285b4685ce24b72f56d6331678c9",
+    "backend/src/game/mod.rs": "e9d11beca65706f9ae827d5cb0364097ceedc94ecbd620cbffdf2c5cd26c3ca5",
+    "backend/src/game/recovery_answers.rs": "5964ea75e4a0ce2d3f82c26a6404b71920a025d9281b11305cd86d4b68b5e677",
+    "backend/src/lib.rs": "1cbe640a7a436b48fc3a2ce86cb18aafd24d4729dae20fb6dfd632ecd193a876",
+    "backend/src/limits.rs": "d56a4269229b3414fb81f8e0c93bd653fbd43bab9ff774b010b92e44d8c0fca7",
+    "backend/src/observability.rs": "5c91d962441dc47a5c6e1733120ee61f5f96f5190a6af02ff09242db1d8846f5",
+    "backend/src/security/mod.rs": "9f2e5725ebc10b3d4d68a89bf9147e243c1cba5eeeb0c9c50930a8e48b6e5a31",
+    "backend/src/worker_runtime/auth_output.rs": "5fe69c0523997953b012a209327a26ba24e3c2f570867b06ada7ce3b7dd45f5e",
+    "backend/src/worker_runtime/command_lookup.rs": "1c4280f7a829b53589396d80bedd37f8f060d60169abca23cdfff299b95deb9d",
+    "backend/src/worker_runtime/database.rs": "ae3f2008cb047a0f6dc56ba91ec1f5e89c55531d9218cdf7be112cc63bf74ea3",
+    "backend/src/worker_runtime/directory.rs": "fe1be253d5e4d531a50a10ba54ba451f6636d18964502d523157589916993b2e",
+    "backend/src/worker_runtime/discovery/mod.rs": "3c6fc6bab8ad968a34d4c971cdf5b480ef6291c126a0f9cb8e8acb333cd1c755",
+    "backend/src/worker_runtime/discovery/owner.rs": "34c91a0374160555e40e4126da8123b62c77771a8a7d9cdd872c6a62d31d3648",
+    "backend/src/worker_runtime/discovery/reservation_lookup.rs": "6e7ad6b945216aede5b3f343d2a82ba03de0438cd5c29f90d6466f58fc68eb10",
+    "backend/src/worker_runtime/discovery/wire.rs": "aaf11cd05f70df0503c0c7fd3454e3321ff2eab055e372ae55874aa35ef3e175",
+    "backend/src/worker_runtime/edge.rs": "8953b7b795693ce2a030d3e321a849e80881030dcba22be958701ab63f42a346",
+    "backend/src/worker_runtime/game_accounts.rs": "e8e7ac5146bd59c7073cfa753943312e63c069d2806867322bb4f7fbb7098813",
+    "backend/src/worker_runtime/game_directory.rs": "ddb78b992526f15425543d69893abf7ec22157c78756d0cdb48ce8f5dbee2eda",
+    "backend/src/worker_runtime/game_object.rs": "d718d96bc049a69540d86afb100ee0ebe93b9da84f1bffec1a83415fbdb5fb53",
+    "backend/src/worker_runtime/game_peers.rs": "05801a47f2984c238aff8826e69acc447ed9740146a6c517242251079fe5d911",
+    "backend/src/worker_runtime/game_reads.rs": "6680a3f08626eeaf117cc3468ea7b29f615808931d329bf0134b39eae2a5df11",
+    "backend/src/worker_runtime/game_recovery/mod.rs": "ea8a49e739f0a60b44e1bcc3fb5dd95bb3cb14b2e01277d498b92a1077334615",
+    "backend/src/worker_runtime/game_recovery/wire.rs": "f6f794cdc1da1c309216d6a75e974d90ad32292a4c2baa3b1bcf4937ec335088",
+    "backend/src/worker_runtime/game_sockets.rs": "405ee81f205e92443d52563ee21d9dbf303d51f89ba3d550961d8a6dc2ac4cb5",
+    "backend/src/worker_runtime/game_wire.rs": "832f5fe330ca4c4c59bee889908e4b130785519b5e34ff6ef0aeb0253717def7",
+    "backend/src/worker_runtime/games.rs": "73cf8d1e2e9c44c64c5ae7d0f7d8dc8a332d6340ede7cc20c6d396c6afb73dfc",
+    "backend/src/worker_runtime/history/mod.rs": "7788fac5c4abab2e5c85144aca85b5a9e7aaafdc821a46602df446c6ff4f7fd0",
+    "backend/src/worker_runtime/history/owner.rs": "2e1d92f0cb49771409684ebfb71d6bd9361c76b94b989fe5d1aa46f2b1396e3d",
+    "backend/src/worker_runtime/history/wire.rs": "97934c721f9a3e2a10dc53fe15b4f69bd3d0bc35889cf6528938e17d06d9abd8",
+    "backend/src/worker_runtime/management.rs": "e7c126571745cbdb14486e04ff45c51f3bbb2c8a7050e3cbfe97c91d450624cd",
+    "backend/src/worker_runtime/mod.rs": "61228b28fc4a7b3318bf4212f016b856f0452681596a7a4475c47312dbc54418",
+    "backend/src/worker_runtime/operator_peers.rs": "a22e513165d7f1d954b608bb9849e47c951ae3a8013287ae01321a0c85ae619f",
+    "backend/src/worker_runtime/operator_runtime.rs": "b466f2cdac3c65140d02b33908a2c95b576a0939faf7c5398274c3a3d99bd3fe",
+    "backend/src/worker_runtime/removals.rs": "7ab0b192cb171d6ae7db2a21f3d28cabc7d7c7ddc4577e96f06f1e4c7dbe3652",
+    "backend/src/worker_runtime/runtime.rs": "b686fcc87f8bf66f2a7118fde79a4602619f5990b0fb7167cd4de115cd24cc74",
+    "backend/src/worker_runtime/users.rs": "a30fb77074e3869e7db005389ca5154c69728850e273aecf8e499432c08904c9",
+    "backend/src/worker_runtime/wire.rs": "2b0c3f8b69d171b8ab1b532b82de5c1155f93d80bf887a309f6ef2a35194858b",
+    "backend/tests/account_management.rs": "c13fc73821f7d6bd71a47b210e078f7626f9f77291ab46a7fa10e27f1308282f",
+    "backend/tests/accounts_idempotency.rs": "6ade0245f63ea64757f8744c26d8d73b4a8bf1be029770866f638f786b2cee36",
+    "backend/tests/auth_audit.rs": "8d92a09adda62cb5a40728815442d919f5149303f703d68efac93fde9332bf8b",
+    "backend/tests/auth_core.rs": "a0cc4454c9c646f881b2a81811b2e6e28a46126c741a92d8c51a7e86c48eb075",
+    "backend/tests/crypto_constraints.rs": "d5f38b0b5e04bd15f90a4f649e50321cb81699a655cf30b3082f7cb5dbf151ff",
+    "backend/tests/dedicated_reads_https_wss.py": "69a183cde08895426c40ba0f8d197a1f7bfacc89b8b281843b6a9db3b350bd51",
+    "backend/tests/directory.rs": "6eb322bfb05884b05c2dc76c701c18a5490274fa471afa1ddb333244048722fd",
+    "backend/tests/directory_games.rs": "40045addaa829c3ead0d45ef13db1e0630b7d51154b14be300cbde86aaf980cc",
+    "backend/tests/directory_games/history.rs": "14a06e0df402e361607ca617f388181f887dbef1ae5513ad6db85755e7de30c8",
+    "backend/tests/game_authority.rs": "a169e1b77068c86cb2840d17fc88f8836a2c1c84f7c9ab0ddb879743ace714e2",
+    "backend/tests/game_delivery.rs": "cea5b41081e533cf272ea4fc33c3a9a0cf51a9b74f288b37000476d079e59530",
+    "backend/tests/game_wire.rs": "3559453740e1cb6ab227eb263ed2d3cb9be5737aa9436de85f39f6ec313c707c",
+    "backend/tests/gameplay_https_wss.py": "8ad152226789d8ab3bd0a9d79d9c68ffe0f4ad6ea34beeaf097785d4185c87d5",
+    "backend/tests/games_core.rs": "2bd289b8ce6ba5e8f699db9cce6b21791595f83341047424b2fa8449f3e5ee63",
+    "backend/tests/games_core/command_lookup.rs": "86edcc20d788bb3b224cefa39f20ac1a1f33da2d7433a1d84a26ac7291914c90",
+    "backend/tests/games_core/discovery.rs": "1f47208b2448a462d411971316bbb2c965e78db0b267d4d21c02d4f96d8a5411",
+    "backend/tests/games_core/game_storage_audit.rs": "4a50d9cabf259fec41bf919a8612ada67a4bbe3a899ff74b795fd66fe995168e",
+    "backend/tests/games_core/history.rs": "cb4568fd411d2b7de3d3406cd5d52102784524d5b6a4f2431b86e25da9948220",
+    "backend/tests/games_core/operator.rs": "856dded03144c2915a96ceb64cde3b5f6f04d1daab3db0063abceca6f1014854",
+    "backend/tests/games_core/player_lifecycle.rs": "0c65be4f017fc29e17ba7067c20da35f19b47e415abaf62c7cfccee54b0a05e1",
+    "backend/tests/games_core/player_lifecycle_review.rs": "0195994d53a0d46d7969edc735c821c6e6252ebf310f075a79f5909af5deac83",
+    "backend/tests/games_core/player_recovery.rs": "0a3374198c9fe40c3ee8ad787c692cda966db2f3ddf91c7110b4e27652011d85",
+    "backend/tests/games_core/prestart_maintenance.rs": "a1195fa5887e7b46d9112c6d30234ae7ee34c04a0e0f9df3a5f46d21e8f9258c",
+    "backend/tests/games_core/publication_receipt.rs": "71e57d59f5ccef9fc2de0b2a895a6882d643c0646c35762f2e9d3557f69b6252",
+    "backend/tests/games_core/reads.rs": "1fa6dbdd0a8913ac0bfc7f0db3028d7298aafcf928f771e9c2a0fee6664a33e5",
+    "backend/tests/games_core/receipt_atomicity.rs": "ac6cbff3424199f8c4c37a72ad3089c13f71ce897e0ff888f7ad32e1c45eab50",
+    "backend/tests/games_core/spectators.rs": "2f2570f559fd9d864a49cfd96d2b16577a2c262a4059e5cb31ed67038f02ce60",
+    "backend/tests/games_core/start_publication.rs": "c2bc64749c7a82e277eb3a2550a17dc18988606fac9082ca2f4390e9cd152f28",
+    "backend/tests/games_core/terminal.rs": "3e5ec403ee6b37181d933945ebee3451a16cb5759e361ac056d792fcb96155be",
+    "backend/tests/games_core/terminal_faults.rs": "8f43730a3e8af16a884fd3e962c4a82b85115646c38fb933578b7eab7ec3b18a",
+    "backend/tests/games_core/terminal_regressions.rs": "182cea1c9b0bc63f1c37965e95b81f42e8a53e357066d39c01c85b0a059e8e23",
+    "backend/tests/games_core/write_regressions.rs": "b79a96e13dbba001b9e8c4b2666b1c560942900e8c050f724fa5b160e4b2e77d",
+    "backend/tests/history_api.rs": "b52ec75b79709e266b779d95eb363b004b25f1c9e51781b0b53817210646da08",
+    "backend/tests/operator_https_wss.py": "04b99070076a54428537501b64a3a3aa6bb7acd11af7df151dbdf74eaaa08944",
+    "backend/tests/security.rs": "da89addcbbf151616feab7be4f7189e6e88f34b2b0f899e90b3525b7f69b4539",
+    "backend/tests/sql_policy_tags.rs": "c252debb3be2de8fd736473c72349d3e0a0e3e64b59f386f6efd688a55c99506",
+    "backend/tests/storage.rs": "adb4265533280b5a11b81c6854e7442967af170b7caeaacebbfef076bd0dbf82",
+    "backend/tests/storage_management.rs": "eef4e000c9cff21d3bb2b7bb91a34a1e9c7c7295896fe5278766900875a52538",
+    "backend/tests/support/mod.rs": "fc744fcf29c9a205e95a569219e408bdb10215102c2a5cbb48f91b8abe1b5560",
+    "backend/tests/users_core.rs": "cd5f9d1d89e40f8c8210c54b6426ad799e52eed2096be419c835e3847b490c1c",
+    "backend/vitest.config.js": "10124981c3751e2d2a8339585666854c60eb9a8cb2def7ffc48d66115ea6161c",
+    "backend/worker-tests/alarms.test.js": "35e3471b8bcb4d637af5d121813455697fd97459d90ef559a2073c2e5e4347a2",
+    "backend/worker-tests/auth_audit.test.js": "1fd8d2508d07aa233ab110650e90cc2d0f7ad12c001ae9f1dfc34ceb4f9d17d8",
+    "backend/worker-tests/command_lookup.test.js": "d9c1af470942327715f424154c657bbdd1af30df6aab0ca424c515414b228943",
+    "backend/worker-tests/command_lookup_repairs.test.js": "f7403260215189cf343ede3a203e76531bce5fbc86356a28ebe46e0dca8125b8",
+    "backend/worker-tests/developer.test.js": "ae455553f7019b305ba0590db45ee42783dfb161b69a3b25982d0afb444b5d99",
+    "backend/worker-tests/discovery.test.js": "16537433b748af81b669fce19295808c7e8de7c7aca06b70b4cd311a3699e339",
+    "backend/worker-tests/discovery_boundaries.test.js": "575294b29716e163f1a453b0c2ab5274d98b87b2ac96aab8eb6510f31d2dceb8",
+    "backend/worker-tests/discovery_deadlines.test.js": "14bfda763be67f017de726fa542898ceb9fe7252edf0ee9b5594bbb175af1383",
+    "backend/worker-tests/discovery_expiry.test.js": "6fb293c6441ea1427b5bfa2c1f7d907f2105ea52e7b6eb4d6db1c8e0b4f1bfd8",
+    "backend/worker-tests/fixtures.js": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
+    "backend/worker-tests/game_object.test.js": "f0f4dfaf877b2764eee69a4a0e16556dfe1852fb97c05d993c0146e450c299b6",
+    "backend/worker-tests/game_recovery.test.js": "e3c75179a8c55059dd113ef016baada38f7ff434fa5ab8863ac6a94847643c43",
+    "backend/worker-tests/game_storage_audit.test.js": "d03ed2fcb334cefc4e91c02699a1c47d03bbfdf068bc6d005370ca0e12a3fd77",
+    "backend/worker-tests/gameplay.test.js": "fce52d1c5fe8a10a052e45ed73eb2c9e0ce4aefdb2c9fa949fd90d914bb9851a",
+    "backend/worker-tests/games.test.js": "51ba8501b6e32ca9f82b1c73c037f262f8f9a157b339190a063d8b75e5990d35",
+    "backend/worker-tests/lifecycle.test.js": "066e74151dafbca6b0206c541757ec5cf2d80f5c53df2bbc532573d1e236c58e",
+    "backend/worker-tests/logging.test.js": "50e28b05ac251dcede0bd9b130b86419c91568c8860fcd96423b471b7f277989",
+    "backend/worker-tests/operator-repairs.test.js": "7dc8ed0f233c0bc8139a0c39a5edf565d40ce5037f07f428e4ddc916290e8c55",
+    "backend/worker-tests/operator.test.js": "c05028e27b993d9d444115920fac3b4c1e1f12e3c035972c05ed37492beea15a",
+    "backend/worker-tests/player_lifecycle.test.js": "326cbef03d41b04dca088fda12846f70fd7701ebab8a79ab10ef53ebf216ac7d",
+    "backend/worker-tests/player_lifecycle_boundaries.test.js": "4c36e2d8557518dffa4cbcac19dabf02b36e5c85de8149c2fd497ed72ea63f40",
+    "backend/worker-tests/player_recovery_boundaries.test.js": "6923276b14ba12ebaba6e3ed666cefa81a329aee64adad32b259867a07885cce",
+    "backend/worker-tests/player_recovery_deadlines.test.js": "bda9689d1ed17c64cd7713368b745c0fe2ba9324ebb8800d72455712efe2de7c",
+    "backend/worker-tests/player_recovery_review_regressions.test.js": "c0ab4c808af63fa8380b74837d1840f381b54d713c11ad5181f75b442772a003",
+    "backend/worker-tests/player_sync_release.test.js": "ce046b84590364de69ca15be7302ab792cd5977ac988e110ee5fa6ad2db422bb",
+    "backend/worker-tests/read_routes.test.js": "282d6ddc7228785f52a663d9f1894fd25ceae544885b84202aa2b9f2156919ec",
+    "backend/worker-tests/removal-recovery.test.js": "77a42c8f802906aaa70176a3aa3d07a9de75d40ee6f6e255d25e8e3094bcd5a1",
+    "backend/worker-tests/security.test.js": "d9e33b3027e948774b3efa18656fcb823453613828faf4ff9201dd0f0b23660d",
+    "backend/worker-tests/spectators.test.js": "6f3e41ead6815aa07211f91bf4253657f0bdcd5c6ea734dad90b5648ec3ba7c5",
+    "backend/worker-tests/storage_bounds.test.js": "65909115863bcfccbd37fe53b19cf0460c0f0b846a91b2a88a913e2e93c8abf6",
+    "backend/worker-tests/transactions.test.js": "e8084290f07b9b4ee5b7ce17cede79b6275a781f78474c716955de65c5e32566",
+    "backend/worker-tests/transport.test.js": "28d48f8287109ccb6c03904de7e6f942c6de7821c8f8927eccc658d676aa893c",
+    "backend/worker-tests/transport_audit.test.js": "a881e31ebae054a4e66bf2b6a27817b0b5b7da8ef2b88b083e989df295a4c190",
+    "backend/worker-tests/transport_receiving_cut.test.js": "875c09820f2d0cd5ab623bc58b16a9e9bc2106138181f8eea3987f9b07baf84e",
+    "backend/worker-tests/users.test.js": "18c256c9f4c38e9d27beb5a4d0b6140394b25c0fa21836e84a4eed6d39b8e86c",
+    "cli/src/args.rs": "3dac319e00008f76de481889ab9ddf3c57d3b0c1412abcf1d3db4abb99717f46",
+    "cli/src/client.rs": "82a6ec9c3f01ee3183be3d997b649c6fab1bb603c5c4ca0000450c0796bfa0c1",
+    "cli/src/error.rs": "7ef0b5c901045a8e3574ad44acdafed69f3605a7edfb36b062a78c3eb85721a1",
+    "cli/src/link_file.rs": "5d78e3ac7767f7413a252cfee91606dda50ea03c25380dfda9c5667e9e579746",
+    "cli/src/main.rs": "57fb066a0210c2aa2a757b6c4ca95338a70fcad671ace798087dc0c41793474f",
+    "cli/src/operations/accounts.rs": "245ba331e7461e58965b91d579f57b8c73efad8fc29e3869fd80ad1bd16b53d6",
+    "cli/src/operations/audit.rs": "835c43995f704396bc185e3d057ba6f2aa5237a7be63bac00ca28285d842aefc",
+    "cli/src/operations/mod.rs": "4b5039fe3f54ee165ca8f20abeddce413c3959d26885254927e66cf3170611d9",
+    "cli/src/output.rs": "591bb374a85613aa4f178e4e214092a7692e0fade0934de816bd20c68b2cd90d",
+    "cli/src/protocol.rs": "adcb6549aae69d9f59323f33d754556ac8ec52692d6147c2f081d8a8e5b0690a",
+    "cli/tests/client/mod.rs": "5c403284cb7469d94679485bcb51900fbc91dad4552a91cae5d4ac9dfb10691e",
+    "cli/tests/fixtures/mod.rs": "fd81a5e940268ddbd4f3ef7d21691b736979f531aedf75f3263399effbbfd667",
+    "cli/tests/help.rs": "9de57e09d7a91d76275480cc2262ba7f4191631d20b1c5dd313dbc84065150a7",
+    "shared/config/src/env/backend.rs": "3abc9856467e9217b4da7a1c0ad52a65fa543fd7b91a6946d50f4c2e36255950",
+    "shared/config/src/env/cli.rs": "0deccac66a81606d65299510c9b8ed85a1d0dbcee226666f26e8623e4eeff2c2",
+    "shared/config/src/env/error.rs": "5efdac5abc4a0b9ec65b5eb10a85345ce2de9ac79ee06e8bae4782fac12d7021",
+    "shared/config/src/env/frontend.rs": "f17f72fe307afea80fe96717e3c4f761b78e7876989cd7c84f331f45ff7ad405",
+    "shared/config/src/env/mod.rs": "f208f7718eea7d67d6df295ed24766924fb08556426c101519dc8bd86d5846bb",
+    "shared/config/src/env/utility/mod.rs": "b3e9278c8f5c3cce7f56521cb30b688f4548dc1d03d42b95745f6e05c8894528",
+    "shared/config/src/env/utility/origin.rs": "ef0324848553accf204d2ed021fa20eb2d082b729efc3b3aa854a113dc0142bc",
+    "shared/config/src/env/utility/secret.rs": "4f66da51ad9d15850901f7c820f0885405462614dcccd23aec90a262211bbbce",
+    "shared/config/src/lib.rs": "bedecf61602b5a076c3af5c62f48fa812bd4cdef1eb38639718a27b1fda44b48",
+    "shared/config/tests/backend.rs": "2c8d45606ebaf7befaaf33ad475b90242f6ba2f66e8627ccde0f1b006c6503c0",
+    "shared/config/tests/backend_once_error.rs": "9b9053389ab593d926f8cc8b2bc0847246bc120d055332f4984d209d7df81e73",
+    "shared/config/tests/backend_once_success.rs": "7bcd6183ae581c0a77570f9e97e9f0c344756bdddbb163a1ea2638d3067cdbbc",
+    "shared/config/tests/cli.rs": "58c267132680ede1658836f48486929d34d60d42b9c65fb38faaefda529274f1",
+    "shared/config/tests/frontend.rs": "b844433bf96510aa1fcf00ca89b614a29f65f2b804d8be3f261e9b652ffce11e",
+    "shared/config/tests/frontend_once_error.rs": "71a094f1306d9fbefb8b7966d8dc296cecd662f5f3634c417a31bcccda8bcbc2",
+    "shared/config/tests/frontend_once_success.rs": "323e92dec8e46af68b786457b15c9d1022357bc18093e6d0d3e0da3744c7e577",
+    "shared/config/tests/once_concurrent_error.rs": "a7065a4d27faddab53a3f9844982e78973e8695de91c26f6a47b699a02bbe008",
+    "shared/config/tests/once_concurrent_success.rs": "e2105810a8ace16335ebc736e38e25b56d7d873dff506cc05865bf9844f5369b",
+    "shared/config/tests/once_scopes.rs": "8457fc01f3332f3b713e185318df0b983fab699e8adb043733f4c222a1170485",
+    "shared/config/tests/support/mod.rs": "9004b8e4ee0c3faf14a6e5d429eeae1b43861c6d7b860f45e9eba5ba29ac2e6d",
+    "shared/config/tests/typed_struct.rs": "42357ed95d606ad0a6f4039afae39a03c9f8a6b358c87574370eeca651af0d3f",
+    "shared/contracts/src/discovery.rs": "96d2282898e40dfd0cd0d20c16b76ebb811c81f0cf78942ddb995a7d13149cdd",
+    "shared/contracts/src/games.rs": "52ef7025d6e6b28d6c7dd62d8a8736e4daecee11fe5fb7f31cf8939d33456ea3",
+    "shared/contracts/src/games/commands.rs": "99255c683b96dfb412e77abc8d5c7ec3af6c2882223416d705d05d6efcf21001",
+    "shared/contracts/src/games/reads.rs": "6e84316a5cb2bf72ed1e08e7678a095706863eabea68694ae4adf17250bdbd2a",
+    "shared/contracts/src/history.rs": "64efe9f5186564657d01bfb07a7ace078078568d6b74bee1894935319506dc05",
+    "shared/contracts/src/lib.rs": "81b7b9eed6e20703cacdc6e2d0a9fb4c3e6b38e8e6179d9da14bac6d645e0763",
+    "shared/contracts/src/management.rs": "b93a967c2db17b0abc09205b21338cfd7c1dba2aa55b923a4dc7b0912b41a707",
+    "shared/contracts/src/users.rs": "a313d5bd151c8ca98a99fba606f95ebf4032fd67d500331698f643a018220461",
+    "shared/contracts/tests/management.rs": "b9fc56aa202ac910a1bccc026b8ef4dcac5157ed21a1facb779aeaa5bec94f28",
+    "shared/domain/src/accounts.rs": "283d06d0b0662f61efd2c372714baeae6429875bb4fedfeaf1526de238040e34",
+    "shared/domain/src/accounts/error.rs": "98d768d1154ebed51b8bb1ca3e0333d4f1a0918d4f414c16832049da0a7c23a5",
+    "shared/domain/src/games.rs": "73abfcddb0a15b0e8f66a921a84d375b7cfe3ee89ae6be16648c9ea3ae68b454",
+    "shared/domain/src/ids.rs": "2656ffdabbf74c630e62dccebdb3cb93cb69072219f3a221ac425605eb22810b",
+    "shared/domain/src/ids/error.rs": "6471d183fbfe3b86e1ef914243751c27c7fb50df7e6f299ade1ddb213e2c0e11",
+    "shared/domain/src/lib.rs": "2ed1d9dd49270fd45e3ce38c31d5877472dc854c042c324a5cb7b33de807d3bd",
+    "shared/domain/tests/account_constraints.rs": "9c0143bf597f8aa5575381bb735917bf57bf9730603624e90de636092bb18ffc"
+  },
+  "schema_fixture_sha256": {
+    "backend/tests/fixtures/game-schema-published-operator.json": "6d09fc0fc10a680055dc2ca40f5295be690c951b24c4133b79885ef64eb5c8aa",
+    "backend/tests/fixtures/game-schema-published-read.json": "983ed64b4cf8ce71534597e8234faa63fd3a03896e7339b5024a324872679616",
+    "backend/tests/fixtures/game-schema-v1.sql": "2b15b624a3594373738961bc69e429bf3c2b8d7396b34d080895ba27ccff4362"
+  },
+  "worker_artifact_sha256": {
+    "backend/build/index_bg.wasm": "e150b72a6f7d71467b1fe82a144ef1c7914017e97210f0c6cc2680797fad8809",
+    "backend/build/index.js": "1078cf91d1ef5c8ce713eb8ccdd53830fa96d1e16469117a323245f3e64583e6",
+    "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+    "target/wasm32-unknown-unknown/release/brews_backend.wasm": "e8f389e6992f703b00cd9558add4707655c739648d9b1e227da882be2d14d9da"
+  },
+  "workerd_case_inventory": [
+    {
+      "suite": "backend/worker-tests/alarms.test.js",
+      "cases": [
+        {
+          "name": "anonymous access succeeds without deadlines or a spurious alarm",
+          "status": "passed"
+        },
+        {
+          "name": "sets the earliest absolute expiry and cleans expired authority in a durable alarm",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/auth_audit.test.js",
+      "cases": [
+        {
+          "name": "current auth durably fences the later expiry decision and denies one-millisecond rollback",
+          "status": "passed"
+        },
+        {
+          "name": "game auth durably fences the later expiry decision and denies one-millisecond rollback",
+          "status": "passed"
+        },
+        {
+          "name": "admin auth durably fences the later expiry decision and denies one-millisecond rollback",
+          "status": "passed"
+        },
+        {
+          "name": "current auth propagates ignore fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "current auth propagates abort fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "current auth propagates clock_readback fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "current auth propagates floor_readback fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "current auth propagates readback_failure fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "game auth propagates ignore fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "game auth propagates abort fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "game auth propagates clock_readback fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "game auth propagates floor_readback fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "game auth propagates readback_failure fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "admin auth propagates ignore fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "admin auth propagates abort fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "admin auth propagates clock_readback fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "admin auth propagates floor_readback fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "admin auth propagates readback_failure fence failures",
+          "status": "passed"
+        },
+        {
+          "name": "link redemption fences its actual expiry decision before rollback",
+          "status": "passed"
+        },
+        {
+          "name": "login receipt expiry fences its actual decision before rollback",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired completion cookie cannot return a receipt when expiry crosses password proof",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired completion retry propagates ignore clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired completion retry propagates abort clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired completion retry propagates clock_readback clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired completion retry propagates floor_readback clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired completion retry propagates readback_failure clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired retry rechecks post-proof authority: UPDATE account_sessions SET expires_at=expires_at-1",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired retry rechecks post-proof authority: UPDATE account_sessions SET revoked_at=revoked_at+1",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired retry rechecks post-proof authority: UPDATE account_sessions SET credential_epoch=credential_epoch+1",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired retry rechecks post-proof authority: UPDATE accounts SET disabled_at=created_at",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired retry rechecks post-proof authority: UPDATE accounts SET credential_epoch=credential_epoch+1",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment retired wrong-password proofs block the same login caller and account buckets",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment login failures block completion retries and rate write faults remain unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired completion cookie cannot return a receipt when expiry crosses password proof",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired completion retry propagates ignore clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired completion retry propagates abort clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired completion retry propagates clock_readback clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired completion retry propagates floor_readback clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired completion retry propagates readback_failure clock failure without receipt",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired retry rechecks post-proof authority: UPDATE account_sessions SET expires_at=expires_at-1",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired retry rechecks post-proof authority: UPDATE account_sessions SET revoked_at=revoked_at+1",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired retry rechecks post-proof authority: UPDATE account_sessions SET credential_epoch=credential_epoch+1",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired retry rechecks post-proof authority: UPDATE accounts SET disabled_at=created_at",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired retry rechecks post-proof authority: UPDATE accounts SET credential_epoch=credential_epoch+1",
+          "status": "passed"
+        },
+        {
+          "name": "reset retired wrong-password proofs block the same login caller and account buckets",
+          "status": "passed"
+        },
+        {
+          "name": "reset login failures block completion retries and rate write faults remain unavailable",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/command_lookup.test.js",
+      "cases": [
+        {
+          "name": "command lookup creation own actor admin no override and no effects",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup closed grammar and invalid selected token never fallback",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup recovery stable actor switch source deletion and alias reuse",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed game",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed command",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed timestamp",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed oversize",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed type",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed failed-audit",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup corrupt data or durable audit fail closed ignored-audit",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup rejects older same payload and actor-substituted positive ACK",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup rejects older same payload and actor-substituted negative ACK",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup Directory uninitialized intent reads exact original account without allocation",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup required work beyond 24 hours stays pending",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup required work beyond 24 hours retires receipt",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup rejects genuine previous negative release ACK with current actor restored",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup ACK binds entire ingress game",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup ACK binds entire ingress command",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup frozen counter6 migration none",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup frozen counter6 migration column",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup frozen counter6 migration index",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup frozen counter6 migration ignored-counter",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup current spectator admission owns its receipt and Leave deletes lookup authority",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup supplied command expiry sample remains fenced through rolled-back owner denial",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup future and unseen exact floor are bounded statuses while current actor stays valid",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/command_lookup_repairs.test.js",
+      "cases": [
+        {
+          "name": "command lookup creation Admin absent audit captured",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup creation Admin absent audit IGNORE",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup creation Admin absent audit ABORT",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup creation Admin directory-unavailable audit captured",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup creation Admin directory-unavailable audit IGNORE",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup creation Admin directory-unavailable audit ABORT",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup orphan Admin audit alarm purges at fixed expiry and stays purged through rollback",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup committed transfer rejects semantic target contradiction",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup committed transfer rejects semantic assignment contradiction",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup committed transfer rejects semantic target-with-canonical-fingerprint contradiction",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup committed transfer rejects semantic assignment-with-canonical-fingerprint contradiction",
+          "status": "passed"
+        },
+        {
+          "name": "command lookup committed transfer rejects semantic receipt-target contradiction",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/developer.test.js",
+      "cases": [
+        {
+          "name": "the restricted interface rejects browser headers, bad credentials and non-object payloads",
+          "status": "passed"
+        },
+        {
+          "name": "the CLI transport requires an exact canonical mutation command ID",
+          "status": "passed"
+        },
+        {
+          "name": "Directory cancellation seals late acquires and preserves other operations' gates",
+          "status": "passed"
+        },
+        {
+          "name": "Directory receipt cleanup is alarm-driven rather than waiting for a peer visit",
+          "status": "passed"
+        },
+        {
+          "name": "hosted-game rejection reconciles the gate and account intent before responding",
+          "status": "passed"
+        },
+        {
+          "name": "an audit-write failure rolls back actual Worker creation and withholds results",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated CLI credential allows safe account listing without cookies",
+          "status": "passed"
+        },
+        {
+          "name": "CLI reads schedule audit retention and alarms purge expired events",
+          "status": "passed"
+        },
+        {
+          "name": "persistent local runtime metadata does not masquerade as an unknown Directory schema",
+          "status": "passed"
+        },
+        {
+          "name": "socket-close pending removal uses durable backoff instead of spinning its alarm",
+          "status": "passed"
+        },
+        {
+          "name": "CLI disable of an enrolled account finishes without socket work",
+          "status": "passed"
+        },
+        {
+          "name": "CLI disable completes only after Directory release and returns a secret-free receipt",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/discovery.test.js",
+      "cases": [
+        {
+          "name": "discovery returns honest free and New slots with read-only cross-host/admin summaries",
+          "status": "passed"
+        },
+        {
+          "name": "discovery grammar rejects retry, bearer, body, filters, unknown selectors and ambiguous cookies",
+          "status": "passed"
+        },
+        {
+          "name": "unknown codes never contact or initialize Game and codes normalize through strict transport",
+          "status": "passed"
+        },
+        {
+          "name": "a failed initializer reserves preparing without exposing its pending identity",
+          "status": "passed"
+        },
+        {
+          "name": "hidden code publication and stale terminal release never masquerade as an available game",
+          "status": "passed"
+        },
+        {
+          "name": "availability counts only valid connected players, capacities and ownership without grants or presence writes",
+          "status": "passed"
+        },
+        {
+          "name": "discovery fails closed on genuine account peer or SQL failure",
+          "status": "passed"
+        },
+        {
+          "name": "discovery fails closed on genuine directory peer or SQL failure",
+          "status": "passed"
+        },
+        {
+          "name": "discovery fails closed on genuine game peer or SQL failure",
+          "status": "passed"
+        },
+        {
+          "name": "revocation during the Directory await denies account fields at the final Game cut",
+          "status": "passed"
+        },
+        {
+          "name": "idle expiry is durably fenced in Workerd and cannot resurrect after clock rollback/reconstruction",
+          "status": "passed"
+        },
+        {
+          "name": "discovery deadline ignored_write failure never returns protected data",
+          "status": "passed"
+        },
+        {
+          "name": "discovery deadline sync failure never returns protected data",
+          "status": "passed"
+        },
+        {
+          "name": "terminal state committed during the final Accounts await cannot disclose the hydrated summary",
+          "status": "passed"
+        },
+        {
+          "name": "edge hydration rechecks account revocation before releasing any live fields",
+          "status": "passed"
+        },
+        {
+          "name": "edge hydration rechecks player revocation before releasing any live fields",
+          "status": "passed"
+        },
+        {
+          "name": "code expiry first observed at edge release persists denial before clock rollback",
+          "status": "passed"
+        },
+        {
+          "name": "revocation during the final denial output gate cannot disclose an account slot response",
+          "status": "passed"
+        },
+        {
+          "name": "unknown code reads leave the genuine GAMES namespace object inventory unchanged",
+          "status": "passed"
+        },
+        {
+          "name": "selected player expiry is fenced in actual Workerd storage and does not resurrect on rollback",
+          "status": "passed"
+        },
+        {
+          "name": "an unreadable socket registry attachment fails availability unavailable without presence writes",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/discovery_boundaries.test.js",
+      "cases": [
+        {
+          "name": "discovery normalizes approved lowercase codes and percent-encoded outer spaces",
+          "status": "passed"
+        },
+        {
+          "name": "discovery accepts harmless browser and tracing metadata while rejecting bearer authority",
+          "status": "passed"
+        },
+        {
+          "name": "cross-host discovery is read-only and does not create result grants or renew idle deadlines",
+          "status": "passed"
+        },
+        {
+          "name": "public entry projection has no private occupancy or membership and never silently uses invalid account credentials",
+          "status": "passed"
+        },
+        {
+          "name": "unknown code does not reserve or create a game and invalid availability proof is denied",
+          "status": "passed"
+        },
+        {
+          "name": "idle expiry observed by public discovery fences a subsequent clock rollback",
+          "status": "passed"
+        },
+        {
+          "name": "revocation after the initial owner account proof cannot disclose a summary",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/discovery_deadlines.test.js",
+      "cases": [
+        {
+          "name": "entry expiry after owner reply 1 retains the edge sample despite rollback before denial",
+          "status": "passed"
+        },
+        {
+          "name": "entry expiry after owner reply 2 retains the edge sample despite rollback before denial",
+          "status": "passed"
+        },
+        {
+          "name": "player expiry after owner reply 1 retains the edge sample despite rollback before denial",
+          "status": "passed"
+        },
+        {
+          "name": "player expiry after owner reply 2 retains the edge sample despite rollback before denial",
+          "status": "passed"
+        },
+        {
+          "name": "required Game expiry fence ignore failure cannot acknowledge or disclose a projection",
+          "status": "passed"
+        },
+        {
+          "name": "required Game expiry fence abort failure cannot acknowledge or disclose a projection",
+          "status": "passed"
+        },
+        {
+          "name": "required Game expiry fence readback failure cannot acknowledge or disclose a projection",
+          "status": "passed"
+        },
+        {
+          "name": "required Game expiry fence sync failure cannot acknowledge or disclose a projection",
+          "status": "passed"
+        },
+        {
+          "name": "required Game expiry fence wrong_ack failure cannot acknowledge or disclose a projection",
+          "status": "passed"
+        },
+        {
+          "name": "required Game expiry fence wrong_sample failure cannot acknowledge or disclose a projection",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/discovery_expiry.test.js",
+      "cases": [
+        {
+          "name": "occupied genuine Accounts expiry after await at cut 1 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "occupied genuine Accounts expiry after await at cut 2 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "occupied genuine Accounts expiry after await at cut 3 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "occupied genuine Accounts expiry after await at cut 4 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "occupied genuine Accounts expiry after await at cut 5 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "occupied genuine Accounts expiry after await at cut 6 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "free genuine Accounts expiry after await at cut 1 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "free genuine Accounts expiry after await at cut 2 fences rollback before denial arrives",
+          "status": "passed"
+        },
+        {
+          "name": "free session expiry after discovery reply 1 fences original edge sample",
+          "status": "passed"
+        },
+        {
+          "name": "occupied session expiry after discovery reply 1 fences original edge sample",
+          "status": "passed"
+        },
+        {
+          "name": "occupied session expiry after discovery reply 2 fences original edge sample",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence ignore failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence abort failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence clock_readback failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence readback_failure failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence sync failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence ack_sample failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence ack_identity failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "required Accounts expiry fence ack_rejected failure stays unavailable with no protected output",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts action cannot forge a trusted expiry fence",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts target cannot forge a trusted expiry fence",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts epoch cannot forge a trusted expiry fence",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts expires cannot forge a trusted expiry fence",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts unknown cannot forge a trusted expiry fence",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts canonical_id cannot forge a trusted expiry fence",
+          "status": "passed"
+        },
+        {
+          "name": "malformed Accounts row_identity cannot forge a trusted expiry fence",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/game_object.test.js",
+      "cases": [
+        {
+          "name": "an empty Game owner alarm neither panics nor invents a Game",
+          "status": "passed"
+        },
+        {
+          "name": "recovery probes actual absent known owner without initializing defaults",
+          "status": "passed"
+        },
+        {
+          "name": "account close proves actual absent target and echoes all identity fields",
+          "status": "passed"
+        },
+        {
+          "name": "Game owner opens and durably publishes a lobby",
+          "status": "passed"
+        },
+        {
+          "name": "two genuine hibernating player streams permit atomic public Start",
+          "status": "passed"
+        },
+        {
+          "name": "a repeated player stream supersedes its predecessor without counting two players",
+          "status": "passed"
+        },
+        {
+          "name": "account close holds uncertainty on failed SDK close and preserves the exact ledger",
+          "status": "passed"
+        },
+        {
+          "name": "delivery INSERT storage failure closes a genuine current stream as unavailable and retains credit",
+          "status": "passed"
+        },
+        {
+          "name": "delivery DELETE storage failure closes a genuine current stream as unavailable and retains credit",
+          "status": "passed"
+        },
+        {
+          "name": "alarm removes expired orphan credit after actual close retirement failed without touching live credit",
+          "status": "passed"
+        },
+        {
+          "name": "two genuine concurrent account upgrades from 99 recheck capacity at native acceptance",
+          "status": "passed"
+        },
+        {
+          "name": "an oversized native registry remains enumerable for fail-closed alarm recovery",
+          "status": "passed"
+        },
+        {
+          "name": "prepared account close IGNORE never ACKs an unfenced grant and delayed real proof cannot admit it",
+          "status": "passed"
+        },
+        {
+          "name": "prepared account close ABORT never ACKs an unfenced grant and delayed real proof cannot admit it",
+          "status": "passed"
+        },
+        {
+          "name": "real unacknowledged snapshots enforce backlog credit with overflow close 1009",
+          "status": "passed"
+        },
+        {
+          "name": "real unacknowledged snapshots enforce bytes credit with overflow close 1009",
+          "status": "passed"
+        },
+        {
+          "name": "terminal cleanup releases its reservation while retaining credit for uncertain genuine SDK closure",
+          "status": "passed"
+        },
+        {
+          "name": "invalid original ACK unknown fails closed with the owning policy class",
+          "status": "passed"
+        },
+        {
+          "name": "invalid original ACK revision fails closed with the owning policy class",
+          "status": "passed"
+        },
+        {
+          "name": "invalid original ACK duplicate fails closed with the owning policy class",
+          "status": "passed"
+        },
+        {
+          "name": "invalid original ACK oversized fails closed with the owning policy class",
+          "status": "passed"
+        },
+        {
+          "name": "invalid original ACK binary fails closed with the owning policy class",
+          "status": "passed"
+        },
+        {
+          "name": "valid ACK releases exact encoded credit without renewal, gameplay or host keepalive",
+          "status": "passed"
+        },
+        {
+          "name": "actual player session expiry closes native presence without deleting retained membership",
+          "status": "passed"
+        },
+        {
+          "name": "admission expiry and unknown code never allocate membership or cookies",
+          "status": "passed"
+        },
+        {
+          "name": "lost player cookie retries are receipt-only and missing retry context cannot leak the result",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot final-await changed_view resynchronizes without releasing captured output",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot final-await closed_authority resynchronizes without releasing captured output",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot final-await overlapping_send resynchronizes without releasing captured output",
+          "status": "passed"
+        },
+        {
+          "name": "genuine hibernation preserves outstanding credit and reconstructed native presence",
+          "status": "passed"
+        },
+        {
+          "name": "unknown Game admission fails without initializing a configuration or default record",
+          "status": "passed"
+        },
+        {
+          "name": "fresh admission cookie is withheld when actual owner authority expires at its output await",
+          "status": "passed"
+        },
+        {
+          "name": "fresh player cookie is withheld when actual owner authority expires at its output await",
+          "status": "passed"
+        },
+        {
+          "name": "Game owner alarm cancels and releases an expired prestart lobby",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/game_recovery.test.js",
+      "cases": [
+        {
+          "name": "Directory alarm retries genuine absent known initializer without inventing Game state",
+          "status": "passed"
+        },
+        {
+          "name": "ordinary Users commands dispatch genuine due socket-close work",
+          "status": "passed"
+        },
+        {
+          "name": "ordinary CLI commands dispatch genuine due socket-close work",
+          "status": "passed"
+        },
+        {
+          "name": "Directory alarm acknowledges genuine initialized New Game after withheld initializer delivery",
+          "status": "passed"
+        },
+        {
+          "name": "Directory alarm publishes only a genuine committed lobby after withheld publication delivery",
+          "status": "passed"
+        },
+        {
+          "name": "allocated hidden Directory code is released by actual New Game timeout without inventing Game code",
+          "status": "passed"
+        },
+        {
+          "name": "Directory alarm seals only actual absent known creation at its deadline",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/game_storage_audit.test.js",
+      "cases": [
+        {
+          "name": "final gameplay expiry denial is durably fenced: rollback_after_denial",
+          "status": "passed"
+        },
+        {
+          "name": "final gameplay expiry denial is durably fenced: ignored_write",
+          "status": "passed"
+        },
+        {
+          "name": "final gameplay expiry denial is durably fenced: failed_sync",
+          "status": "passed"
+        },
+        {
+          "name": "accepted account anchors stop at the shared grant bound and cannot deadlock ending",
+          "status": "passed"
+        },
+        {
+          "name": "Recovery captures native accepted preparation after owner acceptance and immediate close fail; retries respect deadlines",
+          "status": "passed"
+        },
+        {
+          "name": "known predecessor messages and errors cannot bypass close backoff or poison its successor",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/gameplay.test.js",
+      "cases": [
+        {
+          "name": "manual and random calls commit through the Worker and deliver only authorized boards",
+          "status": "passed"
+        },
+        {
+          "name": "lost genuine Directory Start ACK recovers the current projection after an accepted first call",
+          "status": "passed"
+        },
+        {
+          "name": "rejected calls preserve progression and exhaustion never auto-ends a game",
+          "status": "passed"
+        },
+        {
+          "name": "confirmed new cancellation deletes pre-start data without History and releases only its reservation",
+          "status": "passed"
+        },
+        {
+          "name": "confirmed awaiting_players cancellation deletes pre-start data without History and releases only its reservation",
+          "status": "passed"
+        },
+        {
+          "name": "confirmed InProgress ending preserves final History without a winner",
+          "status": "passed"
+        },
+        {
+          "name": "lost genuine terminal release ACK remains Pending and alarm retry cannot release a newer game",
+          "status": "passed"
+        },
+        {
+          "name": "native registry uncertainty releases immediately and schedules exact transport recovery through hibernation",
+          "status": "passed"
+        },
+        {
+          "name": "terminal reconnect uses only original eligible grants and never admits a new account session",
+          "status": "passed"
+        },
+        {
+          "name": "terminal player Exit revokes only its final access while preserving other viewers and History",
+          "status": "passed"
+        },
+        {
+          "name": "a host-selected offline qualifier resolves once with immutable History and existing final access",
+          "status": "passed"
+        },
+        {
+          "name": "account Exit retires every existing account-game session without changing read-only peers or History",
+          "status": "passed"
+        },
+        {
+          "name": "failed physical player Exit close acknowledges durable revocation and schedules prompt recovery",
+          "status": "passed"
+        },
+        {
+          "name": "History deadline alarm purges actual owner rows and matching Directory index without clearing a newer reservation",
+          "status": "passed"
+        },
+        {
+          "name": "History account reads are immutable and survive Exit with a fresh login",
+          "status": "passed"
+        },
+        {
+          "name": "History final Accounts await expiry is durably fenced before denial and survives reconstruction",
+          "status": "passed"
+        },
+        {
+          "name": "History detail expiry first observed after the edge Accounts await is durably fenced",
+          "status": "passed"
+        },
+        {
+          "name": "History list expiry first observed after the edge Accounts await is durably fenced",
+          "status": "passed"
+        },
+        {
+          "name": "History final expiry ignore failure is unavailable rather than a nondurable NotFound",
+          "status": "passed"
+        },
+        {
+          "name": "History final expiry abort failure is unavailable rather than a nondurable NotFound",
+          "status": "passed"
+        },
+        {
+          "name": "History final expiry clock_readback failure is unavailable rather than a nondurable NotFound",
+          "status": "passed"
+        },
+        {
+          "name": "History final expiry floor_readback failure is unavailable rather than a nondurable NotFound",
+          "status": "passed"
+        },
+        {
+          "name": "History final expiry sync failure is unavailable rather than a nondurable NotFound",
+          "status": "passed"
+        },
+        {
+          "name": "History detail edge expiry confirmation fails closed on revoked without post-await disclosure",
+          "status": "passed"
+        },
+        {
+          "name": "History list edge expiry confirmation fails closed on revoked without post-await disclosure",
+          "status": "passed"
+        },
+        {
+          "name": "History detail edge expiry confirmation fails closed on sync without post-await disclosure",
+          "status": "passed"
+        },
+        {
+          "name": "History list edge expiry confirmation fails closed on sync without post-await disclosure",
+          "status": "passed"
+        },
+        {
+          "name": "History detail edge expiry confirmation fails closed on rollback without post-await disclosure",
+          "status": "passed"
+        },
+        {
+          "name": "History list edge expiry confirmation fails closed on rollback without post-await disclosure",
+          "status": "passed"
+        },
+        {
+          "name": "History cross-host and admin access revalidates live Accounts instead of cached metadata",
+          "status": "passed"
+        },
+        {
+          "name": "History rejects malformed authoritative owner replies without empty-success fallbacks",
+          "status": "passed"
+        },
+        {
+          "name": "History corruption and ignored durable clock writes fail closed in actual Workerd SQL",
+          "status": "passed"
+        },
+        {
+          "name": "History resolved winner, pagination and beyond-first-page expiry use original owners",
+          "status": "passed"
+        },
+        {
+          "name": "History rechecks Accounts after owner awaits and never returns a disabled account snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "History remains readable while a genuine terminal Directory ACK is pending",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/games.test.js",
+      "cases": [
+        {
+          "name": "an enrolled host creates a New game through the Worker",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/lifecycle.test.js",
+      "cases": [
+        {
+          "name": "enrolls through A3/A4, rotates at the original deadline, then logs in through A1",
+          "status": "passed"
+        },
+        {
+          "name": "resets through A5/A6 without auto-login and invalidates prior Normal sessions",
+          "status": "passed"
+        },
+        {
+          "name": "logout A7 revokes only the presented session and leaves other logins valid",
+          "status": "passed"
+        },
+        {
+          "name": "simultaneous redemption is single-use and all losers receive generic invalid-link",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/logging.test.js",
+      "cases": [
+        {
+          "name": "auth credential and ingress failures log no sensitive input or request metadata",
+          "status": "passed"
+        },
+        {
+          "name": "unknown enrollment and reset completion credentials emit safe rejection diagnostics",
+          "status": "passed"
+        },
+        {
+          "name": "wrong-scope completion credentials are diagnosed while session reads remain quiet",
+          "status": "passed"
+        },
+        {
+          "name": "ordinary session reads and unknown routes do not produce application logs",
+          "status": "passed"
+        },
+        {
+          "name": "management issuance and replay log only command metadata, never bearer links",
+          "status": "passed"
+        },
+        {
+          "name": "an audit-storage failure logs a safe error and never claims successful delivery",
+          "status": "passed"
+        },
+        {
+          "name": "removal audit failure emits a storage error before its pending retry response",
+          "status": "passed"
+        },
+        {
+          "name": "removal proof mismatch logs a protocol failure and retains work for retry",
+          "status": "passed"
+        },
+        {
+          "name": "private Directory malformed envelopes are diagnosed without logging raw content",
+          "status": "passed"
+        },
+        {
+          "name": "account and Directory alarm failures are classified without raw SQLite errors",
+          "status": "passed"
+        },
+        {
+          "name": "storage output-gate failure logs durability and withholds delivery diagnostics",
+          "status": "passed"
+        },
+        {
+          "name": "removal completion is not logged before the final owner output gate",
+          "status": "passed"
+        },
+        {
+          "name": "rejected CLI credentials emit one structured safe boundary event",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/operator-repairs.test.js",
+      "cases": [
+        {
+          "name": "operator regression final owner target cut after gate during last Accounts await",
+          "status": "passed"
+        },
+        {
+          "name": "operator regression final owner target cut after disable during last Accounts await",
+          "status": "passed"
+        },
+        {
+          "name": "operator regression final owner target cut after delete during last Accounts await",
+          "status": "passed"
+        },
+        {
+          "name": "operator regression authenticated admin target read release failure receives durable Failed audit",
+          "status": "passed"
+        },
+        {
+          "name": "operator regression oversized authenticated admin operator body rejected with durable audit",
+          "status": "passed"
+        },
+        {
+          "name": "operator coupled last Accounts candidate cut rejects gate",
+          "status": "passed"
+        },
+        {
+          "name": "operator coupled last Accounts candidate cut rejects disable",
+          "status": "passed"
+        },
+        {
+          "name": "operator coupled last Accounts candidate cut rejects delete",
+          "status": "passed"
+        },
+        {
+          "name": "operator coupled last Accounts candidate cut rejects reset",
+          "status": "passed"
+        },
+        {
+          "name": "operator coupled last Accounts candidate cut rejects unverify",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized configuration captures only current admin metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized configuration captures only current host metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized configuration captures only current anonymous metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized resume captures only current admin metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized resume captures only current host metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized resume captures only current anonymous metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized host-transfer captures only current admin metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized host-transfer captures only current host metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized host-transfer captures only current anonymous metadata",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized privileged rejection fails closed on ignore capture",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized privileged rejection fails closed on abort capture",
+          "status": "passed"
+        },
+        {
+          "name": "operator oversized privileged rejection fails closed on entropy capture",
+          "status": "passed"
+        },
+        {
+          "name": "operator real held transfer excludes competing intent and cancellation releases",
+          "status": "passed"
+        },
+        {
+          "name": "operator real held code excludes competing intent and cancellation releases",
+          "status": "passed"
+        },
+        {
+          "name": "operator lost committed ACK past 24 hours survives cleanup and game reconstruction",
+          "status": "passed"
+        },
+        {
+          "name": "operator lost committed ACK past 24 hours survives cleanup and directory reconstruction",
+          "status": "passed"
+        },
+        {
+          "name": "operator lost undelivered abort past 24 hours survives cleanup and undelivered reconstruction",
+          "status": "passed"
+        },
+        {
+          "name": "operator release failure cannot claim captured audit on ignore",
+          "status": "passed"
+        },
+        {
+          "name": "operator release failure cannot claim captured audit on abort",
+          "status": "passed"
+        },
+        {
+          "name": "operator release failure cannot claim captured audit on entropy",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/operator.test.js",
+      "cases": [
+        {
+          "name": "operator C7 closed patch all fields omission null duplicate unknown and atomic failure",
+          "status": "passed"
+        },
+        {
+          "name": "operator C7 current credentials exact Origin mandatory header and no no-op renewal",
+          "status": "passed"
+        },
+        {
+          "name": "operator C9 intentional existing resume renews once read-only host/admin passive and retry do not",
+          "status": "passed"
+        },
+        {
+          "name": "operator C10 safe discovery and transfer preserves reservation newhost authority outgoing exact retry",
+          "status": "passed"
+        },
+        {
+          "name": "operator recipient disabled pending reset-required admin gate invalid and stale assignment",
+          "status": "passed"
+        },
+        {
+          "name": "operator privileged audit actual actor once success failure rollback and fixed retention",
+          "status": "passed"
+        },
+        {
+          "name": "operator durable Directory removal guards both hosts until matching commit proof settles",
+          "status": "passed"
+        },
+        {
+          "name": "operator resume rejects terminal without recreating grants and transfer preserves in-progress boards sockets",
+          "status": "passed"
+        },
+        {
+          "name": "operator receiving configuration expiry is durably denied before rollback reauthorization",
+          "status": "passed"
+        },
+        {
+          "name": "operator receiving resume expiry is durably denied before rollback reauthorization",
+          "status": "passed"
+        },
+        {
+          "name": "operator receiving host-transfer expiry is durably denied before rollback reauthorization",
+          "status": "passed"
+        },
+        {
+          "name": "operator genuine same-actor earlier release ACK cannot disclose targets after actual host transfer",
+          "status": "passed"
+        },
+        {
+          "name": "operator authenticated admin invalid transport is audited once without submitted content or anonymous attempts",
+          "status": "passed"
+        },
+        {
+          "name": "operator genuine earlier Accounts reply is rejected at an identical command and clock",
+          "status": "passed"
+        },
+        {
+          "name": "operator committed assignment and actor receipt survive before_settle crash and exact recovery",
+          "status": "passed"
+        },
+        {
+          "name": "operator committed assignment and actor receipt survive after_settle crash and exact recovery",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/player_lifecycle.test.js",
+      "cases": [
+        {
+          "name": "rename preserves stable proof/session/expiry, trims ASCII and releases old exact alias",
+          "status": "passed"
+        },
+        {
+          "name": "lobby Leave deletes membership and authority and requires new ID/proof with safe lost-response 401",
+          "status": "passed"
+        },
+        {
+          "name": "In Progress Leave retains board/proof/return session, excludes delayed lobby branch, retry preserves successor",
+          "status": "passed"
+        },
+        {
+          "name": "required ignored Leave writes roll back membership and closure",
+          "status": "passed"
+        },
+        {
+          "name": "required aborted Leave writes roll back membership and closure",
+          "status": "passed"
+        },
+        {
+          "name": "membership receiving cut 1 fences original expiry through rollback during denial",
+          "status": "passed"
+        },
+        {
+          "name": "membership receiving cut 2 fences original expiry through rollback during denial",
+          "status": "passed"
+        },
+        {
+          "name": "wrong expiry-denial peer acknowledgement never releases own alias bytes",
+          "status": "passed"
+        },
+        {
+          "name": "second membership owner cut denies epoch supersession after authorized result",
+          "status": "passed"
+        },
+        {
+          "name": "second membership owner cut denies alias supersession after authorized result",
+          "status": "passed"
+        },
+        {
+          "name": "second membership owner cut denies state supersession after authorized result",
+          "status": "passed"
+        },
+        {
+          "name": "owner rename_alias storage-await expiry denies protected alias and fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "owner rename_alias_output storage-await expiry denies protected alias and fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "receipt-only rename retry after a later rename preserves later spelling and revisions",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/player_lifecycle_boundaries.test.js",
+      "cases": [
+        {
+          "name": "alias change preserves current authority and recovery material while no-op and exact retry have no revision effect",
+          "status": "passed"
+        },
+        {
+          "name": "mutation selects only the player cookie, not a coexisting account or arbitrary identity",
+          "status": "passed"
+        },
+        {
+          "name": "closed original-byte alias and Leave bodies reject duplicate, nullable, target and wrong-lifecycle claims",
+          "status": "passed"
+        },
+        {
+          "name": "alias transaction ignored required write fails closed without claiming alias or receipt",
+          "status": "passed"
+        },
+        {
+          "name": "alias transaction aborted required write fails closed without claiming alias or receipt",
+          "status": "passed"
+        },
+        {
+          "name": "lobby Leave removes all participant authority and answer; old cookie cannot replay or reclaim membership",
+          "status": "passed"
+        },
+        {
+          "name": "lobby Leave ignored deletion rolls back membership sessions revisions and outcome",
+          "status": "passed"
+        },
+        {
+          "name": "lobby Leave aborted deletion rolls back membership sessions revisions and outcome",
+          "status": "passed"
+        },
+        {
+          "name": "fresh delayed lobby Leave after Start conflicts rather than selecting in-progress meaning",
+          "status": "passed"
+        },
+        {
+          "name": "in-progress Leave retains board and fixed session; reconnect and same-command retry never erase successor presence or Leave history",
+          "status": "passed"
+        },
+        {
+          "name": "known durably fenced predecessor close failure cannot block valid fixed-session return",
+          "status": "passed"
+        },
+        {
+          "name": "Leave captures physically accepted prepared orphan before deleting grants, even after failed owner socket acceptance",
+          "status": "passed"
+        },
+        {
+          "name": "lost first rename response leaves one durable alias change and an authenticated receipt-only retry",
+          "status": "passed"
+        },
+        {
+          "name": "terminal player access grants final view only, never new alias or Leave effects",
+          "status": "passed"
+        },
+        {
+          "name": "superseded player authority after the first rename owner reply prevents private reply release",
+          "status": "passed"
+        },
+        {
+          "name": "recovered-session old Leave receipt expiry is fenced in transit without extending its original retry window",
+          "status": "passed"
+        },
+        {
+          "name": "reconstructed rename output rechecks current alias after second-owner storage await 3",
+          "status": "passed"
+        },
+        {
+          "name": "reconstructed rename output rechecks current alias after second-owner storage await 6",
+          "status": "passed"
+        },
+        {
+          "name": "rename observed expiry requires exact bound durable denial ACK: wrong_fence_sample",
+          "status": "passed"
+        },
+        {
+          "name": "rename observed expiry requires exact bound durable denial ACK: wrong_fence_game",
+          "status": "passed"
+        },
+        {
+          "name": "rename observed expiry requires exact bound durable denial ACK: unavailable_fence",
+          "status": "passed"
+        },
+        {
+          "name": "rename edge expiry cut 1 durably fences the original clock sample even if the denial await rolls back",
+          "status": "passed"
+        },
+        {
+          "name": "rename edge expiry cut 2 durably fences the original clock sample even if the denial await rolls back",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/player_recovery_boundaries.test.js",
+      "cases": [
+        {
+          "name": "public recovery needs answer proof even with host or existing player credentials and never case-folds the alias",
+          "status": "passed"
+        },
+        {
+          "name": "normalized code and proof restore one identity; receipt retries still require fresh proof and never replay a cookie",
+          "status": "passed"
+        },
+        {
+          "name": "private answer PUT and DELETE preserve current sessions and remain invisible to other viewers",
+          "status": "passed"
+        },
+        {
+          "name": "a committed recovery whose owner response is lost cannot resend its cookie; fresh proof and command recover again",
+          "status": "passed"
+        },
+        {
+          "name": "unknown code and unavailable enrollment fail with the same safe recovery result without modifying the reservation",
+          "status": "passed"
+        },
+        {
+          "name": "owner-side supersession before reply release prevents a stale recovered credential reaching the browser",
+          "status": "passed"
+        },
+        {
+          "name": "five failed recovery attempts block without extending the block; restart retains it and expiry removes it",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/player_recovery_deadlines.test.js",
+      "cases": [
+        {
+          "name": "recovery recover_player deadline observed at edge survives rollback before the next owner await",
+          "status": "passed"
+        },
+        {
+          "name": "recovery recovery_output deadline observed at edge survives rollback before the next owner await",
+          "status": "passed"
+        },
+        {
+          "name": "recovery expiry fencing requires an exact durable ACK, not unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "recovery expiry fencing requires an exact durable ACK, not wrong_sample",
+          "status": "passed"
+        },
+        {
+          "name": "answer PUT reply 1 fences observed expiry without releasing private data after rollback",
+          "status": "passed"
+        },
+        {
+          "name": "answer PUT reply 2 fences observed expiry without releasing private data after rollback",
+          "status": "passed"
+        },
+        {
+          "name": "answer DELETE reply 1 fences observed expiry without releasing private data after rollback",
+          "status": "passed"
+        },
+        {
+          "name": "answer DELETE reply 2 fences observed expiry without releasing private data after rollback",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/player_recovery_review_regressions.test.js",
+      "cases": [
+        {
+          "name": "cut1 expiry observed before output request survives rollback",
+          "status": "passed"
+        },
+        {
+          "name": "cut2 denial fences original observed sample when subsequent clock sample rolls back",
+          "status": "passed"
+        },
+        {
+          "name": "D14 private response is denied if owning authority revoked after owner cut",
+          "status": "passed"
+        },
+        {
+          "name": "second recovery cut cannot substitute a different syntactically valid cookie token",
+          "status": "passed"
+        },
+        {
+          "name": "real SQLite failure bucket write IGNORE rolls back all scope buckets",
+          "status": "passed"
+        },
+        {
+          "name": "real SQLite failure bucket write ABORT rolls back all scope buckets",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/player_sync_release.test.js",
+      "cases": [
+        {
+          "name": "healthy live player snapshot and up_to_date release",
+          "status": "passed"
+        },
+        {
+          "name": "delayed Recovery snapshot cannot release original Sync",
+          "status": "passed"
+        },
+        {
+          "name": "delayed Recovery up_to_date cannot release original Sync",
+          "status": "passed"
+        },
+        {
+          "name": "healthy terminal final-access player snapshot and up_to_date release",
+          "status": "passed"
+        },
+        {
+          "name": "delayed terminal Exit snapshot cannot release original Sync",
+          "status": "passed"
+        },
+        {
+          "name": "delayed terminal Exit up_to_date cannot release original Sync",
+          "status": "passed"
+        },
+        {
+          "name": "player Sync fails closed on missing release proof",
+          "status": "passed"
+        },
+        {
+          "name": "player Sync fails closed on identity release proof",
+          "status": "passed"
+        },
+        {
+          "name": "player Sync fails closed on deadline release proof",
+          "status": "passed"
+        },
+        {
+          "name": "player sync receive expiry stays denied through a rollback during fencing",
+          "status": "passed"
+        },
+        {
+          "name": "player release receive expiry stays denied through a rollback during fencing",
+          "status": "passed"
+        },
+        {
+          "name": "terminal access pruned at the original expiry cannot release a held snapshot after rollback",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/read_routes.test.js",
+      "cases": [
+        {
+          "name": "dedicated remaining-values legal one-value all-free New configuration is complete",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated remaining-values complete 75 pool rejects invalid configuration bounds",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated calls mixed actual manual random retry duplicate and sparse numeric remainder",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated passive expiry preserves existing alarm and coordinates prestart release",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated original idle cap is not extended by actual host resume",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held calls rejects actual accepted call before release",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held account cut rejects actual host assignment transfer",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held spectator loses access during actual terminal notice and cleanup",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held original terminal grant is denied at History expiry equality",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated all nine routes reject methods command headers wrong Origin bearer and duplicate cookie",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route C5 exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /membership exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /players exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /calls exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /remaining-values exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /membership/board exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /boards exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /qualification exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated read route /result exists prestart with its own projection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads New cross-host all six permitted inspections create no grant revision timer session",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads closed grammar ambiguous cookie contexts and explicit invalid never fallback",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads spectator own membership omits recovery and has no private qualification boards roster",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads actual presence ignores prepared slots and survives hibernation",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads gameplay complete calls numeric order selected boards qualifiers exhaustion and retained Leave",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads terminal Cancelled original grants and truthful roster",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated reads terminal Resolved original grants and truthful roster",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held membership rejects stale private payload after actual recovery",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held membership rejects stale private payload after actual delete-recovery",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held membership rejects stale private payload after actual rename",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held membership rejects stale private payload after actual leave",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held membership rejects stale private payload after actual switch",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated final Accounts recut denies actual disable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated final Accounts recut denies actual reset",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated final Accounts recut denies actual delete",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated final Accounts recut denies actual epoch",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated final Accounts recut denies actual role",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin game typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin /players typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin /calls typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin /remaining-values typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin /boards typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin /qualification typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin /result typed audit success or rejection once",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated audit entropy or ignored write cannot release an unaudited Admin read",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated genuine old /read ACK cannot authorize later recovery invocation",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated genuine old /read-release ACK cannot authorize later recovery invocation",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated negative ACK from different invocation is unavailable without false cookie clearing",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin game typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin /calls typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin /qualification typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin /result typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin /boards typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin /remaining-values typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated malformed authenticated Admin /players typed rejection",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held final result denied after actual Exit",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held final result denied after actual expiry",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated release wrong-challenge is unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated release wrong-digest is unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated release unknown is unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated release truncated is unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated release unsafe-clock is unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated release missing-code is unavailable",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated edge deadline durably fenced before entropy failure and rollback denial",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated same-clock actual challenges differ and entropy failure has no fallback",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated current shorter spectator grace cap enforced after receiving await",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated Admin socket registry failure is withheld and durably Failed",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated held /read-release after actual recovery cannot release old payload",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated maximum legal 20-member roster and full 1000 pool remain complete and bounded",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated observed expiry lost ACK is unavailable without clear-cookie",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated observed expiry wrong-binding ACK is unavailable without clear-cookie",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated observed expiry ignored-write ACK is unavailable without clear-cookie",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated frozen published counter5 Workerd migration none",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated frozen published counter5 Workerd migration unknown-shape",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated frozen published counter5 Workerd migration index-drift",
+          "status": "passed"
+        },
+        {
+          "name": "dedicated frozen published counter5 Workerd migration ignored-marker",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/removal-recovery.test.js",
+      "cases": [
+        {
+          "name": "prepared removal has a durable recovery alarm before its first Directory await",
+          "status": "passed"
+        },
+        {
+          "name": "stale ungranted prepared intent is permanently rejected and unlocked after reconciliation",
+          "status": "passed"
+        },
+        {
+          "name": "late genuine duplicate acquire replies return the matching committed receipt",
+          "status": "passed"
+        },
+        {
+          "name": "private management envelopes reject positional arrays without reading or mutating accounts",
+          "status": "passed"
+        },
+        {
+          "name": "legacy prepared intent without an alarm recovers through genuine Directory calls",
+          "status": "passed"
+        },
+        {
+          "name": "alarm recovery unlocks stale ungranted work instead of retrying forever",
+          "status": "passed"
+        },
+        {
+          "name": "old known Directory pending grant remains eligible for legitimate completion",
+          "status": "passed"
+        },
+        {
+          "name": "genuine completed acquire rejection cannot authorize a prepared mutation",
+          "status": "passed"
+        },
+        {
+          "name": "late genuine grant after another handler aborts is permanently rejected without mutation",
+          "status": "passed"
+        },
+        {
+          "name": "undelayed parallel matching removals never return negative results or duplicate successful audit",
+          "status": "passed"
+        },
+        {
+          "name": "stale recovery withholds completion until genuine Directory reconciliation succeeds",
+          "status": "passed"
+        },
+        {
+          "name": "committed recovery withholds completion until genuine Directory reconciliation succeeds",
+          "status": "passed"
+        },
+        {
+          "name": "committed admin-session recovery backs off while socket acknowledgements remain outstanding",
+          "status": "passed"
+        },
+        {
+          "name": "private inputs preserve duplicate-field rejection and require object envelopes",
+          "status": "passed"
+        },
+        {
+          "name": "malformed array private Directory reply cannot become a mutation grant",
+          "status": "passed"
+        },
+        {
+          "name": "malformed duplicate private Directory reply cannot become a mutation grant",
+          "status": "passed"
+        },
+        {
+          "name": "malformed unknown private Directory reply cannot become a mutation grant",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/security.test.js",
+      "cases": [
+        {
+          "name": "auth retries return secret-free receipts without reissuing cookies",
+          "status": "passed"
+        },
+        {
+          "name": "passwords allow exact ASCII controls but reject the 51-character input",
+          "status": "passed"
+        },
+        {
+          "name": "NUL and DEL survive username SQLite storage and exact case-sensitive lookup",
+          "status": "passed"
+        },
+        {
+          "name": "disabled accounts and changed epochs invalidate existing cookies immediately",
+          "status": "passed"
+        },
+        {
+          "name": "link purpose failures are generic and do not consume the link",
+          "status": "passed"
+        },
+        {
+          "name": "failure-only throttles persist across requests and do not create sessions",
+          "status": "passed"
+        },
+        {
+          "name": "an auth schema newer than this binary fails closed",
+          "status": "passed"
+        },
+        {
+          "name": "body/query/method validation fails before owner credential work",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/spectators.test.js",
+      "cases": [
+        {
+          "name": "spectator capacity 0 is enforced separately with no double seat",
+          "status": "passed"
+        },
+        {
+          "name": "spectator capacity 1 is enforced separately with no double seat",
+          "status": "passed"
+        },
+        {
+          "name": "spectator capacity 50 is enforced separately with no double seat",
+          "status": "passed"
+        },
+        {
+          "name": "spectator admission retries require actor context and never replay cookies",
+          "status": "passed"
+        },
+        {
+          "name": "spectator code context mismatches and terminal admission fail closed",
+          "status": "passed"
+        },
+        {
+          "name": "spectator audience projection has no roster boards proofs or privileged commands",
+          "status": "passed"
+        },
+        {
+          "name": "coexisting cookies require explicit sync selector and Leave selects only participant",
+          "status": "passed"
+        },
+        {
+          "name": "spectators alone never satisfy the Start connected player minimum",
+          "status": "passed"
+        },
+        {
+          "name": "running spectator admission sees ordered public calls and latest exhaustion",
+          "status": "passed"
+        },
+        {
+          "name": "role switches retire sockets delete proof preserve absolute expiry and release exact alias",
+          "status": "passed"
+        },
+        {
+          "name": "target spectator capacity/alias rejection preserves original role",
+          "status": "passed"
+        },
+        {
+          "name": "target player capacity/alias rejection preserves original role",
+          "status": "passed"
+        },
+        {
+          "name": "role switch controlled SQLite insert fault rolls back",
+          "status": "passed"
+        },
+        {
+          "name": "role switch controlled SQLite delete fault rolls back",
+          "status": "passed"
+        },
+        {
+          "name": "role switch controlled SQLite receipt fault rolls back",
+          "status": "passed"
+        },
+        {
+          "name": "never-connected spectator grace exclusive boundary -1",
+          "status": "passed"
+        },
+        {
+          "name": "never-connected spectator grace exclusive boundary 0",
+          "status": "passed"
+        },
+        {
+          "name": "never-connected spectator grace exclusive boundary 1",
+          "status": "passed"
+        },
+        {
+          "name": "spectator replacement survives hibernation and stale predecessor callback",
+          "status": "passed"
+        },
+        {
+          "name": "terminal spectator notice is best effort and deletes all authority: started false",
+          "status": "passed"
+        },
+        {
+          "name": "terminal spectator notice is best effort and deletes all authority: started true",
+          "status": "passed"
+        },
+        {
+          "name": "closed switch/admission JSON mandatory command UUID and account cannot prove anonymous membership",
+          "status": "passed"
+        },
+        {
+          "name": "valid current spectator admission without context is a secret-free reconnect",
+          "status": "passed"
+        },
+        {
+          "name": "actual disconnected spectator WSS reconnect exclusive grace -1",
+          "status": "passed"
+        },
+        {
+          "name": "actual disconnected spectator WSS reconnect exclusive grace 0",
+          "status": "passed"
+        },
+        {
+          "name": "actual disconnected spectator WSS reconnect exclusive grace 1",
+          "status": "passed"
+        },
+        {
+          "name": "all fifty audience sockets reconstruct actual presence after hibernation",
+          "status": "passed"
+        },
+        {
+          "name": "spectator sync receiving deadline denial durably fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "spectator release receiving deadline denial durably fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "delayed spectator sync cannot disclose original output after leave",
+          "status": "passed"
+        },
+        {
+          "name": "delayed spectator sync cannot disclose original output after switch",
+          "status": "passed"
+        },
+        {
+          "name": "delayed spectator sync cannot disclose original output after terminal",
+          "status": "passed"
+        },
+        {
+          "name": "terminal spectator send provider failure cannot retain seat or hold reservation",
+          "status": "passed"
+        },
+        {
+          "name": "terminal spectator close provider failure cannot retain seat or hold reservation",
+          "status": "passed"
+        },
+        {
+          "name": "terminal spectator both provider failure cannot retain seat or hold reservation",
+          "status": "passed"
+        },
+        {
+          "name": "deleted switch and Leave source credentials cannot replay receipts",
+          "status": "passed"
+        },
+        {
+          "name": "actual SQLite spectator migration marker corruption fails closed without publishing marker",
+          "status": "passed"
+        },
+        {
+          "name": "actual SQLite spectator migration ddl corruption fails closed without publishing marker",
+          "status": "passed"
+        },
+        {
+          "name": "concurrent Start and player role switch serialize without deleting a started board",
+          "status": "passed"
+        },
+        {
+          "name": "spectator availability releases expired grace occupancy and fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator ack cannot reauthorize a switched socket",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator frame cannot reauthorize a switched socket",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator attachment cannot reauthorize a switched socket",
+          "status": "passed"
+        },
+        {
+          "name": "failed spectator replacement acceptance preserves predecessor and seat",
+          "status": "passed"
+        },
+        {
+          "name": "original absolute spectator session expiry removes connected authority despite WSS presence",
+          "status": "passed"
+        },
+        {
+          "name": "actual terminal send precedes physical spectator deletion: operator",
+          "status": "passed"
+        },
+        {
+          "name": "actual terminal send precedes physical spectator deletion: idle",
+          "status": "passed"
+        },
+        {
+          "name": "actual terminal send precedes physical spectator deletion: cancel",
+          "status": "passed"
+        },
+        {
+          "name": "actual terminal send precedes physical spectator deletion: winner",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator browser cookie clears on context denial and permits fresh awaiting_players admission",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator browser cookie clears on join denial and permits fresh awaiting_players admission",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator browser cookie clears on context denial and permits fresh in_progress admission",
+          "status": "passed"
+        },
+        {
+          "name": "stale spectator browser cookie clears on join denial and permits fresh in_progress admission",
+          "status": "passed"
+        },
+        {
+          "name": "spectator denial cookie clearing is limited to selected entry proof and exact game path",
+          "status": "passed"
+        },
+        {
+          "name": "actual spectator preflight reuses current identity with both natural cookies at owner and edge cuts",
+          "status": "passed"
+        },
+        {
+          "name": "terminal enumeration failure purges audience or retains only checked cleanup work and releases",
+          "status": "passed"
+        },
+        {
+          "name": "terminal delete failure purges audience or retains only checked cleanup work and releases",
+          "status": "passed"
+        },
+        {
+          "name": "real Workerd maximum legal call pool commits winner and sends complete public terminal notice",
+          "status": "passed"
+        },
+        {
+          "name": "spectator discovery safe owner/edge capacity 0 awaiting_players",
+          "status": "passed"
+        },
+        {
+          "name": "spectator discovery safe owner/edge capacity 0 in_progress",
+          "status": "passed"
+        },
+        {
+          "name": "spectator discovery safe owner/edge capacity 1 awaiting_players",
+          "status": "passed"
+        },
+        {
+          "name": "spectator discovery safe owner/edge capacity 1 in_progress",
+          "status": "passed"
+        },
+        {
+          "name": "crash before notice consumption reconstructs bounded terminal attempt -1",
+          "status": "passed"
+        },
+        {
+          "name": "crash before notice consumption reconstructs bounded terminal attempt 0",
+          "status": "passed"
+        },
+        {
+          "name": "terminal notice does not trust mismatched attachment viewer",
+          "status": "passed"
+        },
+        {
+          "name": "terminal notice does not trust mismatched attachment session_id",
+          "status": "passed"
+        },
+        {
+          "name": "terminal notice does not trust mismatched attachment connection_id",
+          "status": "passed"
+        },
+        {
+          "name": "terminal notice does not trust mismatched attachment authentication_epoch",
+          "status": "passed"
+        },
+        {
+          "name": "terminal notice does not trust mismatched attachment session_expires_at",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair genuine other spectator ACK cannot release deleted spectator projection",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair replacement predecessor close fault allows successor and terminal release",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair spectator accepted prepared orphan cannot gain presence and survives role switch as fenced close work",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair current shorter grace release exclusive boundary -1",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair current shorter grace release exclusive boundary 0",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair current shorter grace release exclusive boundary 1",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair genuine ACK replay binds game",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair genuine ACK replay binds action",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair genuine ACK replay binds receipt",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair genuine ACK replay binds context",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair new grace during sync owner persistence cut -1",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair new grace during sync owner persistence cut 0",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair new grace during sync owner persistence cut 1",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair new grace during release owner persistence cut -1",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair new grace during release owner persistence cut 0",
+          "status": "passed"
+        },
+        {
+          "name": "runtime repair new grace during release owner persistence cut 1",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair same actor genuine stale sync ACK after real Leave fails closed",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair same actor genuine stale context ACK after real Leave fails closed",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair same actor genuine stale receipt ACK after real Leave fails closed",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair genuine released ACK for wrong challenge fails closed",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair genuine rejected ACK for wrong challenge fails closed",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair missing challenge cannot release protected projection",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair short challenge cannot release protected projection",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair missing binding cannot release protected projection",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair future timestamp cannot release protected projection",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair trusted rng failure sends no release request",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair trusted clock failure sends no release request",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair trusted challenges ignore client headers on healthy retry",
+          "status": "passed"
+        },
+        {
+          "name": "attempt repair original expiry fences rollback before any entropy draw",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/storage_bounds.test.js",
+      "cases": [
+        {
+          "name": "the full 1000-value pool remains callable, synchronizable and archivable in Workerd",
+          "status": "passed"
+        },
+        {
+          "name": "terminal archival supports all 20 retained players with 100 cells each",
+          "status": "passed"
+        },
+        {
+          "name": "account migration rejects a ignored schema marker and rolls back",
+          "status": "passed"
+        },
+        {
+          "name": "account migration rejects a corrupted schema marker and rolls back",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/transactions.test.js",
+      "cases": [
+        {
+          "name": "owner transaction rolls back enrollment changes when session insertion fails",
+          "status": "passed"
+        },
+        {
+          "name": "owner transaction commits failure metadata despite a rejected credential command",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/transport.test.js",
+      "cases": [
+        {
+          "name": "returns an anonymous no-store session through actual Wasm and SQLite",
+          "status": "passed"
+        },
+        {
+          "name": "does not expose private Durable Object paths as public routes",
+          "status": "passed"
+        },
+        {
+          "name": "rejects an absent Origin before any credential operation",
+          "status": "passed"
+        },
+        {
+          "name": "logout with no cookie is idempotent and clears only the host session cookie",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/transport_audit.test.js",
+      "cases": [
+        {
+          "name": "Current suppresses protected output after expiry during owner sync",
+          "status": "passed"
+        },
+        {
+          "name": "private auth rejects a positional request root",
+          "status": "passed"
+        },
+        {
+          "name": "Game Sync withholds player snapshot after edge expiry",
+          "status": "passed"
+        },
+        {
+          "name": "Users withholds newly issued enrollment secret after caller expiry at edge",
+          "status": "passed"
+        },
+        {
+          "name": "History initial account expiry denial durably fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "History initial expiry fence preserves receiving sample and fails closed: rollback",
+          "status": "passed"
+        },
+        {
+          "name": "History initial expiry fence preserves receiving sample and fails closed: missing_ack",
+          "status": "passed"
+        },
+        {
+          "name": "History initial expiry fence preserves receiving sample and fails closed: wrong_sample",
+          "status": "passed"
+        },
+        {
+          "name": "History initial expiry fence preserves receiving sample and fails closed: wrong_identity",
+          "status": "passed"
+        },
+        {
+          "name": "History initial expiry fence preserves receiving sample and fails closed: failed_write",
+          "status": "passed"
+        },
+        {
+          "name": "History initial expiry fence preserves receiving sample and fails closed: failed_sync",
+          "status": "passed"
+        },
+        {
+          "name": "auth edge output expiry never releases protected body/cookie: rollback",
+          "status": "passed"
+        },
+        {
+          "name": "auth edge output expiry never releases protected body/cookie: missing_ack",
+          "status": "passed"
+        },
+        {
+          "name": "auth edge output expiry never releases protected body/cookie: wrong_deadline",
+          "status": "passed"
+        },
+        {
+          "name": "auth edge output expiry never releases protected body/cookie: failed_write",
+          "status": "passed"
+        },
+        {
+          "name": "auth edge output expiry never releases protected body/cookie: failed_sync",
+          "status": "passed"
+        },
+        {
+          "name": "auth owner sync rechecks live eligibility: revoke",
+          "status": "passed"
+        },
+        {
+          "name": "auth owner sync rechecks live eligibility: disable",
+          "status": "passed"
+        },
+        {
+          "name": "auth owner sync rechecks live eligibility: epoch",
+          "status": "passed"
+        },
+        {
+          "name": "auth owner sync rechecks live eligibility: lifecycle",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: rollback",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: missing_ack",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: wrong_sample",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: wrong_deadline",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: wrong_game",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: failed_write",
+          "status": "passed"
+        },
+        {
+          "name": "Sync transit expiry fences the Game before denial: failed_sync",
+          "status": "passed"
+        },
+        {
+          "name": "Sync owner output gate rechecks the player session and durably denies expiry",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: response_array",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: body_array",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: error_array",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: cookie_array",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: cookie_unknown",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: nested_session_array",
+          "status": "passed"
+        },
+        {
+          "name": "private auth response rejects positional/nonobject structures: nested_account_array",
+          "status": "passed"
+        },
+        {
+          "name": "Users issuance transit expiry requires exact durable ACK: rollback",
+          "status": "passed"
+        },
+        {
+          "name": "Users issuance transit expiry requires exact durable ACK: missing_ack",
+          "status": "passed"
+        },
+        {
+          "name": "Users issuance transit expiry requires exact durable ACK: wrong_identity",
+          "status": "passed"
+        },
+        {
+          "name": "Users issuance transit expiry requires exact durable ACK: wrong_deadline",
+          "status": "passed"
+        },
+        {
+          "name": "Users issuance transit expiry requires exact durable ACK: failed_write",
+          "status": "passed"
+        },
+        {
+          "name": "Users owner sync expiry suppresses enrollment issuance and durably fences rollback",
+          "status": "passed"
+        },
+        {
+          "name": "Sync with a missing transport deadline cannot release a snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "private auth cannot extend Set-Cookie expiry or replay the withheld cookie",
+          "status": "passed"
+        },
+        {
+          "name": "captured player closures remain fenced through activity without early physical retries",
+          "status": "passed"
+        },
+        {
+          "name": "account Sync preserves the first receiving expiry across denial awaits: rollback",
+          "status": "passed"
+        },
+        {
+          "name": "account Sync preserves the first receiving expiry across denial awaits: wrong_ack",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/transport_receiving_cut.test.js",
+      "cases": [
+        {
+          "name": "account Sync preserves initial idle expiry before another authorization await",
+          "status": "passed"
+        },
+        {
+          "name": "account Sync preserves initial account expiry before another authorization await",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "suite": "backend/worker-tests/users.test.js",
+      "cases": [
+        {
+          "name": "Worker rejects a sequence-shaped nested account peer response",
+          "status": "passed"
+        },
+        {
+          "name": "Worker rejects a sequence-shaped nested users account peer response",
+          "status": "passed"
+        },
+        {
+          "name": "Worker rejects a sequence-shaped nested receipt peer response",
+          "status": "passed"
+        },
+        {
+          "name": "Worker rejects a sequence-shaped nested error peer response",
+          "status": "passed"
+        },
+        {
+          "name": "an enrolled admin lists and reads safe Users metadata through the Worker",
+          "status": "passed"
+        },
+        {
+          "name": "Users endpoints reject unauthenticated, host, restricted, expired and disabled actors",
+          "status": "passed"
+        },
+        {
+          "name": "restricted, revoked, disabled and stale-epoch admin cookies never expose Users data",
+          "status": "passed"
+        },
+        {
+          "name": "fixed-role creation follows planned fields and same-command replay never returns a URL",
+          "status": "passed"
+        },
+        {
+          "name": "list pagination follows stable account IDs and rejects unsupported queries",
+          "status": "passed"
+        },
+        {
+          "name": "creation rejects client role or authority and actions require empty bodies and exact Origin",
+          "status": "passed"
+        },
+        {
+          "name": "enrollment reissue and reset reuse core invalidation and redact replay handoffs",
+          "status": "passed"
+        },
+        {
+          "name": "disable, enable and delete use Directory coordination and receipt-only replay",
+          "status": "passed"
+        },
+        {
+          "name": "self-removal and hosted assignments remain guarded and audit failures roll back",
+          "status": "passed"
+        },
+        {
+          "name": "role loss during Directory acquire aborts prepared work and releases its exact gate",
+          "status": "passed"
+        },
+        {
+          "name": "session revocation during Directory reconciliation finishes cleanup but withholds the receipt",
+          "status": "passed"
+        },
+        {
+          "name": "Users result is withheld if the issuer loses authority during the final storage sync",
+          "status": "passed"
+        },
+        {
+          "name": "self-reset commits credential revocation but cannot hand the URL to a revoked session",
+          "status": "passed"
+        },
+        {
+          "name": "lost Directory release acknowledgement returns Pending, then the same command completes once",
+          "status": "passed"
+        },
+        {
+          "name": "concurrent admin removal replies bind one receipt and one accepted mutation",
+          "status": "passed"
+        },
+        {
+          "name": "outstanding socket acknowledgements prevent completed Users removal claims",
+          "status": "passed"
+        },
+        {
+          "name": "Users handoffs and denials log only closed metadata, never credentials or URLs",
+          "status": "passed"
+        },
+        {
+          "name": "Users commands share the actor's auth idempotency namespace",
+          "status": "passed"
+        },
+        {
+          "name": "strict public and private Users envelopes reject ambiguous authority claims",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "final_bounded_review": {
+    "verdict": "G4-AUDIT-01, G4-FACTS-01 and G4-AUDIT-ALARM-01 repaired in this bounded follow-up; no new blocking findings beyond explicitly OPEN RUNTIME-FINAL-01.",
+    "source_schema_artifact_counts": {
+      "source": 234,
+      "schema": 3,
+      "artifact": 4
+    },
+    "verification": {
+      "current_final_manifests_match_before_and_after": true,
+      "manifest_files_unchanged": true,
+      "repository_file_count": 309,
+      "repository_file_hash_map_unchanged": true,
+      "status_unchanged": true,
+      "index_empty": true,
+      "closure_core": {
+        "path": "backend/src/db/game/command_lookup.rs",
+        "prior_review_sha256": "3fc7cf16b0a23e78b96a135fb2f6b03d09df964e1fe6ba2f2552c7f2b788761b",
+        "current_sha256": "3fc7cf16b0a23e78b96a135fb2f6b03d09df964e1fe6ba2f2552c7f2b788761b",
+        "unchanged": true
+      },
+      "source_changes_since_previous_repair_review": [
+        "backend/src/worker_runtime/command_lookup.rs",
+        "backend/src/worker_runtime/game_object.rs",
+        "backend/src/worker_runtime/game_reads.rs",
+        "backend/worker-tests/command_lookup_repairs.test.js"
+      ]
+    },
+    "inspected_source_sha256": {
+      "backend/src/db/game/command_lookup.rs": "3fc7cf16b0a23e78b96a135fb2f6b03d09df964e1fe6ba2f2552c7f2b788761b",
+      "backend/src/worker_runtime/command_lookup.rs": "1c4280f7a829b53589396d80bedd37f8f060d60169abca23cdfff299b95deb9d",
+      "backend/src/worker_runtime/game_reads.rs": "6680a3f08626eeaf117cc3468ea7b29f615808931d329bf0134b39eae2a5df11",
+      "backend/src/worker_runtime/game_object.rs": "d718d96bc049a69540d86afb100ee0ebe93b9da84f1bffec1a83415fbdb5fb53",
+      "backend/src/db/game.rs": "f80cc877429793d4bdd1b0eec756fd907ec2acfab885439eb577927d6377972b",
+      "backend/src/db/game/operator.rs": "cb49f2b0b526cec0d93cfff6419860dc631e47dacc8c0d1d1c2b37402e19ed72",
+      "backend/src/worker_runtime/directory.rs": "fe1be253d5e4d531a50a10ba54ba451f6636d18964502d523157589916993b2e",
+      "backend/src/worker_runtime/game_recovery/mod.rs": "ea8a49e739f0a60b44e1bcc3fb5dd95bb3cb14b2e01277d498b92a1077334615",
+      "backend/src/worker_runtime/game_sockets.rs": "405ee81f205e92443d52563ee21d9dbf303d51f89ba3d550961d8a6dc2ac4cb5",
+      "backend/src/worker_runtime/games.rs": "73cf8d1e2e9c44c64c5ae7d0f7d8dc8a332d6340ede7cc20c6d396c6afb73dfc",
+      "backend/worker-tests/command_lookup.test.js": "d9c1af470942327715f424154c657bbdd1af30df6aab0ca424c515414b228943",
+      "backend/worker-tests/command_lookup_repairs.test.js": "f7403260215189cf343ede3a203e76531bce5fbc86356a28ebe46e0dca8125b8",
+      "backend/worker-tests/fixtures.js": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
+      "backend/vitest.config.js": "10124981c3751e2d2a8339585666854c60eb9a8cb2def7ffc48d66115ea6161c",
+      "backend/wrangler.toml": "58ca2152a77ec9049a80a4e4f4fd0ee8a4cf2a5619197b7b2bc14bd389245f64"
+    },
+    "actual_execution_counts": {
+      "executed": 49,
+      "passed": 44,
+      "failed": 5,
+      "skipped": 0
+    },
+    "shared_failures": 1,
+    "scratch_setup_control_failures": 4,
+    "scratch_diagnostics": {
+      "schedule": "Request cloned after genuine provider consumed body; failed before initializer fault; reviewer helper error.",
+      "schedule-v2": "Concurrent genuine Directory creation retry alarm recomputed Game alarm; isolated GET not established.",
+      "schedule-v3": "Actual native get/set trace plus allowed Delivery clock change from concurrent recovery; failed before scheduling-fault assertions.",
+      "schedule-v4": "Actual scheduling-failure withholding checks pass, but concurrent Directory retry changes attempts; passive snapshot control fails.",
+      "schedule-v5": "Isolated by deleting only scratch Directory alarm; durable intent/retry metadata preserved; earlier alarm and real scheduler failure pass.",
+      "schedule-v6": "Same passing schedule with explicit actual SQLite purge/clock-fence/rollback readback; alarm manually rearmed from stored expiry after deliberate scheduler failure fixture."
+    },
+    "execution_inventory": [
+      {
+        "label": "permanent-worker",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "worker-tests/command_lookup.test.js",
+          "worker-tests/command_lookup_repairs.test.js",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-permanent-worker-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 0,
+        "executed": 37,
+        "passed": 37,
+        "failed": 0,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-permanent-worker-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-permanent-worker.log"
+      },
+      {
+        "label": "original-probes",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-review-probes.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-original-probes-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 0,
+        "executed": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-original-probes-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-original-probes.log"
+      },
+      {
+        "label": "shared-return",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "../docs/reviews/evidence/command-lookup-final-return.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-shared-return-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-shared-return-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-shared-return.log"
+      },
+      {
+        "label": "audit-alarm",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-audit-alarm.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-audit-alarm-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 0,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-audit-alarm-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-audit-alarm.log"
+      },
+      {
+        "label": "schedule",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule.log"
+      },
+      {
+        "label": "schedule-v2",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v2.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v2-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v2-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v2.log"
+      },
+      {
+        "label": "schedule-v3",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v3.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v3-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v3-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v3.log"
+      },
+      {
+        "label": "schedule-v4",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v4.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v4-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v4-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v4.log"
+      },
+      {
+        "label": "schedule-v5",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v5.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v5-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 0,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v5-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v5.log"
+      },
+      {
+        "label": "schedule-v6",
+        "command": [
+          "./node_modules/.bin/vitest",
+          "run",
+          "--config",
+          "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v6.config.mjs",
+          "--reporter=default",
+          "--reporter=json",
+          "--outputFile.json=/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v6-results.json"
+        ],
+        "cwd": "/home/orangepi/Workspace/brews-bingo/backend",
+        "exit_code": 0,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "results": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v6-results.json",
+        "log": "/root/.hermes/cache/scratch/brews-command-lookup-final-followup-schedule-v6.log"
+      }
+    ]
+  },
+  "repaired_findings": [
+    "G4-AUDIT-01",
+    "G4-FACTS-01",
+    "G4-AUDIT-ALARM-01"
+  ],
+  "graph": {
+    "source_hashes_match": true,
+    "semantic_documentation_refreshed": false,
+    "health": {
+      "node_count": 4471,
+      "unverified_node_count": 0,
+      "raw_edge_count": 14976,
+      "non_object_edges": 0,
+      "missing_endpoint_edges": 0,
+      "dangling_endpoint_edges": 893,
+      "self_loop_edges": 0,
+      "valid_candidate_edges": 14083,
+      "exact_duplicate_edges": 91,
+      "directed_unique_endpoint_pairs": 13610,
+      "directed_same_endpoint_collapsed_edges": 473,
+      "undirected_unique_endpoint_pairs": 13600,
+      "undirected_same_endpoint_collapsed_edges": 483,
+      "same_endpoint_group_count": 345,
+      "relation_variant_groups": 27,
+      "source_file_variant_groups": 0,
+      "source_location_variant_groups": 139,
+      "context_variant_groups": 117,
+      "post_build_graph_type": "DiGraph",
+      "post_build_node_count": 4471,
+      "post_build_edge_count": 13679,
+      "post_build_error": "",
+      "producer_suppression": {
+        "path": "/root/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
+        "total_sites": 10,
+        "sites": [
+          {
+            "line": 975,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+          },
+          {
+            "line": 1125,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+          },
+          {
+            "line": 1127,
+            "name": "seen_doc_refs",
+            "tuple_arity": 0,
+            "sample": "seen_doc_refs: set[str] = set()"
+          },
+          {
+            "line": 1550,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+          },
+          {
+            "line": 2019,
+            "name": "seen_keys",
+            "tuple_arity": 0,
+            "sample": "seen_keys: set[tuple] = set()"
+          },
+          {
+            "line": 2942,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids: set[str] = set()"
+          },
+          {
+            "line": 3050,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids: set[str] = set()"
+          },
+          {
+            "line": 3129,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids: set[str] = set()"
+          },
+          {
+            "line": 3624,
+            "name": "seen_ids",
+            "tuple_arity": 0,
+            "sample": "seen_ids: set[str] = set()"
+          },
+          {
+            "line": 3625,
+            "name": "seen_edges",
+            "tuple_arity": 4,
+            "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+          }
+        ],
+        "error": ""
+      },
+      "examples": [
+        {
+          "source": "backend_src_db_game_record",
+          "target": "backend_src_db_game_rs_option",
+          "edge_count": 12,
+          "relations": [
+            "references"
+          ],
+          "source_files": [
+            "backend/src/db/game.rs"
+          ],
+          "source_locations": [
+            "L2381",
+            "L2382",
+            "L2383",
+            "L2384",
+            "L2385",
+            "L2386",
+            "L2387",
+            "L2388",
+            "L2389",
+            "L2390",
+            "L2391",
+            "L2392"
+          ],
+          "contexts": [
+            "field"
+          ]
+        },
+        {
+          "source": "backend_src_auth_command_authcommand",
+          "target": "backend_src_auth_command_rs_string",
+          "edge_count": 7,
+          "relations": [
+            "references"
+          ],
+          "source_files": [
+            "backend/src/auth/command.rs"
+          ],
+          "source_locations": [
+            "L11",
+            "L12",
+            "L15",
+            "L19",
+            "L23",
+            "L24",
+            "L27"
+          ],
+          "contexts": [
+            "field",
+            "generic_arg"
+          ]
+        },
+        {
+          "source": "backend_src_worker_runtime_game_wire_gameownerresponse",
+          "target": "backend_src_worker_runtime_game_wire_rs_option",
+          "edge_count": 7,
+          "relations": [
+            "references"
+          ],
+          "source_files": [
+            "backend/src/worker_runtime/game_wire.rs"
+          ],
+          "source_locations": [
+            "L283",
+            "L297",
+            "L306",
+            "L308",
+            "L318",
+            "L320",
+            "L322"
+          ],
+          "contexts": [
+            "field"
+          ]
+        },
+        {
+          "source": "backend_src_worker_runtime_game_wire_gameingress",
+          "target": "backend_src_worker_runtime_game_wire_rs_option",
+          "edge_count": 7,
+          "relations": [
+            "references"
+          ],
+          "source_files": [
+            "backend/src/worker_runtime/game_wire.rs"
+          ],
+          "source_locations": [
+            "L1123",
+            "L1124",
+            "L1125",
+            "L1126",
+            "L1127",
+            "L1128",
+            "L1130"
+          ],
+          "contexts": [
+            "field"
+          ]
+        },
+        {
+          "source": "shared_contracts_src_management_managementcommand",
+          "target": "shared_contracts_src_management_rs_accountid",
+          "edge_count": 7,
+          "relations": [
+            "references"
+          ],
+          "source_files": [
+            "shared/contracts/src/management.rs"
+          ],
+          "source_locations": [
+            "L20",
+            "L24",
+            "L32",
+            "L35",
+            "L38",
+            "L41",
+            "L44"
+          ],
+          "contexts": [
+            "field",
+            "generic_arg"
+          ]
+        }
+      ]
+    }
+  },
+  "portable_probe_sha256": {
+    "docs/reviews/evidence/command-lookup-final-return.test.js": "28cec08b858f5ca8ab0335007d8a1afcf3cbd63612ace70c5f21261f86875a11",
+    "docs/reviews/evidence/command-lookup-final-return.config.mjs": "fa946f6c1fcec6da2e54f1c207a1ebddd9d730489121adface64bb0ea99d3355"
+  },
+  "preserved_slice6_probe_sha256": {
+    "docs/reviews/evidence/dedicated-read-release-races.test.js": "c447029b41510618e544cbd7c98ade4ac1686464a9bf088ca9b6b3d4e91bd237",
+    "docs/reviews/evidence/dedicated-read-release-races.config.mjs": "55737e1b895a81222b0d21dad6adbbad11e6896b488108341d219396850e3137"
+  },
+  "protected_baseline_inputs_sha256": {
+    "AGENTS.md": "f99c90f3d787ee32f62cd0496d927f3e678dbd6c1837c80c6307054ad4c9f248",
+    "Cargo.lock": "0dded95e4d803f647941d6519ac62bd1cb5bea7ccb4366b88ff13f8f3b7c0b88",
+    "rust-toolchain.toml": "f85f74c3f9bf13cfb68855f5e125bbd206d6e07440f7d3145a5872ad14e2bdb2",
+    ".cargo/config.toml": "57fe85194e6c0cf21a90c162ebc365618307766cc40694d3f4df9623a940d46a",
+    "backend/package.json": "b60ec01f45ab37ed6d3bd786ccb6b2186349bd62422aad7c8916e7270a8b331a",
+    "backend/package-lock.json": "490ddc232da8da02bf3080a1269f9733ef8a6ad923b5c3344f79ce3e8aacd10e",
+    "backend/wrangler.toml": "58ca2152a77ec9049a80a4e4f4fd0ee8a4cf2a5619197b7b2bc14bd389245f64",
+    "docs/reviews/dedicated-read-slice-2026-10-12.md": "b7852178b4679858134069753a58e2ea6bf840ab66333ecb694dc47401eaa532",
+    "docs/reviews/dedicated-read-slice-2026-10-12-evidence.json": "d6ae137f679258e3c76a8688204b176b69e5cdab658cdad5e4d4b6766a27b8b8",
+    "docs/reviews/evidence/dedicated-read-release-races.test.js": "c447029b41510618e544cbd7c98ade4ac1686464a9bf088ca9b6b3d4e91bd237",
+    "docs/reviews/evidence/dedicated-read-release-races.config.mjs": "55737e1b895a81222b0d21dad6adbbad11e6896b488108341d219396850e3137"
+  },
+  "scratch_evidence_sha256": {
+    "brews-command-lookup-audit-alarm.log": "633e7d0864bc0fb7169088e02e2a48d1ece2410603ddc223fda124154d93eb66",
+    "brews-command-lookup-final-cli-build.log": "f591e097f22f91dd5c31fbbf7e587d80c0a4e0ed594f9c9012a544f38c52d926",
+    "brews-command-lookup-final-clippy-native.log": "f4403412cb20dc7d8a0a94c08c9c8853e4bac9b3e8489158834f30512311ed97",
+    "brews-command-lookup-final-clippy-wasm.log": "1f945e99028a98ddb28b969e0ef289c3ac233d4a359ac2195fe5f74e0273791b",
+    "brews-command-lookup-final-doc.log": "6fd4e0085f9240c3e820c3c024490339c0c8573c33ffbe81dda406ddc0bce9d1",
+    "brews-command-lookup-final-fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "brews-command-lookup-final-followup-audit-alarm.log": "6b6e937867662792773ab41ffadb8af770be676bf5e250b88e9209fa787c7c19",
+    "brews-command-lookup-final-followup-hashes.json": "b3bcfd6d8cc2a62d551fec4cf23a7400d38ad47d3ddb9e5a2c48fca3a5396d19",
+    "brews-command-lookup-final-followup-original-probes.log": "3921631ba098749986f6b970e02d43298ec3f155f5b14fd837623ccd01914f4c",
+    "brews-command-lookup-final-followup-permanent-worker.log": "4395e69b4bdb30856045e8470d691a0d75365b678157987eb3ecdeb1948aeacd",
+    "brews-command-lookup-final-followup-schedule-v2.log": "2513c89578c80ff248ccf335a8a197f44ce4ec3f8a71abfc38c7e38a5df171ac",
+    "brews-command-lookup-final-followup-schedule-v3.log": "62ed5c35bb97ab4dbd8c2c33826446a9a761a484d23c28444daff0cfd48bce9a",
+    "brews-command-lookup-final-followup-schedule-v4.log": "5f9f84fb124c9850653413210c991a868d735664defc03509b4c199b9eb04383",
+    "brews-command-lookup-final-followup-schedule-v5.log": "8c3b3f3a18b84581d272e8c122e5350f3880e4b872db682f9944c16360fffe12",
+    "brews-command-lookup-final-followup-schedule-v6.log": "ef6df91a66dfc24fb3455934c510a09a28a192524894fe454dbf79e49839597a",
+    "brews-command-lookup-final-followup-schedule.log": "685b829ac8a0fdd219982d403413994d57169715ffb87d3df04dd16d0043c62f",
+    "brews-command-lookup-final-followup-shared-return.log": "ba9fb88b3e7f3f742a63c0c7619606bc9a56a1bc24853ef3a7cb3d66856614d4",
+    "brews-command-lookup-final-followup.log": "66a303e5f93f9b3201023782bf9dc87ca1b20577c805449272bd64070815fd77",
+    "brews-command-lookup-final-followup.md": "5f91d1220882a7c9da9edc3d19c9cc0e78fbe86be17a2ceb9e24ed19a05fcbb3",
+    "brews-command-lookup-final-graph.log": "c9113496bb1b2e92dedddb27c5df94219c0affc5b8872403047279c9637dc860",
+    "brews-command-lookup-final-https.log": "9c0abd9e2096a577993b657d493f00bc0ba8e73d6caa3d5586d446f344006fcd",
+    "brews-command-lookup-final-native-debug.log": "e4a4aa0e91a58a61f6f36b8dd132f132648ead1c5265c73d6809cf97f1279fa6",
+    "brews-command-lookup-final-native-release.log": "9d1e123326629a7d1d8b362e9dbcddf1c8e5b6f357d914ce01449b7f14169523",
+    "brews-command-lookup-final-operator-https.log": "ed304fc846b274fc8038a7e96519b83303256a9cda5d427c043e7659f80d4205",
+    "brews-command-lookup-final-portable-race.log": "b88d75201d7ba364a1a1daeafc422c9b92bc92115a9a7a247976a3e3b89a849f",
+    "brews-command-lookup-final-read-https.log": "a69a7b96c09f7ecaa8267812b48844d005cf4350179d218f9f72decb499aae13",
+    "brews-command-lookup-final-worker-build.log": "4d708efc24916db5e058d8769a64bb9bb2152ce0610b1ad847b2c9c33d952bb4",
+    "brews-command-lookup-final-worker.log": "495b6671581946c595c129c2e2f62ae13d300dd8d5eb1109e1490b421226af87",
+    "brews-command-lookup-pre-bucket-assertion-native-debug.log": "5f854abe59db8e1f698ef2a4d6b7df1abf1cca7e629238cf7835c7731912f3b0",
+    "brews-command-lookup-repair-review-hashes.json": "47704c2180e1c743e1dcf8f77cb1f6e49a05609602115ee50d741b1ba981678c",
+    "brews-command-lookup-repair-review.md": "c6422dd5f05bcc53a44d4358d66f6c8d76d880900d1d3882aa3c54715633edd4",
+    "brews-command-lookup-review-hashes.json": "7a07a5a95b43e4e8e992eba52d6974a1f6277f326a618824b2f71ae8f99a67a7",
+    "brews-command-lookup-review.md": "0b9e4064317ecb574858481372afffa73b4eb7a971a2c3612434ff8a5831d47a",
+    "run_brews_command_lookup_final_native.sh": "f6b7cf64dd9037fdb561f4cd7868eecd741e2d0e92168212c2bc620c26cf44cd",
+    "run_brews_command_lookup_final_runtime.sh": "12b3cfbee4916e187156b9312449c0e73173479cb71389dba919cc4fe9a18168",
+    "verify_brews_command_lookup.py": "97e1280e95218ce9f4b29057c3a6504cddb74d0dc77ab3b04a6316a0d7f26e13"
+  },
+  "limits": [
+    "Positive passing suites exclude intentionally failing stronger-contract probes.",
+    "The retained shared failure prevents final Slice 7 acceptance.",
+    "Four final reviewer scratch setup/control failures are preserved and are not product findings or passes.",
+    "Initial full-native bucket/schema assertion failure was corrected by restoring the original count 6.",
+    "Interrupted/superseded full runtime attempts are not acceptance passes.",
+    "No frontend, exports, production release-gate certification, provisioning, secret provisioning or future-slice implementation is claimed.",
+    "Slice 2 pending independent-final-review and later Slice 8/9 statuses remain unchanged."
+  ]
+}

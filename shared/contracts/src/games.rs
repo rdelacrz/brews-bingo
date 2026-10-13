@@ -3168,4 +3168,5 @@ mod tests {
     }
 }
 
+pub mod commands;
 pub mod reads;

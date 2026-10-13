@@ -3,6 +3,8 @@
     clippy::expect_used,
     reason = "Real SQLite tests fail fast."
 )]
+#[path = "games_core/command_lookup.rs"]
+mod command_lookup;
 #[path = "games_core/discovery.rs"]
 mod discovery;
 #[path = "games_core/operator.rs"]

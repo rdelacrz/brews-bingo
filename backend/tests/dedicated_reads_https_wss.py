@@ -107,7 +107,7 @@ class SocketClient:
 
 
 # This focused harness uses the same real TLS handshake/frame checks as gameplay.
-with tempfile.TemporaryDirectory(prefix='brews-read-slice-followup-https-', dir=os.environ['TMPDIR']) as directory:
+with tempfile.TemporaryDirectory(prefix='brews-command-lookup-https-', dir=os.environ['TMPDIR']) as directory:
     scratch=Path(directory)
     os.chmod(scratch,0o700)
     ca,ca_key,cert,key,csr=(scratch/name for name in ['ca.pem','ca-key.pem','localhost.pem','localhost-key.pem','localhost.csr'])
@@ -172,6 +172,13 @@ with tempfile.TemporaryDirectory(prefix='brews-read-slice-followup-https-', dir=
             config={'numeric_upper_bound':12,'board_side_length':2,'free_cells_enabled':False,'free_cell_positions':[],'player_capacity':3,'spectator_capacity':3}
             made,_=call('reads-create-New','/api/games',body={'configuration':config},session=host)
             game=made['game']['game_id'];base='/api/games/'+game
+            command=made['receipt']['command_id']
+            call('command-lookup-GET-body-denied',base+'/commands/'+command,method='GET',body={},session=host,expected=400)
+            found,_=call('command-lookup-creation-actual-HTTPS',base+'/commands/'+command,method='GET',session=host)
+            check(found=={'version':1,'game_id':game,'command_id':command,'result_status':{'status':'committed','receipt':made['receipt'],'follow_up_pending':False}},'command creation result')
+            for label,credential in [('other',other),('admin',admin)]:
+                unknown,_=call('command-lookup-cross-actor-'+label,base+'/commands/'+command,method='GET',session=credential)
+                check(unknown['result_status']=={'status':'unknown'},'cross actor lookup oracle')
             def read(label,path='',session=host,expected=200):return call(label,base+path,method='GET',session=session,expected=expected)[0]
             for name,path in [('C5',''),('D2','/players'),('E1','/calls'),('E2','/remaining-values'),('E4','/boards'),('E5','/qualification')]:read('reads-New-'+name,path,other)
             read('reads-New-F1-conflict','/result',host,409)
@@ -183,6 +190,11 @@ with tempfile.TemporaryDirectory(prefix='brews-read-slice-followup-https-', dir=
                 joined,session=call('reads-join-'+str(n),base+'/players',body={'game_code':code,'alias':alias,'recovery_answer':answer},session=admission,cookie_effect=True)
                 players.append({'session':session,'answer':answer,'body':joined})
             p=players[0]
+            admission_command=p['body']['receipt']['command_id']
+            found,_=call('command-lookup-admission-current-player',base+'/commands/'+admission_command,method='GET',session=p['session'])
+            check(found['result_status']['receipt']==p['body']['receipt'],'lookup admission outcome')
+            call('command-lookup-selector-ambiguous',base+'/commands/'+command,method='GET',session=host+'; '+p['session'],expected=400)
+            call('command-lookup-invalid-selected-token',base+'/commands/'+command+'?view=player',method='GET',session=host+'; __Secure-brews-player=invalid',expected=401)
             membership=read('reads-D1-own-current-recovery','/membership',p['session']);check(membership['membership']['player_id']==p['body']['player_id'] and membership['membership']['recovery_enabled'],'own real membership projection')
             board=read('reads-E3-unassigned-null','/membership/board',p['session']);check(board['board'] is None,'unassigned own board must be explicit null')
             q=read('reads-E5-prestart-false','/qualification',p['session']);check(not q['qualified'] and q['qualifying_lines']==[],'prestart own qualification')
@@ -226,10 +238,13 @@ with tempfile.TemporaryDirectory(prefix='brews-read-slice-followup-https-', dir=
             read('reads-final-E2-unavailable-409','/remaining-values',host,409)
             read('reads-final-spectator-denied','/result',spec,401)
             read('reads-final-passive-other-no-grant','/result',other,401)
+            call('command-lookup-terminal-original-player',base+'/commands/'+admission_command,method='GET',session=p['session'])
             call('reads-player-Exit',base+'/exit',body={},session=p['session'])
             read('reads-final-exited-player-denied','/result',p['session'],401)
+            call('command-lookup-after-player-Exit-denied',base+'/commands/'+admission_command,method='GET',session=p['session'],expected=401)
             call('reads-account-Exit',base+'/exit',body={},session=host)
             read('reads-final-exited-account-denied','/result',host,401)
+            call('command-lookup-after-account-Exit-denied',base+'/commands/'+command,method='GET',session=host,expected=401)
             call('reads-History-separate-after-Exit','/api/history/'+game,method='GET',session=host)
             audit_rows=None
             for database in (scratch/'state').rglob('*.sqlite'):
@@ -245,7 +260,7 @@ with tempfile.TemporaryDirectory(prefix='brews-read-slice-followup-https-', dir=
             print(json.dumps({'actual_https_wss_read_checks':'passed','check_count':len(completed),'checks':completed,'real_player_sockets':2,'real_spectator_sockets':1,'deployment':'none'}))
         finally:
             log.flush()
-            retained_log=Path(os.environ['TMPDIR'])/'brews-read-slice-followup-https-worker.log'
+            retained_log=Path(os.environ['TMPDIR'])/'brews-command-lookup-https-worker.log'
             shutil.copyfile(scratch/'worker.log',retained_log);os.chmod(retained_log,0o600)
             for stream in sockets:stream.close()
             process.terminate()

@@ -51,7 +51,10 @@ pub fn game_read_route(path: &str) -> Option<(GameId, ReadKind)> {
         "boards" => ReadKind::Boards,
         "qualification" => ReadKind::Qualification,
         "result" => ReadKind::Result,
-        _ => return None,
+        _ => {
+            let command = action.strip_prefix("commands/")?.parse().ok()?;
+            ReadKind::CommandLookup(command)
+        }
     };
     Some((id, kind))
 }
@@ -183,6 +186,68 @@ mod tests {
             b"",
             ORIGIN,
         )
+    }
+    #[test]
+    fn command_lookup_route_uses_closed_existing_read_grammar() {
+        let command = "01890f3e-53b7-7d28-9b05-4f65092d5702";
+        let action = format!("/commands/{command}");
+        let cookies = "__Host-brews_session=account; __Secure-brews-player=player; __Secure-brews-spectator=spectator";
+        assert_eq!(
+            decode(&action, None, cookies).err(),
+            Some(ApiError::InvalidInput)
+        );
+        for (view, token) in [
+            ("account", "account"),
+            ("player", "player"),
+            ("spectator", "spectator"),
+        ] {
+            assert_eq!(
+                decode(&action, Some(&format!("view={view}")), cookies)
+                    .unwrap()
+                    .token
+                    .as_deref(),
+                Some(token)
+            );
+        }
+        for query in [
+            "view=account&view=player",
+            "view=account&command_id=x",
+            "view=%70layer",
+            "token=x",
+            "",
+        ] {
+            assert_eq!(
+                decode(&action, Some(query), cookies).err(),
+                Some(ApiError::InvalidInput)
+            );
+        }
+        for action in [
+            "/commands/01890F3E-53b7-7d28-9b05-4f65092d5702",
+            "/commands/not-an-id",
+            "/commands/01890f3e-53b7-4d28-9b05-4f65092d5702",
+        ] {
+            assert!(game_read_route(&format!("/api/games/{ID}{action}")).is_none());
+        }
+        let path = format!("/api/games/{ID}{action}");
+        let mut h = HeaderMap::new();
+        h.insert("cookie", "__Host-brews_session=account".parse().unwrap());
+        for body in [b"{}".as_slice(), b" ".as_slice()] {
+            assert_eq!(
+                decode_game_read(&Method::GET, &path, None, &h, body, ORIGIN).err(),
+                Some(ApiError::InvalidInput)
+            );
+        }
+        h.insert("idempotency-key", command.parse().unwrap());
+        assert_eq!(
+            decode_game_read(&Method::GET, &path, None, &h, b"", ORIGIN).err(),
+            Some(ApiError::InvalidInput)
+        );
+        h.remove("idempotency-key");
+        h.insert("origin", "https://wrong.test".parse().unwrap());
+        assert_eq!(
+            decode_game_read(&Method::GET, &path, None, &h, b"", ORIGIN).err(),
+            Some(ApiError::Forbidden)
+        );
     }
     #[test]
     fn dedicated_reads_closed_selectors_and_participant_isolation() {
