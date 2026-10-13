@@ -1,4 +1,5 @@
 //! Start, ordered calls, and automatic board evaluation within the owner transaction.
+use super::OperatorPurpose;
 use super::SQL_SELECT_GAME_BOARD_PLAYER_IDS;
 use super::{
     CELL_FREE, CELL_VALUE, Database, GameError, GameService, HOST_VIEW, JS_SAFE_INTEGER_MAX,
@@ -53,9 +54,9 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         reservation: &ReservationProof,
         observed: &[ConnectionId],
     ) -> Result<GameResponse, GameError> {
-        let expected = revision(expected)?;
-        let fp = command_fingerprint(WorkKind::StartProjection.tag(), expected);
-        self.tx(|now| {
+        self.operator_response_attempt(&authority, OperatorPurpose::Start, |now| {
+            let expected = revision(expected)?;
+            let fp = command_fingerprint(WorkKind::StartProjection.tag(), expected);
             let r = self.record()?;
             authorize_mutation(&authority, &r, now)?;
             if reservation.game_id() != r.id {
@@ -245,9 +246,6 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         value: &str,
         expected_revision: u64,
     ) -> Result<GameResponse, GameError> {
-        if !valid_pool_value(value, brews_domain::games::NUMERIC_UPPER_BOUND_MAX) {
-            return Err(GameError::InvalidInput);
-        }
         self.commit_call(
             authority,
             command,
@@ -264,15 +262,21 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         mode: CallMode,
         requested_value: Option<&str>,
     ) -> Result<GameResponse, GameError> {
-        let expected = revision(expected_revision)?;
-        if matches!(
-            (mode, requested_value),
-            (CallMode::Random, Some(_)) | (CallMode::Manual, None)
-        ) {
-            return Err(GameError::InvalidInput);
-        }
-        let fingerprint = call_fingerprint(mode, expected, requested_value);
-        self.tx(|now| {
+        let purpose = if mode == CallMode::Random {
+            OperatorPurpose::CallRandom
+        } else {
+            OperatorPurpose::CallManual
+        };
+        self.operator_response_attempt(&authority, purpose, |now| {
+            let expected = revision(expected_revision)?;
+            if matches!(
+                (mode, requested_value),
+                (CallMode::Random, Some(_)) | (CallMode::Manual, None)
+            ) {
+                return Err(GameError::InvalidInput);
+            }
+            let fingerprint = call_fingerprint(mode, expected, requested_value);
+
             let record = self.record()?;
             authorize_mutation(&authority, &record, now)?;
             let actor = account_actor(authority.account_id());

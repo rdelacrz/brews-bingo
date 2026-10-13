@@ -5,48 +5,16 @@ use crate::game::{
 };
 use brews_contracts::games::{ConfigurationPatch, HostTransferInput};
 
+pub(crate) const DEVELOPER_CLI_ACTOR_KEY: &str = "developer_cli";
+// Bound examined rows independently of live page size and expired population.
+const GAME_AUDIT_CANDIDATE_BUDGET: i64 = 256;
+const SQL_SELECT_GAME_AUDIT_CANDIDATES: &str = "SELECT audit_id,actor_account_id,target_game_id,operation,outcome,occurred_at,expires_at FROM game_admin_audit INDEXED BY game_admin_audit_target_order WHERE target_game_id=? AND audit_id>? ORDER BY audit_id LIMIT ?";
 const GAME_AUDIT_RETENTION_MS: i64 = crate::game::GAME_ADMIN_AUDIT_RETENTION_MS;
 const SQL_UPDATE_OPERATOR_ACTIVITY: &str = "UPDATE game_record SET last_host_activity=?,idle_due=? WHERE singleton=1 AND host_id=? AND idle_due IS NOT NULL";
 const SQL_INSERT_GAME_AUDIT: &str = "INSERT INTO game_admin_audit VALUES(?,?,?,?,?,?,?)";
+const SQL_SELECT_GAME_AUDIT_BY_ID: &str = "SELECT audit_id,actor_account_id,target_game_id,operation,outcome,occurred_at,expires_at FROM game_admin_audit WHERE audit_id=?";
 const SQL_SELECT_TRANSFER: &str = "SELECT operation_id,game_id,actor_account_id,command_id,fingerprint,old_host_id,target_account_id,expected_assignment_revision,prepared_game_revision,nonce,phase,next_attempt_at,retry_attempts FROM game_host_transfers ORDER BY operation_id LIMIT 2";
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum OperatorPurpose {
-    Configuration,
-    Resume,
-    HostTransfer,
-    HostTransferTargets,
-    GameRead,
-    MembershipRead,
-    PlayersRead,
-    CallsRead,
-    RemainingValuesRead,
-    OwnBoardRead,
-    BoardsRead,
-    QualificationRead,
-    ResultRead,
-    CommandLookup,
-}
-impl OperatorPurpose {
-    pub const fn tag(self) -> &'static str {
-        match self {
-            Self::Configuration => "configuration",
-            Self::Resume => "resume",
-            Self::HostTransfer => "host_transfer",
-            Self::HostTransferTargets => "host_transfer_targets",
-            Self::GameRead => "game_read",
-            Self::MembershipRead => "membership_read",
-            Self::PlayersRead => "players_read",
-            Self::CallsRead => "calls_read",
-            Self::RemainingValuesRead => "remaining_values_read",
-            Self::OwnBoardRead => "own_board_read",
-            Self::BoardsRead => "boards_read",
-            Self::QualificationRead => "qualification_read",
-            Self::ResultRead => "result_read",
-            Self::CommandLookup => "command_lookup",
-        }
-    }
-}
+pub use brews_contracts::game_audit::GameAuditOperation as OperatorPurpose;
 #[derive(Clone, Copy)]
 pub(crate) enum OperatorAuditOutcome {
     Succeeded,
@@ -128,54 +96,93 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         purpose: OperatorPurpose,
         action: impl FnOnce(i64) -> Result<(T, bool), GameError>,
     ) -> Result<T, GameError> {
-        let game = match self.operator_game_identity()? {
-            Some(game) => Some(game),
-            None => self.record_optional()?.map(|r| r.id),
-        };
+        self.operator_target_attempt(authority, purpose, None, action)
+    }
+    pub(super) fn operator_target_attempt<T>(
+        &self,
+        authority: &GameAccountAuthority,
+        purpose: OperatorPurpose,
+        target: Option<GameId>,
+        action: impl FnOnce(i64) -> Result<(T, bool), GameError>,
+    ) -> Result<T, GameError> {
+        let game = std::cell::Cell::new(target);
         let authenticated_admin = std::cell::Cell::new(
             authority.role() == AccountRole::Admin
                 && authorize(authority, self.runtime.now_ms()).is_ok(),
         );
+        let action_error = std::cell::Cell::new(None);
         let result = self.maintenance(|now| {
             authenticated_admin
                 .set(authority.role() == AccountRole::Admin && authorize(authority, now).is_ok());
-            let out = action(now);
+            let out = (|| {
+                if game.get().is_none() {
+                    game.set(self.operator_game_identity()?);
+                    if game.get().is_none() {
+                        game.set(self.record_optional()?.map(|r| r.id));
+                    }
+                }
+                action(now)
+            })();
+            action_error.set(out.as_ref().err().copied());
             if authenticated_admin.get()
-                && let Some(game) = game
+                && let Some(game) = game.get()
             {
                 match &out {
                     Ok((_, true)) => self.operator_audit(
-                        authority.account_id(),
+                        brews_contracts::management::AuditActor::Account(authority.account_id()),
                         game,
                         purpose,
                         OperatorAuditOutcome::Succeeded,
                         now,
                     )?,
-                    Err(error)
-                        if !matches!(error, GameError::Storage | GameError::RandomUnavailable) =>
-                    {
-                        self.operator_audit(
-                            authority.account_id(),
-                            game,
-                            purpose,
-                            OperatorAuditOutcome::Rejected,
-                            now,
-                        )?
-                    }
+                    Err(error) if !error.is_execution_failure() => self.operator_audit(
+                        brews_contracts::management::AuditActor::Account(authority.account_id()),
+                        game,
+                        purpose,
+                        OperatorAuditOutcome::Rejected,
+                        now,
+                    )?,
                     _ => {}
                 }
             }
-            out.map(|(value, _)| value)
+            out.map(|(value, _)| value).map_err(|e| {
+                if e.is_execution_failure() {
+                    GameError::Storage
+                } else {
+                    e
+                }
+            })
         });
-        if matches!(
-            result.as_ref().err(),
-            Some(GameError::Storage | GameError::RandomUnavailable)
-        ) && authenticated_admin.get()
-            && let Some(game) = game
+        let result = result.map_err(|error| {
+            if error == GameError::Storage
+                && let Some(original) = action_error.get().filter(|e| e.is_execution_failure())
+            {
+                original
+            } else {
+                error
+            }
+        });
+        if result
+            .as_ref()
+            .err()
+            .is_some_and(|error| error.is_execution_failure())
+            && authenticated_admin.get()
         {
+            // A failed preflight may be recoverable. Resolve only a retained identity;
+            // targetless owners cannot supply attribution.
+            let game = match game.get() {
+                Some(game) => Some(game),
+                None => self
+                    .operator_game_identity()?
+                    .or(self.record_optional()?.map(|r| r.id)),
+            };
+            let Some(game) = game else {
+                return result;
+            };
             self.maintenance(|now| {
+                authorize(authority, now)?;
                 self.operator_audit(
-                    authority.account_id(),
+                    brews_contracts::management::AuditActor::Account(authority.account_id()),
                     game,
                     purpose,
                     OperatorAuditOutcome::Failed,
@@ -185,18 +192,268 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         }
         result
     }
+    pub(super) fn capture_operator_result<T>(
+        &self,
+        authority: &GameAccountAuthority,
+        game: GameId,
+        purpose: OperatorPurpose,
+        result: Result<T, GameError>,
+        now: i64,
+    ) -> Result<T, GameError> {
+        if authority.role() == AccountRole::Admin && authorize(authority, now).is_ok() {
+            let outcome = match &result {
+                Ok(_) => OperatorAuditOutcome::Succeeded,
+                Err(error) if error.is_execution_failure() => {
+                    return Err(GameError::Storage);
+                }
+                Err(_) => OperatorAuditOutcome::Rejected,
+            };
+            self.operator_audit(
+                brews_contracts::management::AuditActor::Account(authority.account_id()),
+                game,
+                purpose,
+                outcome,
+                now,
+            )?;
+            self.fence_read_deadline(now)?;
+        }
+        result
+    }
+    pub(super) fn operator_response_attempt(
+        &self,
+        authority: &GameAccountAuthority,
+        purpose: OperatorPurpose,
+        action: impl FnOnce(i64) -> Result<GameResponse, GameError>,
+    ) -> Result<GameResponse, GameError> {
+        self.operator_attempt(authority, purpose, |now| {
+            action(now).map(|response| {
+                let fresh = !matches!(response, GameResponse::Committed { .. });
+                (response, fresh)
+            })
+        })
+    }
+    /// Private developer transport supplies the owner identity; no browser authority is accepted.
+    pub fn list_game_audit(
+        &self,
+        game: GameId,
+        after: Option<brews_domain::ids::AuditId>,
+        limit: u32,
+    ) -> Result<brews_contracts::management::ManagementResponse, GameError> {
+        use brews_contracts::{
+            game_audit::{GAME_AUDIT_PAGE_MAX, GameAuditEvent},
+            management::{AuditActor, AuditOutcome, ManagementResponse},
+        };
+        let result = (|| {
+            // Cleanup commits bounded progress even if the page's candidate budget is spent.
+            self.maintenance(|now| self.cleanup_operator_audit(now))?;
+            self.maintenance(|now| {
+                let action = (|| {
+                    if !(1..=GAME_AUDIT_PAGE_MAX).contains(&limit) {
+                        return Err(GameError::InvalidInput);
+                    }
+                    if self.operator_game_identity()?.is_some_and(|id| id != game)
+                        || self.record_optional()?.is_some_and(|r| r.id != game)
+                    {
+                        return Err(GameError::Forbidden);
+                    }
+                    let candidates = self.db.query(
+                        SQL_SELECT_GAME_AUDIT_CANDIDATES,
+                        &[
+                            text(game),
+                            text(after.map(|id| id.to_string()).unwrap_or_default()),
+                            int(GAME_AUDIT_CANDIDATE_BUDGET + 1),
+                        ],
+                    )?;
+                    let exhausted = candidates.len() > GAME_AUDIT_CANDIDATE_BUDGET as usize;
+                    let rows = candidates
+                        .iter()
+                        .take(GAME_AUDIT_CANDIDATE_BUDGET as usize)
+                        .filter_map(|row| match number(row, 6) {
+                            Ok(expiry) if expiry > now => Some(Ok(row)),
+                            Ok(_) => None,
+                            Err(error) => Some(Err(error)),
+                        })
+                        .take(limit as usize + 1)
+                        .collect::<Result<Vec<_>, GameError>>()?;
+                    if exhausted && rows.len() <= limit as usize {
+                        return Err(GameError::Storage);
+                    }
+                    let mut events = rows
+                        .iter()
+                        .map(|row| {
+                            let actor = match string(row, 1)? {
+                                DEVELOPER_CLI_ACTOR_KEY => AuditActor::DeveloperCli,
+                                id => {
+                                    AuditActor::Account(id.parse().map_err(|_| GameError::Storage)?)
+                                }
+                            };
+                            let outcome = match string(row, 4)? {
+                                "succeeded" => AuditOutcome::Succeeded,
+                                "rejected" => AuditOutcome::Rejected,
+                                "failed" => AuditOutcome::Failed,
+                                _ => return Err(GameError::Storage),
+                            };
+                            let operation = serde_json::from_value(serde_json::Value::String(
+                                string(row, 3)?.into(),
+                            ))
+                            .map_err(|_| GameError::Storage)?;
+                            Ok(GameAuditEvent {
+                                audit_id: string(row, 0)?
+                                    .parse()
+                                    .map_err(|_| GameError::Storage)?,
+                                actor,
+                                target_game_id: string(row, 2)?
+                                    .parse()
+                                    .map_err(|_| GameError::Storage)?,
+                                operation,
+                                outcome,
+                                occurred_at: number(row, 5)?,
+                                expires_at: number(row, 6)?,
+                            })
+                        })
+                        .collect::<Result<Vec<_>, GameError>>()?;
+                    // Validate the lookahead too: it establishes the next-page claim.
+                    if events.iter().enumerate().any(|(index, event)| {
+                        event.occurred_at > now
+                            || event.expires_at <= now
+                            || !brews_contracts::game_audit::validate_page(
+                                game,
+                                if index == 0 {
+                                    after
+                                } else {
+                                    Some(events[index - 1].audit_id)
+                                },
+                                1,
+                                game,
+                                std::slice::from_ref(event),
+                                None,
+                            )
+                    }) {
+                        return Err(GameError::Storage);
+                    }
+                    let next_cursor = if events.len() > limit as usize {
+                        events.truncate(limit as usize);
+                        events.last().map(|e| e.audit_id)
+                    } else {
+                        None
+                    };
+                    if events
+                        .iter()
+                        .any(|event| event.occurred_at > now || event.expires_at <= now)
+                        || !brews_contracts::game_audit::validate_page(
+                            game,
+                            after,
+                            limit,
+                            game,
+                            &events,
+                            next_cursor,
+                        )
+                    {
+                        return Err(GameError::Storage);
+                    }
+                    Ok(ManagementResponse::GameAudit {
+                        game_id: game,
+                        events,
+                        next_cursor,
+                    })
+                })();
+                let outcome = match &action {
+                    Ok(_) => OperatorAuditOutcome::Succeeded,
+                    Err(error) if error.is_execution_failure() => return Err(GameError::Storage),
+                    Err(_) => OperatorAuditOutcome::Rejected,
+                };
+                self.operator_audit(
+                    AuditActor::DeveloperCli,
+                    game,
+                    OperatorPurpose::ListGameAudit,
+                    outcome,
+                    now,
+                )?;
+                action
+            })
+        })();
+        if result
+            .as_ref()
+            .err()
+            .is_some_and(|error| error.is_execution_failure())
+        {
+            self.maintenance(|now| {
+                self.operator_audit(
+                    AuditActor::DeveloperCli,
+                    game,
+                    OperatorPurpose::ListGameAudit,
+                    OperatorAuditOutcome::Failed,
+                    now,
+                )
+            })?;
+        }
+        result
+    }
+    /// Caller is the restricted developer transport after exact owner identity validation.
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn capture_developer_audit_rejection(&self, game: GameId) -> Result<(), GameError> {
+        let result = self.maintenance(|now| {
+            self.operator_audit(
+                brews_contracts::management::AuditActor::DeveloperCli,
+                game,
+                OperatorPurpose::ListGameAudit,
+                OperatorAuditOutcome::Rejected,
+                now,
+            )
+        });
+        if result
+            .as_ref()
+            .err()
+            .is_some_and(|error| error.is_execution_failure())
+        {
+            self.maintenance(|now| {
+                self.operator_audit(
+                    brews_contracts::management::AuditActor::DeveloperCli,
+                    game,
+                    OperatorPurpose::ListGameAudit,
+                    OperatorAuditOutcome::Failed,
+                    now,
+                )
+            })?;
+        }
+        result
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn capture_developer_audit_failure(&self, game: GameId) -> Result<(), GameError> {
+        self.maintenance(|now| {
+            self.operator_audit(
+                brews_contracts::management::AuditActor::DeveloperCli,
+                game,
+                OperatorPurpose::ListGameAudit,
+                OperatorAuditOutcome::Failed,
+                now,
+            )
+        })
+    }
     fn operator_audit(
         &self,
-        actor: AccountId,
+        actor: brews_contracts::management::AuditActor,
         game: GameId,
         purpose: OperatorPurpose,
         outcome: OperatorAuditOutcome,
         now: i64,
     ) -> Result<(), GameError> {
         let audit = make_id(self.runtime, now).map_err(|_| GameError::Storage)?;
+        if !self
+            .db
+            .query(SQL_SELECT_GAME_AUDIT_BY_ID, &[text(audit)])?
+            .is_empty()
+        {
+            return Err(GameError::Storage);
+        }
         let row = vec![
             text(audit),
-            text(actor),
+            text(match actor {
+                brews_contracts::management::AuditActor::Account(id) => id.to_string(),
+                brews_contracts::management::AuditActor::DeveloperCli => {
+                    DEVELOPER_CLI_ACTOR_KEY.into()
+                }
+            }),
             text(game),
             text(purpose.tag()),
             text(outcome.tag()),
@@ -204,7 +461,9 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             int(add_time(now, GAME_AUDIT_RETENTION_MS)?),
         ];
         self.db.execute(SQL_INSERT_GAME_AUDIT, &row)?;
-        if self.db.query("SELECT audit_id,actor_account_id,target_game_id,operation,outcome,occurred_at,expires_at FROM game_admin_audit WHERE audit_id=?",&[text(audit)])?!=vec![row] { return Err(GameError::Storage); }
+        if self.db.query(SQL_SELECT_GAME_AUDIT_BY_ID, &[text(audit)])? != vec![row] {
+            return Err(GameError::Storage);
+        }
         Ok(())
     }
     pub fn capture_operator_failure(
@@ -221,7 +480,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     .or(self.operator_game_identity()?)
             {
                 self.operator_audit(
-                    authority.account_id(),
+                    brews_contracts::management::AuditActor::Account(authority.account_id()),
                     game,
                     purpose,
                     OperatorAuditOutcome::Failed,
@@ -267,8 +526,8 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         command: CommandId,
         patch: &ConfigurationPatch,
     ) -> Result<GameResponse, GameError> {
-        let fp = patch_fingerprint(patch)?;
         self.operator_attempt(&authority,OperatorPurpose::Configuration,|now| {
+            let fp = patch_fingerprint(patch)?;
             authorize(&authority,now)?;
             let r=self.record()?;ensure_before_idle(&r,now)?;
             let actor=account_actor(authority.account_id());
@@ -363,10 +622,10 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         command: CommandId,
         input: &HostTransferInput,
     ) -> Result<TransferPreparation, GameError> {
-        let fp = transfer_fingerprint(input)?;
         // Preparation is not a successful privileged action. Capture rejection/failure;
         // success audit belongs atomically to the final assignment/receipt transaction.
         self.operator_attempt(&authority, OperatorPurpose::HostTransfer, |now| {
+            let fp = transfer_fingerprint(input)?;
             authorize(&authority, now)?;
             let r = self.record()?;
             ensure_before_idle(&r, now)?;
@@ -762,7 +1021,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     .or(self.operator_game_identity()?)
             {
                 self.operator_audit(
-                    authority.account_id(),
+                    brews_contracts::management::AuditActor::Account(authority.account_id()),
                     game,
                     purpose,
                     OperatorAuditOutcome::Rejected,
@@ -1198,5 +1457,113 @@ mod tests {
                 TransferPhase::Prepared
             );
         }
+    }
+    #[test]
+    fn privileged_audit_ordered_candidates_bound_actual_sqlite_vm_work() {
+        let f = Fixture::new();
+        let game = f.service().record().unwrap().id;
+        for expired in [false, true] {
+            let mut steps = Vec::new();
+            for count in [400_u32, 4000_u32] {
+                f.game.execute("DELETE FROM game_admin_audit", &[]).unwrap();
+                for serial in 0..count {
+                    let mut bytes = [0_u8; 16];
+                    bytes[6] = 0x70;
+                    bytes[8] = 0x80;
+                    bytes[12..].copy_from_slice(&serial.to_be_bytes());
+                    let occurred = if expired { 1 } else { f.rt.now.get() };
+                    f.game
+                        .execute(
+                            SQL_INSERT_GAME_AUDIT,
+                            &[
+                                text(uuid::Uuid::from_bytes(bytes)),
+                                text(f.id::<AccountId>(1)),
+                                text(game),
+                                text(OperatorPurpose::Configuration.tag()),
+                                text(OperatorAuditOutcome::Succeeded.tag()),
+                                int(occurred),
+                                int(occurred + GAME_AUDIT_RETENTION_MS),
+                            ],
+                        )
+                        .unwrap();
+                }
+                let conn = f.game.conn.borrow();
+                let mut statement = conn.prepare(SQL_SELECT_GAME_AUDIT_CANDIDATES).unwrap();
+                let mut cursor = statement
+                    .query(rusqlite::params![
+                        game.to_string(),
+                        "",
+                        GAME_AUDIT_CANDIDATE_BUDGET + 1
+                    ])
+                    .unwrap();
+                let mut returned = 0;
+                while cursor.next().unwrap().is_some() {
+                    returned += 1;
+                }
+                assert_eq!(returned, GAME_AUDIT_CANDIDATE_BUDGET + 1);
+                drop(cursor);
+                let work = statement.get_status(rusqlite::StatementStatus::VmStep);
+                println!(
+                    "audit candidates population={count} expired={expired} returned={returned} vm_steps={work}"
+                );
+                assert_eq!(
+                    statement.get_status(rusqlite::StatementStatus::FullscanStep),
+                    0
+                );
+                assert_eq!(statement.get_status(rusqlite::StatementStatus::Sort), 0);
+                steps.push(work);
+            }
+            assert!(steps[1] <= steps[0] + 50);
+        }
+    }
+    #[test]
+    fn privileged_audit_candidate_exhaustion_withholds_page_and_cleanup_makes_bounded_progress() {
+        let f = Fixture::new();
+        let game = f.service().record().unwrap().id;
+        for serial in 0..4000_u32 {
+            let mut bytes = [0_u8; 16];
+            bytes[6] = 0x70;
+            bytes[8] = 0x80;
+            bytes[12..].copy_from_slice(&serial.to_be_bytes());
+            f.game
+                .execute(
+                    SQL_INSERT_GAME_AUDIT,
+                    &[
+                        text(uuid::Uuid::from_bytes(bytes)),
+                        text(f.id::<AccountId>(1)),
+                        text(game),
+                        text(OperatorPurpose::Configuration.tag()),
+                        text(OperatorAuditOutcome::Succeeded.tag()),
+                        int(1),
+                        int(1 + GAME_AUDIT_RETENTION_MS),
+                    ],
+                )
+                .unwrap();
+        }
+        assert_eq!(
+            f.service().list_game_audit(game, None, 1).err(),
+            Some(GameError::Storage)
+        );
+        assert_eq!(
+            f.game
+                .query(
+                    "SELECT count(*) FROM game_admin_audit WHERE expires_at<=?",
+                    &[int(f.rt.now.get())]
+                )
+                .unwrap(),
+            vec![vec![int(4000 - crate::limits::CLEANUP_BATCH_SIZE)]]
+        );
+        assert_eq!(
+            f.game
+                .query(
+                    "SELECT operation,outcome FROM game_admin_audit WHERE expires_at>?",
+                    &[int(f.rt.now.get())]
+                )
+                .unwrap(),
+            vec![vec![
+                text(OperatorPurpose::ListGameAudit.tag()),
+                text(OperatorAuditOutcome::Failed.tag())
+            ]]
+        );
     }
 }

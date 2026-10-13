@@ -67,6 +67,27 @@ async fn dispatch(env: &Env, request: AxumRequest) -> AxumResponse {
     ) {
         Ok(decoded) => decoded,
         Err(error) => {
+            // Only an unambiguous canonical target can route a rejected developer read.
+            if let Ok(context) = super::decode_private_json::<GameAuditTransportContext>(&bytes) {
+                let request = GameAuditTransportRejection {
+                    game_id: context.game_id,
+                };
+                let result: Result<GameAuditTransportRejection> = super::game_peers::call(
+                    env,
+                    "GAMES",
+                    &context.game_id.to_string(),
+                    "/developer-audit-rejection",
+                    &request,
+                    super::game_peers::GAME_PEER_MAX_BYTES,
+                )
+                .await
+                .map_err(|_| {
+                    worker::Error::RustError("developer audit capture unavailable".into())
+                });
+                if !result.is_ok_and(|reply| reply.game_id == context.game_id) {
+                    return edge::failure(ApiError::Unavailable);
+                }
+            }
             observability::api_failure(Boundary::CliIngress, error);
             return edge::failure(error);
         }
@@ -75,18 +96,39 @@ async fn dispatch(env: &Env, request: AxumRequest) -> AxumResponse {
         command: decoded.command,
         command_id: decoded.command_id,
     };
-    match call_accounts(env, &message).await {
+    match call_owner(env, &message).await {
         Ok(response) => response,
         Err(_) => {
+            if let ManagementCommand::ListGameAudit { game_id, .. } = message.command {
+                let request = GameAuditTransportRejection { game_id };
+                let captured: std::result::Result<GameAuditTransportRejection, _> =
+                    super::game_peers::call(
+                        env,
+                        "GAMES",
+                        &game_id.to_string(),
+                        "/developer-audit-failure",
+                        &request,
+                        super::game_peers::GAME_PEER_MAX_BYTES,
+                    )
+                    .await;
+                if !captured.is_ok_and(|reply| reply.game_id == game_id) {
+                    return edge::failure(ApiError::Unavailable);
+                }
+            }
             observability::failure(Boundary::AccountsPeer, Failure::Unavailable);
             edge::failure(ApiError::Unavailable)
         }
     }
 }
 
-async fn call_accounts(env: &Env, message: &OwnerManagementRequest) -> Result<AxumResponse> {
-    let namespace = env.durable_object("ACCOUNTS")?;
-    let stub = namespace.id_from_name("accounts")?.get_stub()?;
+async fn call_owner(env: &Env, message: &OwnerManagementRequest) -> Result<AxumResponse> {
+    let game = match &message.command {
+        ManagementCommand::ListGameAudit { game_id, .. } => Some(*game_id),
+        _ => None,
+    };
+    let namespace = env.durable_object(if game.is_some() { "GAMES" } else { "ACCOUNTS" })?;
+    let target = game.map_or_else(|| "accounts".into(), |id| id.to_string());
+    let stub = namespace.id_from_name(&target)?.get_stub()?;
     let body = Zeroizing::new(
         serde_json::to_string(message)
             .map_err(|_| worker::Error::RustError("management serialization failed".into()))?,
@@ -97,7 +139,14 @@ async fn call_accounts(env: &Env, message: &OwnerManagementRequest) -> Result<Ax
     let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     init.with_headers(headers);
-    let request = Request::new_with_init("https://accounts.internal/management", &init)?;
+    let request = Request::new_with_init(
+        if game.is_some() {
+            "https://game.internal/developer-audit"
+        } else {
+            "https://accounts.internal/management"
+        },
+        &init,
+    )?;
     let response = stub.fetch_with_request(request).await?;
     let status = response.status_code();
     let http: worker::HttpResponse = response.try_into()?;
@@ -110,9 +159,72 @@ async fn call_accounts(env: &Env, message: &OwnerManagementRequest) -> Result<Ax
     if status == 200 || status == 202 {
         let typed = ManagementResponse::decode_json(&content)
             .map_err(|_| worker::Error::RustError("invalid management result".into()))?;
+        if let ManagementCommand::ListGameAudit {
+            game_id,
+            after,
+            limit,
+        } = message.command
+        {
+            let ManagementResponse::GameAudit {
+                game_id: actual,
+                events,
+                next_cursor,
+            } = &typed
+            else {
+                return Err(worker::Error::RustError("invalid game audit result".into()));
+            };
+            if !brews_contracts::game_audit::validate_page(
+                game_id,
+                after,
+                limit,
+                *actual,
+                events,
+                *next_cursor,
+            ) {
+                return Err(worker::Error::RustError("invalid game audit page".into()));
+            }
+            let observed = crate::auth::Runtime::now_ms(&WorkerRuntime);
+            if !(0..=crate::limits::JS_SAFE_INTEGER_MAX).contains(&observed)
+                || events.iter().any(|event| event.occurred_at > observed)
+            {
+                return Err(worker::Error::RustError("invalid game audit clock".into()));
+            }
+            if events.iter().any(|event| observed >= event.expires_at) {
+                let denial = GameAuditExpiryFence {
+                    game_id,
+                    observed_at: observed,
+                };
+                let response: GameAuditExpiryFence = super::game_peers::call(
+                    env,
+                    "GAMES",
+                    &game_id.to_string(),
+                    "/developer-audit-expiry",
+                    &denial,
+                    super::game_peers::GAME_PEER_MAX_BYTES,
+                )
+                .await
+                .map_err(|_| worker::Error::RustError("game audit expiry unavailable".into()))?;
+                if response.game_id != game_id || response.observed_at != observed {
+                    return Err(worker::Error::RustError("invalid game audit expiry".into()));
+                }
+                return Err(worker::Error::RustError("expired game audit result".into()));
+            }
+        }
         let pending = matches!(typed, ManagementResponse::Pending { .. });
         if pending != (status == 202) {
             return Err(worker::Error::RustError("invalid management status".into()));
+        }
+    } else if game.is_some() {
+        let error = match status {
+            400 => ManagementError::InvalidInput,
+            403 => ManagementError::Forbidden,
+            503 => ManagementError::Storage,
+            _ => return Err(worker::Error::RustError("invalid game audit status".into())),
+        };
+        let result: GameAuditErrorReply = super::decode_private_json(&content)
+            .map_err(|_| worker::Error::RustError("invalid game audit error".into()))?;
+        if result.error.code != error.code() || result.error.message != error.to_string() {
+            return Err(worker::Error::RustError("invalid game audit error".into()));
         }
     } else if !matches!(status, 400 | 401 | 403 | 404 | 409 | 503) {
         return Err(worker::Error::RustError("invalid management status".into()));
@@ -253,4 +365,170 @@ pub(super) fn management_error(error: ManagementError) -> Result<Response> {
     .with_status(error.status());
     response.headers_mut().set("Cache-Control", "no-store")?;
     Ok(response)
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct GameAuditExpiryFence {
+    pub(super) game_id: brews_domain::ids::GameId,
+    pub(super) observed_at: i64,
+}
+impl super::game_object::GameObject {
+    pub(super) async fn execute_developer_audit(&self, bytes: &[u8]) -> Result<Response> {
+        let message: OwnerManagementRequest = super::decode_private_json(bytes)
+            .map_err(|_| worker::Error::RustError("invalid game audit request".into()))?;
+        let ManagementCommand::ListGameAudit {
+            game_id,
+            after,
+            limit,
+        } = message.command
+        else {
+            return Response::error("invalid game audit command", 400);
+        };
+        if message.command_id.is_some()
+            || !self
+                .owns_game(game_id)
+                .map_err(|_| worker::Error::RustError("game audit identity unavailable".into()))?
+        {
+            return Response::error("invalid game audit target", 400);
+        }
+        let result = async {
+            let db = self.database()?;
+            let service = self.service(&db, &WorkerRuntime)?;
+            service.bind_operator_game_identity(game_id)?;
+            let result = service.list_game_audit(game_id, after, limit);
+            self.persist_developer_audit(&service, &db, game_id).await?;
+            let result = result?;
+            if let ManagementResponse::GameAudit { events, .. } = &result {
+                let now = crate::auth::Runtime::now_ms(&WorkerRuntime);
+                if events.iter().any(|event| now >= event.expires_at) {
+                    service.fence_operator_output_expiry(now)?;
+                    self.state
+                        .storage()
+                        .sync()
+                        .await
+                        .map_err(|_| crate::game::GameError::Storage)?;
+                    return Err(crate::game::GameError::Storage);
+                }
+            }
+            Ok::<_, crate::game::GameError>(result)
+        }
+        .await;
+        match result {
+            Ok(outcome) => management_result(&outcome),
+            Err(error) => {
+                let error = match error {
+                    crate::game::GameError::InvalidInput => ManagementError::InvalidInput,
+                    crate::game::GameError::Forbidden => ManagementError::Forbidden,
+                    _ => ManagementError::Storage,
+                };
+                management_error(error)
+            }
+        }
+    }
+    async fn persist_developer_audit(
+        &self,
+        service: &crate::db::game::GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        game: brews_domain::ids::GameId,
+    ) -> std::result::Result<(), crate::game::GameError> {
+        if let Err(error) = self.persist(service, db).await {
+            service.capture_developer_audit_failure(game)?;
+            self.persist(service, db).await?;
+            return Err(error);
+        }
+        Ok(())
+    }
+    pub(super) async fn execute_developer_audit_expiry(&self, bytes: &[u8]) -> Result<Response> {
+        let request: GameAuditExpiryFence = super::decode_private_json(bytes)
+            .map_err(|_| worker::Error::RustError("invalid game audit fence".into()))?;
+        if !self
+            .owns_game(request.game_id)
+            .map_err(|_| worker::Error::RustError("game audit identity unavailable".into()))?
+        {
+            return Response::error("invalid game audit target", 400);
+        }
+        let db = self
+            .database()
+            .map_err(|_| worker::Error::RustError("game audit unavailable".into()))?;
+        let service = self
+            .service(&db, &WorkerRuntime)
+            .map_err(|_| worker::Error::RustError("game audit unavailable".into()))?;
+        service
+            .fence_operator_output_expiry(request.observed_at)
+            .map_err(|_| worker::Error::RustError("game audit fence unavailable".into()))?;
+        self.state.storage().sync().await?;
+        Response::from_json(&request)
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GameAuditErrorReply {
+    error: GameAuditErrorFields,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GameAuditErrorFields {
+    code: String,
+    message: String,
+}
+
+// Purpose and target extraction rejects duplicate fields; submitted contents are discarded.
+#[derive(Deserialize)]
+struct GameAuditTransportContext {
+    #[serde(rename = "operation")]
+    _operation: GameAuditTransportPurpose,
+    game_id: brews_domain::ids::GameId,
+}
+#[derive(Deserialize)]
+enum GameAuditTransportPurpose {
+    #[serde(rename = "list_game_audit")]
+    ListGameAudit,
+}
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GameAuditTransportRejection {
+    game_id: brews_domain::ids::GameId,
+}
+impl super::game_object::GameObject {
+    pub(super) async fn execute_developer_audit_transport(
+        &self,
+        bytes: &[u8],
+        outcome: super::operator_runtime::TransportAuditOutcome,
+    ) -> Result<Response> {
+        let request: GameAuditTransportRejection = super::decode_private_json(bytes)
+            .map_err(|_| worker::Error::RustError("invalid developer audit rejection".into()))?;
+        if !self
+            .owns_game(request.game_id)
+            .map_err(|_| worker::Error::RustError("developer audit identity unavailable".into()))?
+        {
+            return Response::error("invalid developer audit target", 400);
+        }
+        let db = self
+            .database()
+            .map_err(|_| worker::Error::RustError("developer audit storage unavailable".into()))?;
+        let service = self
+            .service(&db, &WorkerRuntime)
+            .map_err(|_| worker::Error::RustError("developer audit service unavailable".into()))?;
+        service
+            .bind_operator_game_identity(request.game_id)
+            .map_err(|_| worker::Error::RustError("developer audit identity unavailable".into()))?;
+        let captured = match outcome {
+            super::operator_runtime::TransportAuditOutcome::Rejected => {
+                service.capture_developer_audit_rejection(request.game_id)
+            }
+            super::operator_runtime::TransportAuditOutcome::Failed => {
+                service.capture_developer_audit_failure(request.game_id)
+            }
+        };
+        captured
+            .map_err(|_| worker::Error::RustError("developer audit capture unavailable".into()))?;
+        self.persist_developer_audit(&service, &db, request.game_id)
+            .await
+            .map_err(|_| {
+                worker::Error::RustError("developer audit durability unavailable".into())
+            })?;
+        Response::from_json(&request)
+    }
 }

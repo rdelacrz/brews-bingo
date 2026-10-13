@@ -29,6 +29,12 @@ mod previous_read_game_schema;
 #[path = "../schema/previous_read_operator_schema.rs"]
 mod previous_read_operator_schema;
 
+#[allow(dead_code, reason = "Frozen published schema inventory.")]
+#[path = "../schema/previous_command_game_schema.rs"]
+mod previous_command_game_schema;
+#[path = "../schema/previous_command_operator_schema.rs"]
+mod previous_command_operator_schema;
+
 const MINIFLARE_OWNER_METADATA_TABLE: &str = "__miniflare_do_name";
 const CLOUDFLARE_OWNER_METADATA_TABLE: &str = "_cf_METADATA";
 const SCHEMA_TABLE_INVENTORY_ROW_LIMIT: i64 =
@@ -432,7 +438,7 @@ fn retained_schema_matches(table: &str, actual: &str, tables: &[&str], expected:
 }
 fn validate_retained_schema<D: Database>(db: &D, tables: &[&str]) -> Result<(), StorageError> {
     let statements = game_schema::statements();
-    validate_table_definitions(
+    validate_historical_schema(
         db,
         tables,
         &statements.iter().map(String::as_str).collect::<Vec<_>>(),
@@ -462,7 +468,14 @@ fn validate_historical_schema<D: Database>(
             .or_else(|| statement.strip_prefix("CREATE UNIQUE INDEX "))
             .and_then(|s| s.split(['(', ' ']).next())
             .ok_or(StorageError)?;
-        if !catalog.iter().any(|row| matches!(row.as_slice(), [SqlValue::Text(n),SqlValue::Text(sql)] if n == name && sql.replace(&format!("\"{name}\""), name) == statement)) { return Err(StorageError); }
+        let table = statement
+            .split_once(" ON ")
+            .and_then(|(_, rest)| rest.split('(').next())
+            .ok_or(StorageError)?;
+        if !catalog.iter().any(|row| matches!(row.as_slice(), [SqlValue::Text(n),SqlValue::Text(sql)] if n == name
+            && sql.replace(&format!("\"{name}\""), name).replace(&format!("\"{table}\""), table) == statement)) {
+            return Err(StorageError);
+        }
     }
     Ok(())
 }
@@ -672,33 +685,55 @@ fn migrate_saved_operator_workflows<D: Database>(db: &D) -> Result<(), StorageEr
     )?;
     validate_schema(db)
 }
-fn migrate_read_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError> {
+fn migrate_privileged_audit<D: Database>(
+    db: &D,
+    previous_counter: i64,
+    published: Vec<String>,
+    previous_tables: &[&str],
+) -> Result<(), StorageError> {
     let actual = inventory(db)?;
     let tables = actual.iter().map(String::as_str).collect::<Vec<_>>();
-    if actual != migration_table_set(&previous_saved_game_schema::GAME_TABLES, false)
-        && actual != migration_table_set(&previous_saved_game_schema::GAME_TABLES, true)
+    if actual != migration_table_set(previous_tables, false)
+        && actual != migration_table_set(previous_tables, true)
     {
         return Err(StorageError);
     }
-    let published = previous_saved_game_schema::statements();
     validate_historical_schema(
         db,
         &tables,
         &published.iter().map(String::as_str).collect::<Vec<_>>(),
     )?;
     let before = db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])?;
+    // The previous actor field represented only an account, never the CLI path.
+    for row in &before {
+        if row.len() != 7 {
+            return Err(StorageError);
+        }
+        super::string(row, 0)
+            .map_err(|_| StorageError)?
+            .parse::<brews_domain::ids::AuditId>()
+            .map_err(|_| StorageError)?;
+        super::string(row, 1)
+            .map_err(|_| StorageError)?
+            .parse::<brews_domain::ids::AccountId>()
+            .map_err(|_| StorageError)?;
+        super::string(row, 2)
+            .map_err(|_| StorageError)?
+            .parse::<brews_domain::ids::GameId>()
+            .map_err(|_| StorageError)?;
+    }
     let ddl = schema_statement_for("game_admin_audit")?.replacen(
         "CREATE TABLE game_admin_audit(",
-        "CREATE TABLE game_admin_audit_read_purposes(",
+        "CREATE TABLE game_admin_audit_typed_actor(",
         1,
     );
     db.execute(&ddl, &[])?;
     db.execute(
-        "INSERT INTO game_admin_audit_read_purposes SELECT * FROM game_admin_audit",
+        "INSERT INTO game_admin_audit_typed_actor SELECT * FROM game_admin_audit",
         &[],
     )?;
     if db.query(
-        "SELECT * FROM game_admin_audit_read_purposes ORDER BY audit_id",
+        "SELECT * FROM game_admin_audit_typed_actor ORDER BY audit_id",
         &[],
     )? != before
     {
@@ -706,11 +741,15 @@ fn migrate_read_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError
     }
     db.execute("DROP TABLE game_admin_audit", &[])?;
     db.execute(
-        "ALTER TABLE game_admin_audit_read_purposes RENAME TO game_admin_audit",
+        "ALTER TABLE game_admin_audit_typed_actor RENAME TO game_admin_audit",
         &[],
     )?;
     db.execute(
         "CREATE INDEX game_admin_audit_expiry ON game_admin_audit(expires_at,audit_id)",
+        &[],
+    )?;
+    db.execute(
+        "CREATE INDEX game_admin_audit_target_order ON game_admin_audit(target_game_id,audit_id)",
         &[],
     )?;
     if db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])? != before {
@@ -718,57 +757,7 @@ fn migrate_read_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError
     }
     db.execute(
         SQL_UPDATE_GAME_SCHEMA_VERSION,
-        &[int(GAME_SCHEMA_VERSION), int(5)],
-    )?;
-    validate_schema(db)
-}
-fn migrate_command_lookup_audit_vocabulary<D: Database>(db: &D) -> Result<(), StorageError> {
-    let actual = inventory(db)?;
-    let tables = actual.iter().map(String::as_str).collect::<Vec<_>>();
-    if actual != migration_table_set(&previous_read_game_schema::GAME_TABLES, false)
-        && actual != migration_table_set(&previous_read_game_schema::GAME_TABLES, true)
-    {
-        return Err(StorageError);
-    }
-    let published = previous_read_game_schema::statements();
-    validate_historical_schema(
-        db,
-        &tables,
-        &published.iter().map(String::as_str).collect::<Vec<_>>(),
-    )?;
-    let before = db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])?;
-    let ddl = schema_statement_for("game_admin_audit")?.replacen(
-        "CREATE TABLE game_admin_audit(",
-        "CREATE TABLE game_admin_audit_command_lookup_purpose(",
-        1,
-    );
-    db.execute(&ddl, &[])?;
-    db.execute(
-        "INSERT INTO game_admin_audit_command_lookup_purpose SELECT * FROM game_admin_audit",
-        &[],
-    )?;
-    if db.query(
-        "SELECT * FROM game_admin_audit_command_lookup_purpose ORDER BY audit_id",
-        &[],
-    )? != before
-    {
-        return Err(StorageError);
-    }
-    db.execute("DROP TABLE game_admin_audit", &[])?;
-    db.execute(
-        "ALTER TABLE game_admin_audit_command_lookup_purpose RENAME TO game_admin_audit",
-        &[],
-    )?;
-    db.execute(
-        "CREATE INDEX game_admin_audit_expiry ON game_admin_audit(expires_at,audit_id)",
-        &[],
-    )?;
-    if db.query("SELECT * FROM game_admin_audit ORDER BY audit_id", &[])? != before {
-        return Err(StorageError);
-    }
-    db.execute(
-        SQL_UPDATE_GAME_SCHEMA_VERSION,
-        &[int(GAME_SCHEMA_VERSION), int(6)],
+        &[int(GAME_SCHEMA_VERSION), int(previous_counter)],
     )?;
     validate_schema(db)
 }
@@ -812,9 +801,26 @@ pub fn migrate_game<D: Database>(db: &D) -> Result<(), GameError> {
             } else if version == 4 {
                 migrate_saved_operator_workflows(db)?;
             } else if version == 5 {
-                migrate_read_audit_vocabulary(db)?;
+                migrate_privileged_audit(
+                    db,
+                    version,
+                    previous_saved_game_schema::statements(),
+                    &previous_saved_game_schema::GAME_TABLES,
+                )?;
             } else if version == 6 {
-                migrate_command_lookup_audit_vocabulary(db)?;
+                migrate_privileged_audit(
+                    db,
+                    version,
+                    previous_read_game_schema::statements(),
+                    &previous_read_game_schema::GAME_TABLES,
+                )?;
+            } else if version == 7 {
+                migrate_privileged_audit(
+                    db,
+                    version,
+                    previous_command_game_schema::statements(),
+                    &previous_command_game_schema::GAME_TABLES,
+                )?;
             } else if version != GAME_SCHEMA_VERSION {
                 return Err(StorageError);
             }
@@ -1445,6 +1451,181 @@ mod tests {
             }
         }
     }
+    fn published_privileged_audit_database(delivery: bool) -> Sqlite {
+        let db = Sqlite::new();
+        for sql in previous_command_game_schema::statements() {
+            db.execute(&sql, &[]).unwrap();
+        }
+        db.execute(SQL_INSERT_GAME_METADATA, &[int(7)]).unwrap();
+        db.execute(
+            "INSERT INTO game_admin_audit VALUES(?,?,?,?,?,?,?)",
+            &[
+                text("01890f3e-53b7-7d28-9b05-4f65092d5701"),
+                text("01890f3e-53b7-7d28-9b05-4f65092d5702"),
+                text("01890f3e-53b7-7d28-9b05-4f65092d5703"),
+                text("command_lookup"),
+                text("succeeded"),
+                int(1),
+                int(7_776_000_001),
+            ],
+        )
+        .unwrap();
+        if delivery {
+            crate::db::game_delivery::migrate_game_delivery(&db).unwrap();
+        }
+        db
+    }
+    #[test]
+    fn privileged_audit_migration_pins_previous_ddl_preserves_actor_and_expiry_and_optional_delivery()
+     {
+        let golden: Vec<String> = serde_json::from_str(include_str!(
+            "../../../tests/fixtures/game-schema-published-command.json"
+        ))
+        .unwrap();
+        assert_eq!(golden, previous_command_game_schema::statements());
+        for delivery in [false, true] {
+            let db = published_privileged_audit_database(delivery);
+            let before = db.query("SELECT * FROM game_admin_audit", &[]).unwrap();
+            migrate_game(&db).unwrap();
+            validate_schema(&db).unwrap();
+            assert_eq!(
+                db.query("SELECT * FROM game_admin_audit", &[]).unwrap(),
+                before
+            );
+            db.execute(
+                "INSERT INTO game_admin_audit VALUES(?,?,?,?,?,?,?)",
+                &[
+                    text("01890f3e-53b7-7d28-9b05-4f65092d5704"),
+                    text("developer_cli"),
+                    text("01890f3e-53b7-7d28-9b05-4f65092d5703"),
+                    text("list_game_audit"),
+                    text("succeeded"),
+                    int(1),
+                    int(7_776_000_001),
+                ],
+            )
+            .unwrap();
+        }
+    }
+    #[test]
+    fn privileged_audit_migration_rejects_every_table_column_and_index_drift_without_writes() {
+        for delivery in [false, true] {
+            for table in previous_command_game_schema::GAME_TABLES {
+                let db = published_privileged_audit_database(delivery);
+                db.execute(
+                    &format!("ALTER TABLE {table} ADD COLUMN unexpected TEXT"),
+                    &[],
+                )
+                .unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage), "{table}");
+                assert_eq!(counted.writes.get(), 0);
+            }
+            for sql in [
+                "DROP INDEX game_admin_audit_expiry",
+                "CREATE INDEX unknown_audit_index ON game_admin_audit(operation)",
+                "CREATE TABLE unknown_audit_owner(id TEXT) STRICT",
+            ] {
+                let db = published_privileged_audit_database(delivery);
+                db.execute(sql, &[]).unwrap();
+                let counted = WriteCounter {
+                    inner: &db,
+                    writes: std::cell::Cell::new(0),
+                };
+                assert_eq!(migrate_game(&counted), Err(GameError::Storage));
+                assert_eq!(counted.writes.get(), 0);
+            }
+        }
+    }
+    #[test]
+    fn privileged_audit_migration_ignored_or_failed_marker_rolls_back_ddl_rows_and_fixed_expiry() {
+        for fault in ["IGNORE", "ABORT,'controlled migration failure'"] {
+            let db = published_privileged_audit_database(true);
+            let before = db.query("SELECT * FROM game_admin_audit", &[]).unwrap();
+            let ddl = db
+                .query(
+                    "SELECT sql FROM sqlite_master WHERE name='game_admin_audit'",
+                    &[],
+                )
+                .unwrap();
+            db.execute(&format!("CREATE TRIGGER deny_audit_migration BEFORE UPDATE OF schema_version ON game_metadata BEGIN SELECT RAISE({fault}); END"),&[]).unwrap();
+            assert_eq!(migrate_game(&db), Err(GameError::Storage));
+            assert_eq!(
+                db.query(SQL_SELECT_GAME_METADATA_SCHEMA_VERSION, &[])
+                    .unwrap(),
+                vec![vec![int(7)]]
+            );
+            assert_eq!(
+                db.query("SELECT * FROM game_admin_audit", &[]).unwrap(),
+                before
+            );
+            assert_eq!(
+                db.query(
+                    "SELECT sql FROM sqlite_master WHERE name='game_admin_audit'",
+                    &[]
+                )
+                .unwrap(),
+                ddl
+            );
+        }
+    }
+    #[test]
+    fn privileged_audit_migration_cannot_reinterpret_non_account_previous_actors_as_developer() {
+        for actor in ["developer_cli", "invalid-account"] {
+            let db = published_privileged_audit_database(false);
+            db.execute(
+                "UPDATE game_admin_audit SET actor_account_id=?",
+                &[text(actor)],
+            )
+            .unwrap();
+            let counted = WriteCounter {
+                inner: &db,
+                writes: std::cell::Cell::new(0),
+            };
+            assert_eq!(migrate_game(&counted), Err(GameError::Storage));
+            assert_eq!(counted.writes.get(), 0);
+        }
+    }
+    #[test]
+    fn privileged_audit_restore_copy_keeps_fixed_expiry_denied_after_equality_and_clock_rollback() {
+        let db = published_privileged_audit_database(false);
+        let before = db.query("SELECT * FROM game_admin_audit", &[]).unwrap();
+        migrate_game(&db).unwrap();
+        let rt = TestRuntime::new();
+        rt.now.set(7_776_000_001);
+        let game = "01890f3e-53b7-7d28-9b05-4f65092d5703".parse().unwrap();
+        let service = GameService::new(&db, &rt, AuthPolicy::default(), &[9; 32]).unwrap();
+        let brews_contracts::management::ManagementResponse::GameAudit { events, .. } =
+            service.list_game_audit(game, None, 100).unwrap()
+        else {
+            panic!("page")
+        };
+        assert!(events.is_empty());
+        service.cleanup().unwrap();
+        db.execute(
+            "INSERT INTO game_admin_audit VALUES(?,?,?,?,?,?,?)",
+            &before[0],
+        )
+        .unwrap();
+        let brews_contracts::management::ManagementResponse::GameAudit { events, .. } =
+            service.list_game_audit(game, None, 100).unwrap()
+        else {
+            panic!("page")
+        };
+        assert!(
+            events
+                .iter()
+                .all(|e| e.audit_id.to_string() != "01890f3e-53b7-7d28-9b05-4f65092d5701")
+        );
+        rt.now.set(7_776_000_000);
+        assert_eq!(
+            service.list_game_audit(game, None, 100).err(),
+            Some(GameError::Storage)
+        );
+    }
     fn published_command_lookup_database(delivery: bool) -> Sqlite {
         let db = Sqlite::new();
         for sql in previous_read_game_schema::statements() {
@@ -1681,6 +1862,32 @@ mod tests {
             };
             assert_eq!(migrate_game(&counted), Err(GameError::Storage), "{drift}");
             assert_eq!(counted.writes.get(), 0, "{drift}");
+        }
+    }
+    #[test]
+    fn privileged_audit_order_index_migration_ignored_write_rolls_back_published_storage() {
+        let db = published_privileged_audit_database(true);
+        let before = previous_admission_contents(&db);
+        let fault = SwallowedMigrationStatement {
+            db: &db,
+            statement: "CREATE INDEX game_admin_audit_target_order ON game_admin_audit(target_game_id,audit_id)",
+        };
+        assert_eq!(migrate_game(&fault), Err(GameError::Storage));
+        assert_eq!(previous_admission_contents(&db), before);
+    }
+    #[test]
+    fn privileged_audit_current_order_index_drift_and_unrecognized_indexes_fail_without_writes() {
+        for ddl in [
+            "DROP INDEX game_admin_audit_target_order",
+            "DROP INDEX game_admin_audit_target_order; CREATE INDEX game_admin_audit_target_order ON game_admin_audit(audit_id,target_game_id)",
+            "CREATE INDEX unexpected_audit_index ON game_admin_audit(operation)",
+        ] {
+            let db = published_privileged_audit_database(false);
+            migrate_game(&db).unwrap();
+            db.conn.borrow().execute_batch(ddl).unwrap();
+            let before = previous_admission_contents(&db);
+            assert_eq!(migrate_game(&db), Err(GameError::Storage));
+            assert_eq!(previous_admission_contents(&db), before);
         }
     }
 }

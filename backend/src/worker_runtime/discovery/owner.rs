@@ -2,7 +2,7 @@
 use super::super::{WorkerRuntime, game_object::GameObject, game_peers};
 use super::wire::{
     DISCOVERY_REPLY_MAX_BYTES, DiscoveryAction, DiscoveryOutcome, DiscoveryOwnerReply,
-    DiscoveryOwnerRequest,
+    DiscoveryOwnerRequest, DiscoveryReadPhase,
 };
 use crate::{
     auth::{GameAccountAuthority, Runtime},
@@ -43,7 +43,66 @@ impl GameObject {
         &self,
         request: DiscoveryOwnerRequest,
     ) -> worker::Result<worker::Response> {
-        let result = self.discovery_read(&request).await;
+        let identified_role = std::cell::Cell::new(None);
+        let needs_capture = std::cell::Cell::new(true);
+        let primary_rejection = std::cell::Cell::new(false);
+        let mut result = self
+            .discovery_read(
+                &request,
+                &identified_role,
+                &needs_capture,
+                &primary_rejection,
+            )
+            .await;
+        if let Err(error) = &result
+            && (error.is_execution_failure()
+                || (!primary_rejection.get()
+                    && !matches!(error, GameError::Unauthorized | GameError::Expired)))
+            && needs_capture.get()
+            && identified_role.get() != Some(brews_domain::accounts::AccountRole::Host)
+            && request.expiry.is_none()
+        {
+            let token = match &request.action {
+                DiscoveryAction::Summary { token } | DiscoveryAction::Account { token } => {
+                    Some(token.as_str())
+                }
+                _ => None,
+            };
+            if let Some(token) = token {
+                let captured = async {
+                    if !self.owns_game(request.game_id)? {
+                        return Err(GameError::Storage);
+                    }
+                    let db = self.database()?;
+                    let service = self.service(&db, &WorkerRuntime)?;
+                    service.bind_operator_game_identity(request.game_id)?;
+                    if error.is_execution_failure() {
+                        self.capture_operator_peer_error(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::DiscoveryRead,
+                            *error,
+                        )
+                        .await
+                    } else if let Ok(actor) = self.authorize_operator_account(&service, token).await
+                        && actor.role() == brews_domain::accounts::AccountRole::Admin
+                    {
+                        service.capture_operator_rejection(
+                            &actor,
+                            crate::db::game::OperatorPurpose::DiscoveryRead,
+                        )?;
+                        self.persist(&service, &db).await
+                    } else {
+                        Ok(())
+                    }
+                }
+                .await;
+                if captured.is_err() {
+                    result = Err(GameError::Storage);
+                }
+            }
+        }
         let reply = result.unwrap_or_else(|error| DiscoveryOwnerReply {
             game_id: request.game_id,
             checked_at: WorkerRuntime.now_ms(),
@@ -66,6 +125,9 @@ impl GameObject {
     async fn discovery_read(
         &self,
         request: &DiscoveryOwnerRequest,
+        identified_role: &std::cell::Cell<Option<brews_domain::accounts::AccountRole>>,
+        needs_capture: &std::cell::Cell<bool>,
+        primary_rejection: &std::cell::Cell<bool>,
     ) -> Result<DiscoveryOwnerReply, GameError> {
         if !self.owns_game(request.game_id)? {
             return Err(GameError::Storage);
@@ -100,6 +162,7 @@ impl GameObject {
             ),
             None => None,
         };
+        identified_role.set(initial.as_ref().map(|proof| proof.role()));
         // Hydrate before proving the reservation. This first cut is never released.
         let first_view = match &request.action {
             DiscoveryAction::Summary { .. } | DiscoveryAction::Account { .. } => {
@@ -113,16 +176,31 @@ impl GameObject {
             DiscoveryAction::Entry { game_code } => Some(game_code),
             _ => None,
         };
-        let first = service.discovery(request.game_id, first_view, first_code, true, &[]);
+        let first = match request.phase {
+            DiscoveryReadPhase::Primary => {
+                service.discovery(request.game_id, first_view, first_code, true, &[])
+            }
+            DiscoveryReadPhase::Recut => {
+                service.discovery_for_response(request.game_id, first_view, first_code, true, &[])
+            }
+        };
+        primary_rejection.set(request.phase == DiscoveryReadPhase::Primary && first.is_err());
         // The output gate makes observed denial fences durable; no timers/grants are changed.
-        self.state
-            .storage()
-            .sync()
-            .await
-            .map_err(|_| GameError::Storage)?;
+        if request.phase == DiscoveryReadPhase::Primary
+            && identified_role.get() == Some(brews_domain::accounts::AccountRole::Admin)
+        {
+            self.persist(&service, &db).await?;
+        } else {
+            self.state
+                .storage()
+                .sync()
+                .await
+                .map_err(|_| GameError::Storage)?;
+        }
         if let Err(error) = first
             && !matches!(error, GameError::Expired | GameError::NotFound)
         {
+            needs_capture.set(request.phase != DiscoveryReadPhase::Primary);
             return Err(error);
         }
         // At most one recut after a final-cut denial needs a durability await.
@@ -166,7 +244,7 @@ impl GameObject {
             } else {
                 Vec::new()
             };
-            let final_cut = service.discovery(
+            let final_cut = service.discovery_for_response(
                 request.game_id,
                 view,
                 selected.published_code.as_ref(),

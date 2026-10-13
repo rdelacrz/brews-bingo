@@ -67,7 +67,21 @@ test("discovery returns honest free and New slots with read-only cross-host/admi
   expect((await value("/api/games?state=new", actor.session)).games).toHaveLength(1);
   await inOwner((_instance, state) => state.storage.sql.exec("UPDATE accounts SET role='admin' WHERE account_id=?", peer.accountId));
   expect((await value("/api/games/current", peer.session)).game.may_operate).toBe(true);
-  expect(await rows(id)).toEqual(before);
+  const after = await rows(id);
+  // Required Admin capture may maintain only audit, clock and alarm bookkeeping.
+  for (const name of Object.keys(before.tables).filter(name => !["game_admin_audit", "game_metadata", "game_delivery_metadata"].includes(name))) expect(after.tables[name]).toEqual(before.tables[name]);
+  expect(after.tables.game_admin_audit).toHaveLength(1);
+  expect(after.tables.game_admin_audit[0]).toMatchObject({actor_account_id: peer.accountId, target_game_id: id, operation: "discovery_read", outcome: "succeeded"});
+  expect(after.tables.game_admin_audit[0].expires_at).toBe(after.tables.game_admin_audit[0].occurred_at + 7776000000);
+  expect(after.tables.game_metadata).toHaveLength(before.tables.game_metadata.length);
+  expect(after.tables.game_metadata[0].schema_version).toBe(before.tables.game_metadata[0].schema_version);
+  expect(after.tables.game_metadata[0].singleton).toBe(before.tables.game_metadata[0].singleton);
+  expect(after.tables.game_metadata[0].command_floor_ms).toBeGreaterThanOrEqual(before.tables.game_metadata[0].command_floor_ms);
+  expect(after.tables.game_metadata[0].command_floor_ms).toBeLessThanOrEqual(after.tables.game_metadata[0].last_observed_ms);
+  expect(after.tables.game_metadata[0].last_observed_ms).toBeGreaterThanOrEqual(before.tables.game_metadata[0].last_observed_ms);
+  expect(after.tables.game_delivery_metadata.map(row => ({...row, last_observed_ms: before.tables.game_delivery_metadata[0].last_observed_ms}))).toEqual(before.tables.game_delivery_metadata);
+  expect(after.tables.game_delivery_metadata[0].last_observed_ms).toBeGreaterThanOrEqual(before.tables.game_delivery_metadata[0].last_observed_ms);
+  expect(after.alarm).toBeLessThanOrEqual(after.tables.game_admin_audit[0].expires_at);
   expect((await get(`/api/games/${id}/availability?view=account`, actor.session)).status).toBe(404);
 });
 

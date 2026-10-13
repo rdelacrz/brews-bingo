@@ -132,6 +132,12 @@ pub(crate) enum AccountCommand {
 #[derive(Subcommand)]
 pub(crate) enum AuditCommand {
     List(AuditPage),
+    Game {
+        #[arg(value_parser = canonical_id::<brews_domain::ids::GameId>)]
+        game_id: brews_domain::ids::GameId,
+        #[command(flatten)]
+        page: AuditPage,
+    },
 }
 
 #[cfg(test)]

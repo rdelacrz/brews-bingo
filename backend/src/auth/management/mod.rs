@@ -231,6 +231,9 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         command_id: Option<CommandId>,
         canonical_origin: &str,
     ) -> Result<ManagementResponse, ManagementError> {
+        if matches!(command, ManagementCommand::ListGameAudit { .. }) {
+            return Err(ManagementError::InvalidInput);
+        }
         self.management_attempt(&principal, &command, |actor| {
             self.execute_management_checked(&command, actor, command_id, canonical_origin)
         })
@@ -265,6 +268,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
             return Err(ManagementError::InvalidInput);
         }
         match command {
+            ManagementCommand::ListGameAudit { .. } => Err(ManagementError::InvalidInput),
             ManagementCommand::ListAccounts { after, limit } => {
                 self.management_accounts(*after, *limit)
             }

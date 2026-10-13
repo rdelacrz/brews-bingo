@@ -160,7 +160,7 @@ impl Attachment {
             expires: self.session_expires_at,
         })
     }
-    fn account_grant(&self) -> Result<AccountConnectionGrant, GameError> {
+    pub(super) fn account_grant(&self) -> Result<AccountConnectionGrant, GameError> {
         let identity = self.identity()?;
         Ok(AccountConnectionGrant {
             game: identity.game_id,
@@ -394,6 +394,45 @@ impl GameObject {
         Ok(out)
     }
     pub(super) async fn upgrade(&self, ingress: &GameIngress) -> Result<Response, GameError> {
+        let needs_capture = std::cell::Cell::new(true);
+        let result = self.upgrade_connection(ingress, &needs_capture).await;
+        if let Err(error) = &result
+            && needs_capture.get()
+            && ingress.view == Some(ViewSelector::Account)
+            && let (Some(game), Some(token)) = (ingress.game_id, ingress.session_token.as_deref())
+        {
+            if !self.owns_game(game)? {
+                return Err(GameError::Storage);
+            }
+            let db = self.database()?;
+            let service = self.service(&db, &WorkerRuntime)?;
+            service.bind_operator_game_identity(game)?;
+            if error.is_execution_failure() {
+                self.capture_operator_peer_error(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::AccountStream,
+                    *error,
+                )
+                .await?;
+            } else if let Ok(actor) = self.authorize_operator_account(&service, token).await
+                && actor.role() == brews_domain::accounts::AccountRole::Admin
+            {
+                service.capture_operator_rejection(
+                    &actor,
+                    crate::db::game::OperatorPurpose::AccountStream,
+                )?;
+                self.persist(&service, &db).await?;
+            }
+        }
+        result
+    }
+    async fn upgrade_connection(
+        &self,
+        ingress: &GameIngress,
+        needs_capture: &std::cell::Cell<bool>,
+    ) -> Result<Response, GameError> {
         let db = self.database()?;
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
@@ -402,6 +441,12 @@ impl GameObject {
             .as_deref()
             .ok_or(GameError::Unauthorized)?;
         let id = ingress.game_id.ok_or(GameError::InvalidInput)?;
+        if !self.owns_game(id)? {
+            return Err(GameError::Conflict);
+        }
+        if ingress.view == Some(ViewSelector::Account) {
+            service.bind_operator_game_identity(id)?;
+        }
         if service.directory_projection()?.game_id() != id {
             return Err(GameError::Conflict);
         }
@@ -454,7 +499,9 @@ impl GameObject {
                         .map_err(peer_error)?;
                 let identity =
                     AccountConnectionIdentity::from_authority(&authority, id, connection);
+                needs_capture.set(false);
                 let grant = service.prepare_account_connection(authority, connection)?;
+                needs_capture.set(true);
                 self.persist(&service, &db).await?;
                 let authority = game_peers::authorize_account_connection(&self.env, &identity)
                     .await
@@ -462,14 +509,36 @@ impl GameObject {
                 let hint = Attachment::account(&grant);
                 hint.write(&pair.server)?;
                 service.validate_prepared_account_connection(&grant, &authority)?;
-                self.accept_socket(&pair.server)?;
-                if let Err(error) = service.accept_account_connection(&grant, authority) {
-                    let _ = pair.server.close(
-                        Some(CloseCode::Resynchronize.value()),
-                        Some("resynchronize"),
-                    );
+                if let Err(error) = self.accept_socket(&pair.server) {
+                    if pair
+                        .server
+                        .close(
+                            Some(CloseCode::Resynchronize.value()),
+                            Some("resynchronize"),
+                        )
+                        .is_err()
+                    {
+                        self.transport_retry.set(true);
+                    }
                     return Err(error);
                 }
+                needs_capture.set(false);
+                if let Err(error) = service.accept_account_connection(&grant, authority) {
+                    // The transaction retained the predecessor and rolled back the successor.
+                    // Its native hint cannot authorize output without the accepted SQL row.
+                    if pair
+                        .server
+                        .close(
+                            Some(CloseCode::Resynchronize.value()),
+                            Some("resynchronize"),
+                        )
+                        .is_err()
+                    {
+                        self.transport_retry.set(true);
+                    }
+                    return Err(error);
+                }
+                needs_capture.set(true);
                 hint
             }
             None => return Err(GameError::InvalidInput),

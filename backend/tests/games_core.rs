@@ -3,6 +3,8 @@
     clippy::expect_used,
     reason = "Real SQLite tests fail fast."
 )]
+#[path = "games_core/audit_repairs.rs"]
+mod audit_repairs;
 #[path = "games_core/command_lookup.rs"]
 mod command_lookup;
 #[path = "games_core/discovery.rs"]
@@ -15,6 +17,8 @@ mod player_lifecycle;
 mod player_lifecycle_review;
 #[path = "games_core/player_recovery.rs"]
 mod player_recovery;
+#[path = "games_core/privileged_audit.rs"]
+mod privileged_audit;
 #[path = "games_core/publication_receipt.rs"]
 mod publication_receipt;
 #[path = "games_core/reads.rs"]

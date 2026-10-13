@@ -27,6 +27,34 @@ use worker::{
 };
 use zeroize::Zeroizing;
 
+pub(super) fn privileged_purpose(
+    ingress: &GameIngress,
+) -> Option<crate::db::game::OperatorPurpose> {
+    use crate::db::game::OperatorPurpose as Purpose;
+    Some(match ingress.operation {
+        GameAction::Create => Purpose::Creation,
+        GameAction::Configuration => Purpose::Configuration,
+        GameAction::Resume => Purpose::Resume,
+        GameAction::HostTransfer => Purpose::HostTransfer,
+        GameAction::HostTransferTargets => Purpose::HostTransferTargets,
+        GameAction::Stream if ingress.view == Some(super::game_wire::ViewSelector::Account) => {
+            Purpose::AccountStream
+        }
+        GameAction::Lobby => Purpose::Lobby,
+        GameAction::Start => Purpose::Start,
+        GameAction::CallRandom => Purpose::CallRandom,
+        GameAction::CallManual => Purpose::CallManual,
+        GameAction::Winner => Purpose::Winner,
+        GameAction::Cancel => Purpose::Cancel,
+        GameAction::Sync if ingress.view == Some(super::game_wire::ViewSelector::Account) => {
+            Purpose::AccountContext
+        }
+        GameAction::Exit if ingress.view == Some(super::game_wire::ViewSelector::Account) => {
+            Purpose::AccountExit
+        }
+        _ => return None,
+    })
+}
 enum RegistryAvailability {
     Available,
     Unavailable,
@@ -592,7 +620,15 @@ impl GameObject {
         if !self.owns_game(id)? {
             return Err(GameError::Conflict);
         }
-        service.cleanup()?;
+        let token = ingress.session_token.as_deref().unwrap_or("");
+        if let Some(purpose) = privileged_purpose(ingress) {
+            service.bind_operator_game_identity(id)?;
+            let cleanup = service.cleanup();
+            self.privileged_operation_result(&service, &db, token, purpose, cleanup)
+                .await?;
+        } else {
+            service.cleanup()?;
+        }
         if matches!(
             ingress.operation,
             GameAction::Configuration
@@ -611,7 +647,13 @@ impl GameObject {
                 | GameAction::SwitchToPlayer
                 | GameAction::SwitchToSpectator
         ) {
-            self.broadcast(&service, &db).await?;
+            let result = self.broadcast(&service, &db).await;
+            if let Some(purpose) = privileged_purpose(ingress) {
+                self.privileged_operation_result(&service, &db, token, purpose, result)
+                    .await?;
+            } else {
+                result?;
+            }
         }
         // A caller cannot retarget an existing Game by supplying a different typed ID.
         if let Ok(projection) = service.directory_projection()
@@ -733,10 +775,22 @@ impl GameObject {
                 })
             }
             (GameAction::Create, GamePayload::Create(input)) => {
-                self.persist(&service, &db).await?;
-                let work = game_peers::creation_work(&self.env, id)
-                    .await
-                    .map_err(peer_error)?
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Creation,
+                )
+                .await?;
+                let work = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Creation,
+                        game_peers::creation_work(&self.env, id).await,
+                    )
+                    .await?
                     .ok_or(GameError::NotFound)?;
                 if Some(work.command_id()) != command
                     || work.fingerprint()
@@ -744,27 +798,74 @@ impl GameObject {
                 {
                     return Err(GameError::Conflict);
                 }
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Creation,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Creation,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let result = service.initialize(&work, authority, &input.configuration)?;
-                self.persist(&service, &db).await?;
-                game_peers::acknowledge_creation(&self.env, &result.ready)
-                    .await
-                    .map_err(peer_error)?;
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Creation,
+                )
+                .await?;
+                self.privileged_peer_result(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Creation,
+                    game_peers::acknowledge_creation(&self.env, &result.ready).await,
+                )
+                .await?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Creation,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Creation,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 service.account_view(authority, &self.observed(&service)?)?;
                 Ok(success(result.response))
             }
             (GameAction::Lobby, GamePayload::Revision(input)) => {
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Lobby,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let command = command.ok_or(GameError::InvalidInput)?;
                 let prepared =
                     service.prepare_lobby(authority, command, input.expected_revision)?;
@@ -775,10 +876,22 @@ impl GameObject {
                     LobbyPreparation::Ready(work) => work,
                 };
                 if work.phase() == WorkPhase::Prepared {
-                    self.persist(&service, &db).await?;
-                    let creation = game_peers::creation_work(&self.env, id)
-                        .await
-                        .map_err(peer_error)?
+                    self.persist_privileged(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                    )
+                    .await?;
+                    let creation = self
+                        .privileged_peer_result(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::Lobby,
+                            game_peers::creation_work(&self.env, id).await,
+                        )
+                        .await?
                         .ok_or(GameError::Conflict)?;
                     let projection = service.directory_projection()?;
                     if creation.game_id() != projection.game_id()
@@ -795,27 +908,83 @@ impl GameObject {
                         creation.created_at(),
                         SourceRevision::INITIAL,
                     );
-                    self.persist(&service, &db).await?;
-                    let ack = game_peers::acknowledge_creation(&self.env, &ready)
-                        .await
-                        .map_err(peer_error)?;
-                    self.persist(&service, &db).await?;
-                    let grant = game_peers::allocate_game_code(&self.env, ack)
-                        .await
-                        .map_err(peer_error)?;
-                    self.persist(&service, &db).await?;
-                    let authority = game_peers::authorize_account(&self.env, token)
-                        .await
-                        .map_err(peer_error)?;
+                    self.persist_privileged(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                    )
+                    .await?;
+                    let ack = self
+                        .privileged_peer_result(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::Lobby,
+                            game_peers::acknowledge_creation(&self.env, &ready).await,
+                        )
+                        .await?;
+                    self.persist_privileged(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                    )
+                    .await?;
+                    let grant = self
+                        .privileged_peer_result(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::Lobby,
+                            game_peers::allocate_game_code(&self.env, ack).await,
+                        )
+                        .await?;
+                    self.persist_privileged(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                    )
+                    .await?;
+                    let authority = self
+                        .privileged_peer_result(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::Lobby,
+                            game_peers::authorize_account(&self.env, token).await,
+                        )
+                        .await?;
                     let current = reload(&service, &work)?;
                     service.commit_lobby(&current, authority, &grant)?;
                 }
                 let current = reload(&service, &work)?;
-                let response = self.publish(&service, &db, &current).await?;
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                let response = self
+                    .privileged_operation_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                        self.publish(&service, &db, &current).await,
+                    )
+                    .await?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Lobby,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Lobby,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 service.account_view(authority, &self.observed(&service)?)?;
                 Ok(success(response))
             }
@@ -1002,15 +1171,26 @@ impl GameObject {
                 })
             }
             (GameAction::Sync, GamePayload::Empty) => {
-                self.persist(&service, &db).await?;
+                if let Some(purpose) = privileged_purpose(ingress) {
+                    self.persist_privileged(&service, &db, token, purpose)
+                        .await?;
+                } else {
+                    self.persist(&service, &db).await?;
+                }
                 let initial = match ingress.view {
                     Some(super::game_wire::ViewSelector::Player) => {
                         service.sync_player(token, ingress.known_revision)
                     }
                     Some(super::game_wire::ViewSelector::Account) => {
-                        let authority = game_peers::authorize_account(&self.env, token)
-                            .await
-                            .map_err(peer_error)?;
+                        let authority = self
+                            .privileged_peer_result(
+                                &service,
+                                &db,
+                                token,
+                                privileged_purpose(ingress).ok_or(GameError::Storage)?,
+                                game_peers::authorize_account(&self.env, token).await,
+                            )
+                            .await?;
                         service.sync_account(
                             authority,
                             ingress.known_revision,
@@ -1021,7 +1201,12 @@ impl GameObject {
                         return Err(GameError::InvalidInput);
                     }
                 };
-                self.persist(&service, &db).await?;
+                if let Some(purpose) = privileged_purpose(ingress) {
+                    self.persist_privileged(&service, &db, token, purpose)
+                        .await?;
+                } else {
+                    self.persist(&service, &db).await?;
+                }
                 initial?.encode_json().map_err(|_| GameError::Storage)?;
                 // Flush maintenance, then derive the protected response without another success await.
                 let (response, valid_until, authority, player_authority) = match ingress.view {
@@ -1057,9 +1242,15 @@ impl GameObject {
                         (response, deadline.valid_until, None, Some(deadline.into()))
                     }
                     Some(super::game_wire::ViewSelector::Account) => {
-                        let authority = game_peers::authorize_account(&self.env, token)
-                            .await
-                            .map_err(peer_error)?;
+                        let authority = self
+                            .privileged_peer_result(
+                                &service,
+                                &db,
+                                token,
+                                privileged_purpose(ingress).ok_or(GameError::Storage)?,
+                                game_peers::authorize_account(&self.env, token).await,
+                            )
+                            .await?;
                         let wire = super::game_wire::SyncAccountAuthority::from(&authority);
                         let cut = service.sync_account_output(
                             authority,
@@ -1093,15 +1284,26 @@ impl GameObject {
             }
             (GameAction::Exit, GamePayload::Empty) => {
                 let command = command.ok_or(GameError::InvalidInput)?;
-                self.persist(&service, &db).await?;
+                if let Some(purpose) = privileged_purpose(ingress) {
+                    self.persist_privileged(&service, &db, token, purpose)
+                        .await?;
+                } else {
+                    self.persist(&service, &db).await?;
+                }
                 let (response, account) = match ingress.view {
                     Some(super::game_wire::ViewSelector::Player) => {
                         (service.exit_player(token, command)?, None)
                     }
                     Some(super::game_wire::ViewSelector::Account) => {
-                        let authority = game_peers::authorize_account(&self.env, token)
-                            .await
-                            .map_err(peer_error)?;
+                        let authority = self
+                            .privileged_peer_result(
+                                &service,
+                                &db,
+                                token,
+                                privileged_purpose(ingress).ok_or(GameError::Storage)?,
+                                game_peers::authorize_account(&self.env, token).await,
+                            )
+                            .await?;
                         let account = authority.account_id();
                         (service.exit_account(authority, command)?, Some(account))
                     }
@@ -1110,13 +1312,29 @@ impl GameObject {
                     }
                 };
                 // The owner has revoked every same-principal binding before physical closure.
-                self.persist(&service, &db).await?;
+                if let Some(purpose) = privileged_purpose(ingress) {
+                    self.persist_privileged(&service, &db, token, purpose)
+                        .await?;
+                } else {
+                    self.persist(&service, &db).await?;
+                }
                 let _ = self.broadcast(&service, &db).await;
-                self.persist(&service, &db).await?;
+                if let Some(purpose) = privileged_purpose(ingress) {
+                    self.persist_privileged(&service, &db, token, purpose)
+                        .await?;
+                } else {
+                    self.persist(&service, &db).await?;
+                }
                 if let Some(account) = account {
-                    let current = game_peers::authorize_account(&self.env, token)
-                        .await
-                        .map_err(peer_error)?;
+                    let current = self
+                        .privileged_peer_result(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::AccountExit,
+                            game_peers::authorize_account(&self.env, token).await,
+                        )
+                        .await?;
                     if current.account_id() != account || current.expires_at() <= rt.now_ms() {
                         return Err(GameError::Unauthorized);
                     }
@@ -1125,70 +1343,170 @@ impl GameObject {
                 Ok(success(response))
             }
             (GameAction::CallRandom, GamePayload::Revision(input)) => {
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::CallRandom,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::CallRandom,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let response = service.call_random(
                     authority,
                     command.ok_or(GameError::InvalidInput)?,
                     input.expected_revision,
                 )?;
-                self.complete_gameplay(&service, &db, token, response, false)
-                    .await
+                self.complete_gameplay(
+                    &service,
+                    &db,
+                    token,
+                    response,
+                    false,
+                    privileged_purpose(ingress).ok_or(GameError::InvalidInput)?,
+                )
+                .await
             }
             (GameAction::CallManual, GamePayload::CallManual(input)) => {
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::CallManual,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::CallManual,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let response = service.call_manual_value(
                     authority,
                     command.ok_or(GameError::InvalidInput)?,
                     &input.value,
                     input.expected_revision,
                 )?;
-                self.complete_gameplay(&service, &db, token, response, false)
-                    .await
+                self.complete_gameplay(
+                    &service,
+                    &db,
+                    token,
+                    response,
+                    false,
+                    privileged_purpose(ingress).ok_or(GameError::InvalidInput)?,
+                )
+                .await
             }
             (GameAction::Winner, GamePayload::Winner(input)) => {
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Winner,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Winner,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let response = service.submit_winner(
                     authority,
                     command.ok_or(GameError::InvalidInput)?,
                     input.player_id,
                     input.expected_revision,
                 )?;
-                self.complete_gameplay(&service, &db, token, response, true)
-                    .await
+                self.complete_gameplay(
+                    &service,
+                    &db,
+                    token,
+                    response,
+                    true,
+                    privileged_purpose(ingress).ok_or(GameError::InvalidInput)?,
+                )
+                .await
             }
             (GameAction::Cancel, GamePayload::Cancel(input)) => {
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Cancel,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Cancel,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let response = service.cancel_game(
                     authority,
                     command.ok_or(GameError::InvalidInput)?,
                     input.expected_state,
                     input.confirmed,
                 )?;
-                self.complete_gameplay(&service, &db, token, response, true)
-                    .await
+                self.complete_gameplay(
+                    &service,
+                    &db,
+                    token,
+                    response,
+                    true,
+                    privileged_purpose(ingress).ok_or(GameError::InvalidInput)?,
+                )
+                .await
             }
             (GameAction::Start, GamePayload::Revision(input)) => {
                 let command = command.ok_or(GameError::InvalidInput)?;
-                self.persist(&service, &db).await?;
-                let reservation = game_peers::confirm_reservation(&self.env, id)
-                    .await
-                    .map_err(peer_error)?;
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Start,
+                )
+                .await?;
+                let reservation = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Start,
+                        game_peers::confirm_reservation(&self.env, id).await,
+                    )
+                    .await?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Start,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Start,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 let initial = service.start(
                     authority,
                     command,
@@ -1201,7 +1519,16 @@ impl GameObject {
                     .into_iter()
                     .find(|w| w.command_id() == command);
                 let response = if let Some(work) = pending {
-                    match self.publish(&service, &db, &work).await? {
+                    match self
+                        .privileged_operation_result(
+                            &service,
+                            &db,
+                            token,
+                            crate::db::game::OperatorPurpose::Start,
+                            self.publish(&service, &db, &work).await,
+                        )
+                        .await?
+                    {
                         GameResponse::Pending { operation_id } => {
                             GameResponse::Pending { operation_id }
                         }
@@ -1210,16 +1537,81 @@ impl GameObject {
                 } else {
                     initial
                 };
-                self.broadcast(&service, &db).await?;
-                self.persist(&service, &db).await?;
-                let authority = game_peers::authorize_account(&self.env, token)
-                    .await
-                    .map_err(peer_error)?;
+                self.privileged_operation_result(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Start,
+                    self.broadcast(&service, &db).await,
+                )
+                .await?;
+                self.persist_privileged(
+                    &service,
+                    &db,
+                    token,
+                    crate::db::game::OperatorPurpose::Start,
+                )
+                .await?;
+                let authority = self
+                    .privileged_peer_result(
+                        &service,
+                        &db,
+                        token,
+                        crate::db::game::OperatorPurpose::Start,
+                        game_peers::authorize_account(&self.env, token).await,
+                    )
+                    .await?;
                 service.account_view(authority, &self.observed(&service)?)?;
                 Ok(success(response))
             }
             _ => Err(GameError::InvalidInput),
         }
+    }
+    async fn privileged_operation_result<T>(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        token: &str,
+        purpose: crate::db::game::OperatorPurpose,
+        result: Result<T, GameError>,
+    ) -> Result<T, GameError> {
+        if let Err(error) = &result {
+            self.capture_operator_peer_error(service, db, token, purpose, *error)
+                .await?;
+        }
+        result
+    }
+    async fn privileged_peer_result<T>(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        token: &str,
+        purpose: crate::db::game::OperatorPurpose,
+        result: Result<T, game_peers::GamePeerError>,
+    ) -> Result<T, GameError> {
+        match result {
+            Ok(value) => Ok(value),
+            Err(error) => {
+                let error = peer_error(error);
+                self.capture_operator_peer_error(service, db, token, purpose, error)
+                    .await?;
+                Err(error)
+            }
+        }
+    }
+    async fn persist_privileged(
+        &self,
+        service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
+        db: &OwnerDatabase,
+        token: &str,
+        purpose: crate::db::game::OperatorPurpose,
+    ) -> Result<(), GameError> {
+        if let Err(error) = self.persist(service, db).await {
+            self.capture_operator_peer_error(service, db, token, purpose, error)
+                .await?;
+            return Err(error);
+        }
+        Ok(())
     }
     async fn complete_membership(
         &self,
@@ -1274,35 +1666,41 @@ impl GameObject {
         token: &str,
         response: GameResponse,
         terminal: bool,
+        purpose: crate::db::game::OperatorPurpose,
     ) -> Result<GameOwnerResponse, GameError> {
-        // Terminal cleanup/release proceed even when native socket enumeration is unavailable.
-        if terminal {
-            self.persist_recovery(service, db).await?;
-        } else {
+        let result = async {
+            // Terminal cleanup/release proceed even when native socket enumeration is unavailable.
+            if terminal {
+                self.persist_recovery(service, db).await?;
+            } else {
+                self.persist(service, db).await?;
+            }
+            let delivery = self.broadcast(service, db).await;
+            let response = if terminal {
+                // Final delivery is best-effort; viewer ACK/Exit never gates release.
+                self.finish_terminal_release(service, db, response).await?
+            } else {
+                delivery?;
+                response
+            };
             self.persist(service, db).await?;
-        }
-        let delivery = self.broadcast(service, db).await;
-        let response = if terminal {
-            // Final delivery is best-effort; viewer ACK/Exit never gates release.
-            self.finish_terminal_release(service, db, response).await?
-        } else {
-            delivery?;
-            response
-        };
-        self.persist(service, db).await?;
-        let authority = game_peers::authorize_account(&self.env, token)
-            .await
-            .map_err(peer_error)?;
-        if let Err(error) = service.authorize_gameplay_response(authority) {
-            // Expiry rejection may write a denial fence; finish durability before rejection.
-            self.state
-                .storage()
-                .sync()
+            let authority = game_peers::authorize_account(&self.env, token)
                 .await
-                .map_err(|_| GameError::Storage)?;
-            return Err(error);
+                .map_err(peer_error)?;
+            if let Err(error) = service.authorize_gameplay_response(authority) {
+                // Expiry rejection may write a denial fence; finish durability before rejection.
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+                return Err(error);
+            }
+            Ok(success(response))
         }
-        Ok(success(response))
+        .await;
+        self.privileged_operation_result(service, db, token, purpose, result)
+            .await
     }
     async fn finish_terminal_release(
         &self,
@@ -1503,11 +1901,21 @@ impl DurableObject for GameObject {
             }
             return self.execute_operator_expiry_denial(request).await;
         }
-        if path == "/operator-transport-rejection" {
+        if matches!(
+            path.as_str(),
+            "/operator-transport-rejection" | "/operator-transport-failure"
+        ) {
             if request.method() != worker::Method::Post || request.url()?.query().is_some() {
                 return worker::Response::error("invalid operator rejection", 400);
             }
-            return self.execute_operator_transport_rejection(request).await;
+            let outcome = if path == "/operator-transport-failure" {
+                super::operator_runtime::TransportAuditOutcome::Failed
+            } else {
+                super::operator_runtime::TransportAuditOutcome::Rejected
+            };
+            return self
+                .execute_operator_transport_capture(request, outcome)
+                .await;
         }
         if path == "/operator-release"
             && request.method() == Method::Post
@@ -1548,6 +1956,10 @@ impl DurableObject for GameObject {
                 "/command"
                     | "/recovery"
                     | "/close-account"
+                    | "/developer-audit"
+                    | "/developer-audit-expiry"
+                    | "/developer-audit-rejection"
+                    | "/developer-audit-failure"
                     | "/history"
                     | "/discovery"
                     | "/sync-player-release"
@@ -1597,6 +2009,25 @@ impl DurableObject for GameObject {
                 },
             };
             return Response::from_json(&reply);
+        }
+        if path == "/developer-audit" {
+            return self.execute_developer_audit(&bytes).await;
+        }
+        if matches!(
+            path.as_str(),
+            "/developer-audit-rejection" | "/developer-audit-failure"
+        ) {
+            let outcome = if path == "/developer-audit-failure" {
+                super::operator_runtime::TransportAuditOutcome::Failed
+            } else {
+                super::operator_runtime::TransportAuditOutcome::Rejected
+            };
+            return self
+                .execute_developer_audit_transport(&bytes, outcome)
+                .await;
+        }
+        if path == "/developer-audit-expiry" {
+            return self.execute_developer_audit_expiry(&bytes).await;
         }
         if path == "/discovery" {
             let request =
@@ -1731,9 +2162,33 @@ impl DurableObject for GameObject {
         let service = self
             .service(&db, &WorkerRuntime)
             .map_err(|_| worker::Error::RustError("game transport unavailable".into()))?;
+        let replaced_account = if let Ok(hint) = Attachment::read(&ws)
+            && matches!(hint.viewer, Viewer::Account(_))
+        {
+            match service.current_account_connection(hint.session_id) {
+                Ok(current) => {
+                    let closed = hint.account_grant().map_err(|_| {
+                        worker::Error::RustError("game transport unavailable".into())
+                    })?;
+                    current.as_ref() != Some(&closed)
+                }
+                Err(GameError::NotFound) => true,
+                Err(_) => {
+                    return Err(worker::Error::RustError(
+                        "game transport unavailable".into(),
+                    ));
+                }
+            }
+        } else {
+            false
+        };
         self.retire_socket(&ws, &service, &db, CloseCode::Normal)
             .await
             .map_err(|_| worker::Error::RustError("game transport unavailable".into()))?;
+        // A fenced predecessor changes no view; its broadcast would race successor output.
+        if replaced_account {
+            return Ok(());
+        }
         self.broadcast(&service, &db)
             .await
             .map_err(|_| worker::Error::RustError("game transport unavailable".into()))

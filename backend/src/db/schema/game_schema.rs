@@ -1,7 +1,7 @@
 //! Normalized, isolated Game-owner schema. No authoritative JSON collections.
 use crate::limits::JS_SAFE_INTEGER_MAX;
 use brews_domain::games::GameState;
-pub const GAME_SCHEMA_VERSION: i64 = 7;
+pub const GAME_SCHEMA_VERSION: i64 = 8;
 pub const PREVIOUS_GAME_SCHEMA_VERSION: i64 = 1;
 pub const PREVIOUS_GAME_TABLES: [&str; 16] = [
     "game_admission_contexts",

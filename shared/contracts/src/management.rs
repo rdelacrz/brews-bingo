@@ -43,6 +43,11 @@ pub enum ManagementCommand {
     EnableAccount {
         account_id: AccountId,
     },
+    ListGameAudit {
+        game_id: brews_domain::ids::GameId,
+        after: Option<AuditId>,
+        limit: u32,
+    },
     ListAudit {
         after: Option<AuditId>,
         limit: u32,
@@ -158,6 +163,11 @@ pub enum ManagementResponse {
     Committed {
         receipt: ManagementReceipt,
     },
+    GameAudit {
+        game_id: brews_domain::ids::GameId,
+        events: Vec<crate::game_audit::GameAuditEvent>,
+        next_cursor: Option<AuditId>,
+    },
     Audit {
         events: Vec<AuditEvent>,
         next_cursor: Option<AuditId>,
@@ -231,6 +241,16 @@ impl fmt::Debug for ManagementResponse {
             Self::Account { account } => {
                 f.debug_struct("Account").field("account", account).finish()
             }
+            Self::GameAudit {
+                game_id,
+                events,
+                next_cursor,
+            } => f
+                .debug_struct("GameAudit")
+                .field("game_id", game_id)
+                .field("events", events)
+                .field("next_cursor", next_cursor)
+                .finish(),
             Self::Audit {
                 events,
                 next_cursor,
@@ -246,7 +266,10 @@ impl ManagementCommand {
     pub const fn is_mutating(&self) -> bool {
         !matches!(
             self,
-            Self::ListAccounts { .. } | Self::GetAccount { .. } | Self::ListAudit { .. }
+            Self::ListAccounts { .. }
+                | Self::GetAccount { .. }
+                | Self::ListAudit { .. }
+                | Self::ListGameAudit { .. }
         )
     }
 }

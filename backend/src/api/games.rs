@@ -143,34 +143,86 @@ pub fn game_cookie_path(id: GameId) -> String {
 /// This does not authenticate the cookie; only the Game/Accounts owners do that.
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn operator_rejection_context(
-    method: &Method,
+    _method: &Method,
     path: &str,
+    query: Option<&str>,
     headers: &HeaderMap,
-    origin: &str,
+    _origin: &str,
 ) -> Result<(GameId, crate::db::game::OperatorPurpose, String), ApiError> {
     let (operation, game) = route(path)?;
-    let purpose = match (operation, method) {
-        (GameOperation::Configuration, &Method::PATCH) => {
-            crate::db::game::OperatorPurpose::Configuration
-        }
-        (GameOperation::Resume, &Method::POST) => crate::db::game::OperatorPurpose::Resume,
-        (GameOperation::HostTransfer, &Method::POST) => {
-            crate::db::game::OperatorPurpose::HostTransfer
-        }
-        (GameOperation::HostTransferTargets, &Method::GET) => {
-            crate::db::game::OperatorPurpose::HostTransferTargets
-        }
+    if matches!(
+        operation,
+        GameOperation::Sync | GameOperation::Stream | GameOperation::Exit
+    ) && !audit_account_view(query, headers)
+    {
+        return Err(ApiError::InvalidInput);
+    }
+    let purpose = match operation {
+        GameOperation::Configuration => crate::db::game::OperatorPurpose::Configuration,
+        GameOperation::Resume => crate::db::game::OperatorPurpose::Resume,
+        GameOperation::HostTransfer => crate::db::game::OperatorPurpose::HostTransfer,
+        GameOperation::HostTransferTargets => crate::db::game::OperatorPurpose::HostTransferTargets,
+        GameOperation::Lobby => crate::db::game::OperatorPurpose::Lobby,
+        GameOperation::Start => crate::db::game::OperatorPurpose::Start,
+        GameOperation::CallRandom => crate::db::game::OperatorPurpose::CallRandom,
+        GameOperation::CallManual => crate::db::game::OperatorPurpose::CallManual,
+        GameOperation::Winner => crate::db::game::OperatorPurpose::Winner,
+        GameOperation::Exit => crate::db::game::OperatorPurpose::AccountExit,
+        GameOperation::Cancel => crate::db::game::OperatorPurpose::Cancel,
+        GameOperation::Sync => crate::db::game::OperatorPurpose::AccountContext,
+        GameOperation::Stream => crate::db::game::OperatorPurpose::AccountStream,
         _ => return Err(ApiError::InvalidInput),
     };
-    validate_headers(headers)?;
-    if (method != Method::GET || headers.contains_key("origin"))
-        && (headers.get_all("origin").iter().count() != 1
-            || headers.get("origin").and_then(|v| v.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
-    }
     Ok((
         game.ok_or(ApiError::InvalidInput)?,
+        purpose,
+        super::decode::session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
+    ))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn audit_account_view(query: Option<&str>, headers: &HeaderMap) -> bool {
+    let raw = query.unwrap_or("");
+    if raw
+        .split('&')
+        .any(|field| matches!(field, "view=player" | "view=spectator" | "view=entry"))
+    {
+        return false;
+    }
+    if raw.split('&').any(|field| field == "view=account") {
+        return true;
+    }
+    !headers
+        .get("cookie")
+        .and_then(|h| h.to_str().ok())
+        .is_some_and(|cookie| {
+            cookie.split(';').any(|field| {
+                field.trim().starts_with(PLAYER_COOKIE_NAME)
+                    || field.trim().starts_with(SPECTATOR_COOKIE_NAME)
+            })
+        })
+}
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn audit_read_rejection_context(
+    path: &str,
+    query: Option<&str>,
+    headers: &HeaderMap,
+) -> Result<(GameId, crate::db::game::OperatorPurpose, String), ApiError> {
+    let (id, purpose) = if let Some(id) = path.strip_prefix("/api/history/") {
+        (id, crate::db::game::OperatorPurpose::HistoryRead)
+    } else if let Some(id) = path
+        .strip_prefix("/api/games/")
+        .and_then(|p| p.strip_suffix("/availability"))
+    {
+        if !audit_account_view(query, headers) {
+            return Err(ApiError::InvalidInput);
+        }
+        (id, crate::db::game::OperatorPurpose::DiscoveryRead)
+    } else {
+        return Err(ApiError::InvalidInput);
+    };
+    Ok((
+        id.parse().map_err(|_| ApiError::InvalidInput)?,
         purpose,
         super::decode::session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
     ))

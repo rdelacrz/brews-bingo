@@ -5,7 +5,8 @@ pub(super) mod wire;
 
 use self::wire::{
     DISCOVERY_REPLY_MAX_BYTES, DiscoveryAction, DiscoveryDirectoryReply, DiscoveryDirectoryRequest,
-    DiscoveryOutcome, DiscoveryOwnerReply, DiscoveryOwnerRequest, ObservedDiscoveryExpiry,
+    DiscoveryOutcome, DiscoveryOwnerReply, DiscoveryOwnerRequest, DiscoveryReadPhase,
+    ObservedDiscoveryExpiry,
 };
 use super::{edge, game_peers};
 use crate::{
@@ -67,10 +68,64 @@ async fn owner(
         request,
         DISCOVERY_REPLY_MAX_BYTES,
     )
-    .await
-    .map_err(peer_error)?;
-    wire::verify(request, &reply, super::WorkerRuntime.now_ms()).map_err(peer_error)?;
+    .await;
+    let reply = match reply {
+        Ok(reply) => reply,
+        Err(error) => {
+            capture_owner_failure(env, request).await?;
+            return Err(peer_error(error));
+        }
+    };
+    if let Err(error) = wire::verify(request, &reply, super::WorkerRuntime.now_ms()) {
+        capture_owner_failure(env, request).await?;
+        return Err(peer_error(error));
+    }
     Ok(reply)
+}
+async fn capture_owner_failure(
+    env: &Env,
+    request: &DiscoveryOwnerRequest,
+) -> Result<(), DiscoveryError> {
+    if request.expiry.is_none()
+        && let DiscoveryAction::Summary { token } | DiscoveryAction::Account { token } =
+            &request.action
+    {
+        super::operator_runtime::audit_failed_transport(
+            env,
+            (
+                request.game_id,
+                crate::db::game::OperatorPurpose::DiscoveryRead,
+                token.as_str().to_owned(),
+            ),
+        )
+        .await?;
+    }
+    Ok(())
+}
+async fn current_targeted(
+    env: &Env,
+    token: &str,
+    game: Option<brews_domain::ids::GameId>,
+) -> Result<crate::auth::GameAccountAuthority, DiscoveryError> {
+    match game_peers::authorize_discovery_account(env, token).await {
+        Ok(proof) => Ok(proof),
+        Err(error) => {
+            if !matches!(error, game_peers::GamePeerError::Unauthorized)
+                && let Some(game) = game
+            {
+                super::operator_runtime::audit_failed_transport(
+                    env,
+                    (
+                        game,
+                        crate::db::game::OperatorPurpose::DiscoveryRead,
+                        token.to_owned(),
+                    ),
+                )
+                .await?;
+            }
+            Err(peer_error(error))
+        }
+    }
 }
 async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryError> {
     let cfg = get_backend_config(env).map_err(|_| ApiError::Unavailable)?;
@@ -83,20 +138,39 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
         return Err(ApiError::Forbidden.into());
     }
     let (parts, body) = request.into_parts();
-    let bytes = Zeroizing::new(
-        to_bytes(body, api::BODY_LIMIT)
-            .await
-            .map_err(|_| ApiError::PayloadTooLarge)?
-            .to_vec(),
-    );
-    let decoded = api::decode_discovery(
+    let bytes = match to_bytes(body, api::BODY_LIMIT).await {
+        Ok(bytes) => Zeroizing::new(bytes.to_vec()),
+        Err(_) => {
+            if let Ok(context) = api::audit_read_rejection_context(
+                parts.uri.path(),
+                parts.uri.query(),
+                &parts.headers,
+            ) {
+                super::operator_runtime::audit_rejected_transport(env, context).await?;
+            }
+            return Err(ApiError::PayloadTooLarge.into());
+        }
+    };
+    let decoded = match api::decode_discovery(
         &parts.method,
         parts.uri.path(),
         parts.uri.query(),
         &parts.headers,
         &bytes,
         &cfg.application_origin,
-    )?;
+    ) {
+        Ok(decoded) => decoded,
+        Err(error) => {
+            if let Ok(context) = api::audit_read_rejection_context(
+                parts.uri.path(),
+                parts.uri.query(),
+                &parts.headers,
+            ) {
+                super::operator_runtime::audit_rejected_transport(env, context).await?;
+            }
+            return Err(error.into());
+        }
+    };
     let account = matches!(
         decoded.command,
         DiscoveryCommand::Current
@@ -108,15 +182,18 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
     );
     let initial = if account {
         Some(
-            game_peers::authorize_discovery_account(
+            current_targeted(
                 env,
                 decoded
                     .session_token
                     .as_deref()
                     .ok_or(DiscoveryError::Unauthorized)?,
+                match &decoded.command {
+                    DiscoveryCommand::Availability { game_id, .. } => Some(*game_id),
+                    _ => None,
+                },
             )
-            .await
-            .map_err(peer_error)?,
+            .await?,
         )
     } else {
         None
@@ -235,6 +312,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
     let mut request = DiscoveryOwnerRequest {
         game_id,
         action,
+        phase: DiscoveryReadPhase::Primary,
         expiry: None,
     };
     let hydrated = owner(env, &request).await?;
@@ -276,15 +354,15 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
         return Err(DiscoveryError::Unauthorized);
     }
     if account {
-        let proof = game_peers::authorize_discovery_account(
+        let proof = current_targeted(
             env,
             decoded
                 .session_token
                 .as_deref()
                 .ok_or(DiscoveryError::Unauthorized)?,
+            Some(game_id),
         )
-        .await
-        .map_err(peer_error)?;
+        .await?;
         if !initial
             .as_ref()
             .is_some_and(|a| owner::same_authority(a, &proof))
@@ -294,6 +372,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, DiscoveryErro
     }
     // Recut Game after edge reauthorization/hydration. The owner reauthorizes
     // again after its peer awaits; no successful projection is reused across cuts.
+    request.phase = DiscoveryReadPhase::Recut;
     let reply = owner(env, &request).await?;
     let observed_at = super::WorkerRuntime.now_ms();
     if let Some(deadline) = reply.valid_until.filter(|t| *t <= observed_at) {

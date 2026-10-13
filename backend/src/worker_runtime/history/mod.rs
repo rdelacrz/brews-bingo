@@ -60,6 +60,31 @@ async fn current(env: &Env, token: &str) -> Result<GameAccountAuthority, History
         .await
         .map_err(peer_error)
 }
+async fn current_targeted(
+    env: &Env,
+    token: &str,
+    game: Option<brews_domain::ids::GameId>,
+) -> Result<GameAccountAuthority, HistoryError> {
+    match current(env, token).await {
+        Ok(proof) => Ok(proof),
+        Err(error) => {
+            if matches!(error, HistoryError::Transport(ApiError::Unavailable))
+                && let Some(game) = game
+            {
+                super::operator_runtime::audit_failed_transport(
+                    env,
+                    (
+                        game,
+                        crate::db::game::OperatorPurpose::HistoryRead,
+                        token.to_owned(),
+                    ),
+                )
+                .await?;
+            }
+            Err(error)
+        }
+    }
+}
 pub(super) fn same_authority(a: &GameAccountAuthority, b: &GameAccountAuthority) -> bool {
     a.account_id() == b.account_id()
         && a.session_id() == b.session_id()
@@ -71,7 +96,7 @@ async fn owner(
     env: &Env,
     request: &HistoryOwnerRequest,
 ) -> Result<HistoryOwnerOutcome, HistoryError> {
-    let reply: HistoryOwnerReply = game_peers::call(
+    let reply: std::result::Result<HistoryOwnerReply, _> = game_peers::call(
         env,
         "GAMES",
         &request.game_id.to_string(),
@@ -79,9 +104,36 @@ async fn owner(
         request,
         wire::HISTORY_REPLY_MAX_BYTES,
     )
+    .await;
+    let reply = match reply {
+        Ok(reply) => reply,
+        Err(error) => {
+            capture_owner_failure(env, request).await?;
+            return Err(peer_error(error));
+        }
+    };
+    match wire::verify_owner(request, reply, super::WorkerRuntime.now_ms()) {
+        Ok(outcome) => Ok(outcome),
+        Err(error) => {
+            capture_owner_failure(env, request).await?;
+            Err(peer_error(error))
+        }
+    }
+}
+async fn capture_owner_failure(
+    env: &Env,
+    request: &HistoryOwnerRequest,
+) -> Result<(), HistoryError> {
+    super::operator_runtime::audit_failed_transport(
+        env,
+        (
+            request.game_id,
+            crate::db::game::OperatorPurpose::HistoryRead,
+            request.token.as_str().to_owned(),
+        ),
+    )
     .await
-    .map_err(peer_error)?;
-    wire::verify_owner(request, reply, super::WorkerRuntime.now_ms()).map_err(peer_error)
+    .map_err(Into::into)
 }
 async fn confirm_expiry_denial(
     env: &Env,
@@ -116,25 +168,48 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, HistoryError>
         return Err(ApiError::Forbidden.into());
     }
     let (parts, body) = request.into_parts();
-    let bytes = Zeroizing::new(
-        to_bytes(body, api::BODY_LIMIT)
-            .await
-            .map_err(|_| ApiError::PayloadTooLarge)?
-            .to_vec(),
-    );
-    let decoded = api::decode_history(
+    let bytes = match to_bytes(body, api::BODY_LIMIT).await {
+        Ok(bytes) => Zeroizing::new(bytes.to_vec()),
+        Err(_) => {
+            if let Ok(context) = api::audit_read_rejection_context(
+                parts.uri.path(),
+                parts.uri.query(),
+                &parts.headers,
+            ) {
+                super::operator_runtime::audit_rejected_transport(env, context).await?;
+            }
+            return Err(ApiError::PayloadTooLarge.into());
+        }
+    };
+    let decoded = match api::decode_history(
         &parts.method,
         parts.uri.path(),
         parts.uri.query(),
         &parts.headers,
         &bytes,
         &cfg.application_origin,
-    )?;
+    ) {
+        Ok(decoded) => decoded,
+        Err(error) => {
+            if let Ok(context) = api::audit_read_rejection_context(
+                parts.uri.path(),
+                parts.uri.query(),
+                &parts.headers,
+            ) {
+                super::operator_runtime::audit_rejected_transport(env, context).await?;
+            }
+            return Err(error.into());
+        }
+    };
     let token = decoded
         .session_token
         .as_deref()
         .ok_or(HistoryError::Unauthorized)?;
-    let initial = current(env, token).await?;
+    let target = match &decoded.command {
+        HistoryCommand::Detail(game) => Some(*game),
+        _ => None,
+    };
+    let initial = current_targeted(env, token, target).await?;
     match decoded.command {
         HistoryCommand::Detail(game_id) => {
             let outcome = owner(
@@ -146,7 +221,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, HistoryError>
                 },
             )
             .await?;
-            let proof = current(env, token).await?;
+            let proof = current_targeted(env, token, Some(game_id)).await?;
             if !same_authority(&initial, &proof) {
                 return Err(HistoryError::Unauthorized);
             }

@@ -27,10 +27,18 @@ pub(in crate::worker_runtime) struct ObservedDiscoveryExpiry {
     #[serde(deserialize_with = "positive_integer")]
     pub observed_at: i64,
 }
+/// Only the private edge chooses whether this invocation is the primary read.
+#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(in crate::worker_runtime) enum DiscoveryReadPhase {
+    Primary,
+    Recut,
+}
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::worker_runtime) struct DiscoveryOwnerRequest {
     pub game_id: GameId,
+    pub phase: DiscoveryReadPhase,
     #[serde(deserialize_with = "object")]
     pub action: DiscoveryAction,
     #[serde(default, deserialize_with = "optional_object")]
@@ -240,6 +248,7 @@ mod tests {
     fn request() -> DiscoveryOwnerRequest {
         DiscoveryOwnerRequest {
             game_id: "01900000-0000-7000-8000-000000000001".parse().unwrap(),
+            phase: DiscoveryReadPhase::Primary,
             action: DiscoveryAction::Entry {
                 game_code: "AB12CD34".parse().unwrap(),
             },

@@ -45,6 +45,15 @@ pub enum GameError {
     #[error("game generation budget exhausted")]
     GenerationExhausted,
 }
+impl GameError {
+    /// Failures of execution must roll back and use a separate Failed capture.
+    pub const fn is_execution_failure(self) -> bool {
+        matches!(
+            self,
+            Self::Storage | Self::RandomUnavailable | Self::GenerationExhausted
+        )
+    }
+}
 impl From<crate::db::StorageError> for GameError {
     fn from(_: crate::db::StorageError) -> Self {
         Self::Storage
@@ -260,7 +269,7 @@ impl AccountConnectionGrant {
 }
 
 pub const HOST_VIEW: &str = "host";
-pub const GAME_ADMIN_AUDIT_RETENTION_MS: i64 = 90 * crate::limits::MILLISECONDS_PER_DAY;
+pub const GAME_ADMIN_AUDIT_RETENTION_MS: i64 = brews_contracts::game_audit::GAME_AUDIT_RETENTION_MS;
 pub const HOST_IDLE_MS: i64 = 86_400_000;
 pub const RECEIPT_MS: i64 = 86_400_000;
 pub const PLAYER_SESSION_MS: i64 = 86_400_000;

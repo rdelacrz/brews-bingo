@@ -56,6 +56,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             if let Ok(context) = api::operator_rejection_context(
                 &parts.method,
                 parts.uri.path(),
+                parts.uri.query(),
                 &parts.headers,
                 &cfg.application_origin,
             ) {
@@ -96,6 +97,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             if let Ok(context) = api::operator_rejection_context(
                 &parts.method,
                 parts.uri.path(),
+                parts.uri.query(),
                 &parts.headers,
                 &cfg.application_origin,
             ) {
@@ -203,10 +205,13 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
     }
     let owner_request = worker::Request::new_with_init("https://game.internal/command", &init)
         .map_err(|_| ApiError::Unavailable)?;
-    let response = stub
-        .fetch_with_request(owner_request)
-        .await
-        .map_err(|_| ApiError::Unavailable)?;
+    let response = match stub.fetch_with_request(owner_request).await {
+        Ok(response) => response,
+        Err(_) => {
+            audit_game_transport_failure(env, &ingress).await?;
+            return Err(ApiError::Unavailable);
+        }
+    };
     if response.status_code() == 101 {
         if ingress.operation != GameAction::Stream {
             return Err(ApiError::Unavailable);
@@ -218,22 +223,35 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         return Ok(http.map(Body::new));
     }
     if response.status_code() != 200 {
+        audit_game_transport_failure(env, &ingress).await?;
         return Err(ApiError::Unavailable);
     }
-    let http: worker::HttpResponse = response.try_into().map_err(|_| ApiError::Unavailable)?;
-    let bytes = Zeroizing::new(
-        to_bytes(
-            Body::new(http.into_body()),
-            brews_contracts::games::GAME_FRAME_MAX_BYTES + super::game_wire::GAME_WIRE_MAX_BYTES,
-        )
-        .await
-        .map_err(|_| ApiError::Unavailable)?
-        .to_vec(),
-    );
-    let result = GameOwnerResponse::decode_json(&bytes).map_err(|_| ApiError::Unavailable)?;
-    result
-        .validate_for(&ingress)
-        .map_err(|_| ApiError::Unavailable)?;
+    let decoded = async {
+        let http: worker::HttpResponse = response.try_into().map_err(|_| ApiError::Unavailable)?;
+        let bytes = Zeroizing::new(
+            to_bytes(
+                Body::new(http.into_body()),
+                brews_contracts::games::GAME_FRAME_MAX_BYTES
+                    + super::game_wire::GAME_WIRE_MAX_BYTES,
+            )
+            .await
+            .map_err(|_| ApiError::Unavailable)?
+            .to_vec(),
+        );
+        let result = GameOwnerResponse::decode_json(&bytes).map_err(|_| ApiError::Unavailable)?;
+        result
+            .validate_for(&ingress)
+            .map_err(|_| ApiError::Unavailable)?;
+        Ok::<_, ApiError>(result)
+    }
+    .await;
+    let result = match decoded {
+        Ok(result) => result,
+        Err(error) => {
+            audit_game_transport_failure(env, &ingress).await?;
+            return Err(error);
+        }
+    };
     match &result {
         GameOwnerResponse::Operator { response, .. } => {
             if let Some(failure) =
@@ -700,6 +718,16 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
         }
     }
 }
+async fn audit_game_transport_failure(env: &Env, ingress: &GameIngress) -> Result<(), ApiError> {
+    if let Some(purpose) = super::game_object::privileged_purpose(ingress)
+        && let Some(game) = ingress.game_id
+        && let Some(token) = ingress.session_token.as_deref()
+    {
+        super::operator_runtime::audit_failed_transport(env, (game, purpose, token.to_owned()))
+            .await?;
+    }
+    Ok(())
+}
 fn same_receipt(
     first: &brews_contracts::games::GameReceipt,
     second: &brews_contracts::games::GameReceipt,
@@ -839,6 +867,7 @@ async fn fence_recovery_output(
     let game = ingress.game_id.ok_or(ApiError::Unavailable)?;
     let request = super::discovery::wire::DiscoveryOwnerRequest {
         game_id: game,
+        phase: super::discovery::wire::DiscoveryReadPhase::Recut,
         action: if ingress.view == Some(super::game_wire::ViewSelector::Account) {
             super::discovery::wire::DiscoveryAction::Account {
                 token: game_peers::SecretToken::new(

@@ -6,11 +6,14 @@ use crate::{
 use brews_contracts::management::{
     AuditActor, AuditOperation, AuditOutcome, AuditTarget, ManagementCommand,
 };
-pub(super) fn action(command: &ManagementCommand) -> (AuditOperation, AuditTarget) {
-    match command {
+pub(super) fn action(
+    command: &ManagementCommand,
+) -> Result<(AuditOperation, AuditTarget), ManagementError> {
+    Ok(match command {
         ManagementCommand::ListAccounts { .. } => {
             (AuditOperation::ListAccounts, AuditTarget::AccountsOwner)
         }
+        ManagementCommand::ListGameAudit { .. } => return Err(ManagementError::InvalidInput),
         ManagementCommand::ListAudit { .. } => {
             (AuditOperation::ListAudit, AuditTarget::AccountsOwner)
         }
@@ -41,7 +44,7 @@ pub(super) fn action(command: &ManagementCommand) -> (AuditOperation, AuditTarge
             AuditOperation::EnableAccount,
             AuditTarget::Account(*account_id),
         ),
-    }
+    })
 }
 impl<D: Database, R: Runtime> AuthService<'_, D, R> {
     pub(super) fn management_actor_hint(
@@ -70,7 +73,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         operation: impl FnOnce(AuditActor) -> Result<T, ManagementError>,
     ) -> Result<T, ManagementError> {
         let hint = std::cell::Cell::new(None);
-        let (audit_operation, target) = action(command);
+        let (audit_operation, target) = action(command)?;
         let result = self.management_transaction(|| {
             hint.set(self.management_actor_hint(principal)?);
             let result = self.management_actor(principal).and_then(operation);

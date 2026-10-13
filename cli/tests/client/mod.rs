@@ -962,3 +962,38 @@ fn real_tls_client_sends_authenticated_read_without_browser_headers() {
     assert_eq!(payload["operation"], "list_accounts");
     assert_eq!(server.connections(), 1);
 }
+
+#[test]
+fn game_audit_cli_real_tls_has_exact_target_no_browser_headers_and_checks_closed_response() {
+    let game = "01890f3e-53b7-7d28-9b05-4f65092d5711";
+    let prepared =
+        crate::args::Cli::try_parse_from(["brews", "audit", "game", game, "--limit", "1"])
+            .unwrap()
+            .prepare()
+            .unwrap();
+    for (body, valid) in [
+        (format!(r#"{{"result":"game_audit","game_id":"{game}","events":[],"next_cursor":null}}"#),true),
+        (r#"{"result":"game_audit","game_id":"01890f3e-53b7-7d28-9b05-4f65092d5712","events":[],"next_cursor":null}"#.to_string(),false),
+        (format!(
+            r#"{{"result":"game_audit","game_id":"{game}","events":[],"next_cursor":"{game}"}}"#
+        ),false),
+        (format!(r#"{{"result":"game_audit","game_id":"{game}","events":[{{"audit_id":"{game}","actor":"developer_cli","target_game_id":"{game}","operation":"list_game_audit","outcome":"succeeded","occurred_at":1,"expires_at":7776000001}}],"next_cursor":null}}"#),false),
+    ] {
+        let server = Server::start(200, "", body.into_bytes(), Duration::ZERO);
+        let result = ManagementClient::new(&server.config)
+            .unwrap()
+            .execute(&prepared);
+        assert_eq!(result.is_ok(), valid);
+        let request = server.request();
+        let headers = request.headers.to_ascii_lowercase();
+        assert!(
+            !headers.contains("cookie:")
+                && !headers.contains("origin:")
+                && !headers.contains("idempotency-key:")
+        );
+        let payload: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
+        assert_eq!(payload["operation"], "list_game_audit");
+        assert_eq!(payload["game_id"], game);
+        assert_eq!(server.connections(), 1);
+    }
+}

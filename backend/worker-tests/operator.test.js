@@ -75,7 +75,7 @@ test("operator privileged audit actual actor once success failure rollback and f
  const discovery=await targets(f,a.session);expect(discovery.status).toBe(200);
  let audits=(await rows(f)).audits;expect(audits).toHaveLength(3);expect(audits.filter(a=>a.operation==="configuration"&&a.outcome==="succeeded")).toHaveLength(1);for(const event of audits){expect(event.actor_account_id).toBe(a.accountId);expect(event.target_game_id).toBe(f.id);expect(event.expires_at-event.occurred_at).toBe(7776000000);expect(Object.keys(event).sort()).toEqual(["actor_account_id","audit_id","expires_at","occurred_at","operation","outcome","target_game_id"]);}
  await runInDurableObject(owner(f.id),(_,state)=>state.storage.sql.exec("CREATE TRIGGER block_audit BEFORE INSERT ON game_admin_audit BEGIN SELECT RAISE(IGNORE); END"));
- expect((await patch(f,{expected_revision:1,player_capacity:4},{session:a.session})).status).toBe(503);expect((await sync(f,a.session)).snapshot.configuration.player_capacity).toBe(3);
+ expect((await patch(f,{expected_revision:1,player_capacity:4},{session:a.session})).status).toBe(503);expect((await exports.default.fetch(`${origin}/api/games/${f.id}/sync?view=account`,{headers:{Cookie:a.session}})).status).toBe(503);expect((await sync(f,f.host.session)).snapshot.configuration.player_capacity).toBe(3);
  await runInDurableObject(owner(f.id),(_,state)=>state.storage.sql.exec("DROP TRIGGER block_audit"));
  const cancelled=await post(`/api/games/${f.id}/cancel`,{confirmed:true,expected_state:"new"},{session:f.host.session});expect(cancelled.status).toBe(200);expect((await rows(f)).audits).toHaveLength(3);
  expect((await post(`/api/games/${f.id}/resume`,{}, {session:a.session})).status).toBe(404);

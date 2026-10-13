@@ -10,7 +10,12 @@ impl GameObject {
         request: HistoryOwnerRequest,
     ) -> worker::Result<worker::Response> {
         let game_id = request.game_id;
-        let result = async {
+        let identified_role = std::cell::Cell::new(None);
+        let needs_capture = std::cell::Cell::new(true);
+        let mut result = async {
+            if !self.owns_game(game_id)? {
+                return Err(GameError::Storage);
+            }
             let db = self.database()?;
             let service = self.service(&db, &WorkerRuntime)?;
             let proof = game_peers::authorize_account(&self.env, request.token.as_str())
@@ -19,12 +24,20 @@ impl GameObject {
                     game_peers::GamePeerError::Unauthorized => GameError::Unauthorized,
                     _ => GameError::Storage,
                 })?;
+            identified_role.set(Some(proof.role()));
             let observed = service.history(proof, game_id);
-            self.state
-                .storage()
-                .sync()
-                .await
-                .map_err(|_| GameError::Storage)?;
+            if identified_role.get() == Some(brews_domain::accounts::AccountRole::Admin) {
+                self.persist(&service, &db).await?;
+            } else {
+                self.state
+                    .storage()
+                    .sync()
+                    .await
+                    .map_err(|_| GameError::Storage)?;
+            }
+            if observed.is_err() {
+                needs_capture.set(false);
+            }
             observed?;
             let current = game_peers::authorize_account(&self.env, request.token.as_str())
                 .await
@@ -54,6 +67,32 @@ impl GameObject {
             })
         }
         .await;
+        if let Err(error) = &result
+            && error.is_execution_failure()
+            && needs_capture.get()
+            && identified_role.get() != Some(brews_domain::accounts::AccountRole::Host)
+        {
+            let captured = async {
+                if !self.owns_game(game_id)? {
+                    return Err(GameError::Storage);
+                }
+                let db = self.database()?;
+                let service = self.service(&db, &WorkerRuntime)?;
+                service.bind_operator_game_identity(game_id)?;
+                self.capture_operator_peer_error(
+                    &service,
+                    &db,
+                    request.token.as_str(),
+                    crate::db::game::OperatorPurpose::HistoryRead,
+                    *error,
+                )
+                .await
+            }
+            .await;
+            if captured.is_err() {
+                result = Err(GameError::Storage);
+            }
+        }
         let outcome = result.unwrap_or_else(|e| match e {
             GameError::NotFound | GameError::Expired => HistoryOwnerOutcome::NotFound {},
             GameError::Unauthorized => HistoryOwnerOutcome::Unauthorized {},

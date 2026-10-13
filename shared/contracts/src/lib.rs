@@ -39,3 +39,5 @@ pub struct SessionView {
     pub account_id: AccountId,
     pub role: AccountRole,
 }
+
+pub mod game_audit;

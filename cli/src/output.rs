@@ -48,6 +48,10 @@ pub(crate) fn write_response(
             ManagementResponse::Audit { events, .. } => {
                 writeln!(sink, "{} audit events", events.len()).map_err(|_| CliError::Output)?
             }
+            ManagementResponse::GameAudit { events, .. } => {
+                writeln!(sink, "{} game audit events", events.len())
+                    .map_err(|_| CliError::Output)?;
+            }
             ManagementResponse::Pending { .. } => {
                 writeln!(sink, "Removal is pending, NOT complete.").map_err(|_| CliError::Output)?
             }

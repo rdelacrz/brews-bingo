@@ -80,7 +80,48 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         reservation_matches: bool,
         observed: &[ConnectionGrant],
     ) -> Result<DiscoveryCut, GameError> {
-        self.db
+        self.read_discovery(
+            game_id,
+            viewer,
+            published_code,
+            reservation_matches,
+            observed,
+            true,
+        )
+    }
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn discovery_for_response(
+        &self,
+        game_id: GameId,
+        viewer: DiscoveryViewer<'_>,
+        published_code: Option<&GameCode>,
+        reservation_matches: bool,
+        observed: &[ConnectionGrant],
+    ) -> Result<DiscoveryCut, GameError> {
+        self.read_discovery(
+            game_id,
+            viewer,
+            published_code,
+            reservation_matches,
+            observed,
+            false,
+        )
+    }
+    fn read_discovery(
+        &self,
+        game_id: GameId,
+        viewer: DiscoveryViewer<'_>,
+        published_code: Option<&GameCode>,
+        reservation_matches: bool,
+        observed: &[ConnectionGrant],
+        capture: bool,
+    ) -> Result<DiscoveryCut, GameError> {
+        let account = match viewer {
+            DiscoveryViewer::Summary(a) | DiscoveryViewer::Account(a) => Some(a),
+            _ => None,
+        };
+        let outcome = self
+            .db
             .transaction(|| {
                 validate_schema(self.db)?;
                 let now = self.discovery_clock().map_err(|_| StorageError)?;
@@ -274,12 +315,34 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                         cut
                     }),
                 };
+                let result = if capture && let Some(account) = account {
+                    self.capture_operator_result(
+                        account,
+                        game_id,
+                        super::OperatorPurpose::DiscoveryRead,
+                        result,
+                        now,
+                    )
+                } else {
+                    result
+                };
                 match result {
                     Err(GameError::Storage) => Err(StorageError),
                     result => Ok(result),
                 }
             })
-            .map_err(|_| GameError::Storage)?
+            .map_err(|_| GameError::Storage)
+            .and_then(|result| result);
+        if capture
+            && outcome
+                .as_ref()
+                .err()
+                .is_some_and(|error| error.is_execution_failure())
+            && let Some(account) = account
+        {
+            self.capture_operator_failure(account, super::OperatorPurpose::DiscoveryRead)?;
+        }
+        outcome
     }
     pub(super) fn discovery_clock(&self) -> Result<i64, GameError> {
         let rows = self.db.query(

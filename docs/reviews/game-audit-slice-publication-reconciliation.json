@@ -1,0 +1,73 @@
+{
+  "kind": "slice8_authorized_prepublication_reconciliation",
+  "recorded_at_utc": "2026-10-13T04:52:31.372437+00:00",
+  "baseline_commit": "61b4e657af6c89491824a33b718c8f2fa38664b1",
+  "review_snapshot_sha256": "ba1a7cf017fb968f329024ece846a55d8d423acb3bfdbbf32d49c5b1b17ef146",
+  "evidence_snapshot_sha256": "be53da89863040833fce9c33431c5200ddec40cf14d8056799e25575d7d0a16b",
+  "publication_delta": {
+    "backend/worker-tests/game_audit_repairs.test.js": {
+      "reviewed_sha256": "ea17675e6c448e9bf0935e27cfb50cde075f56d78cb9da01054c6d107ceac38f",
+      "publication_sha256": "52a089e35bbc6821cca666686dac29f144ca909786746806b93f8db583ccab6e",
+      "change": "Removed only one trailing blank line; all original assertion bytes retained"
+    }
+  },
+  "production_source_schema_worker_artifacts": "exactly_match_review_snapshot",
+  "graph_source_hashes": "242 sources match review except the declared whitespace-only test delta",
+  "graph_artifact_sha256": {
+    "graphify-out/code/GRAPH_REPORT.md": "4b1d5ed13ed0f1e85727438c53bd9b3b45fc853f22a5b8aefadefad50019ccd5",
+    "graphify-out/code/graph.html": "0a31da55a9c1df62d992fe513257287dc06fd946d2efe05c48b07eabed811ff5",
+    "graphify-out/code/graph.json": "2399f14fb686ff2ef7f2008f49226367ce84b175269a3b7115fd5ce962d88cbf",
+    "graphify-out/code/manifest.json": "49738a0bc16efb8348d6a3b11842022cfd1abd894dfa2c69e0fbfded2812e71c",
+    "graphify-out/code/structural-extraction.json": "9274e7b1a68bdd07ebd94e16ce3bab7a6a3efc18424cfaa06b31dfdda8286b67"
+  },
+  "focused_publication_rerun": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "result_sha256": "35e4e7762b70e7aa28730f80cee2ffa946e92b321dca0da942d7334fb79cd3a3",
+    "log_sha256": "fffafe3176d07165deef187d9d5c220bf20f8bfb835bed37af84701a14fcbc28",
+    "case_names": [
+      "independent actual GET account stream missing-game durably captures outcome",
+      "independent actual GET account stream native-registry durably captures outcome",
+      "independent actual GET account stream storage-sync durably captures outcome",
+      "independent actual GET account stream register-authority durably captures outcome",
+      "independent already-identified Admin history receiving-edge Accounts recut failure retains Failed audit",
+      "independent already-identified Admin discovery receiving-edge Accounts recut failure retains Failed audit",
+      "independent existing owner configuration transient Accounts failure gets freshly captured",
+      "independent existing owner resume transient Accounts failure gets freshly captured",
+      "independent existing owner game-read transient Accounts failure gets freshly captured",
+      "independent pre-owner transient Accounts failure for targeted history is freshly capturable",
+      "independent pre-owner transient Accounts failure for targeted discovery is freshly capturable",
+      "independent edge audit observed clock rejects future-occurrence",
+      "independent edge audit observed clock rejects negative-clock",
+      "independent edge audit observed clock rejects nan-clock",
+      "independent edge audit observed clock rejects unsafe-clock",
+      "empty audit page rejects negative-clock at receiving edge",
+      "empty audit page rejects nan-clock at receiving edge",
+      "empty audit page rejects unsafe-clock at receiving edge",
+      "two private discovery invocations retain exactly one logical Admin Success",
+      "account successor IGNORE failure fences its native socket and retains predecessor",
+      "account successor ABORT failure fences its native socket and retains predecessor",
+      "account successor sdk failure fences its native socket and retains predecessor",
+      "account successor sdk-after-accept failure fences its native socket and retains predecessor",
+      "account Stream one-shot registry error records one fresh Failed and no Success",
+      "targeted history transient authority fault never recreates a disabled Admin",
+      "targeted discovery transient authority fault never recreates a disabled Admin",
+      "discovery continuation preserves independent authenticated denials with one verified Success",
+      "missing History Admin rejection is durable and scheduled through audit-only reconstruction",
+      "sequential host account replacement preserves successor and frame delivery ACK=false",
+      "sequential host account replacement preserves successor and frame delivery ACK=true",
+      "sequential admin account replacement preserves successor and frame delivery ACK=false",
+      "sequential admin account replacement preserves successor and frame delivery ACK=true"
+    ]
+  },
+  "integrated_results": "Immutable review reports 956 native/profile, 12 doctests, 711 Workerd and 373 TLS; not relabeled as full reruns after whitespace-only edit",
+  "open_acceptance": [
+    "RUNTIME-FINAL-01",
+    "Slice2 final review",
+    "Slice6/7 acceptance",
+    "Slice9 production gates"
+  ],
+  "deployment": "none",
+  "remote_readback": "Recorded separately after successful push; this is the prepublication verification record"
+}

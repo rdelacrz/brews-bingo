@@ -557,7 +557,20 @@ impl GameObject {
         let rt = WorkerRuntime;
         let service = self.service(&db, &rt)?;
         service.bind_operator_game_identity(request.selection.game_id)?;
-        let actor = self.read_account(&service, request).await?;
+        let actor = match self.read_account(&service, request).await {
+            Ok(actor) => actor,
+            Err(error) => {
+                self.capture_operator_peer_error(
+                    &service,
+                    &db,
+                    &request.token,
+                    read_purpose(request.selection.kind),
+                    error,
+                )
+                .await?;
+                return Err(error);
+            }
+        };
         let initial = self
             .capture_passive_read(&service, request, actor.as_ref(), true)
             .await;
@@ -606,7 +619,7 @@ impl GameObject {
         error: GameError,
     ) -> Result<(), GameError> {
         if let Some(a) = actor {
-            if error == GameError::Storage {
+            if error.is_execution_failure() {
                 service.capture_operator_failure(a, read_purpose(request.selection.kind))?;
             } else {
                 service.capture_operator_rejection(a, read_purpose(request.selection.kind))?;
@@ -720,7 +733,7 @@ impl GameObject {
                 let (checked_at, valid_until, code) = match result {
                     Ok((t, d)) => (t, d, None),
                     Err(e) => {
-                        if matches!(e, GameError::Storage | GameError::RandomUnavailable) {
+                        if e.is_execution_failure() {
                             return worker::Response::error("read cut unavailable", 503);
                         }
                         let db = self.database().map_err(|_| {

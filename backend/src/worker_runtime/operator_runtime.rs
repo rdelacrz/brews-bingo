@@ -55,9 +55,35 @@ pub(super) struct OperatorTransportRejectionReply {
     #[serde(deserialize_with = "operator_peers::decode_challenge")]
     challenge: operator_peers::OperatorChallenge,
 }
+#[derive(Clone, Copy)]
+pub(super) enum TransportAuditOutcome {
+    Rejected,
+    Failed,
+}
+impl TransportAuditOutcome {
+    fn path(self) -> &'static str {
+        match self {
+            Self::Rejected => "/operator-transport-rejection",
+            Self::Failed => "/operator-transport-failure",
+        }
+    }
+}
+pub(super) async fn audit_failed_transport(
+    env: &worker::Env,
+    context: (brews_domain::ids::GameId, OperatorPurpose, String),
+) -> Result<(), crate::api::ApiError> {
+    audit_transport(env, context, TransportAuditOutcome::Failed).await
+}
 pub(super) async fn audit_rejected_transport(
     env: &worker::Env,
     context: (brews_domain::ids::GameId, OperatorPurpose, String),
+) -> Result<(), crate::api::ApiError> {
+    audit_transport(env, context, TransportAuditOutcome::Rejected).await
+}
+async fn audit_transport(
+    env: &worker::Env,
+    context: (brews_domain::ids::GameId, OperatorPurpose, String),
+    outcome: TransportAuditOutcome,
 ) -> Result<(), crate::api::ApiError> {
     let (game_id, purpose, token) = context;
     let token = zeroize::Zeroizing::new(token);
@@ -72,7 +98,7 @@ pub(super) async fn audit_rejected_transport(
         env,
         "GAMES",
         &game_id.to_string(),
-        "/operator-transport-rejection",
+        outcome.path(),
         &request,
         game_peers::GAME_PEER_MAX_BYTES,
     )
@@ -200,9 +226,10 @@ impl GameObject {
             }
         }
     }
-    pub(super) async fn execute_operator_transport_rejection(
+    pub(super) async fn execute_operator_transport_capture(
         &self,
         request: worker::Request,
+        outcome: TransportAuditOutcome,
     ) -> worker::Result<worker::Response> {
         let http: worker::HttpRequest = request.try_into()?;
         let bytes = zeroize::Zeroizing::new(
@@ -237,10 +264,15 @@ impl GameObject {
             .await
         {
             Ok(actor) => {
-                if service
-                    .capture_operator_rejection(&actor, request.purpose)
-                    .is_err()
-                {
+                let result = match outcome {
+                    TransportAuditOutcome::Rejected => {
+                        service.capture_operator_rejection(&actor, request.purpose)
+                    }
+                    TransportAuditOutcome::Failed => {
+                        service.capture_operator_failure(&actor, request.purpose)
+                    }
+                };
+                if result.is_err() {
                     return worker::Response::error("operator audit unavailable", 503);
                 }
             }
@@ -313,7 +345,7 @@ impl GameObject {
         }
         result
     }
-    async fn capture_operator_peer_error(
+    pub(super) async fn capture_operator_peer_error(
         &self,
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         db: &OwnerDatabase,
@@ -321,10 +353,16 @@ impl GameObject {
         purpose: OperatorPurpose,
         error: GameError,
     ) -> Result<(), GameError> {
+        // An already durable authority-expiry denial needs no new actor check.
+        if matches!(error, GameError::Unauthorized | GameError::Expired) {
+            return Ok(());
+        }
         // Only a fresh authenticated actor supplies audit attribution. If the
         // authority owner cannot accept that check, protected output stays denied.
-        if let Ok(actor) = self.authorize_operator_account(service, token).await {
-            if error == GameError::Storage {
+        if let Ok(actor) = self.authorize_operator_account(service, token).await
+            && actor.role() == brews_domain::accounts::AccountRole::Admin
+        {
+            if error.is_execution_failure() {
                 service.capture_operator_failure(&actor, purpose)?;
             } else {
                 service.capture_operator_rejection(&actor, purpose)?;
@@ -344,10 +382,22 @@ impl GameObject {
             .session_token
             .as_deref()
             .ok_or(GameError::Unauthorized)?;
-        let authority = self
-            .authorize_operator_account(service, token)
-            .await
-            .map_err(peer_error)?;
+        let authority = match self.authorize_operator_account(service, token).await {
+            Ok(authority) => authority,
+            Err(error) => {
+                let error = peer_error(error);
+                let purpose = match ingress.operation {
+                    GameAction::Configuration => OperatorPurpose::Configuration,
+                    GameAction::Resume => OperatorPurpose::Resume,
+                    GameAction::HostTransfer => OperatorPurpose::HostTransfer,
+                    GameAction::HostTransferTargets => OperatorPurpose::HostTransferTargets,
+                    _ => return Err(GameError::InvalidInput),
+                };
+                self.capture_operator_peer_error(service, db, token, purpose, error)
+                    .await?;
+                return Err(error);
+            }
+        };
         match (
             ingress.operation,
             ingress.payload().map_err(|_| GameError::InvalidInput)?,

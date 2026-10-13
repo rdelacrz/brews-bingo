@@ -10,7 +10,7 @@ mod operator;
     )
 )]
 mod reads;
-pub(crate) use operator::OperatorAuditOutcome;
+pub(crate) use operator::{DEVELOPER_CLI_ACTOR_KEY, OperatorAuditOutcome};
 pub use operator::{OperatorPurpose, TransferPreparation};
 #[cfg(target_arch = "wasm32")]
 pub(crate) use operator::{patch_fingerprint, transfer_fingerprint};
@@ -294,124 +294,137 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         authority: GameAccountAuthority,
         config: &GameConfiguration,
     ) -> Result<CreationResult, GameError> {
-        let fp = crate::game::creation_fingerprint(config)?;
-        self.tx(|now| {
-            authorize(&authority, now)?;
-            if authority.account_id() != work.account_id() {
-                return Err(GameError::Forbidden);
-            }
-            if fp != work.fingerprint() {
-                return Err(GameError::Conflict);
-            }
-            let existing = self.record_optional()?;
-            let ready = CreationReadyProof::new(
-                work.game_id(),
-                work.account_id(),
-                work.command_id(),
-                fp,
-                work.created_at(),
-                SourceRevision::INITIAL,
-            );
-            if let Some(record) = existing {
-                if record.id != work.game_id()
-                    || record.creator != work.account_id()
-                    || record.creation_command != work.command_id()
-                    || record.fp != fp
-                    || record.created != work.created_at()
-                {
-                    return Err(GameError::Conflict);
-                }
-                if record.state == GameState::Cancelled {
-                    return Err(GameError::Expired);
-                }
-                let receipt = self
-                    .receipt(
+        self.operator_target_attempt(
+            &authority,
+            OperatorPurpose::Creation,
+            Some(work.game_id()),
+            |now| {
+                let result = (|| {
+                    let fp = crate::game::creation_fingerprint(config)?;
+                    authorize(&authority, now)?;
+                    if authority.account_id() != work.account_id() {
+                        return Err(GameError::Forbidden);
+                    }
+                    if fp != work.fingerprint() {
+                        return Err(GameError::Conflict);
+                    }
+                    let existing = self.record_optional()?;
+                    let ready = CreationReadyProof::new(
+                        work.game_id(),
+                        work.account_id(),
+                        work.command_id(),
+                        fp,
+                        work.created_at(),
+                        SourceRevision::INITIAL,
+                    );
+                    if let Some(record) = existing {
+                        if record.id != work.game_id()
+                            || record.creator != work.account_id()
+                            || record.creation_command != work.command_id()
+                            || record.fp != fp
+                            || record.created != work.created_at()
+                        {
+                            return Err(GameError::Conflict);
+                        }
+                        if record.state == GameState::Cancelled {
+                            return Err(GameError::Expired);
+                        }
+                        let receipt = self
+                            .receipt(
+                                &account_actor(work.account_id()),
+                                work.command_id(),
+                                *fp.digest(),
+                                now,
+                            )?
+                            .ok_or(GameError::StaleCommand)?;
+                        return Ok(CreationResult {
+                            ready,
+                            response: GameResponse::Committed { receipt },
+                        });
+                    }
+                    if now >= work.deadline() || work.created_at() > now {
+                        return Err(GameError::Expired);
+                    }
+                    self.admit(work.command_id(), now)?;
+                    let due = add_time(work.created_at(), HOST_IDLE_MS)?;
+                    self.db.execute(
+                        SQL_INSERT_GAME_RECORD,
+                        &[
+                            text(work.game_id()),
+                            text(work.account_id()),
+                            text(work.command_id()),
+                            SqlValue::Blob(fp.digest().to_vec()),
+                            text(work.account_id()),
+                            text(GameState::New),
+                            int(work.created_at()),
+                            int(work.created_at()),
+                            int(due),
+                        ],
+                    )?;
+                    self.db.execute(
+                        SQL_INSERT_GAME_CONFIGURATION,
+                        &[
+                            int(i64::from(config.numeric_upper_bound)),
+                            int(i64::from(config.board_side_length)),
+                            int(i64::from(config.free_cells_enabled)),
+                            int(i64::from(config.player_capacity)),
+                            int(i64::from(config.spectator_capacity)),
+                            text(config.winning_pattern),
+                        ],
+                    )?;
+                    for p in &config.free_cell_positions {
+                        self.db.execute(
+                            SQL_INSERT_GAME_FREE_CELLS,
+                            &[int(i64::from(p.row)), int(i64::from(p.column))],
+                        )?;
+                    }
+                    self.db
+                        .execute(SQL_INSERT_GAME_VIEW_REVISIONS, &[text(HOST_VIEW)])?;
+                    if self.view_revision(HOST_VIEW)? != 0 {
+                        return Err(GameError::Storage);
+                    }
+                    if self.operator_game_identity()?.is_none() {
+                        self.db.execute(
+                            "INSERT INTO game_operator_identity VALUES(1,?)",
+                            &[text(work.game_id())],
+                        )?;
+                    }
+                    if self.operator_game_identity()? != Some(work.game_id()) {
+                        return Err(GameError::Storage);
+                    }
+                    let receipt = self.store_receipt(
                         &account_actor(work.account_id()),
                         work.command_id(),
                         *fp.digest(),
+                        GameOutcome::Created {
+                            view_revision: 0,
+                            idle_cancel_due_at: due,
+                        },
+                        work.game_id(),
                         now,
-                    )?
-                    .ok_or(GameError::StaleCommand)?;
-                return Ok(CreationResult {
-                    ready,
-                    response: GameResponse::Committed { receipt },
-                });
-            }
-            if now >= work.deadline() || work.created_at() > now {
-                return Err(GameError::Expired);
-            }
-            self.admit(work.command_id(), now)?;
-            let due = add_time(work.created_at(), HOST_IDLE_MS)?;
-            self.db.execute(
-                SQL_INSERT_GAME_RECORD,
-                &[
-                    text(work.game_id()),
-                    text(work.account_id()),
-                    text(work.command_id()),
-                    SqlValue::Blob(fp.digest().to_vec()),
-                    text(work.account_id()),
-                    text(GameState::New),
-                    int(work.created_at()),
-                    int(work.created_at()),
-                    int(due),
-                ],
-            )?;
-            self.db.execute(
-                SQL_INSERT_GAME_CONFIGURATION,
-                &[
-                    int(i64::from(config.numeric_upper_bound)),
-                    int(i64::from(config.board_side_length)),
-                    int(i64::from(config.free_cells_enabled)),
-                    int(i64::from(config.player_capacity)),
-                    int(i64::from(config.spectator_capacity)),
-                    text(config.winning_pattern),
-                ],
-            )?;
-            for p in &config.free_cell_positions {
-                self.db.execute(
-                    SQL_INSERT_GAME_FREE_CELLS,
-                    &[int(i64::from(p.row)), int(i64::from(p.column))],
-                )?;
-            }
-            self.db
-                .execute(SQL_INSERT_GAME_VIEW_REVISIONS, &[text(HOST_VIEW)])?;
-            if self.view_revision(HOST_VIEW)? != 0 {
-                return Err(GameError::Storage);
-            }
-            self.db.execute(
-                "INSERT INTO game_operator_identity VALUES(1,?)",
-                &[text(work.game_id())],
-            )?;
-            if self.operator_game_identity()? != Some(work.game_id()) {
-                return Err(GameError::Storage);
-            }
-            let receipt = self.store_receipt(
-                &account_actor(work.account_id()),
-                work.command_id(),
-                *fp.digest(),
-                GameOutcome::Created {
-                    view_revision: 0,
-                    idle_cancel_due_at: due,
-                },
-                work.game_id(),
-                now,
-            )?;
-            let record = self.record()?;
-            if record.id != work.game_id()
-                || crate::game::creation_fingerprint(&self.configuration()?)? != fp
-            {
-                return Err(GameError::Storage);
-            }
-            Ok(CreationResult {
-                ready,
-                response: GameResponse::Created {
-                    game: record.summary(0),
-                    configuration: self.configuration()?,
-                    idle_cancel_due_at: due,
-                    receipt,
-                },
-            })
-        })
+                    )?;
+                    let record = self.record()?;
+                    if record.id != work.game_id()
+                        || crate::game::creation_fingerprint(&self.configuration()?)? != fp
+                    {
+                        return Err(GameError::Storage);
+                    }
+                    Ok(CreationResult {
+                        ready,
+                        response: GameResponse::Created {
+                            game: record.summary(0),
+                            configuration: self.configuration()?,
+                            idle_cancel_due_at: due,
+                            receipt,
+                        },
+                    })
+                })();
+                result.map(|value| {
+                    let fresh = !matches!(value.response, GameResponse::Committed { .. });
+                    (value, fresh)
+                })
+            },
+        )
     }
     #[cfg(any(test, target_arch = "wasm32"))]
     pub(crate) fn creation_ready(
@@ -449,52 +462,58 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         command: CommandId,
         expected: u64,
     ) -> Result<LobbyPreparation, GameError> {
-        let expected = revision(expected)?;
-        let fp = command_fingerprint(WorkKind::Lobby.tag(), expected);
-        self.tx(|now| {
-            let record = self.record()?;
-            authorize_mutation(&authority, &record, now)?;
-            let actor = account_actor(authority.account_id());
-            if let Some(pending) = self.command_work(&actor, command)? {
-                if pending.fingerprint != fp {
+        self.operator_attempt(&authority, OperatorPurpose::Lobby, |now| {
+            let result = (|| {
+                let expected = revision(expected)?;
+                let fp = command_fingerprint(WorkKind::Lobby.tag(), expected);
+                let record = self.record()?;
+                authorize_mutation(&authority, &record, now)?;
+                let actor = account_actor(authority.account_id());
+                if let Some(pending) = self.command_work(&actor, command)? {
+                    if pending.fingerprint != fp {
+                        return Err(GameError::Conflict);
+                    }
+                    if !self.host_transfer_work()?.is_empty() {
+                        return Err(GameError::Conflict);
+                    }
+                    return Ok(LobbyPreparation::Ready(pending));
+                }
+                if let Some(receipt) = self.receipt(&actor, command, fp, now)? {
+                    return Ok(LobbyPreparation::Committed(receipt));
+                }
+                self.admit(command, now)?;
+                if record.state != GameState::New {
                     return Err(GameError::Conflict);
                 }
-                if !self.host_transfer_work()?.is_empty() {
+                if self.view_revision(HOST_VIEW)? != expected {
+                    return Err(GameError::StaleRevision);
+                }
+                ensure_before_idle(&record, now)?;
+                if !self.all_work(1)?.is_empty() || !self.host_transfer_work()?.is_empty() {
                     return Err(GameError::Conflict);
                 }
-                return Ok(LobbyPreparation::Ready(pending));
-            }
-            if let Some(receipt) = self.receipt(&actor, command, fp, now)? {
-                return Ok(LobbyPreparation::Committed(receipt));
-            }
-            self.admit(command, now)?;
-            if record.state != GameState::New {
-                return Err(GameError::Conflict);
-            }
-            if self.view_revision(HOST_VIEW)? != expected {
-                return Err(GameError::StaleRevision);
-            }
-            ensure_before_idle(&record, now)?;
-            if !self.all_work(1)?.is_empty() || !self.host_transfer_work()?.is_empty() {
-                return Err(GameError::Conflict);
-            }
-            let work = PendingWork {
-                operation: make_id(self.runtime, now)?
-                    .try_into()
-                    .map_err(|_| GameError::Storage)?,
-                kind: WorkKind::Lobby,
-                phase: WorkPhase::Prepared,
-                actor,
-                command,
-                fingerprint: fp,
-                expected,
-                fence: record.revision,
-                created: now,
-                next: add_time(now, crate::game::RETRY_INITIAL_MS)?,
-                attempts: 0,
-            };
-            self.insert_work(&work)?;
-            Ok(LobbyPreparation::Ready(work))
+                let work = PendingWork {
+                    operation: make_id(self.runtime, now)?
+                        .try_into()
+                        .map_err(|_| GameError::Storage)?,
+                    kind: WorkKind::Lobby,
+                    phase: WorkPhase::Prepared,
+                    actor,
+                    command,
+                    fingerprint: fp,
+                    expected,
+                    fence: record.revision,
+                    created: now,
+                    next: add_time(now, crate::game::RETRY_INITIAL_MS)?,
+                    attempts: 0,
+                };
+                self.insert_work(&work)?;
+                Ok(LobbyPreparation::Ready(work))
+            })();
+            result.map(|value| {
+                let fresh = false;
+                (value, fresh)
+            })
         })
     }
     pub fn commit_lobby(
@@ -503,7 +522,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         authority: GameAccountAuthority,
         grant: &CodeGrant,
     ) -> Result<GameResponse, GameError> {
-        self.tx(|now| {
+        self.operator_attempt(&authority, OperatorPurpose::Lobby, |now| {
             let record = self.record()?;
             authorize_mutation(&authority, &record, now)?;
             if account_actor(authority.account_id()) != work.actor {
@@ -527,9 +546,12 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             }
             ensure_before_idle(&record, now)?;
             if current.phase == WorkPhase::AwaitingAcknowledgement {
-                return Ok(GameResponse::Pending {
-                    operation_id: current.operation,
-                });
+                return Ok((
+                    GameResponse::Pending {
+                        operation_id: current.operation,
+                    },
+                    false,
+                ));
             }
             if !self.host_transfer_work()?.is_empty()
                 || record.state != GameState::New
@@ -589,9 +611,12 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             {
                 return Err(GameError::Storage);
             }
-            Ok(GameResponse::Pending {
-                operation_id: current.operation,
-            })
+            Ok((
+                GameResponse::Pending {
+                    operation_id: current.operation,
+                },
+                true,
+            ))
         })
     }
     pub fn directory_projection(&self) -> Result<GameProjection, GameError> {
@@ -1356,14 +1381,20 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         authority: GameAccountAuthority,
         observed: &[ConnectionId],
     ) -> Result<GameView, GameError> {
-        self.tx(|now| {
-            authorize(&authority, now)?;
-            let r = self.record()?;
-            ensure_before_idle(&r, now)?;
-            self.enter_account(&authority, now)?;
-            self.reconcile_presence(observed, &r, now)?;
-            self.host_projection(&r, now)
-        })
+        self.tx(|now| self.account_view_at(&authority, observed, now))
+    }
+    fn account_view_at(
+        &self,
+        authority: &GameAccountAuthority,
+        observed: &[ConnectionId],
+        now: i64,
+    ) -> Result<GameView, GameError> {
+        authorize(authority, now)?;
+        let r = self.record()?;
+        ensure_before_idle(&r, now)?;
+        self.enter_account(authority, now)?;
+        self.reconcile_presence(observed, &r, now)?;
+        self.host_projection(&r, now)
     }
     fn enter_account(&self, a: &GameAccountAuthority, now: i64) -> Result<(), GameError> {
         let record = self.record()?;
@@ -1833,48 +1864,51 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         authority: GameAccountAuthority,
         connection: ConnectionId,
     ) -> Result<AccountConnectionGrant, GameError> {
-        self.tx(|now| {
-            authorize(&authority, now)?;
-            let r = self.record()?;
-            let anchor_exists = !self
-                .db
-                .query(
-                    SQL_SELECT_ACCOUNT_PREPARED_GRANT_DETAILS,
-                    &[text(authority.session_id()), text(ACCOUNT_KIND)],
-                )?
-                .is_empty();
-            self.reserve_connection_grants(
-                if anchor_exists { 1 } else { 2 },
-                Some((ACCOUNT_KIND, authority.session_id())),
-                now,
-            )?;
-            self.enter_account(&authority, now)?;
-            let grant = AccountConnectionGrant {
-                game: r.id,
-                session: authority.session_id(),
-                account: authority.account_id(),
-                connection,
-                epoch: authority.credential_epoch(),
-                expires: authority.expires_at(),
-            };
-            self.delete_prepared_connections(ACCOUNT_KIND, grant.session)?;
-            self.db.execute(
-                SQL_INSERT_GAME_CONNECTION_GRANTS,
-                &[
-                    text(connection),
-                    text(ACCOUNT_KIND),
-                    text(grant.session),
-                    text(grant.account),
-                    text(connection),
-                    int(grant.epoch),
-                    int(now),
-                    int(grant.expires),
-                ],
-            )?;
-            if !self.has_account_prepared(&grant)? {
-                return Err(GameError::Storage);
-            }
-            Ok(grant)
+        self.operator_attempt(&authority, OperatorPurpose::AccountStream, |now| {
+            let result = (|| {
+                authorize(&authority, now)?;
+                let r = self.record()?;
+                let anchor_exists = !self
+                    .db
+                    .query(
+                        SQL_SELECT_ACCOUNT_PREPARED_GRANT_DETAILS,
+                        &[text(authority.session_id()), text(ACCOUNT_KIND)],
+                    )?
+                    .is_empty();
+                self.reserve_connection_grants(
+                    if anchor_exists { 1 } else { 2 },
+                    Some((ACCOUNT_KIND, authority.session_id())),
+                    now,
+                )?;
+                self.enter_account(&authority, now)?;
+                let grant = AccountConnectionGrant {
+                    game: r.id,
+                    session: authority.session_id(),
+                    account: authority.account_id(),
+                    connection,
+                    epoch: authority.credential_epoch(),
+                    expires: authority.expires_at(),
+                };
+                self.delete_prepared_connections(ACCOUNT_KIND, grant.session)?;
+                self.db.execute(
+                    SQL_INSERT_GAME_CONNECTION_GRANTS,
+                    &[
+                        text(connection),
+                        text(ACCOUNT_KIND),
+                        text(grant.session),
+                        text(grant.account),
+                        text(connection),
+                        int(grant.epoch),
+                        int(now),
+                        int(grant.expires),
+                    ],
+                )?;
+                if !self.has_account_prepared(&grant)? {
+                    return Err(GameError::Storage);
+                }
+                Ok(grant)
+            })();
+            result.map(|value| (value, false))
         })
     }
     #[cfg(any(test, target_arch = "wasm32"))]
@@ -1896,36 +1930,41 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         grant: &AccountConnectionGrant,
         authority: GameAccountAuthority,
     ) -> Result<(), GameError> {
-        self.tx(|now| {
-            self.validate_account_grant(grant, &authority, now)?;
-            if self.current_account_connection(grant.session)?.as_ref() == Some(grant) {
-                return Ok(());
-            }
-            if !self.has_account_prepared(grant)? {
-                return Err(GameError::Unauthorized);
-            }
-            self.require_current_connection_capacity(ACCOUNT_KIND, grant.session, now)?;
-            self.db.execute(
-                SQL_INSERT_GAME_CURRENT_CONNECTIONS,
-                &[
-                    text(ACCOUNT_KIND),
-                    text(grant.session),
-                    text(grant.account),
-                    text(grant.connection),
-                    int(grant.epoch),
-                    int(grant.expires),
-                ],
-            )?;
-            if self.current_account_connection(grant.session)?.as_ref() != Some(grant) {
-                return Err(GameError::Storage);
-            }
-            self.db
-                .execute(SQL_DELETE_CONNECTION_GRANT_BY_ID, &[text(grant.connection)])?;
-            if self.has_account_prepared(grant)? {
-                return Err(GameError::Storage);
-            }
-            Ok(())
-        })
+        self.operator_target_attempt(
+            &authority,
+            OperatorPurpose::AccountStream,
+            Some(grant.game),
+            |now| {
+                self.validate_account_grant(grant, &authority, now)?;
+                if self.current_account_connection(grant.session)?.as_ref() == Some(grant) {
+                    return Ok(((), false));
+                }
+                if !self.has_account_prepared(grant)? {
+                    return Err(GameError::Unauthorized);
+                }
+                self.require_current_connection_capacity(ACCOUNT_KIND, grant.session, now)?;
+                self.db.execute(
+                    SQL_INSERT_GAME_CURRENT_CONNECTIONS,
+                    &[
+                        text(ACCOUNT_KIND),
+                        text(grant.session),
+                        text(grant.account),
+                        text(grant.connection),
+                        int(grant.epoch),
+                        int(grant.expires),
+                    ],
+                )?;
+                if self.current_account_connection(grant.session)?.as_ref() != Some(grant) {
+                    return Err(GameError::Storage);
+                }
+                self.db
+                    .execute(SQL_DELETE_CONNECTION_GRANT_BY_ID, &[text(grant.connection)])?;
+                if self.has_account_prepared(grant)? {
+                    return Err(GameError::Storage);
+                }
+                Ok(((), true))
+            },
+        )
     }
     pub fn account_connection_view(
         &self,
@@ -1983,7 +2022,7 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
             && number(r, 3)? == g.epoch
             && number(r, 4)? == g.expires)
     }
-    fn current_account_connection(
+    pub(crate) fn current_account_connection(
         &self,
         session: SessionId,
     ) -> Result<Option<AccountConnectionGrant>, GameError> {
@@ -2113,10 +2152,22 @@ impl<'a, D: Database, R: Runtime> GameService<'a, D, R> {
         known: Option<u64>,
         observed: &[ConnectionId],
     ) -> Result<brews_contracts::games::SyncResponse, GameError> {
+        self.operator_attempt(&authority, OperatorPurpose::AccountContext, |now| {
+            self.sync_account_at(&authority, known, observed, now)
+                .map(|response| (response, true))
+        })
+    }
+    fn sync_account_at(
+        &self,
+        authority: &GameAccountAuthority,
+        known: Option<u64>,
+        observed: &[ConnectionId],
+        now: i64,
+    ) -> Result<brews_contracts::games::SyncResponse, GameError> {
         if let Some(known) = known {
             revision(known)?;
         }
-        let view = self.account_view(authority, observed)?;
+        let view = self.account_view_at(authority, observed, now)?;
         let rev = view.view_revision();
         Ok(brews_contracts::games::SyncResponse {
             up_to_date: known == Some(rev),

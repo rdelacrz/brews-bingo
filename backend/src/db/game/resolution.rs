@@ -1,4 +1,5 @@
 //! Terminal commands commit immutable History, retire live state, and enqueue release.
+use super::OperatorPurpose;
 use super::{
     CELL_FREE, CELL_VALUE, Database, GameError, GameService, HOST_VIEW, JS_SAFE_INTEGER_MAX,
     PRESTART_PURGE, PendingWork, RETAINED_PLAYER_LIMIT, Record, Runtime, SYSTEM_ACTOR, SqlValue,
@@ -105,10 +106,10 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         player: PlayerId,
         expected_revision: u64,
     ) -> Result<GameResponse, GameError> {
-        let expected = revision(expected_revision)?;
-        let fingerprint =
-            terminal_fingerprint("winner", GameState::InProgress, Some(player), expected);
-        self.tx(|now| {
+        self.operator_response_attempt(&authority, OperatorPurpose::Winner, |now| {
+            let expected = revision(expected_revision)?;
+            let fingerprint =
+                terminal_fingerprint("winner", GameState::InProgress, Some(player), expected);
             let record = self.record()?;
             authorize_mutation(&authority, &record, now)?;
             let actor = account_actor(authority.account_id());
@@ -160,47 +161,47 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         expected_state: GameState,
         confirmed: bool,
     ) -> Result<GameResponse, GameError> {
-        if !confirmed
-            || !matches!(
-                expected_state,
-                GameState::New | GameState::AwaitingPlayers | GameState::InProgress
-            )
-        {
-            return Err(GameError::InvalidInput);
-        }
-        let fingerprint = terminal_fingerprint("cancel", expected_state, None, 0);
-        if expected_state == GameState::InProgress {
-            return self.tx(|now| {
-                let record = self.record()?;
-                authorize_mutation(&authority, &record, now)?;
-                let actor = account_actor(authority.account_id());
-                if self.command_work(&actor, command)?.is_some() {
-                    return Err(GameError::Conflict);
-                }
-                if let Some(receipt) = self.receipt(&actor, command, fingerprint, now)? {
-                    return Ok(GameResponse::Committed { receipt });
-                }
-                self.admit(command, now)?;
-                if record.state != GameState::InProgress {
-                    return Err(GameError::Conflict);
-                }
-                self.commit_terminal(
-                    &record,
-                    TerminalCommit {
-                        expected_host_revision: self.view_revision(HOST_VIEW)?,
-                        command,
-                        actor: &actor,
-                        fingerprint,
-                        expected_state: GameState::InProgress,
-                        state: GameState::Cancelled,
-                        selected_winner: None,
-                        initiated_by: authority.account_id(),
-                        now,
-                    },
+        self.operator_response_attempt(&authority, OperatorPurpose::Cancel, |now| {
+            if !confirmed
+                || !matches!(
+                    expected_state,
+                    GameState::New | GameState::AwaitingPlayers | GameState::InProgress
                 )
-            });
-        }
-        self.tx(|now| {
+            {
+                return Err(GameError::InvalidInput);
+            }
+            let fingerprint = terminal_fingerprint("cancel", expected_state, None, 0);
+            if expected_state == GameState::InProgress {
+                return (|| {
+                    let record = self.record()?;
+                    authorize_mutation(&authority, &record, now)?;
+                    let actor = account_actor(authority.account_id());
+                    if self.command_work(&actor, command)?.is_some() {
+                        return Err(GameError::Conflict);
+                    }
+                    if let Some(receipt) = self.receipt(&actor, command, fingerprint, now)? {
+                        return Ok(GameResponse::Committed { receipt });
+                    }
+                    self.admit(command, now)?;
+                    if record.state != GameState::InProgress {
+                        return Err(GameError::Conflict);
+                    }
+                    self.commit_terminal(
+                        &record,
+                        TerminalCommit {
+                            expected_host_revision: self.view_revision(HOST_VIEW)?,
+                            command,
+                            actor: &actor,
+                            fingerprint,
+                            expected_state: GameState::InProgress,
+                            state: GameState::Cancelled,
+                            selected_winner: None,
+                            initiated_by: authority.account_id(),
+                            now,
+                        },
+                    )
+                })();
+            }
             let record = self.record_optional()?.ok_or(GameError::NotFound)?;
             authorize_mutation(&authority, &record, now)?;
             let actor = account_actor(authority.account_id());

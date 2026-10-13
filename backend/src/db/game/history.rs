@@ -28,7 +28,8 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         game_id: GameId,
         observe: bool,
     ) -> Result<History, GameError> {
-        self.db
+        let outcome = self
+            .db
             .transaction(|| {
                 super::validate_schema(self.db)?;
                 let now = if observe {
@@ -107,12 +108,33 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                             .collect(),
                     })
                 })();
+                let result = if observe {
+                    self.capture_operator_result(
+                        &authority,
+                        game_id,
+                        super::OperatorPurpose::HistoryRead,
+                        result,
+                        now,
+                    )
+                } else {
+                    result
+                };
                 match result {
                     Err(GameError::Storage) => Err(StorageError),
                     result => Ok(result),
                 }
             })
-            .map_err(|_| GameError::Storage)?
+            .map_err(|_| GameError::Storage)
+            .and_then(|result| result);
+        if observe
+            && outcome
+                .as_ref()
+                .err()
+                .is_some_and(|error| error.is_execution_failure())
+        {
+            self.capture_operator_failure(&authority, super::OperatorPurpose::HistoryRead)?;
+        }
+        outcome
     }
     pub(super) fn fence_read_deadline(&self, now: i64) -> Result<(), GameError> {
         let rows = self.db.query(

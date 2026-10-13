@@ -177,7 +177,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         command: brews_domain::ids::CommandId,
     ) -> Result<brews_contracts::games::GameResponse, GameError> {
         let fingerprint = super::command_fingerprint("exit_account", 0);
-        self.tx(|now| {
+        self.operator_response_attempt(&authority, super::OperatorPurpose::AccountExit, |now| {
             super::authorize(&authority, now)?;
             let record = self.record()?;
             self.require_final_history(&record, now)?;

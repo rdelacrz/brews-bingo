@@ -87,7 +87,7 @@ impl<D: Database, R: Runtime> AuthService<'_, D, R> {
         }
         validate_receipt(&receipt)?;
         if brews_contracts::management::AuditOperation::from(receipt.operation)
-            != super::audit::action(command).0
+            != super::audit::action(command)?.0
         {
             return Err(ManagementError::Storage);
         }

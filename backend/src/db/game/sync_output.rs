@@ -119,7 +119,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         observed: &[ConnectionId],
     ) -> Result<(SyncResponse, i64), GameError> {
         let expires_at = authority.expires_at();
-        let response = self.sync_account(authority, known, observed)?;
+        let response = self.tx(|now| self.sync_account_at(&authority, known, observed, now))?;
         let record = self.record()?;
         let deadline = if matches!(record.state, GameState::Resolved | GameState::Cancelled) {
             expires_at.min(record.history_expires.ok_or(GameError::Storage)?)

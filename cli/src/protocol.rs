@@ -22,6 +22,34 @@ pub(crate) fn validate_response(
         (Command::GetAccount { account_id }, Response::Account { account }) => {
             *account_id == account.account_id
         }
+        (
+            Command::ListGameAudit {
+                game_id,
+                after,
+                limit,
+            },
+            Response::GameAudit {
+                game_id: actual,
+                events,
+                next_cursor,
+            },
+        ) => {
+            let observed = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_err(|_| CliError::Protocol)?
+                .as_millis();
+            brews_contracts::game_audit::validate_page(
+                *game_id,
+                *after,
+                *limit,
+                *actual,
+                events,
+                *next_cursor,
+            ) && events.iter().all(|event| {
+                u128::try_from(event.occurred_at).is_ok_and(|at| at <= observed)
+                    && u128::try_from(event.expires_at).is_ok_and(|at| at > observed)
+            })
+        }
         (Command::ListAudit { limit, .. }, Response::Audit { events, .. }) => {
             events.len() <= *limit as usize
                 && events
