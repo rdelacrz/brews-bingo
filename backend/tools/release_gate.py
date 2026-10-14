@@ -18,9 +18,31 @@ import threading
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "backend"
 LANES = ("native", "worker", "tls", "contract")
+SNAPSHOT_POLICY = "authorization_time_snapshot"
+SNAPSHOT_STATUS = "passed_authorization_time_snapshot"
+POLICY_DOCUMENT = "docs/plans/protected-response-policy.md"
+ACCEPTANCE_SUITE = "backend/worker-tests/protected_response_snapshot.test.js"
+HISTORICAL_INPUTS = {
+    "docs/reviews/evidence/command-lookup-final-return.test.js": "28cec08b858f5ca8ab0335007d8a1afcf3cbd63612ace70c5f21261f86875a11",
+    "docs/reviews/evidence/command-lookup-final-return.config.mjs": "fa946f6c1fcec6da2e54f1c207a1ebddd9d730489121adface64bb0ea99d3355",
+}
+ACCEPTANCE_CASES = frozenset(
+    [f"RUNTIME-FINAL-01 G4 recovery {timing} final cut" for timing in ("before", "after")]
+    + [f"RUNTIME-FINAL-01 dedicated {label} recovery {timing} final cut"
+       for timing in ("before", "after") for label in ("membership", "board", "privacy")]
+    + [f"RUNTIME-FINAL-01 {mutation} {timing} final cut content"
+       for timing in ("before", "after") for mutation in ("delete-answer", "rename")]
+    + [f"RUNTIME-FINAL-01 SQL authoritative account epoch invalidation {timing} final cut"
+       for timing in ("before", "after")]
+    + [f"RUNTIME-FINAL-01 cross-session final Exit {timing} final cut" for timing in ("before", "after")]
+    + ["RUNTIME-FINAL-01 original cap expiry after genuine final reply" + suffix
+       for suffix in ("", " with durable denial rollback")]
+    + [f"RUNTIME-FINAL-01 stale {path} challenge substitution is 503 and fresh revoked request is 401"
+       for path in ("/read", "/read-release")]
+)
 PRODUCTION_BLOCKERS = (
     "Slice2 final independent review",
-    "Slice6/7 protected-response acceptance and RUNTIME-FINAL-01 contract decision",
+    "Slice6/7 final independent review",
     "Actual deployed KDF memory/CPU/latency/concurrency and Unicode/clock/CSPRNG/SDK validation",
     "Owner-provided peak event/History forecast and maximum-legal-game per-owner load",
     "Current provider quotas and measured two-times headroom",
@@ -68,8 +90,11 @@ def source_hashes(root: Path) -> dict[str, str]:
     ).splitlines()
     selected = {p for p in names if (
         p in {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
+              "AGENTS.md", "docs/rust-best-practices.md", "docs/operations/cicd.md", POLICY_DOCUMENT,
               "docs/reviews/evidence/command-lookup-final-return.config.mjs",
               "docs/reviews/evidence/command-lookup-final-return.test.js"}
+        or p.startswith("docs/plans/") and Path(p).suffix == ".md"
+        or p.startswith(".github/") and Path(p).suffix in {".yml", ".yaml", ".json", ".toml", ".md", ".py", ".js", ".mjs"}
         or p.split("/")[0] in {"backend", "cli", "shared"}
         and Path(p).suffix in {".rs", ".py", ".js", ".mjs", ".toml", ".json", ".sql"}
     )}
@@ -263,6 +288,103 @@ def parse_contract(report: dict, exit_code: int) -> dict:
     raise GateError("Inconsistent protected-response result")
 
 
+def contract_inputs(root: Path = ROOT) -> dict[str, str]:
+    try:
+        policy = (root / POLICY_DOCUMENT).read_bytes()
+        acceptance = (root / ACCEPTANCE_SUITE).read_bytes()
+        historical = {name: digest((root / name).read_bytes()) for name in HISTORICAL_INPUTS}
+    except OSError as error:
+        raise GateError("Missing approved policy or contract release input") from error
+    if (b"RUNTIME-FINAL-01" not in policy or b"approved authorization-time snapshots" not in policy
+            or b"It may finish because it was authorized before revocation. Revocation blocks subsequent requests." not in policy
+            or not acceptance or historical != HISTORICAL_INPUTS):
+        raise GateError("Unapproved policy or changed historical probe input")
+    return {POLICY_DOCUMENT: digest(policy), ACCEPTANCE_SUITE: digest(acceptance), **historical}
+
+
+def parse_snapshot_acceptance(report: dict, exit_code: int) -> dict:
+    suites = report["testResults"]
+    if (type(exit_code) is not int or exit_code not in (0, 1) or len(suites) != 1
+            or Path(suites[0]["name"]).resolve() != ROOT / ACCEPTANCE_SUITE):
+        raise GateError("Abnormal or wrong-suite snapshot acceptance execution")
+    cases = suites[0]["assertionResults"]
+    names = [case["fullName"] for case in cases]
+    if len(names) != len(ACCEPTANCE_CASES) or len(set(names)) != len(names) or set(names) != ACCEPTANCE_CASES:
+        raise GateError("Snapshot acceptance case inventory is incomplete or duplicated")
+    if any(case["status"] not in ("passed", "failed") for case in cases):
+        raise GateError("Snapshot acceptance skipped or unfinished case")
+    passed = sum(case["status"] == "passed" for case in cases)
+    failed = len(cases) - passed
+    expected_counts = {"numTotalTestSuites": 1, "numPassedTestSuites": int(failed == 0),
+                       "numFailedTestSuites": int(failed != 0), "numPendingTestSuites": 0,
+                       "numTotalTests": len(ACCEPTANCE_CASES), "numPassedTests": passed,
+                       "numFailedTests": failed, "numPendingTests": 0}
+    if (any(type(report.get(key)) is not int or report[key] != value for key, value in expected_counts.items())
+            or any(type(report.get(key, 0)) is not int or report.get(key, 0) != 0
+                   for key in ("numRuntimeErrorTestSuites", "numTodoTests"))
+            or report.get("unhandledErrors", []) or type(report.get("success")) is not bool
+            or report["success"] != (failed == 0) or exit_code != int(failed != 0)
+            or suites[0]["status"] != ("failed" if failed else "passed")):
+        raise GateError("Snapshot acceptance reporter is inconsistent or contains runtime errors")
+    return {"status": SNAPSHOT_STATUS if not failed else "failed_authorization_time_snapshot",
+            "policy": SNAPSHOT_POLICY, "passed": passed, "failed": failed, "skipped": 0,
+            "physical_suites": 1, "raw_exit_code": exit_code,
+            "execution_scope": "contract_only_excluded_from_worker_lane",
+            "case_inventory": {str(ROOT / ACCEPTANCE_SUITE): [
+                {"case_id_sha256": digest(case["fullName"].encode()), "status": case["status"]}
+                for case in cases]}}
+
+
+def historical_observation(report: dict, exit_code: int) -> dict:
+    # Preserve the original physical assertion's parser/result without relabeling it.
+    if type(exit_code) is not int:
+        raise GateError("Historical exit code is not a physical process result")
+    physical = parse_contract(report, exit_code)
+    if exit_code == 1:
+        message = report["testResults"][0]["assertionResults"][0]["failureMessages"][0]
+        lines = message.strip().splitlines()
+        if (not lines or lines[0].strip() != "AssertionError: expected [ 401, 503 ] to include 200"
+                or not any(re.search(r"command-lookup-final-return\.test\.js:85:24\)?$", line.strip()) for line in lines[1:])
+                or any(line.strip() and not line.strip().startswith("at ") for line in lines[1:])):
+            raise GateError("Historical failure is not exactly the superseded assertion")
+    return {**physical, "raw_exit_code": exit_code, "superseded": True}
+
+
+def validate_snapshot_contract(result: dict) -> None:
+    """Reject stale tags or a summary that bypasses required physical inventories."""
+    inputs = contract_inputs()
+    if (result.get("policy") != SNAPSHOT_POLICY or result.get("release_input_sha256") != inputs
+            or result.get("status") not in (SNAPSHOT_STATUS, "failed_authorization_time_snapshot")
+            or result.get("execution_scope") != "contract_only_excluded_from_worker_lane"
+            or type(result.get("physical_suites")) is not int or result["physical_suites"] != 1
+            or type(result.get("skipped")) is not int or result["skipped"] != 0):
+        raise GateError("Missing or stale approved snapshot contract evidence")
+    cases = result.get("case_inventory", {}).get(str(ROOT / ACCEPTANCE_SUITE), [])
+    names = {digest(name.encode()) for name in ACCEPTANCE_CASES}
+    if (set(result.get("case_inventory", {})) != {str(ROOT / ACCEPTANCE_SUITE)}
+            or len(cases) != len(names) or {c.get("case_id_sha256") for c in cases} != names
+            or any(c.get("status") not in ("passed", "failed") for c in cases)):
+        raise GateError("Missing snapshot acceptance inventory")
+    passed = sum(c["status"] == "passed" for c in cases)
+    failed = len(cases) - passed
+    if (any(type(result.get(k)) is not int or result[k] != v
+            for k, v in {"passed": passed, "failed": failed, "raw_exit_code": int(failed != 0)}.items())
+            or result["status"] != (SNAPSHOT_STATUS if failed == 0 else "failed_authorization_time_snapshot")):
+        raise GateError("Snapshot acceptance summary counters are inconsistent")
+    historical = result.get("superseded_receiving_cut_probe")
+    allowed = (
+        {"status": "failed_acceptance_assertion", "finding": "RUNTIME-FINAL-01", "observed_returned_status": 200,
+         "passed": 0, "failed": 1, "skipped": 0, "raw_exit_code": 1, "superseded": True},
+        {"status": "passed_observation_not_contract_approval", "passed": 1, "failed": 0,
+         "skipped": 0, "raw_exit_code": 0, "superseded": True},
+    )
+    if (not isinstance(historical, dict) or historical not in allowed
+            or historical.get("superseded") is not True
+            or any(type(historical.get(key)) is not int for key in ("passed", "failed", "skipped", "raw_exit_code"))
+            or (historical["failed"] and type(historical.get("observed_returned_status")) is not int)):
+        raise GateError("Missing or invalid superseded historical observation")
+
+
 class Runner:
     def __init__(self, output: Path, deadline: int, shards: int):
         self.output, self.deadline, self.shards = output, deadline, shards
@@ -328,7 +450,7 @@ class Runner:
             config.write_text(f"import base from {json.dumps((BACKEND / 'vitest.config.js').as_uri())};\n"
                               f"export default {{ ...base, cacheDir: {json.dumps(str(self.output / f'cache-{index}'))} }};\n")
             _, text = self.command(f"worker-shard-{index}", [str(BACKEND / "node_modules/.bin/vitest"), "run", "--config", str(config),
-                                                            f"--shard={index}/{self.shards}", "--reporter=default", "--reporter=json"], BACKEND)
+                                                            f"--shard={index}/{self.shards}", "--exclude", "worker-tests/protected_response_snapshot.test.js", "--reporter=default", "--reporter=json"], BACKEND)
             return parse_worker(text), measurement_lines(text, "actual-local-Workerd")
         with ThreadPoolExecutor(max_workers=self.shards) as pool:
             try:
@@ -340,7 +462,8 @@ class Runner:
         measurements = [sample for _, samples in shards for sample in samples]
         if len(measurements) != 1:
             raise GateError("Workerd measurement did not execute exactly once")
-        expected = {str(p.resolve()) for p in (BACKEND / "worker-tests").rglob("*.test.js")}
+        expected = {str(p.resolve()) for p in (BACKEND / "worker-tests").rglob("*.test.js")
+                    if p.resolve() != ROOT / ACCEPTANCE_SUITE}
         self.require_artifacts()
         result = reconcile_workers(reports, expected)
         result["measurements"] = measurements[0]
@@ -357,11 +480,19 @@ class Runner:
         return {"check_count": sum(v["check_count"] for v in reports.values()), "reports": reports}
 
     def contract(self) -> dict:
+        inputs = contract_inputs()
         self.require_artifacts()
-        code, text = self.command("protected-response-contract", [str(BACKEND / "node_modules/.bin/vitest"), "run", "--config",
+        code, text = self.command("protected-response-snapshot-acceptance", [str(BACKEND / "node_modules/.bin/vitest"), "run",
+                                  "worker-tests/protected_response_snapshot.test.js", "--reporter=json"], BACKEND, required=False)
+        acceptance = parse_snapshot_acceptance(parse_worker(text), code)
+        self.require_artifacts()
+        code, text = self.command("superseded-receiving-cut-probe", [str(BACKEND / "node_modules/.bin/vitest"), "run", "--config",
                                   str(ROOT / "docs/reviews/evidence/command-lookup-final-return.config.mjs"), "--reporter=json"], BACKEND, required=False)
+        historical = historical_observation(parse_worker(text), code)
         self.require_artifacts()
-        return parse_contract(parse_worker(text), code)
+        result = {**acceptance, "release_input_sha256": inputs, "superseded_receiving_cut_probe": historical}
+        validate_snapshot_contract(result)
+        return result
 
 
 def run(args: argparse.Namespace) -> int:
@@ -387,8 +518,10 @@ def run(args: argparse.Namespace) -> int:
             runner.require_artifacts()
         for lane in lanes:
             report["lanes"][lane] = getattr(runner, lane)()
-            if lane == "contract" and report["lanes"][lane]["failed"]:
-                exit_code = 2
+            if lane == "contract":
+                validate_snapshot_contract(report["lanes"][lane])
+                if report["lanes"][lane]["failed"]:
+                    exit_code = 2
     except (GateError, KeyError, TypeError, ValueError, OSError) as error:
         # No external raw exception/error chain is part of the report.
         report["execution_error"] = type(error).__name__

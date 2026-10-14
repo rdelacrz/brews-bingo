@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/root/.hermes/installs/76f6e7e5145b5f39/environments/646d7396ddf549deab147496427855c8/venv/bin/python3",
+    "tests/game_audit_https_wss.py"
+  ],
+  "elapsed_wall_seconds": 20.020848447980825,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "41f84fdd9eec162d6b056b243e16d81d135a27f0449868cb9d0750578d6689e7",
+  "timed_out": false
+}

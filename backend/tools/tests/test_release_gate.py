@@ -1,5 +1,6 @@
 """Parser/unit fault tests; synthetic reporter fixtures are not execution evidence."""
 import argparse
+import copy
 
 import importlib.util
 import json
@@ -27,6 +28,31 @@ def worker(name="/fixture/a.test.js", case="unit fixture case"):
             "numFailedTests": 0, "numPendingTests": 0, "numRuntimeErrorTestSuites": 0,
             "testResults": [{"name": name, "status": "passed", "assertionResults": [
                 {"fullName": case, "status": "passed", "failureMessages": ["must not persist"]}]}]}
+
+
+def snapshot_report():
+    value = worker(str(gate.ROOT / gate.ACCEPTANCE_SUITE))
+    cases = [{"fullName": name, "status": "passed", "failureMessages": []} for name in sorted(gate.ACCEPTANCE_CASES)]
+    value["testResults"][0]["assertionResults"] = cases
+    value["numTotalTests"] = value["numPassedTests"] = len(cases)
+    return value
+
+
+def historical_report(failed=True):
+    name = "G4 shared RUNTIME-FINAL-01: actual recovery during final return must deny the old session"
+    value = worker(str(gate.ROOT / "docs/reviews/evidence/command-lookup-final-return.test.js"), name)
+    if failed:
+        value.update(success=False, numPassedTests=0, numFailedTests=1, numPassedTestSuites=0, numFailedTestSuites=1)
+        value["testResults"][0]["status"] = "failed"
+        value["testResults"][0]["assertionResults"][0].update(status="failed", failureMessages=[
+            "AssertionError: expected [ 401, 503 ] to include 200\n at command-lookup-final-return.test.js:85:24"])
+    return value
+
+
+def snapshot_summary():
+    return {**gate.parse_snapshot_acceptance(snapshot_report(), 0),
+            "release_input_sha256": gate.contract_inputs(),
+            "superseded_receiving_cut_probe": gate.historical_observation(historical_report(), 1)}
 
 
 class ReporterTests(unittest.TestCase):
@@ -139,6 +165,125 @@ class ReporterTests(unittest.TestCase):
             gate.parse_contract(value, 1)
 
 
+    def test_snapshot_requires_exact_suite_and_case_names_without_duplicates(self):
+        self.assertEqual(gate.parse_snapshot_acceptance(snapshot_report(), 0)["passed"], 20)
+        for mutation in (
+            lambda r: r["testResults"][0].update(name="/fixture/other.test.js"),
+            lambda r: r["testResults"][0]["assertionResults"].pop(),
+            lambda r: r["testResults"][0]["assertionResults"].append(r["testResults"][0]["assertionResults"][0]),
+            lambda r: r["testResults"][0]["assertionResults"][0].update(fullName="renamed fixture"),
+            lambda r: r["testResults"].append(copy.deepcopy(r["testResults"][0])),
+        ):
+            value = snapshot_report()
+            mutation(value)
+            with self.assertRaises(gate.GateError):
+                gate.parse_snapshot_acceptance(value, 0)
+
+    def test_snapshot_rejects_skips_runtime_errors_inconsistent_and_ambiguous_reporters(self):
+        for mutation in (
+            lambda r: r.update(numPendingTests=1), lambda r: r.update(numPendingTestSuites=1),
+            lambda r: r.update(numTodoTests=1), lambda r: r.update(numRuntimeErrorTestSuites=1),
+            lambda r: r.update(unhandledErrors=["fixture"]), lambda r: r.update(success=1),
+            lambda r: r.update(numPassedTests=19), lambda r: r.update(numTotalTests=True),
+            lambda r: r["testResults"][0]["assertionResults"][0].update(status="pending"),
+            lambda r: r["testResults"][0]["assertionResults"][0].update(status="todo"),
+        ):
+            value = snapshot_report()
+            mutation(value)
+            with self.assertRaises(gate.GateError):
+                gate.parse_snapshot_acceptance(value, 0)
+        raw = json.dumps(snapshot_report())
+        with self.assertRaises(gate.GateError):
+            gate.parse_worker(raw + "\n" + raw)
+        for code in (1, 124, -9, False):
+            with self.assertRaises(gate.GateError):
+                gate.parse_snapshot_acceptance(snapshot_report(), code)
+
+    def test_real_acceptance_failure_remains_nonzero_and_payloads_are_not_reported(self):
+        value = snapshot_report()
+        value.update(success=False, numPassedTests=19, numFailedTests=1, numPassedTestSuites=0, numFailedTestSuites=1)
+        value["testResults"][0]["status"] = "failed"
+        value["testResults"][0]["assertionResults"][0].update(status="failed", failureMessages=["private fixture"])
+        parsed = gate.parse_snapshot_acceptance(value, 1)
+        self.assertEqual((parsed["status"], parsed["passed"], parsed["failed"]), ("failed_authorization_time_snapshot", 19, 1))
+        self.assertNotIn("private fixture", json.dumps(parsed))
+        with self.assertRaises(gate.GateError):
+            gate.parse_snapshot_acceptance(value, 0)
+
+    def test_historical_failure_is_preserved_and_unrelated_failures_block(self):
+        observed = gate.historical_observation(historical_report(), 1)
+        self.assertEqual((observed["raw_exit_code"], observed["failed"], observed["observed_returned_status"]), (1, 1, 200))
+        self.assertTrue(observed["superseded"])
+        passed = gate.historical_observation(historical_report(False), 0)
+        self.assertEqual((passed["raw_exit_code"], passed["passed"], passed["failed"]), (0, 1, 0))
+        for mutation in (
+            lambda r: r.update(numRuntimeErrorTestSuites=1), lambda r: r.update(unhandledErrors=["fixture error"]),
+            lambda r: r["testResults"][0]["assertionResults"][0].update(failureMessages=["earlier infrastructure failure"]),
+            lambda r: r["testResults"][0]["assertionResults"][0].update(failureMessages=[
+                "AssertionError: expected [ 401, 503 ] to include 200\n at command-lookup-final-return.test.js:85:24\nUnrelated failure"]),
+            lambda r: r["testResults"][0]["assertionResults"][0].update(failureMessages=[
+                "expected [ 401, 503 ] to include 200 at command-lookup-final-return.test.js:84:24"]),
+        ):
+            value = historical_report()
+            mutation(value)
+            with self.assertRaises(gate.GateError):
+                gate.historical_observation(value, 1)
+
+    def test_summary_cannot_bypass_policy_new_acceptance_or_historical_classification(self):
+        summary = snapshot_summary()
+        gate.validate_snapshot_contract(summary)
+        for mutation in (
+            lambda r: r.pop("policy"), lambda r: r.update(policy="receiving_cut"),
+            lambda r: r.update(status="passed_observation_not_contract_approval"),
+            lambda r: r.pop("release_input_sha256"), lambda r: r["release_input_sha256"].pop(gate.POLICY_DOCUMENT),
+            lambda r: r.update(case_inventory={}), lambda r: r.update(skipped=1),
+            lambda r: r.update(passed=19), lambda r: r.pop("superseded_receiving_cut_probe"),
+            lambda r: r["superseded_receiving_cut_probe"].update(superseded=False),
+            lambda r: r["superseded_receiving_cut_probe"].update(raw_exit_code=0),
+            lambda r: r["superseded_receiving_cut_probe"].update(raw_exit_code=True),
+            lambda r: r["superseded_receiving_cut_probe"].update(failed=0, status="passed"),
+            lambda r: r.update(execution_scope="worker_and_contract_double_counted"),
+        ):
+            value = copy.deepcopy(summary)
+            mutation(value)
+            with self.assertRaises(gate.GateError):
+                gate.validate_snapshot_contract(value)
+
+    def test_contract_inputs_require_approved_policy_new_suite_and_unchanged_original(self):
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+            root = Path(directory)
+            paths = [gate.POLICY_DOCUMENT, gate.ACCEPTANCE_SUITE, *gate.HISTORICAL_INPUTS]
+            for name in paths:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((gate.ROOT / name).read_bytes())
+            self.assertEqual(gate.contract_inputs(root), gate.contract_inputs())
+            for name in paths:
+                target = root / name
+                saved = target.read_bytes()
+                target.unlink()
+                with self.assertRaises(gate.GateError):
+                    gate.contract_inputs(root)
+                target.write_bytes(saved)
+                target.write_bytes(b"superseded unapproved fixture")
+                if name != gate.ACCEPTANCE_SUITE:
+                    with self.assertRaises(gate.GateError):
+                        gate.contract_inputs(root)
+                target.write_bytes(saved)
+
+    def test_source_manifest_includes_approved_policy_and_github_policy_inputs(self):
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+            root = Path(directory)
+            names = [gate.POLICY_DOCUMENT, gate.ACCEPTANCE_SUITE, ".github/workflows/validation.yml",
+                     ".github/workflows/release.yml", "docs/operations/cicd.md", "docs/plans/lld.md", "private.env"]
+            for name in names:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("unit fixture")
+            with patch.object(gate.subprocess, "check_output", return_value="\n".join(names)):
+                self.assertEqual(set(gate.source_hashes(root)), set(names) - {"private.env"})
+
+
 class ExecutionTests(unittest.TestCase):
     def test_registered_parallel_children_are_cancelled_from_the_main_thread(self):
         gate.CANCELLED.clear()
@@ -213,9 +358,38 @@ class ExecutionTests(unittest.TestCase):
                      patch.object(gate.Runner, "contract", return_value={"status": "failed_acceptance_assertion", "failed": 1}):
                     code = gate.run(args)
                 report = json.loads((output / "report.json").read_text())
-                self.assertEqual(code, 1 if drift else 2)
+                self.assertEqual(code, 1)
                 self.assertEqual(report["production_release"], "blocked")
                 self.assertEqual(report["source_unchanged"], not drift)
+
+    def test_approved_snapshot_with_preserved_historical_failure_is_green_locally(self):
+        for acceptance_failed in (False, True):
+            summary = snapshot_summary()
+            if acceptance_failed:
+                summary.update(status="failed_authorization_time_snapshot", passed=19, failed=1, raw_exit_code=1)
+                summary["case_inventory"][str(gate.ROOT / gate.ACCEPTANCE_SUITE)][0]["status"] = "failed"
+            with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+                args = argparse.Namespace(output=Path(directory) / "new-run", deadline=30, lane="contract", shards=1)
+                with patch.object(gate, "source_hashes", return_value={}), \
+                     patch.object(gate.Runner, "command", return_value=(0, "")), \
+                     patch.object(gate.Runner, "require_artifacts"), \
+                     patch.object(gate.Runner, "contract", return_value=summary):
+                    self.assertEqual(gate.run(args), 2 if acceptance_failed else 0)
+                report = json.loads((args.output / "report.json").read_text())
+                self.assertEqual(report["lanes"]["contract"]["superseded_receiving_cut_probe"]["failed"], 1)
+                self.assertEqual(report["production_release"], "blocked")
+
+    def test_contract_executes_separate_new_acceptance_and_unchanged_original_without_build(self):
+        with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
+            runner = gate.Runner(Path(directory), 30, 1)
+            responses = [(0, json.dumps(snapshot_report())), (1, json.dumps(historical_report()))]
+            with patch.object(runner, "require_artifacts"), patch.object(runner, "command", side_effect=responses) as command:
+                result = runner.contract()
+            self.assertEqual(result["passed"], 20)
+            self.assertEqual(result["failed"], 0)
+            self.assertEqual(command.call_count, 2)
+            self.assertIn("worker-tests/protected_response_snapshot.test.js", command.call_args_list[0].args[1])
+            self.assertIn(str(gate.ROOT / "docs/reviews/evidence/command-lookup-final-return.config.mjs"), command.call_args_list[1].args[1])
 
     def test_passing_local_lane_is_not_production_certification(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:

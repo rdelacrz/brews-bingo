@@ -1,0 +1,42 @@
+name: Local validation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.16.0'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14.0'
+      - name: Install and check native mold linker
+        run: |
+          test "$(uname -m)" = x86_64
+          sudo apt-get update
+          sudo apt-get install --yes mold
+          mold --version
+          printf 'int main(void) { return 0; }\n' > "$RUNNER_TEMP/mold-check.c"
+          cc -fuse-ld=mold "$RUNNER_TEMP/mold-check.c" -o "$RUNNER_TEMP/mold-check"
+          "$RUNNER_TEMP/mold-check"
+      - name: Install pinned local tools
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt,clippy --target wasm32-unknown-unknown
+          cargo +1.99.0 install cargo-nextest --version 0.9.140 --locked
+          cargo +1.99.0 install worker-build --version 0.8.7 --locked
+          npm ci --prefix backend --ignore-scripts
+      - name: Unit checks
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s backend/tools/tests -v
+      - name: Complete local release gate (exit 2 blocks)
+        run: python3 backend/tools/release_gate.py --output "$RUNNER_TEMP/local-gate"

@@ -1,0 +1,15 @@
+{
+  "target": "real_loopback_HTTPS_WSS_not_deployed_staging",
+  "exit_code": 1,
+  "elapsed_wall_seconds": 45.336419091996504,
+  "deployment": "none",
+  "stdout_sha256": "06a98f1a430ac8b104433b4ca29e005fffdc1139461e7cb6388503756a52858d",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "raw_output_persisted": false,
+  "worker_artifact_sha256": {
+    "backend/build/index_bg.wasm": "b59c89cdc23187bf1e23693f3776657a52dba0df99eb34142505e6d8fb77c4ef",
+    "backend/build/index.js": "40a1af52a746a9b13c6af4939ad39ce281f2ffe42dfce83c213cc9ea2360a281",
+    "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+    "target/wasm32-unknown-unknown/release/brews_backend.wasm": "e89f8d4d19d118dde9ff4913532dddbbb4d269349631ef4cef76cbbe87157780"
+  }
+}

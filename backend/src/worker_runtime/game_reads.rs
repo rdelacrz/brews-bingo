@@ -413,6 +413,8 @@ pub(super) async fn dispatch(
             return Err(ApiError::Unavailable);
         }
     }
+    // Sequential owner cuts authorize this snapshot, not authority at delivery.
+    // Later revocation may overtake it; exact invocation binding and expiry remain.
     games::json_response(
         200,
         projection

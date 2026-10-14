@@ -1,5 +1,7 @@
 # Brews Bingo — High-Level Design
 
+**Later approved HTTP response policy (2026-10-14):** protected HTTP replies are authorization-time snapshots. A response already authorized at the named server cuts may finish after revocation; subsequent authoritative validations deny revoked access. This preserves immediate mutations, original absolute expiry/rollback fencing and per-request proof binding, without claiming remote authority at delivery or atomic cross-Object cuts. See [the normative policy](protected-response-policy.md). WebSocket contracts and production gates remain separate.
+
 ## 1. Document status and purpose
 
 - **Status:** Cloudflare/Rust/Dioxus, automatic durable boards and Single Line are confirmed. Exact states: **New**, **Awaiting Players**, **In Progress**, **Resolved**, **Cancelled**. HLD-037 supersedes no-winner Resolved: a host-awarded winner produces Resolved; pre-start cancellation or manual no-winner ending produces Cancelled. Both are immutable terminal outcomes with no gameplay/reopening. Host read-only History and existing player identity/recovery rules remain; the existing three-month final History applies to started games ending in either terminal state, while pre-start Cancelled game/participant data is deleted after committed cancellation and excluded from History. HLD-033–HLD-035 settle board rules/assignment; overall HLD sign-off remains open.

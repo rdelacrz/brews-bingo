@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/root/.hermes/cache/scratch/brews-cicd-actionlint/actionlint",
+    "-shellcheck=",
+    "-pyflakes=",
+    ".github/workflows/validation.yml",
+    ".github/workflows/release.yml"
+  ],
+  "exit_code": 0,
+  "hosted_workflow_executed": false,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "workflow_sha256": {
+    ".github/workflows/release.yml": "fede1442001eda8b4f5fba43007b2bf3a333933aa2841d2118cb86d75765d06f",
+    ".github/workflows/validation.yml": "b0ea11a99d9d1477b8773c8b2c3407c8351e39c56bde9baa5a0c30cb8f3d61ed"
+  }
+}

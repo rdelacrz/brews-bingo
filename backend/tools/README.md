@@ -19,9 +19,9 @@ The output directory **must not already exist** and must be outside the reposito
 | Lane | Checks |
 | --- | --- |
 | `native` | Exact pinned Cargo; formatting; complete workspace/all-feature/locked nextest in debug and optimized `release-assertions`; separate doctests; strict native and Worker/Wasm Clippy. No test skips are accepted. |
-| `worker` | Fresh optimized Worker build; every `backend/worker-tests/**/*.test.js`; exact physical file/case inventory and totals, rejecting duplicates, omissions, skips and runtime errors. |
+| `worker` | Fresh optimized Worker build; every general `backend/worker-tests/**/*.test.js` except the snapshot suite assigned to `contract`; exact physical file/case inventory and totals, rejecting duplicates, omissions, skips and runtime errors. Standalone `--lane worker` does not run those 20 policy cases; the full `all` gate does. |
 | `tls` | Fresh native CLI plus the existing gameplay, operator, dedicated-read/G4 and privileged-audit real local HTTPS/WSS harnesses. Requires the complete Worker build to exist. |
-| `contract` | The **unchanged** retained `RUNTIME-FINAL-01` G4 final-return acceptance probe. Requires the complete Worker build to exist. Runs separately from positive Worker tests. |
+| `contract` | Mandatory new `RUNTIME-FINAL-01` authorization-time snapshot acceptance, with exact complete case inventory. Executes the **unchanged** older receiving-cut G4 probe separately and preserves its physical assertion/exit as a superseded historical observation. Both require the complete Worker build. The new suite is excluded from the general Worker lane to avoid double counting, not from the full gate. |
 
 Standalone TLS/contract lanes rebuild the Worker before exercising it; complete runtime artifact hashes are frozen after that build. Separate lanes' source and artifact maps must still be reconciled before combining results. Prefer `all` for one frozen cut. Do not edit source, test/probe inputs or Worker artifacts during a run. Drift is a failure, not a new passing checkpoint.
 
@@ -29,9 +29,9 @@ Standalone TLS/contract lanes rebuild the Worker before exercising it; complete 
 
 - `0`: all **requested local** checks passed. This is never production certification, protected-response policy approval or acceptance of unchecked slices.
 - `1`: a command, evidence parser, inventory, input/artifact check or prerequisite failed. An unrelated probe setup failure is not relabeled a reproduced final-return finding.
-- `2`: the retained final-return acceptance assertion executed and failed at its known HTTP-200 denial boundary. This is a real failed acceptance gate, **not** an expected passing test or permission to deploy.
+- `2`: the mandatory **current** authorization-time snapshot acceptance failed. The original receiving-cut assertion's separately recorded failure remains genuine historical evidence, but no longer vetoes the user's explicitly approved policy. Unrelated historical setup/assertion failures still block with exit 1; the parser does not turn arbitrary failures into historical observations.
 
-`report.json` always says `production_release: "blocked"` and enumerates outstanding acceptance/provider/forecast/provisioning gates. Even a future passing probe is only an observation; this tool cannot choose a protected-response contract or accept it on the user's behalf. No production-ready flag or bypass option exists.
+`report.json` always says `production_release: "blocked"` and enumerates outstanding independent-review/provider/forecast/provisioning gates. The user explicitly approved [authorization-time snapshots](../../docs/plans/protected-response-policy.md) on 2026-10-14; this tool verifies that chosen contract rather than choosing it. A successful `contract` result is `passed_authorization_time_snapshot`, binds policy/test/historical-probe input hashes, and nests the original physical outcome under `superseded_receiving_cut_probe` without relabeling it passed. No production-ready flag or bypass option exists.
 
 The report binds source/schema/config/test/probe inputs to SHA-256, checks their before/after equality and records actual Worker artifact hashes. There is no inferred numeric capacity limit, forecast or provider quota. Original failed review/probe evidence remains unchanged.
 
@@ -44,5 +44,17 @@ The native target also samples current explicit Argon2 hash/verify and real reco
 The next local [maximum-configured-game resource probe](../../docs/operations/game-resource-measurements.md) uses `game_resource_probe.py --output NEW_PRIVATE_DIRECTORY`, with actual native service operations and sampled local Workerd socket traffic. It preserves exact branch/sample/stage identities and independently validates state cardinalities, page-size equations and observed frame/ACK totals. Native full-pool observations and Workerd sampled-call observations are distinct; unavailable SDK row-work counters are explicitly pending, not reported as zero. The full native/Worker suites include these tests, but neither probe closes the owner-forecast/provider-capacity gate.
 
 ## Operations prerequisites
+
+The [CI/CD guide](../../docs/operations/cicd.md) covers explicit staging/production isolation, frozen artifact promotion, exact serving-version readback, staged full-game evidence and required independent manual production approval. These are local definitions, not provisioned or deployed environments.
+
+`backend/tests/full_game_e2e.py` targets an **existing** verified HTTPS staging or explicit loopback Worker. It creates only a least-privilege throwaway host and its own games, uses independent player/spectator cookie jars and continuously reading real WSS clients, checks actual randomly assigned boards with a test-only oracle, exercises Start/random/manual/winner/History/release and exact command replays, then removes its own host and verifies absence. It never starts a server, resets a database, cancels someone else's game or runs mutating gameplay in production. History remains until its contractual expiry. Credentials stay in environment; output is a new private directory with redacted labels/counts only.
+
+```sh
+python3 backend/tests/full_game_e2e.py --origin "$BREWS_API_ORIGIN" \
+  --expected-origin "$BREWS_API_ORIGIN" --environment staging \
+  --output "$TMPDIR/brews-full-game-01" --bootstrap-cli /path/to/verified/brews
+```
+
+The environment label/origin agreement is not namespace proof: deployment tooling must qualify the exact serving version and namespaces before and after a staging run. Local mode additionally accepts `--tls-ca-file TRUSTED_CA`, never disables TLS verification, and is not reported as deployed staging.
 
 [Expiry-preserving restore/backout worksheet](../../docs/operations/restore-and-backout.md) specifies quarantine, original deadlines, clock/authority fences, schema compatibility and reconciliation stop conditions. It is not a tested provider restore script. Provider backup/log/copy controls, isolated environments, provisioning/secret delivery, deployed integration/load/security checks and two-times quota headroom still need separate authorization and actual target evidence. See [Slice 9 backlog](../../docs/plans/PENDING.md#slice-9--production-databaseruntime-and-release-gates).

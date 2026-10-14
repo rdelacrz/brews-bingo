@@ -25,3 +25,29 @@ new_sqlite_classes = ["GameDirectoryObject"]
 [[migrations]]
 tag = "games"
 new_sqlite_classes = ["GameObject"]
+
+# Remote targets are deliberately unprovisioned. Use deployment.py's validated
+# generated config; never deploy this file directly to a remote account.
+[env.staging]
+name = "brews-bingo-api-staging"
+workers_dev = false
+preview_urls = false
+routes = []
+[env.staging.version_metadata]
+binding = "CF_VERSION_METADATA"
+[env.staging.vars]
+APP_ORIGIN = "https://brews-bingo-staging.invalid"
+[env.staging.durable_objects]
+bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }, { name = "GAME_DIRECTORY", class_name = "GameDirectoryObject" }, { name = "GAMES", class_name = "GameObject" }]
+
+[env.production]
+name = "brews-bingo-api-production"
+workers_dev = false
+preview_urls = false
+routes = []
+[env.production.version_metadata]
+binding = "CF_VERSION_METADATA"
+[env.production.vars]
+APP_ORIGIN = "https://brews-bingo-production.invalid"
+[env.production.durable_objects]
+bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }, { name = "GAME_DIRECTORY", class_name = "GameDirectoryObject" }, { name = "GAMES", class_name = "GameObject" }]

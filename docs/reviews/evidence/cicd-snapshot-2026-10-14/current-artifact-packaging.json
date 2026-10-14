@@ -1,0 +1,15 @@
+{
+  "actual_wrangle_dry_run": "passed",
+  "asset_sha256": {
+    "backend/build/index.js": "40a1af52a746a9b13c6af4939ad39ce281f2ffe42dfce83c213cc9ea2360a281",
+    "backend/build/index_bg.wasm": "b59c89cdc23187bf1e23693f3776657a52dba0df99eb34142505e6d8fb77c4ef",
+    "backend/build/package.json": "9eb6bc2af50fe42e73ea9271984927cf9779d6b88c96b38f1326daf3192c8a6e",
+    "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+    "target/debug/brews": "06a960179bf5471b460efec5871fef6b8ed5f094f16ed4f4fb72d022893bb01b",
+    "target/wasm32-unknown-unknown/release/brews_backend.wasm": "e89f8d4d19d118dde9ff4913532dddbbb4d269349631ef4cef76cbbe87157780"
+  },
+  "deployment": "none",
+  "elapsed_seconds": 1.5281059250119142,
+  "fixtures": "disposable_public_inventory_only",
+  "not_a_release_freeze": true
+}

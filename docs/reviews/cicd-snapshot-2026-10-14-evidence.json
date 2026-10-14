@@ -1,0 +1,308 @@
+{
+  "actual_staging_execution": false,
+  "all_executable_test_config_policy_bytes_unchanged": true,
+  "all_other_release_inputs_unchanged": true,
+  "archive_manifest_sha256": "d862cf1aa9b0602a348746f6a267f7be90f4a4967e6a30550e8f3dc772697f5e",
+  "archived_descriptors": 57,
+  "baseline_commit": "af4d4083a8431626e9efe80a0b0a8258af0dbb17",
+  "commit_or_push_performed": false,
+  "current_asset_sha256": {
+    "backend/build/index.js": "40a1af52a746a9b13c6af4939ad39ce281f2ffe42dfce83c213cc9ea2360a281",
+    "backend/build/index_bg.wasm": "b59c89cdc23187bf1e23693f3776657a52dba0df99eb34142505e6d8fb77c4ef",
+    "backend/build/package.json": "9eb6bc2af50fe42e73ea9271984927cf9779d6b88c96b38f1326daf3192c8a6e",
+    "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+    "target/debug/brews": "74d0f7142cccb165df60dc1790d03865043151fc736e538ddab5c4484b7befb3",
+    "target/wasm32-unknown-unknown/release/brews_backend.wasm": "e89f8d4d19d118dde9ff4913532dddbbb4d269349631ef4cef76cbbe87157780"
+  },
+  "deployment": "none",
+  "existing_local_HTTPS_WSS_checks": 373,
+  "external_production_gates_open": 8,
+  "final_remote_target_loopback_execution": {
+    "deployment": "none",
+    "elapsed_wall_seconds": 45.86458960000891,
+    "exit_code": 0,
+    "raw_output_persisted": false,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "3ed15634f4983b17a0e0a8f3eba38cd248c61be877c050c6068b0b5785c25ab9",
+    "target": "real_loopback_HTTPS_WSS_not_deployed_staging",
+    "worker_artifact_sha256": {
+      "backend/build/index.js": "40a1af52a746a9b13c6af4939ad39ce281f2ffe42dfce83c213cc9ea2360a281",
+      "backend/build/index_bg.wasm": "b59c89cdc23187bf1e23693f3776657a52dba0df99eb34142505e6d8fb77c4ef",
+      "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+      "target/wasm32-unknown-unknown/release/brews_backend.wasm": "e89f8d4d19d118dde9ff4913532dddbbb4d269349631ef4cef76cbbe87157780"
+    }
+  },
+  "final_remote_target_loopback_summary": {
+    "accepted_call_count": 6,
+    "check_count": 96,
+    "checks": [
+      "account_final_grant_exit_denied",
+      "all_streams_real_snapshot_ack",
+      "cleanup_own_account_absent",
+      "create_new_standard_board",
+      "genuine_start_presence",
+      "history_exact_boards",
+      "history_exact_outcome_calls_times",
+      "history_immutable_after_exit",
+      "history_immutable_after_successor",
+      "history_list_contains_exact_summary",
+      "manual_0_accepted",
+      "manual_0_host_calls",
+      "manual_0_host_wss",
+      "manual_0_player_0_oracle_wss",
+      "manual_0_player_1_oracle_wss",
+      "manual_0_player_2_oracle_wss",
+      "manual_0_receipt_replay_preserves_each_view",
+      "manual_0_roster_identity",
+      "manual_0_spectator_public_wss",
+      "manual_1_accepted",
+      "manual_1_host_calls",
+      "manual_1_host_wss",
+      "manual_1_player_0_oracle_wss",
+      "manual_1_player_1_oracle_wss",
+      "manual_1_player_2_oracle_wss",
+      "manual_1_receipt_replay_preserves_each_view",
+      "manual_1_roster_identity",
+      "manual_1_spectator_public_wss",
+      "manual_2_accepted",
+      "manual_2_host_calls",
+      "manual_2_host_wss",
+      "manual_2_player_0_oracle_wss",
+      "manual_2_player_1_oracle_wss",
+      "manual_2_player_2_oracle_wss",
+      "manual_2_receipt_replay_preserves_each_view",
+      "manual_2_roster_identity",
+      "manual_2_spectator_public_wss",
+      "manual_3_accepted",
+      "manual_3_host_calls",
+      "manual_3_host_wss",
+      "manual_3_player_0_oracle_wss",
+      "manual_3_player_1_oracle_wss",
+      "manual_3_player_2_oracle_wss",
+      "manual_3_receipt_replay_preserves_each_view",
+      "manual_3_roster_identity",
+      "manual_3_spectator_public_wss",
+      "manual_4_accepted",
+      "manual_4_host_calls",
+      "manual_4_host_wss",
+      "manual_4_player_0_oracle_wss",
+      "manual_4_player_1_oracle_wss",
+      "manual_4_player_2_oracle_wss",
+      "manual_4_receipt_replay_preserves_each_view",
+      "manual_4_roster_identity",
+      "manual_4_spectator_public_wss",
+      "open_lobby",
+      "player_0_separate_admission_wss",
+      "player_1_separate_admission_wss",
+      "player_2_separate_admission_wss",
+      "qualification_without_auto_award",
+      "random_call_host_calls",
+      "random_call_host_wss",
+      "random_call_player_0_oracle_wss",
+      "random_call_player_1_oracle_wss",
+      "random_call_player_2_oracle_wss",
+      "random_call_receipt_replay_preserves_each_view",
+      "random_call_roster_identity",
+      "random_call_spectator_public_wss",
+      "readiness_anonymous_before_bootstrap",
+      "released_slot_recreate_confirmed_cancel",
+      "single_slot_initially_free",
+      "spectator_post_terminal_denied",
+      "spectator_terminal_public_if_delivered",
+      "start_host_calls",
+      "start_host_wss",
+      "start_player_0_oracle_wss",
+      "start_player_1_oracle_wss",
+      "start_player_2_oracle_wss",
+      "start_real_presence",
+      "start_receipt_replay_preserves_each_view",
+      "start_roster_identity",
+      "start_spectator_public_wss",
+      "successor_reservation_released",
+      "terminal_host_calls",
+      "terminal_host_wss",
+      "terminal_player_0_oracle_wss",
+      "terminal_player_0_own_board",
+      "terminal_player_1_oracle_wss",
+      "terminal_player_1_own_board",
+      "terminal_player_2_oracle_wss",
+      "terminal_player_2_own_board",
+      "terminal_reservation_released",
+      "terminal_roster_identity",
+      "throwaway_host_enrolled",
+      "winner_commits_terminal_history",
+      "winner_receipt_replay_preserves_each_view"
+    ],
+    "cleanup": "own_account_removed",
+    "environment": "local",
+    "full_game_e2e": "passed",
+    "history_policy": "retained_until_contract_expiry",
+    "player_count": 3,
+    "snapshot_ack_count": 44
+  },
+  "graph": {
+    "collapsed_directed_edges": 541,
+    "current_source_hashes_verified": true,
+    "dangling_edges": 1094,
+    "documentation_graph_refreshed": false,
+    "manifest_sha256": "88a0fedec6dace3f2bd7e712963bc40fab59d20c92bf47725ffd2c10dc7dfbb6",
+    "source_count": 264
+  },
+  "integrated_exit_code": 0,
+  "kind": "local_CICD_and_approved_snapshot_verification_not_production_certification",
+  "native": {
+    "debug": 959,
+    "doctests": 12,
+    "release-assertions": 959
+  },
+  "post_verification_documentation_delta": {
+    "docs/plans/PENDING.md": {
+      "current_sha256": "ba3c725abc8dc35cdd030ddd83a175b1cbaef7d584d3c42a4ca95216566ce56a",
+      "verified_sha256": "7a1461621e9588215d8bc0048bc35f945f16db259b954f6e3e7dd91775814132"
+    },
+    "docs/plans/lld.md": {
+      "current_sha256": "6072fcc2973b76d085102d2c12e9077d9f3315dd62bc34780dcfbcc9b2f7e5d9",
+      "verified_sha256": "aaa9fdb8483085ba2bad2bf1e4b8ea00073d52ec1aa473fe86ef3ebc901d9340"
+    }
+  },
+  "preserved_failures": {
+    "full_gate_01_exit": 1,
+    "loopback_07": "unclassified_terminal_sync_status_mismatch; later runs pass without hidden retries",
+    "loopback_failed_attempts": [
+      1,
+      2,
+      3,
+      5,
+      7
+    ],
+    "old_receiving_cut_assertion_failed": 1
+  },
+  "production_release": "blocked",
+  "python_passed": 135,
+  "recorded_at": "2026-10-14T04:50:44.163830+00:00",
+  "release_limitation": "Fresh all-lane gates on the exact clean committed cut remain mandatory before real promotion; this reconciles status docs only and does not alter the original report.",
+  "runtime_artifact_sha256": {
+    "backend/build/index.js": "40a1af52a746a9b13c6af4939ad39ce281f2ffe42dfce83c213cc9ea2360a281",
+    "backend/build/index_bg.wasm": "b59c89cdc23187bf1e23693f3776657a52dba0df99eb34142505e6d8fb77c4ef",
+    "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+    "target/wasm32-unknown-unknown/release/brews_backend.wasm": "e89f8d4d19d118dde9ff4913532dddbbb4d269349631ef4cef76cbbe87157780"
+  },
+  "snapshot_contract": {
+    "case_inventory": {
+      "/home/orangepi/Workspace/brews-bingo/backend/worker-tests/protected_response_snapshot.test.js": [
+        {
+          "case_id_sha256": "88dc9ed33f1059f13e4c718274a027ae46f312b23ae7b509a888ca134065c901",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "256530fc69eb909aa2e0826ec1660362c5aa682db90fd0c34f1f862853b06698",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "f2d58e3597d76ae499c48b0032d5ae01e8da03c373b7c7b337447f962e8ae365",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "0a99b5a4d187bc8e6d28f35968130dc276fdd8f9a6cf31921f4cfde19b45d2fc",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "c57964f6361709fbcc8d945aa60a0229672a3d452e74f0d2efa335d8b9fa3dc7",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "0bafc7601b56b40db949c6428c40f0640e85eda9f3a65efd00e41543eaac73a6",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "56488687a52d01ce390629424a09989be1228dedf85fce976cd86c42b45a4372",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "736fdd78017d72707d19705602baa1022e643ec66065ccd4e265d04309038e6d",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "54ad2aae9c07c56880795e35ff0baa9afd563201edfb4a67240433937608f1d3",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "146e4f9d8c8554ff05deb9ffb479870db6c2f6cc8dcee81ed098bcca3937723d",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "e14daf84aa7f892738dc1fed9a94110cbf1d59fb917e203f8767376623a18797",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "8c192958f76e7fac2e5e7891d0c2b2c79cec29ab966e0880d5da330be3b7cfdb",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "6a637bc6545a87a9c27f749dddd700152a18f852e47792b07ec9688791e292f4",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "68004d66eb2a2fd3216c01e1dd1bacdf9feeb709790821e785e673dd251d73c9",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "4716f14c0cb04815cb7709509af81111ae8c6a212fa8032c508d87149df1da7f",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "332e731ec78f4587f38d7382455261329ea0c1033eeb4f8e0726d2a58cad8373",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "b282c49e1e5c3c755f3ed30e79f0041c1118040002bf43564bda5f97a5a9b544",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "c6a3dc6e57662780f8cbaf7cf83d7df7068f8ba3c4f0c396644c0c43824e4076",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "047c17db82b759406be0b55003504825d43a2316f0d5d7cbf03a523f4398591b",
+          "status": "passed"
+        },
+        {
+          "case_id_sha256": "cd21c9f8cac3f24c07e2f013f14cc7c770e1dc9a2c5330da16322eb2c7361375",
+          "status": "passed"
+        }
+      ]
+    },
+    "execution_scope": "contract_only_excluded_from_worker_lane",
+    "failed": 0,
+    "passed": 20,
+    "physical_suites": 1,
+    "policy": "authorization_time_snapshot",
+    "raw_exit_code": 0,
+    "release_input_sha256": {
+      "backend/worker-tests/protected_response_snapshot.test.js": "5b0a339b10d4723177bcdf79163126b43fe6b2ebb98e5335b5dada7854703d9d",
+      "docs/plans/protected-response-policy.md": "fa1aa9d4e1602f36d2eb841e1ad590fc1ccbd344ea5c02a1dcae8964d2f2db1d",
+      "docs/reviews/evidence/command-lookup-final-return.config.mjs": "fa946f6c1fcec6da2e54f1c207a1ebddd9d730489121adface64bb0ea99d3355",
+      "docs/reviews/evidence/command-lookup-final-return.test.js": "28cec08b858f5ca8ab0335007d8a1afcf3cbd63612ace70c5f21261f86875a11"
+    },
+    "skipped": 0,
+    "status": "passed_authorization_time_snapshot",
+    "superseded_receiving_cut_probe": {
+      "failed": 1,
+      "finding": "RUNTIME-FINAL-01",
+      "observed_returned_status": 200,
+      "passed": 0,
+      "raw_exit_code": 1,
+      "skipped": 0,
+      "status": "failed_acceptance_assertion",
+      "superseded": true
+    }
+  },
+  "verification_source_count": 295,
+  "worker": {
+    "general_passed": 723,
+    "general_physical_suites": 39,
+    "snapshot_passed": 20,
+    "snapshot_physical_suites": 1,
+    "total_unique_current_cases": 743
+  }
+}

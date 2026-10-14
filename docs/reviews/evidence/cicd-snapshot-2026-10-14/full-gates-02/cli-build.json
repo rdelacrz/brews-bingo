@@ -1,0 +1,15 @@
+{
+  "command": [
+    "cargo",
+    "build",
+    "-p",
+    "brews-cli",
+    "--locked"
+  ],
+  "elapsed_wall_seconds": 0.20268974799546413,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "2b34696728dc82b03cbf6311d7e3a6a41658bbde097834c3010a78bc82842c1a",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "timed_out": false
+}

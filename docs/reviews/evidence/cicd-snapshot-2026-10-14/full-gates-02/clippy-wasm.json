@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "clippy",
+    "-p",
+    "brews-backend",
+    "--target",
+    "wasm32-unknown-unknown",
+    "--locked",
+    "--",
+    "-D",
+    "warnings"
+  ],
+  "elapsed_wall_seconds": 3.2633010460122023,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "532805cd1d395054a63637a88efc84a9bdcc84ed257bee216e06311d9566cd7c",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "timed_out": false
+}

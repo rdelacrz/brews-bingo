@@ -1,0 +1,188 @@
+name: manualprodapproval
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Exact current trusted main commit (40 lowercase hex)
+        required: true
+        type: string
+# Serializes staging deployment, testing, approval wait and production as one run.
+concurrency:
+  group: brews-staging-production-promotion
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  freeze:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.commit == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    outputs:
+      manifest: ${{ steps.freeze.outputs.manifest }}
+      archive: ${{ steps.freeze.outputs.archive }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.16.0'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14.0'
+      - name: Install and check native mold linker
+        run: |
+          test "$(uname -m)" = x86_64
+          sudo apt-get update
+          sudo apt-get install --yes mold
+          mold --version
+          printf 'int main(void) { return 0; }\n' > "$RUNNER_TEMP/mold-check.c"
+          cc -fuse-ld=mold "$RUNNER_TEMP/mold-check.c" -o "$RUNNER_TEMP/mold-check"
+          "$RUNNER_TEMP/mold-check"
+      - name: Install pinned tools
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt,clippy --target wasm32-unknown-unknown
+          cargo +1.99.0 install cargo-nextest --version 0.9.140 --locked
+          cargo +1.99.0 install worker-build --version 0.8.7 --locked
+          npm ci --prefix backend --ignore-scripts
+      - name: Unit checks
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s backend/tools/tests -v
+      - name: Complete local gate (never turn exit 2 into success)
+        run: python3 backend/tools/release_gate.py --output "$RUNNER_TEMP/local-gate"
+      - id: freeze
+        name: Freeze source, Wasm, shim, tested CLI and evidence
+        env:
+          RELEASE_COMMIT: ${{ inputs.commit }}
+        run: |
+          manifest=$(python3 backend/tools/deployment.py freeze --commit "$RELEASE_COMMIT" --gate "$RUNNER_TEMP/local-gate/report.json" --output "$RUNNER_TEMP/frozen")
+          python3 backend/tools/deployment.py pack --commit "$RELEASE_COMMIT" --manifest-sha256 "$manifest" --artifact "$RUNNER_TEMP/frozen" --archive "$RUNNER_TEMP/release.zip"
+          archive=$(sha256sum "$RUNNER_TEMP/release.zip" | cut -d ' ' -f 1)
+          echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 immutable run artifact
+        with:
+          name: frozen-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/release.zip
+          if-no-files-found: error
+          retention-days: 7
+  staging:
+    outputs:
+      proof: ${{ steps.staging-proof.outputs.proof }}
+    needs: freeze
+    environment: staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      RELEASE_COMMIT: ${{ inputs.commit }}
+      MANIFEST_SHA256: ${{ needs.freeze.outputs.manifest }}
+      ARCHIVE_SHA256: ${{ needs.freeze.outputs.archive }}
+      BREWS_DEPLOYMENT_INVENTORY: ${{ vars.BREWS_DEPLOYMENT_INVENTORY }}
+      BREWS_REVIEWED_READINESS: ${{ vars.BREWS_REVIEWED_READINESS }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.14.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0 same run only
+        with:
+          name: frozen-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/transfer
+      - name: Verify and unpack frozen release
+        run: |
+          echo "$ARCHIVE_SHA256  $RUNNER_TEMP/transfer/release.zip" | sha256sum --check --status
+          python3 backend/tools/deployment.py unpack --archive "$RUNNER_TEMP/transfer/release.zip" --output "$RUNNER_TEMP/frozen"
+          python3 backend/tools/deployment.py verify --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen"
+          npm ci --prefix backend --ignore-scripts
+      - name: Check separately reviewed external readiness
+        run: python3 backend/tools/deployment.py readiness --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen"
+      - name: Check production manual protection before staging
+        env:
+          BREWS_GITHUB_READ_TOKEN: ${{ secrets.ENVIRONMENT_READ_TOKEN }}
+        run: python3 backend/tools/deployment.py protection
+      - name: Deploy and read back staging identity
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python3 backend/tools/deployment.py deploy --environment staging --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen" --output "$RUNNER_TEMP/staging-identity.json"
+      - id: staging-proof
+        name: Actual remote full game and immutable staging proof
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          BREWS_DEV_CLI_KEY: ${{ secrets.BREWS_DEV_CLI_KEY }}
+          BREWS_API_ORIGIN: ${{ vars.BREWS_STAGING_ORIGIN }}
+        run: |
+          proof=$(python3 backend/tools/deployment.py staging-test --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen" --archive "$RUNNER_TEMP/transfer/release.zip" --archive-sha256 "$ARCHIVE_SHA256" --run-id "${{ github.run_id }}" --expected-identity "$RUNNER_TEMP/staging-identity.json" --output "$RUNNER_TEMP/staging-proof.json")
+          echo "proof=$proof" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: staging-proof-${{ github.run_id }}
+          path: ${{ runner.temp }}/staging-proof.json
+          if-no-files-found: error
+          retention-days: 7
+  production:
+    needs: [freeze, staging]
+    if: success() && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.commit == github.sha
+    environment: production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      RELEASE_COMMIT: ${{ inputs.commit }}
+      MANIFEST_SHA256: ${{ needs.freeze.outputs.manifest }}
+      ARCHIVE_SHA256: ${{ needs.freeze.outputs.archive }}
+      PROOF_SHA256: ${{ needs.staging.outputs.proof }}
+      BREWS_DEPLOYMENT_INVENTORY: ${{ vars.BREWS_DEPLOYMENT_INVENTORY }}
+      BREWS_REVIEWED_READINESS: ${{ vars.BREWS_REVIEWED_READINESS }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.14.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: frozen-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/transfer
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: staging-proof-${{ github.run_id }}
+          path: ${{ runner.temp }}/staging-evidence
+      - name: Revalidate same artifact without building
+        run: |
+          echo "$ARCHIVE_SHA256  $RUNNER_TEMP/transfer/release.zip" | sha256sum --check --status
+          python3 backend/tools/deployment.py unpack --archive "$RUNNER_TEMP/transfer/release.zip" --output "$RUNNER_TEMP/frozen"
+          python3 backend/tools/deployment.py verify --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen"
+          npm ci --prefix backend --ignore-scripts
+      - name: Recheck independent readiness and manual protection
+        env:
+          BREWS_GITHUB_READ_TOKEN: ${{ secrets.ENVIRONMENT_READ_TOKEN }}
+        run: |
+          python3 backend/tools/deployment.py readiness --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen"
+          python3 backend/tools/deployment.py protection
+      - name: Recheck tested staging after production human approval
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_READ_ONLY_CLOUDFLARE_API_TOKEN }}
+        run: python3 backend/tools/deployment.py verify-staging --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen" --archive-sha256 "$ARCHIVE_SHA256" --run-id "${{ github.run_id }}" --proof "$RUNNER_TEMP/staging-evidence/staging-proof.json" --proof-sha256 "$PROOF_SHA256"
+      - name: Promote frozen code and verify exact production deployment
+        env:
+          BREWS_GITHUB_READ_TOKEN: ${{ secrets.ENVIRONMENT_READ_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python3 backend/tools/deployment.py deploy --environment production --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen" --output "$RUNNER_TEMP/production-identity.json" --archive-sha256 "$ARCHIVE_SHA256" --run-id "${{ github.run_id }}" --proof "$RUNNER_TEMP/staging-evidence/staging-proof.json" --proof-sha256 "$PROOF_SHA256"
+      - name: Nonmutating production smoke and identity readback
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 backend/tools/deployment.py smoke --environment production --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen"
+          python3 backend/tools/deployment.py readback --environment production --commit "$RELEASE_COMMIT" --manifest-sha256 "$MANIFEST_SHA256" --artifact "$RUNNER_TEMP/frozen" --expected-identity "$RUNNER_TEMP/production-identity.json"

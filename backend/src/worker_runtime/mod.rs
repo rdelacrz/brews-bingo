@@ -2,6 +2,7 @@
 mod auth_output;
 mod command_lookup;
 mod database;
+mod deployment_identity;
 pub(super) mod directory;
 mod discovery;
 mod edge;
@@ -60,6 +61,7 @@ pub async fn fetch(
     let router = Router::new()
         .route("/api/auth/login", any(edge::handle))
         .route("/api/session", any(edge::handle))
+        .route("/api/deployment", any(deployment_identity::handle))
         .route("/api/auth/enrollment/redeem", any(edge::handle))
         .route("/api/auth/enrollment/complete", any(edge::handle))
         .route("/api/auth/password-reset/redeem", any(edge::handle))

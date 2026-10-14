@@ -52,7 +52,7 @@ Record real commands, expected/actual results, target/runtime, observed cuts, ex
 - Migrations: exact supported historical/current templates, newer/unknown/drift rejection, transactional ignored/aborted required-write rollback and compatible worker/schema pairing at the restored population.
 - Load: actual maximum legal game **plus the owner-provided peak event/History forecast**, per Object storage, row reads/writes, requests, wall duration/provider CPU, alarms and WSS amplification. Reverify applicable account/plan quotas and require measured use at or below half each relevant quota; otherwise stop for architecture/cost review. Local VM counters or one sample cannot stand in for these metrics.
 
-`RUNTIME-FINAL-01` remains an independent release blocker. A restore or local positive lane cannot choose authorization-cut semantics or stronger delivery coordination. The older Slice 2 review and Slice 6/7 acceptance remain open until separately completed.
+The user separately approved [authorization-time snapshots](../plans/protected-response-policy.md), and current `RUNTIME-FINAL-01` acceptance passes in the [CI/CD continuation](../reviews/cicd-snapshot-2026-10-14.md). A restore cannot change those semantics, renew expiry or authorize subsequent revoked requests; the old receiving-cut failure remains historical evidence. The older Slice 2 review and final Slice 6/7 acceptance remain open until separately completed, as do actual provider restore and production gates.
 
 ## 5. Compatible backout / corrective forward fix
 

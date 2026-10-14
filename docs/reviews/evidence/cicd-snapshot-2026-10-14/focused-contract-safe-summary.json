@@ -1,0 +1,110 @@
+{
+  "case_inventory": {
+    "/home/orangepi/Workspace/brews-bingo/backend/worker-tests/protected_response_snapshot.test.js": [
+      {
+        "case_id_sha256": "88dc9ed33f1059f13e4c718274a027ae46f312b23ae7b509a888ca134065c901",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "256530fc69eb909aa2e0826ec1660362c5aa682db90fd0c34f1f862853b06698",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "f2d58e3597d76ae499c48b0032d5ae01e8da03c373b7c7b337447f962e8ae365",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "0a99b5a4d187bc8e6d28f35968130dc276fdd8f9a6cf31921f4cfde19b45d2fc",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "c57964f6361709fbcc8d945aa60a0229672a3d452e74f0d2efa335d8b9fa3dc7",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "0bafc7601b56b40db949c6428c40f0640e85eda9f3a65efd00e41543eaac73a6",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "56488687a52d01ce390629424a09989be1228dedf85fce976cd86c42b45a4372",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "736fdd78017d72707d19705602baa1022e643ec66065ccd4e265d04309038e6d",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "54ad2aae9c07c56880795e35ff0baa9afd563201edfb4a67240433937608f1d3",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "146e4f9d8c8554ff05deb9ffb479870db6c2f6cc8dcee81ed098bcca3937723d",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "e14daf84aa7f892738dc1fed9a94110cbf1d59fb917e203f8767376623a18797",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "8c192958f76e7fac2e5e7891d0c2b2c79cec29ab966e0880d5da330be3b7cfdb",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "6a637bc6545a87a9c27f749dddd700152a18f852e47792b07ec9688791e292f4",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "68004d66eb2a2fd3216c01e1dd1bacdf9feeb709790821e785e673dd251d73c9",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "4716f14c0cb04815cb7709509af81111ae8c6a212fa8032c508d87149df1da7f",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "332e731ec78f4587f38d7382455261329ea0c1033eeb4f8e0726d2a58cad8373",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "b282c49e1e5c3c755f3ed30e79f0041c1118040002bf43564bda5f97a5a9b544",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "c6a3dc6e57662780f8cbaf7cf83d7df7068f8ba3c4f0c396644c0c43824e4076",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "047c17db82b759406be0b55003504825d43a2316f0d5d7cbf03a523f4398591b",
+        "status": "passed"
+      },
+      {
+        "case_id_sha256": "cd21c9f8cac3f24c07e2f013f14cc7c770e1dc9a2c5330da16322eb2c7361375",
+        "status": "passed"
+      }
+    ]
+  },
+  "execution_scope": "contract_only_excluded_from_worker_lane",
+  "failed": 0,
+  "passed": 20,
+  "physical_suites": 1,
+  "policy": "authorization_time_snapshot",
+  "raw_exit_code": 0,
+  "release_input_sha256": {
+    "backend/worker-tests/protected_response_snapshot.test.js": "5b0a339b10d4723177bcdf79163126b43fe6b2ebb98e5335b5dada7854703d9d",
+    "docs/plans/protected-response-policy.md": "fa1aa9d4e1602f36d2eb841e1ad590fc1ccbd344ea5c02a1dcae8964d2f2db1d",
+    "docs/reviews/evidence/command-lookup-final-return.config.mjs": "fa946f6c1fcec6da2e54f1c207a1ebddd9d730489121adface64bb0ea99d3355",
+    "docs/reviews/evidence/command-lookup-final-return.test.js": "28cec08b858f5ca8ab0335007d8a1afcf3cbd63612ace70c5f21261f86875a11"
+  },
+  "skipped": 0,
+  "status": "passed_authorization_time_snapshot",
+  "superseded_receiving_cut_probe": {
+    "failed": 1,
+    "finding": "RUNTIME-FINAL-01",
+    "observed_returned_status": 200,
+    "passed": 0,
+    "raw_exit_code": 1,
+    "skipped": 0,
+    "status": "failed_acceptance_assertion",
+    "superseded": true
+  }
+}
