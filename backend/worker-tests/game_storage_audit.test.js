@@ -33,7 +33,7 @@ async function fixture(players = false) {
   return { host, id, code, members };
 }
 const sync = (f, session, view = "player") => exports.default.fetch(`${origin}/api/games/${f.id}/sync?view=${view}`, { headers: { Cookie: session } });
-const recover = f => post("/api/player-recovery", { game_code: f.code, alias: f.members[0].alias, recovery_answer: f.members[0].answer });
+const recover = f => post("/api/games/player-recovery", { game_code: f.code, alias: f.members[0].alias, recovery_answer: f.members[0].answer });
 async function stream(f, session) {
   const response = await exports.default.fetch(`${origin}/api/games/${f.id}/stream?view=player`, {
     headers: { Cookie: session, Origin: origin, Upgrade: "websocket", Connection: "Upgrade" },

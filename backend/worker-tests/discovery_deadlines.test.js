@@ -21,7 +21,7 @@ async function setup(view) {
   const code = (await lobby.json()).game_code;
   if (view === "entry") {
     const deadline = await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT idle_due FROM game_record").one().idle_due);
-    return { id, deadline, path: `/api/game-codes/${code}`, session: undefined };
+    return { id, deadline, path: `/api/games/codes/${code}`, session: undefined };
   }
   const context = await post(`/api/games/${id}/admission-context`, { game_code: code }, { id: null });
   expect(context.status).toBe(200);

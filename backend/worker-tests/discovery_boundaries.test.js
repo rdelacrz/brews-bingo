@@ -38,7 +38,7 @@ async function unchangedDomain(id) {
 test("discovery normalizes approved lowercase codes and percent-encoded outer spaces", async () => {
   const { id, code } = await lobby();
   for (const spelling of [code.toLowerCase(), `%20${code.toLowerCase()}%20`, code]) {
-    const response = await get(`/api/game-codes/${spelling}`);
+    const response = await get(`/api/games/codes/${spelling}`);
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ game_id: id, game_code: code, state: "awaiting_players", can_join_spectator: true });
     expect(response.headers.get("Cache-Control")).toBe("no-store");
@@ -52,7 +52,7 @@ test("discovery normalizes approved lowercase codes and percent-encoded outer sp
 test("discovery accepts harmless browser and tracing metadata while rejecting bearer authority", async () => {
   const { actor, code } = await lobby();
   const metadata = { "Sec-CH-UA": '"Browser";v="1"', "CF-EW-Via": "15", "Traceparent": "00-00000000000000000000000000000001-0000000000000001-01" };
-  for (const [path, session] of [["/api/games/current", actor.session], [`/api/game-codes/${code}`, undefined]]) {
+  for (const [path, session] of [["/api/games/current", actor.session], [`/api/games/codes/${code}`, undefined]]) {
     const response = await get(path, session, metadata);
     expect(response.status).toBe(200);
   }
@@ -78,7 +78,7 @@ test("cross-host discovery is read-only and does not create result grants or ren
   expect(await unchangedDomain(id)).toEqual(before);
   const cancelled = await post(`/api/games/${id}/cancel`, { confirmed: true, expected_state: "awaiting_players" }, { session: actor.session });
   expect(cancelled.status).toBe(200);
-  expect((await get(`/api/game-codes/${code}`)).status).toBe(404);
+  expect((await get(`/api/games/codes/${code}`)).status).toBe(404);
 });
 
 test("public entry projection has no private occupancy or membership and never silently uses invalid account credentials", async () => {
@@ -88,7 +88,7 @@ test("public entry projection has no private occupancy or membership and never s
   const joined = await post(`/api/games/${id}/players`, { game_code: code, alias: "OnlyPlayer" }, { session: cookie(context) });
   expect(joined.status).toBe(200);
   const player = cookie(joined);
-  for (const path of [`/api/game-codes/${code}`, `/api/games/${id}/availability?view=entry&game_code=${code}`]) {
+  for (const path of [`/api/games/codes/${code}`, `/api/games/${id}/availability?view=entry&game_code=${code}`]) {
     const response = await get(path);
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -107,7 +107,7 @@ test("public entry projection has no private occupancy or membership and never s
 test("unknown code does not reserve or create a game and invalid availability proof is denied", async () => {
   const actor = await enroll("DiscoveryBoundaryUnknown");
   const unknownId = commandId();
-  expect((await get("/api/game-codes/ZZZZZZZZ")).status).toBe(404);
+  expect((await get("/api/games/codes/ZZZZZZZZ")).status).toBe(404);
   expect((await get(`/api/games/${unknownId}/availability?view=entry&game_code=ZZZZZZZZ`)).status).toBe(404);
   const current = await get("/api/games/current", actor.session);
   expect(current.status).toBe(200);
@@ -124,12 +124,12 @@ test("idle expiry observed by public discovery fences a subsequent clock rollbac
   const originalNow = Date.now;
   try {
     Date.now = () => due;
-    expect((await get(`/api/game-codes/${code}`)).status).toBe(404);
+    expect((await get(`/api/games/codes/${code}`)).status).toBe(404);
     await runInDurableObject(owner(id), (_instance, state) => {
       expect(state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms).toBeGreaterThanOrEqual(due);
     });
     Date.now = () => due - 1;
-    expect((await get(`/api/game-codes/${code}`)).status).toBe(503);
+    expect((await get(`/api/games/codes/${code}`)).status).toBe(503);
   } finally { Date.now = originalNow; }
 });
 

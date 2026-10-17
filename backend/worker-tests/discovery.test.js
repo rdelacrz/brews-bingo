@@ -105,14 +105,31 @@ test("unknown codes never contact or initialize Game and codes normalize through
     instance.fetch = async request => { if (new URL(request.url).pathname === "/discovery") instance.discoveryCalls++; return instance.discoverySavedFetch(request); };
   });
   try {
-    for (const code of ["ABCD1234", "bad", "%25", "%GG", "%2541BCD1234"]) expect((await get(`/api/game-codes/${code}`)).status).toBe(404);
+    for (const code of ["ABCD1234", "bad", "%25", "%GG", "%2541BCD1234"]) expect((await get(`/api/games/codes/${code}`)).status).toBe(404);
     expect(await runInDurableObject(owner(f.id), instance => instance.discoveryCalls)).toBe(0);
     const code = await lobby(f);
-    const entry = await value(`/api/game-codes/%20${code.toLowerCase()}%20`);
+    const entry = await value(`/api/games/codes/%20${code.toLowerCase()}%20`);
     expect(entry).toEqual({ game_id: f.id, game_code: code, state: "awaiting_players", can_join_player: true, can_join_spectator: true });
     expect(await value(`/api/games/${f.id}/availability?view=entry&game_code=${code}`)).toEqual({ view: "entry", state: "awaiting_players", can_join_player: true, can_join_spectator: true });
     expect((await get(`/api/games/${f.id}/availability?view=entry&game_code=ABCD1234`)).status).toBe(404);
   } finally { await runInDurableObject(owner(f.id), instance => { instance.fetch = instance.discoverySavedFetch; delete instance.discoverySavedFetch; }); }
+});
+
+test("game code lookup uses the games codes route without a legacy alias", async () => {
+  const f = await newGame();
+  const code = await lobby(f);
+  const entry = await value(`/api/games/codes/${code}`);
+  expect(entry).toEqual({ game_id: f.id, game_code: code, state: "awaiting_players", can_join_player: true, can_join_spectator: true });
+  for (const path of [`/api/game-codes/${code}`, "/api/games/codes", "/api/games/codes/", `/api/games/codes/${code}/`, `/api/games/codes/${code}/extra`]) {
+    const response = await get(path);
+    expect(response.status).toBe(404);
+    expect(response.headers.has("Location")).toBe(false);
+    expect(response.headers.has("Set-Cookie")).toBe(false);
+    expect(await response.json()).toEqual({ error: { code: "not_found", message: "route not found" } });
+  }
+  expect((await exports.default.fetch(`${origin}/api/games/codes/${code}`, { method: "POST" })).status).toBe(405);
+  expect((await get(`/api/games/codes/${code}?view=entry`)).status).toBe(400);
+  expect((await get(`/api/games/codes/${code}`, undefined, { Authorization: "Bearer" })).status).toBe(403);
 });
 
 test("a failed initializer reserves preparing without exposing its pending identity", async () => {
@@ -138,16 +155,16 @@ test("hidden code publication and stale terminal release never masquerade as an 
   expect((await post(`/api/games/${f.id}/lobby`, { expected_revision: 0 }, { session: f.actor.session })).status).toBe(202);
   const hidden = await runInDurableObject(owner(f.id), (_instance, state) => state.storage.sql.exec("SELECT game_code FROM game_record").one().game_code);
   expect((await value("/api/games/current", f.actor.session)).game.game_code).toBeNull();
-  expect((await get(`/api/game-codes/${hidden}`)).status).toBe(404);
+  expect((await get(`/api/games/codes/${hidden}`)).status).toBe(404);
   await runInDurableObject(directory(), (_instance, state) => state.storage.sql.exec("DROP TRIGGER discovery_publish_fault"));
   // Force the existing genuine pending publication retry rather than forge a peer ACK.
   await runInDurableObject(owner(f.id), async (instance, state) => { state.storage.sql.exec("UPDATE game_pending_work SET next_attempt_at=?", Date.now()); await instance.alarm(); });
-  expect((await value(`/api/game-codes/${hidden}`)).game_id).toBe(f.id);
+  expect((await value(`/api/games/codes/${hidden}`)).game_id).toBe(f.id);
   await runInDurableObject(directory(), (_instance, state) => state.storage.sql.exec("CREATE TRIGGER discovery_release_fault BEFORE UPDATE ON directory_global_reservation BEGIN SELECT RAISE(ABORT,'test release fault'); END"));
   try {
     expect((await post(`/api/games/${f.id}/cancel`, { expected_state: "awaiting_players", confirmed: true }, { session: f.actor.session })).status).toBe(202);
     expect(await value("/api/games/current", f.actor.session)).toEqual({ slot: "releasing", game: null });
-    expect((await get(`/api/game-codes/${hidden}`)).status).toBe(404);
+    expect((await get(`/api/games/codes/${hidden}`)).status).toBe(404);
     expect((await get(`/api/games/${f.id}/availability?view=entry&game_code=${hidden}`)).status).toBe(404);
   } finally { await runInDurableObject(directory(), (_instance, state) => state.storage.sql.exec("DROP TRIGGER discovery_release_fault")); }
 });
@@ -177,7 +194,7 @@ test("availability counts only valid connected players, capacities and ownership
     await runInDurableObject(directory(), (_instance, state) => state.storage.sql.exec("UPDATE directory_game_index SET state='awaiting_players',started_at=NULL,source_revision=1 WHERE game_id=?", f.id));
     const afterStart = await rows(f.id);
     expect((await value("/api/games/current", peer.session)).game.state).toBe("in_progress");
-    expect((await value(`/api/game-codes/${code}`)).can_join_player).toBe(false);
+    expect((await value(`/api/games/codes/${code}`)).can_join_player).toBe(false);
     expect((await value(path, f.actor.session)).can_start).toBe(false);
     expect(await rows(f.id)).toEqual(afterStart);
     await runInDurableObject(owner(f.id), (_instance, state) => state.storage.sql.exec("UPDATE game_sessions SET revoked_at=? WHERE player_id=(SELECT player_id FROM game_players WHERE alias='First')", Date.now()));
@@ -194,7 +211,7 @@ test.each(["account", "directory", "game"])("discovery fails closed on genuine %
   try {
     const response = await get("/api/games/current", f.actor.session);
     expect(response.status).toBe(503); expect(Object.keys(await response.json())).toEqual(["error"]);
-    if (fault !== "account") expect((await get(`/api/game-codes/${code}`)).status).toBe(503);
+    if (fault !== "account") expect((await get(`/api/games/codes/${code}`)).status).toBe(503);
   } finally { if (fault === "account") await inOwner(instance => { instance.fetch = instance.discoverySavedFetch; delete instance.discoverySavedFetch; }); }
 });
 
@@ -221,12 +238,12 @@ test("idle expiry is durably fenced in Workerd and cannot resurrect after clock 
   await runInDurableObject(owner(f.id), (instance, state) => { state.storage.sql.exec("UPDATE game_record SET idle_due=?", due); instance.discoverySavedAlarm = instance.alarm.bind(instance); instance.alarm = async () => new Response("test-only alarm held"); });
   try {
     Date.now = () => due;
-    expect((await get(`/api/game-codes/${code}`)).status).toBe(404);
+    expect((await get(`/api/games/codes/${code}`)).status).toBe(404);
     expect(await value("/api/games/current", f.actor.session)).toEqual({ slot: "releasing", game: null });
     expect(await runInDurableObject(owner(f.id), (_instance, state) => state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms)).toBe(due);
     Date.now = () => due - 1;
     await evictDurableObject(owner(f.id));
-    expect((await get(`/api/game-codes/${code}`)).status).toBe(503);
+    expect((await get(`/api/games/codes/${code}`)).status).toBe(503);
     expect((await get("/api/games/current", f.actor.session)).status).toBe(503);
   } finally { Date.now = originalNow; await runInDurableObject(owner(f.id), instance => { if (instance.discoverySavedAlarm) { instance.alarm = instance.discoverySavedAlarm; delete instance.discoverySavedAlarm; } }); }
 });
@@ -239,7 +256,7 @@ test.each(["ignored_write", "sync"])("discovery deadline %s failure never return
     if (fault === "ignored_write") state.storage.sql.exec("CREATE TRIGGER discovery_expiry_fault BEFORE UPDATE ON game_metadata BEGIN SELECT RAISE(IGNORE); END");
     else { instance.discoverySavedSync = state.storage.sync.bind(state.storage); state.storage.sync = async () => { if (state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms === due) throw new Error("test-only denial sync fault"); return instance.discoverySavedSync(); }; }
   });
-  try { Date.now = () => due; const response = await get(`/api/game-codes/${code}`); expect(response.status).toBe(503); expect(Object.keys(await response.json())).toEqual(["error"]); }
+  try { Date.now = () => due; const response = await get(`/api/games/codes/${code}`); expect(response.status).toBe(503); expect(Object.keys(await response.json())).toEqual(["error"]); }
   finally { Date.now = originalNow; await runInDurableObject(owner(f.id), (instance, state) => { instance.alarm = instance.discoverySavedAlarm; if (instance.discoverySavedSync) state.storage.sync = instance.discoverySavedSync; state.storage.sql.exec("DROP TRIGGER IF EXISTS discovery_expiry_fault"); }); }
 });
 
@@ -290,10 +307,10 @@ test("code expiry first observed at edge release persists denial before clock ro
     };
   });
   try {
-    expect((await get(`/api/game-codes/${code}`)).status).toBe(404);
+    expect((await get(`/api/games/codes/${code}`)).status).toBe(404);
     expect(await runInDurableObject(owner(f.id), (_instance, state) => state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms)).toBe(due);
     Date.now = () => due - 1;
-    expect((await get(`/api/game-codes/${code}`)).status).toBe(503);
+    expect((await get(`/api/games/codes/${code}`)).status).toBe(503);
   } finally { Date.now = originalNow; await runInDurableObject(owner(f.id), instance => { instance.fetch = instance.discoverySavedFetch; instance.alarm = instance.discoverySavedAlarm; delete instance.discoverySavedFetch; delete instance.discoverySavedAlarm; }); }
 });
 
@@ -326,7 +343,7 @@ test("revocation during the final denial output gate cannot disclose an account 
 
 test("unknown code reads leave the genuine GAMES namespace object inventory unchanged", async () => {
   const before = (await listDurableObjectIds(env.GAMES)).map(id => id.toString()).sort();
-  expect((await get("/api/game-codes/ZZZZZZZZ")).status).toBe(404);
+  expect((await get("/api/games/codes/ZZZZZZZZ")).status).toBe(404);
   expect((await get("/api/games/01900000-0000-7000-8000-000000000099/availability?view=entry&game_code=ZZZZZZZZ")).status).toBe(404);
   expect((await listDurableObjectIds(env.GAMES)).map(id => id.toString()).sort()).toEqual(before);
 });

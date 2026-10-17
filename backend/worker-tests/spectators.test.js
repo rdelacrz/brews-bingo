@@ -97,7 +97,7 @@ test("concurrent Start and player role switch serialize without deleting a start
 });
 test("spectator availability releases expired grace occupancy and fences rollback",async()=>{
  const f=await fixture(1),s=await spectator(f),deadline=(await rows(f)).spectators[0].grace_expires_at;
- try{await clock(f,deadline);const entry=await exports.default.fetch(`${origin}/api/game-codes/${f.code}`);expect(entry.status).toBe(200);expect((await entry.json()).can_join_spectator).toBe(true);expect((await rows(f)).spectators).toHaveLength(0);await clock(f,deadline-1);expect((await get(f,s.session)).status).toBe(503);}
+ try{await clock(f,deadline);const entry=await exports.default.fetch(`${origin}/api/games/codes/${f.code}`);expect(entry.status).toBe(200);expect((await entry.json()).can_join_spectator).toBe(true);expect((await rows(f)).spectators).toHaveLength(0);await clock(f,deadline-1);expect((await get(f,s.session)).status).toBe(503);}
  finally{await restoreClock(f);}
 });
 for(const event of ["ack","frame","attachment"])test(`stale spectator ${event} cannot reauthorize a switched socket`,async()=>{
@@ -282,7 +282,7 @@ for(const capacity of [0,1])for(const state of ["awaiting_players","in_progress"
   for(const full of capacity?[false,true]:[false]){
    let s;if(full)s=await spectator(f);
    const flag=capacity>0&&!full;
-   const entry=await exports.default.fetch(`${origin}/api/game-codes/${f.code}`);expect(entry.status).toBe(200);const publicCode=await entry.json();expect(publicCode.can_join_spectator).toBe(flag);expect(publicCode.can_join_player).toBe(state==="awaiting_players");
+   const entry=await exports.default.fetch(`${origin}/api/games/codes/${f.code}`);expect(entry.status).toBe(200);const publicCode=await entry.json();expect(publicCode.can_join_spectator).toBe(flag);expect(publicCode.can_join_player).toBe(state==="awaiting_players");
    for(const [selected,session] of [["entry",null],["account",f.host.session],...(running?[["player",running.players[0].session]]:[]),...(s?[["spectator",s.session]]:[])]){
     const r=await exports.default.fetch(`${origin}/api/games/${f.id}/availability?view=${selected}${selected==="entry"?`&game_code=${f.code}`:""}`,{headers:session?{Cookie:session}:{}});expect(r.status).toBe(200);expect(r.headers.has("Set-Cookie")).toBe(false);const body=await r.json();expect(body.state).toBe(state);expect(body.can_join_spectator).toBe(flag);
     if(selected==="account"){expect(body.spectator_count).toBe(full?1:0);expect(body.spectator_capacity).toBe(capacity);}else for(const field of ["players","board","player_count","spectator_count","spectator_capacity"])expect(body[field]).toBeUndefined();

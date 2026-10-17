@@ -361,190 +361,6 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_discovery",
-      "label": "discovery.rs",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_availabilityview",
-      "label": "AvailabilityView",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L16",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_discoverycommand",
-      "label": "DiscoveryCommand",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L23",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_option",
-      "label": "Option",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_gameid",
-      "label": "GameId",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_discoveryrequest",
-      "label": "DiscoveryRequest",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L35",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_string",
-      "label": "String",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_drop",
-      "label": "Drop",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_discoveryrequest_drop",
-      "label": ".drop()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L40",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_transport_code",
-      "label": "transport_code()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L45",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_result",
-      "label": "Result",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_query_fields",
-      "label": "query_fields()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_iterator",
-      "label": "Iterator",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_item",
-      "label": "Item",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_no_query",
-      "label": "no_query()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L87",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_decode_discovery",
-      "label": "decode_discovery()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_method",
-      "label": "Method",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_rs_headermap",
-      "label": "HeaderMap",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_read",
-      "label": "read()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_discovery_singleton_filters_and_exact_routes_are_closed",
-      "label": "discovery_singleton_filters_and_exact_routes_are_closed()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L254",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_code_lookup_normalizes_once_and_strictly_decodes_transport",
-      "label": "code_lookup_normalizes_once_and_strictly_decodes_transport()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L303",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_availability_selects_exact_context_without_credential_fallback",
-      "label": "availability_selects_exact_context_without_credential_fallback()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L342",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_discovery_discovery_rejects_body_retry_bearer_unknown_and_unbounded_headers",
-      "label": "discovery_rejects_body_retry_bearer_unknown_and_unbounded_headers()",
-      "file_type": "code",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L387",
-      "_origin": "ast"
-    },
-    {
       "id": "backend_src_api_error",
       "label": "error.rs",
       "file_type": "code",
@@ -577,27 +393,19 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_readrole",
-      "label": "ReadRole",
+      "id": "backend_src_api_games_reads_availabilityview",
+      "label": "AvailabilityView",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L14",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_readselection",
-      "label": "ReadSelection",
+      "id": "backend_src_api_games_reads_discoverycommand",
+      "label": "DiscoveryCommand",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L21",
-      "_origin": "ast"
-    },
-    {
-      "id": "backend_src_api_games_reads_rs_gameid",
-      "label": "GameId",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -609,19 +417,19 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_rs_playerid",
-      "label": "PlayerId",
+      "id": "backend_src_api_games_reads_rs_gameid",
+      "label": "GameId",
       "file_type": "code",
       "source_file": "",
       "source_location": "",
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_gamereadrequest",
-      "label": "GameReadRequest",
+      "id": "backend_src_api_games_reads_discoveryrequest",
+      "label": "DiscoveryRequest",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L28",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -641,27 +449,67 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_gamereadrequest_drop",
+      "id": "backend_src_api_games_reads_discoveryrequest_drop",
       "label": ".drop()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L33",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_game_read_route",
-      "label": "game_read_route()",
+      "id": "backend_src_api_games_reads_transport_code",
+      "label": "transport_code()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L37",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_decode_game_read",
-      "label": "decode_game_read()",
+      "id": "backend_src_api_games_reads_rs_result",
+      "label": "Result",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_query_fields",
+      "label": "query_fields()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L72",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_rs_iterator",
+      "label": "Iterator",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_rs_item",
+      "label": "Item",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_no_query",
+      "label": "no_query()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L90",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_decode_discovery",
+      "label": "decode_discovery()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
       "_origin": "ast"
     },
     {
@@ -681,11 +529,59 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_src_api_games_reads_rs_result",
-      "label": "Result",
+      "id": "backend_src_api_games_reads_readrole",
+      "label": "ReadRole",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L249",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_readselection",
+      "label": "ReadSelection",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L256",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_rs_playerid",
+      "label": "PlayerId",
       "file_type": "code",
       "source_file": "",
       "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_gamereadrequest",
+      "label": "GameReadRequest",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L263",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_gamereadrequest_drop",
+      "label": ".drop()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L268",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_game_read_route",
+      "label": "game_read_route()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L272",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_decode_game_read",
+      "label": "decode_game_read()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L296",
       "_origin": "ast"
     },
     {
@@ -693,7 +589,55 @@
       "label": "read_rejection_context()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_read",
+      "label": "read()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_discovery_singleton_filters_and_exact_routes_are_closed",
+      "label": "discovery_singleton_filters_and_exact_routes_are_closed()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L414",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_code_lookup_uses_games_codes_namespace_only",
+      "label": "code_lookup_uses_games_codes_namespace_only()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L463",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_code_lookup_normalizes_once_and_strictly_decodes_transport",
+      "label": "code_lookup_normalizes_once_and_strictly_decodes_transport()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L482",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_availability_selects_exact_context_without_credential_fallback",
+      "label": "availability_selects_exact_context_without_credential_fallback()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L521",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_api_games_reads_discovery_rejects_body_retry_bearer_unknown_and_unbounded_headers",
+      "label": "discovery_rejects_body_retry_bearer_unknown_and_unbounded_headers()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L566",
       "_origin": "ast"
     },
     {
@@ -701,7 +645,7 @@
       "label": "decode()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L175",
+      "source_location": "L640",
       "_origin": "ast"
     },
     {
@@ -709,7 +653,7 @@
       "label": "command_lookup_route_uses_closed_existing_read_grammar()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L188",
+      "source_location": "L653",
       "_origin": "ast"
     },
     {
@@ -717,7 +661,7 @@
       "label": "dedicated_reads_closed_selectors_and_participant_isolation()",
       "file_type": "code",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L250",
+      "source_location": "L715",
       "_origin": "ast"
     },
     {
@@ -993,11 +937,19 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_src_api_games_writes_player_recovery_uses_games_namespace_only",
+      "label": "player_recovery_uses_games_namespace_only()",
+      "file_type": "code",
+      "source_file": "backend/src/api/games/writes.rs",
+      "source_location": "L654",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_src_api_games_writes_request_zeroization_erases_selected_cookie_and_optional_recovery_material",
       "label": "request_zeroization_erases_selected_cookie_and_optional_recovery_material()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L654",
+      "source_location": "L706",
       "_origin": "ast"
     },
     {
@@ -1005,7 +957,7 @@
       "label": "shared_query_names_preserve_the_public_wire_contract()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L679",
+      "source_location": "L731",
       "_origin": "ast"
     },
     {
@@ -1013,7 +965,7 @@
       "label": "exact_routes_reject_other_methods_authorization_and_origin_ambiguity()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L693",
+      "source_location": "L745",
       "_origin": "ast"
     },
     {
@@ -1021,7 +973,7 @@
       "label": "mutations_require_one_supported_media_type_and_exact_retry_header_rules()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L737",
+      "source_location": "L789",
       "_origin": "ast"
     },
     {
@@ -1029,7 +981,7 @@
       "label": "all_transport_inputs_have_release_active_finite_bounds()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L805",
+      "source_location": "L857",
       "_origin": "ast"
     },
     {
@@ -1037,7 +989,7 @@
       "label": "stream_requires_exact_origin_websocket_upgrade_and_noncredential_selector()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L881",
+      "source_location": "L933",
       "_origin": "ast"
     },
     {
@@ -1045,7 +997,7 @@
       "label": "sync_selects_only_requested_authority_when_account_and_player_cookies_coexist()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L929",
+      "source_location": "L981",
       "_origin": "ast"
     },
     {
@@ -1053,7 +1005,7 @@
       "label": "admission_forwards_an_existing_player_cookie_without_claiming_authority()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L994",
+      "source_location": "L1046",
       "_origin": "ast"
     },
     {
@@ -1061,7 +1013,7 @@
       "label": "admission_context_is_keyless_and_join_uses_separate_game_scoped_cookie()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1026",
+      "source_location": "L1078",
       "_origin": "ast"
     },
     {
@@ -1069,7 +1021,7 @@
       "label": "final_exit_selects_existing_cookie_without_accepting_a_target_or_revision()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1081",
+      "source_location": "L1133",
       "_origin": "ast"
     },
     {
@@ -1077,7 +1029,7 @@
       "label": "gameplay_payloads_preserve_exact_values_identity_and_confirmation()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1135",
+      "source_location": "L1187",
       "_origin": "ast"
     },
     {
@@ -1085,7 +1037,7 @@
       "label": "lobby_and_start_require_canonical_paths_and_original_required_revision()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1256",
+      "source_location": "L1308",
       "_origin": "ast"
     },
     {
@@ -1093,7 +1045,7 @@
       "label": "creation_route_decodes_original_configuration_without_caller_identity()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1327",
+      "source_location": "L1379",
       "_origin": "ast"
     },
     {
@@ -1101,7 +1053,7 @@
       "label": "membership_routes_select_player_cookie_and_reject_transport_and_actor_injection()",
       "file_type": "code",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1351",
+      "source_location": "L1403",
       "_origin": "ast"
     },
     {
@@ -19469,7 +19421,7 @@
       "label": "AccountsObject",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L91",
+      "source_location": "L90",
       "_origin": "ast"
     },
     {
@@ -19485,7 +19437,7 @@
       "label": ".cleanup_alarm()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L96",
+      "source_location": "L95",
       "_origin": "ast"
     },
     {
@@ -19493,7 +19445,7 @@
       "label": ".service()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "_origin": "ast"
     },
     {
@@ -19501,7 +19453,7 @@
       "label": ".execute()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L143",
+      "source_location": "L142",
       "_origin": "ast"
     },
     {
@@ -19509,7 +19461,7 @@
       "label": ".combined_deadline()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "_origin": "ast"
     },
     {
@@ -19525,7 +19477,7 @@
       "label": ".schedule()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L265",
+      "source_location": "L264",
       "_origin": "ast"
     },
     {
@@ -19541,7 +19493,7 @@
       "label": ".new()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L287",
+      "source_location": "L286",
       "_origin": "ast"
     },
     {
@@ -19557,7 +19509,7 @@
       "label": ".fetch()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L290",
+      "source_location": "L289",
       "_origin": "ast"
     },
     {
@@ -19565,7 +19517,7 @@
       "label": ".alarm()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L313",
+      "source_location": "L312",
       "_origin": "ast"
     },
     {
@@ -25333,7 +25285,7 @@
       "label": "join()",
       "file_type": "code",
       "source_file": "backend/tests/gameplay_https_wss.py",
-      "source_location": "L259",
+      "source_location": "L260",
       "_origin": "ast"
     },
     {
@@ -30905,6 +30857,30 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tools_historical_probe_config",
+      "label": "historical_probe.config.mjs",
+      "file_type": "code",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_historical_probe_config_probe",
+      "label": "probe",
+      "file_type": "code",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_tools_historical_probe_config_historicalrecoveryroute",
+      "label": "historicalRecoveryRoute",
+      "file_type": "code",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tools_release_gate",
       "label": "release_gate.py",
       "file_type": "code",
@@ -32641,11 +32617,19 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tools_tests_test_release_gate_reportertests_test_historical_route_adapter_changes_only_the_archived_probe_url",
+      "label": ".test_historical_route_adapter_changes_only_the_archived_probe_url()",
+      "file_type": "code",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L278",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tools_tests_test_release_gate_reportertests_test_source_manifest_includes_approved_policy_and_github_policy_inputs",
       "label": ".test_source_manifest_includes_approved_policy_and_github_policy_inputs()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L278",
+      "source_location": "L306",
       "_origin": "ast"
     },
     {
@@ -32653,7 +32637,7 @@
       "label": "ExecutionTests",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L291",
+      "source_location": "L320",
       "_origin": "ast"
     },
     {
@@ -32661,7 +32645,7 @@
       "label": ".test_registered_parallel_children_are_cancelled_from_the_main_thread()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L292",
+      "source_location": "L321",
       "_origin": "ast"
     },
     {
@@ -32669,7 +32653,7 @@
       "label": ".test_real_child_deadline_terminates_the_process_group()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L316",
+      "source_location": "L345",
       "_origin": "ast"
     },
     {
@@ -32677,7 +32661,7 @@
       "label": ".test_worker_artifact_changes_are_rejected()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L323",
+      "source_location": "L352",
       "_origin": "ast"
     },
     {
@@ -32685,7 +32669,7 @@
       "label": ".test_real_child_output_is_hashed_not_persisted()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L330",
+      "source_location": "L359",
       "_origin": "ast"
     },
     {
@@ -32693,7 +32677,7 @@
       "label": ".test_existing_output_directory_is_not_reused()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L343",
+      "source_location": "L372",
       "_origin": "ast"
     },
     {
@@ -32701,7 +32685,7 @@
       "label": ".test_output_cannot_be_inside_the_repository()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L349",
+      "source_location": "L378",
       "_origin": "ast"
     },
     {
@@ -32709,7 +32693,7 @@
       "label": ".test_failed_contract_and_source_drift_cannot_be_green()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L354",
+      "source_location": "L383",
       "_origin": "ast"
     },
     {
@@ -32717,7 +32701,7 @@
       "label": ".test_approved_snapshot_with_preserved_historical_failure_is_green_locally()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L369",
+      "source_location": "L398",
       "_origin": "ast"
     },
     {
@@ -32725,7 +32709,7 @@
       "label": ".test_contract_executes_separate_new_acceptance_and_unchanged_original_without_build()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L386",
+      "source_location": "L415",
       "_origin": "ast"
     },
     {
@@ -32733,7 +32717,7 @@
       "label": ".test_passing_local_lane_is_not_production_certification()",
       "file_type": "code",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L398",
+      "source_location": "L427",
       "_origin": "ast"
     },
     {
@@ -42086,608 +42070,6 @@
       "_origin": "ast"
     },
     {
-      "source": "backend_src_api_discovery",
-      "target": "super",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L2",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "brews_domain",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L6",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "http",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L10",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "zeroize",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L11",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_availabilityview",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L16",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_discoverycommand",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L23",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L25",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "shared_domain_src_games_gamestate",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L25",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "shared_domain_src_games_gamecode",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L28",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "backend_src_api_discovery_rs_gameid",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L30",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "backend_src_api_discovery_availabilityview",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L31",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L32",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoverycommand",
-      "target": "shared_domain_src_games_gamecode",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L32",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_discoveryrequest",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L35",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoveryrequest",
-      "target": "backend_src_api_discovery_discoverycommand",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L36",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoveryrequest",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L37",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoveryrequest",
-      "target": "backend_src_api_discovery_rs_string",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L37",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoveryrequest",
-      "target": "backend_src_api_discovery_rs_drop",
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L39",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_discoveryrequest",
-      "target": "backend_src_api_discovery_discoveryrequest_drop",
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L40",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_transport_code",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L45",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_transport_code",
-      "target": "backend_src_api_discovery_rs_result",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L45",
-      "weight": 1.0,
-      "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_transport_code",
-      "target": "shared_domain_src_games_gamecode",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L45",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_transport_code",
-      "target": "backend_src_api_error_apierror",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L45",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_query_fields",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_query_fields",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_query_fields",
-      "target": "backend_src_api_discovery_rs_result",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "weight": 1.0,
-      "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_query_fields",
-      "target": "backend_src_api_discovery_rs_iterator",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_query_fields",
-      "target": "backend_src_api_discovery_rs_item",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_query_fields",
-      "target": "backend_src_api_error_apierror",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L69",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_no_query",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L87",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_no_query",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L87",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_no_query",
-      "target": "backend_src_api_discovery_rs_result",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L87",
-      "weight": 1.0,
-      "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_no_query",
-      "target": "backend_src_api_error_apierror",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L87",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_decode_discovery",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_rs_method",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_rs_headermap",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_rs_result",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_discoveryrequest",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_error_apierror",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "super",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L247",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_read",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_read",
-      "target": "backend_src_api_discovery_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_read",
-      "target": "backend_src_api_discovery_rs_headermap",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_read",
-      "target": "backend_src_api_discovery_rs_result",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "weight": 1.0,
-      "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_read",
-      "target": "backend_src_api_discovery_discoveryrequest",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_read",
-      "target": "backend_src_api_error_apierror",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L250",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_discovery_singleton_filters_and_exact_routes_are_closed",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L254",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_code_lookup_normalizes_once_and_strictly_decodes_transport",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L303",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_availability_selects_exact_context_without_credential_fallback",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L342",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery",
-      "target": "backend_src_api_discovery_discovery_rejects_body_retry_bearer_unknown_and_unbounded_headers",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L387",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_query_fields",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L165",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_no_query",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L178",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_discovery_transport_code",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L182",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_read",
-      "target": "backend_src_api_discovery_decode_discovery",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L251",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_availability_selects_exact_context_without_credential_fallback",
-      "target": "backend_src_api_discovery_read",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L363",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "backend_src_api_error",
       "target": "backend_src_api_error_apierror",
       "relation": "contains",
@@ -42721,22 +42103,11 @@
     },
     {
       "source": "backend_src_api_games_mod",
-      "target": "game_headers_max_bytes",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/games/mod.rs",
-      "source_location": "L10",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_games_mod",
       "target": "decode_empty_game_body",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/mod.rs",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -42747,7 +42118,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/mod.rs",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -42758,18 +42129,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/mod.rs",
-      "source_location": "L19",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_games_mod",
-      "target": "writes",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/games/mod.rs",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -42809,7 +42169,7 @@
     },
     {
       "source": "backend_src_api_games_reads",
-      "target": "ids",
+      "target": "brews_domain",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
@@ -42824,7 +42184,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L9",
+      "source_location": "L12",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -42835,7 +42195,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L10",
+      "source_location": "L13",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -42846,9 +42206,396 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L11",
+      "source_location": "L14",
       "weight": 1.0,
       "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_availabilityview",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_discoverycommand",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L28",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "shared_domain_src_games_gamestate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L28",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "shared_domain_src_games_gamecode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L31",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "backend_src_api_games_reads_rs_gameid",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L33",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "backend_src_api_games_reads_availabilityview",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L35",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoverycommand",
+      "target": "shared_domain_src_games_gamecode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L35",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_discoveryrequest",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoveryrequest",
+      "target": "backend_src_api_games_reads_discoverycommand",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L39",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoveryrequest",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoveryrequest",
+      "target": "backend_src_api_games_reads_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoveryrequest",
+      "target": "backend_src_api_games_reads_rs_drop",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_discoveryrequest",
+      "target": "backend_src_api_games_reads_discoveryrequest_drop",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_transport_code",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_transport_code",
+      "target": "backend_src_api_games_reads_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_transport_code",
+      "target": "shared_domain_src_games_gamecode",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_transport_code",
+      "target": "backend_src_api_error_apierror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_query_fields",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_query_fields",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L72",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_query_fields",
+      "target": "backend_src_api_games_reads_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L72",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_query_fields",
+      "target": "backend_src_api_games_reads_rs_iterator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L72",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_query_fields",
+      "target": "backend_src_api_games_reads_rs_item",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L72",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_query_fields",
+      "target": "backend_src_api_error_apierror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L72",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_no_query",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_no_query",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L90",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_no_query",
+      "target": "backend_src_api_games_reads_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L90",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_no_query",
+      "target": "backend_src_api_error_apierror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L90",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_decode_discovery",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_rs_method",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_rs_headermap",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_discoveryrequest",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_error_apierror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L97",
+      "weight": 1.0,
+      "context": "generic_arg",
       "_origin": "ast"
     },
     {
@@ -42857,7 +42604,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L14",
+      "source_location": "L249",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42867,7 +42614,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L21",
+      "source_location": "L256",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42877,7 +42624,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L22",
+      "source_location": "L257",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -42888,7 +42635,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L23",
+      "source_location": "L258",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -42899,7 +42646,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L24",
+      "source_location": "L259",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -42910,7 +42657,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L25",
+      "source_location": "L260",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -42921,7 +42668,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L25",
+      "source_location": "L260",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -42932,7 +42679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L28",
+      "source_location": "L263",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42942,7 +42689,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L29",
+      "source_location": "L264",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -42953,7 +42700,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L30",
+      "source_location": "L265",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -42964,7 +42711,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L30",
+      "source_location": "L265",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -42975,7 +42722,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L32",
+      "source_location": "L267",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42985,7 +42732,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L33",
+      "source_location": "L268",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -42995,7 +42742,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L37",
+      "source_location": "L272",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43005,7 +42752,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L37",
+      "source_location": "L272",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -43016,7 +42763,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L37",
+      "source_location": "L272",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43027,7 +42774,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L37",
+      "source_location": "L272",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43038,7 +42785,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43048,7 +42795,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43059,7 +42806,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43070,7 +42817,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43081,7 +42828,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -43092,7 +42839,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43103,7 +42850,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L61",
+      "source_location": "L296",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43114,7 +42861,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43124,7 +42871,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43135,7 +42882,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43146,7 +42893,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43157,7 +42904,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -43168,7 +42915,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43179,7 +42926,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43190,7 +42937,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43201,7 +42948,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43212,7 +42959,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L142",
+      "source_location": "L377",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43223,9 +42970,124 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L172",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_read",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_read",
+      "target": "backend_src_api_games_reads_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_read",
+      "target": "backend_src_api_games_reads_rs_headermap",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_read",
+      "target": "backend_src_api_games_reads_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_read",
+      "target": "backend_src_api_games_reads_discoveryrequest",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_read",
+      "target": "backend_src_api_error_apierror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L410",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_discovery_singleton_filters_and_exact_routes_are_closed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L414",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_code_lookup_uses_games_codes_namespace_only",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L463",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_code_lookup_normalizes_once_and_strictly_decodes_transport",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L482",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_availability_selects_exact_context_without_credential_fallback",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L521",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads",
+      "target": "backend_src_api_games_reads_discovery_rejects_body_retry_bearer_unknown_and_unbounded_headers",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L566",
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -43234,7 +43096,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L175",
+      "source_location": "L640",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43244,7 +43106,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L175",
+      "source_location": "L640",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -43255,7 +43117,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L175",
+      "source_location": "L640",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -43266,7 +43128,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L175",
+      "source_location": "L640",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43277,7 +43139,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L175",
+      "source_location": "L640",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -43288,7 +43150,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L188",
+      "source_location": "L653",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43298,7 +43160,40 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L250",
+      "source_location": "L715",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_query_fields",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L168",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_no_query",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L181",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_games_reads_transport_code",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L185",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43309,7 +43204,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L69",
+      "source_location": "L304",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43320,7 +43215,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L151",
+      "source_location": "L386",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_read",
+      "target": "backend_src_api_games_reads_decode_discovery",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L411",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_availability_selects_exact_context_without_credential_fallback",
+      "target": "backend_src_api_games_reads_read",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L542",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -43331,7 +43248,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L178",
+      "source_location": "L643",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44554,7 +44471,7 @@
     },
     {
       "source": "backend_src_api_games_writes",
-      "target": "backend_src_api_games_writes_request_zeroization_erases_selected_cookie_and_optional_recovery_material",
+      "target": "backend_src_api_games_writes_player_recovery_uses_games_namespace_only",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
@@ -44564,11 +44481,21 @@
     },
     {
       "source": "backend_src_api_games_writes",
+      "target": "backend_src_api_games_writes_request_zeroization_erases_selected_cookie_and_optional_recovery_material",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/writes.rs",
+      "source_location": "L706",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_writes",
       "target": "backend_src_api_games_writes_shared_query_names_preserve_the_public_wire_contract",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L679",
+      "source_location": "L731",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44578,7 +44505,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L693",
+      "source_location": "L745",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44588,7 +44515,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L737",
+      "source_location": "L789",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44598,7 +44525,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L805",
+      "source_location": "L857",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44608,7 +44535,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L881",
+      "source_location": "L933",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44618,7 +44545,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L929",
+      "source_location": "L981",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44628,7 +44555,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L994",
+      "source_location": "L1046",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44638,7 +44565,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1026",
+      "source_location": "L1078",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44648,7 +44575,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1081",
+      "source_location": "L1133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44658,7 +44585,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1135",
+      "source_location": "L1187",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44668,7 +44595,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1256",
+      "source_location": "L1308",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44678,7 +44605,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1327",
+      "source_location": "L1379",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44688,7 +44615,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1351",
+      "source_location": "L1403",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44836,13 +44763,35 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_src_api_games_writes_player_recovery_uses_games_namespace_only",
+      "target": "backend_src_api_games_writes_headers",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/writes.rs",
+      "source_location": "L657",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_writes_player_recovery_uses_games_namespace_only",
+      "target": "backend_src_api_games_writes_decode_games",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/api/games/writes.rs",
+      "source_location": "L658",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_src_api_games_writes_request_zeroization_erases_selected_cookie_and_optional_recovery_material",
       "target": "backend_src_api_games_writes_headers",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L656",
+      "source_location": "L708",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44853,7 +44802,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L663",
+      "source_location": "L715",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44864,7 +44813,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L672",
+      "source_location": "L724",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44875,7 +44824,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L687",
+      "source_location": "L739",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44886,7 +44835,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L694",
+      "source_location": "L746",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44897,7 +44846,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L738",
+      "source_location": "L790",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44908,7 +44857,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L806",
+      "source_location": "L858",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44919,7 +44868,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L887",
+      "source_location": "L939",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44930,7 +44879,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L938",
+      "source_location": "L990",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44941,7 +44890,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L996",
+      "source_location": "L1048",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44952,7 +44901,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1011",
+      "source_location": "L1063",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44963,7 +44912,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1029",
+      "source_location": "L1081",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44974,7 +44923,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1037",
+      "source_location": "L1089",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44985,7 +44934,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1083",
+      "source_location": "L1135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -44996,7 +44945,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1091",
+      "source_location": "L1143",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45007,7 +44956,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1136",
+      "source_location": "L1188",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45018,7 +44967,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1168",
+      "source_location": "L1220",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45029,7 +44978,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1262",
+      "source_location": "L1314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45040,7 +44989,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1266",
+      "source_location": "L1318",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45051,7 +45000,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1328",
+      "source_location": "L1380",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45062,7 +45011,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1328",
+      "source_location": "L1380",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45073,7 +45022,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1352",
+      "source_location": "L1404",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45084,7 +45033,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/games/writes.rs",
-      "source_location": "L1373",
+      "source_location": "L1425",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -45732,18 +45681,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/api/mod.rs",
-      "source_location": "L30",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_mod",
-      "target": "discovery",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/api/mod.rs",
-      "source_location": "L35",
+      "source_location": "L31",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -109959,7 +109897,7 @@
     },
     {
       "source": "backend_src_worker_runtime_discovery_mod_current_output",
-      "target": "backend_src_api_discovery_discoverycommand",
+      "target": "backend_src_api_games_reads_discoverycommand",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/discovery/mod.rs",
@@ -134482,13 +134420,24 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L91",
+      "source_location": "L90",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "backend_src_worker_runtime_mod_accountsobject",
       "target": "backend_src_worker_runtime_mod_rs_state",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/worker_runtime/mod.rs",
+      "source_location": "L91",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_worker_runtime_mod_accountsobject",
+      "target": "backend_src_worker_runtime_mod_rs_env",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
@@ -134499,22 +134448,11 @@
     },
     {
       "source": "backend_src_worker_runtime_mod_accountsobject",
-      "target": "backend_src_worker_runtime_mod_rs_env",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L93",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_worker_runtime_mod_accountsobject",
       "target": "backend_src_worker_runtime_mod_accountsobject_cleanup_alarm",
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L96",
+      "source_location": "L95",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134524,7 +134462,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L96",
+      "source_location": "L95",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134535,7 +134473,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L96",
+      "source_location": "L95",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134546,7 +134484,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134556,7 +134494,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134567,7 +134505,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134578,7 +134516,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134589,7 +134527,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134600,7 +134538,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134611,7 +134549,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134622,7 +134560,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L123",
+      "source_location": "L122",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134633,7 +134571,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L143",
+      "source_location": "L142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134643,7 +134581,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L143",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134654,7 +134592,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L143",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134665,7 +134603,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L143",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134676,7 +134614,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L143",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134687,7 +134625,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134697,7 +134635,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134708,7 +134646,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134719,7 +134657,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134730,7 +134668,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134741,7 +134679,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134752,7 +134690,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L256",
+      "source_location": "L255",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134763,7 +134701,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L265",
+      "source_location": "L264",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134773,7 +134711,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L265",
+      "source_location": "L264",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134784,7 +134722,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L265",
+      "source_location": "L264",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134795,7 +134733,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L286",
+      "source_location": "L285",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134805,7 +134743,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L287",
+      "source_location": "L286",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134815,7 +134753,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L287",
+      "source_location": "L286",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134826,7 +134764,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L287",
+      "source_location": "L286",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134837,7 +134775,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L287",
+      "source_location": "L286",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134848,7 +134786,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L290",
+      "source_location": "L289",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134858,7 +134796,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L290",
+      "source_location": "L289",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -134869,7 +134807,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L290",
+      "source_location": "L289",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134880,7 +134818,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L290",
+      "source_location": "L289",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134891,7 +134829,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L313",
+      "source_location": "L312",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134901,7 +134839,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L313",
+      "source_location": "L312",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -134912,7 +134850,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L313",
+      "source_location": "L312",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -134935,7 +134873,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L97",
+      "source_location": "L96",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134946,7 +134884,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L101",
+      "source_location": "L100",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134957,7 +134895,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L116",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134968,7 +134906,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L118",
+      "source_location": "L117",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134979,7 +134917,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L132",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -134990,7 +134928,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L155",
+      "source_location": "L154",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135001,7 +134939,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L162",
+      "source_location": "L161",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135012,7 +134950,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L169",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135023,7 +134961,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L218",
+      "source_location": "L217",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135034,7 +134972,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L218",
+      "source_location": "L217",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135045,7 +134983,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L274",
+      "source_location": "L273",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135056,7 +134994,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L307",
+      "source_location": "L306",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -135067,7 +135005,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L315",
+      "source_location": "L314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -160475,7 +160413,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/gameplay_https_wss.py",
-      "source_location": "L259",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -160574,7 +160512,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/gameplay_https_wss.py",
-      "source_location": "L261",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -160585,7 +160523,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/gameplay_https_wss.py",
-      "source_location": "L268",
+      "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -181208,6 +181146,48 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tools_historical_probe_config",
+      "target": "home_orangepi_workspace_brews_bingo_docs_reviews_evidence_command_lookup_final_return_config_mjs",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_historical_probe_config",
+      "target": "ref_node_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_historical_probe_config",
+      "target": "backend_tools_historical_probe_config_probe",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_historical_probe_config",
+      "target": "backend_tools_historical_probe_config_historicalrecoveryroute",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/historical_probe.config.mjs",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tools_release_gate",
       "target": "argparse",
       "relation": "imports",
@@ -186081,11 +186061,21 @@
     },
     {
       "source": "backend_tools_tests_test_release_gate_reportertests",
-      "target": "backend_tools_tests_test_release_gate_reportertests_test_source_manifest_includes_approved_policy_and_github_policy_inputs",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_historical_route_adapter_changes_only_the_archived_probe_url",
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
       "source_location": "L278",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tools_tests_test_release_gate_reportertests",
+      "target": "backend_tools_tests_test_release_gate_reportertests_test_source_manifest_includes_approved_policy_and_github_policy_inputs",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tools/tests/test_release_gate.py",
+      "source_location": "L306",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186095,7 +186085,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L291",
+      "source_location": "L320",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186105,7 +186095,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L292",
+      "source_location": "L321",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186115,7 +186105,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L316",
+      "source_location": "L345",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186125,7 +186115,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L323",
+      "source_location": "L352",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186135,7 +186125,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L330",
+      "source_location": "L359",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186145,7 +186135,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L343",
+      "source_location": "L372",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186155,7 +186145,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L349",
+      "source_location": "L378",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186165,7 +186155,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L354",
+      "source_location": "L383",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186175,7 +186165,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L369",
+      "source_location": "L398",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186185,7 +186175,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L386",
+      "source_location": "L415",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186195,7 +186185,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L398",
+      "source_location": "L427",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186360,7 +186350,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L371",
+      "source_location": "L400",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186371,7 +186361,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L389",
+      "source_location": "L418",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -186382,7 +186372,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tools/tests/test_release_gate.py",
-      "source_location": "L389",
+      "source_location": "L418",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217040,50 +217030,50 @@
       "_origin": "ast"
     },
     {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_utility_require_origin",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L110",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_utility_session_cookie",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L160",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_discovery_decode_discovery",
-      "target": "backend_src_api_utility_named_cookie",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "backend/src/api/discovery.rs",
-      "source_location": "L161",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_src_api_games_reads_decode_game_read",
+      "source": "backend_src_api_games_reads_decode_discovery",
       "target": "backend_src_api_utility_require_origin",
       "relation": "calls",
       "context": "call",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L78",
+      "source_location": "L113",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_utility_session_cookie",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L163",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_discovery",
+      "target": "backend_src_api_utility_named_cookie",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L164",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_api_games_reads_decode_game_read",
+      "target": "backend_src_api_utility_require_origin",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/src/api/games/reads.rs",
+      "source_location": "L313",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217095,7 +217085,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L127",
+      "source_location": "L362",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217107,7 +217097,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L128",
+      "source_location": "L363",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217119,7 +217109,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/api/games/reads.rs",
-      "source_location": "L166",
+      "source_location": "L401",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221499,7 +221489,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/worker_runtime/mod.rs",
-      "source_location": "L128",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast"
     },

@@ -487,7 +487,7 @@ class Runner:
         acceptance = parse_snapshot_acceptance(parse_worker(text), code)
         self.require_artifacts()
         code, text = self.command("superseded-receiving-cut-probe", [str(BACKEND / "node_modules/.bin/vitest"), "run", "--config",
-                                  str(ROOT / "docs/reviews/evidence/command-lookup-final-return.config.mjs"), "--reporter=json"], BACKEND, required=False)
+                                  str(BACKEND / "tools/historical_probe.config.mjs"), "--reporter=json"], BACKEND, required=False)
         historical = historical_observation(parse_worker(text), code)
         self.require_artifacts()
         result = {**acceptance, "release_input_sha256": inputs, "superseded_receiving_cut_probe": historical}

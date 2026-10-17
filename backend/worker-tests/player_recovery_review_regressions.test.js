@@ -13,7 +13,7 @@ async function fixture(){
  const answer=password(); const joined=await post(`/api/games/${id}/players`,{game_code:code,alias:'ReviewPlayer',recovery_answer:answer},{session:cookie(ctx)}); expect(joined.status).toBe(200);
  return {id,code,answer,player:(await joined.json()).player_id,session:cookie(joined)};
 }
-const recover=f=>post('/api/player-recovery',{game_code:f.code,alias:'ReviewPlayer',recovery_answer:f.answer});
+const recover=f=>post('/api/games/player-recovery',{game_code:f.code,alias:'ReviewPlayer',recovery_answer:f.answer});
 const sync=(f,session)=>exports.default.fetch(`${origin}/api/games/${f.id}/sync?view=player`,{headers:{Cookie:session}});
 async function restore(f){await runInDurableObject(owner(f.id),i=>{if(i.reviewOriginal){i.fetch=i.reviewOriginal;delete i.reviewOriginal;} delete i.reviewCut;});}
 test('cut1 expiry observed before output request survives rollback',async()=>{
@@ -65,7 +65,7 @@ for(const mode of ['IGNORE', "ABORT, 'review-only fault'"]){
  test(`real SQLite failure bucket write ${mode.startsWith('IGNORE')?'IGNORE':'ABORT'} rolls back all scope buckets`,async()=>{
   const f=await fixture();
   await runInDurableObject(owner(f.id),(_i,s)=>s.storage.sql.exec(`CREATE TRIGGER review_bucket_fault BEFORE INSERT ON game_recovery_buckets BEGIN SELECT RAISE(${mode}); END`));
-  const result=await post('/api/player-recovery',{game_code:f.code,alias:'ReviewPlayer',recovery_answer:password()});
+  const result=await post('/api/games/player-recovery',{game_code:f.code,alias:'ReviewPlayer',recovery_answer:password()});
   const buckets=await runInDurableObject(owner(f.id),(_i,s)=>[...s.storage.sql.exec('SELECT * FROM game_recovery_buckets')]);
   console.log('BUCKET_FAULT',JSON.stringify({mode:mode.startsWith('IGNORE')?'IGNORE':'ABORT',status:result.status,count:buckets.length}));expect(result.status).toBe(503);expect(buckets).toEqual([]);
  });

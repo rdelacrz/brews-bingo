@@ -77,8 +77,8 @@ test('rename preserves stable proof/session/expiry, trims ASCII and releases old
   expect((await rename(f,'Different',{id:command})).status).toBe(409);
   const noop=await rename(f,accepted.alias); expect(noop.status).toBe(200); expect((await noop.json()).view_revision).toBe(accepted.view_revision);
   await join(f,'First');
-  const old=await post('/api/player-recovery',{game_code:f.code,alias:'First',recovery_answer:f.players[0].answer}); expect(old.status).toBe(401);
-  const recovered=await post('/api/player-recovery',{game_code:f.code,alias:accepted.alias,recovery_answer:f.players[0].answer}); expect(recovered.status).toBe(200); expect((await recovered.json()).membership.player_id).toBe(accepted.player_id);
+  const old=await post('/api/games/player-recovery',{game_code:f.code,alias:'First',recovery_answer:f.players[0].answer}); expect(old.status).toBe(401);
+  const recovered=await post('/api/games/player-recovery',{game_code:f.code,alias:accepted.alias,recovery_answer:f.players[0].answer}); expect(recovered.status).toBe(200); expect((await recovered.json()).membership.player_id).toBe(accepted.player_id);
 });
 test('lobby Leave deletes membership and authority and requires new ID/proof with safe lost-response 401',async()=>{
   const f=await fixture(); const socket=await stream(f,f.players[0]); const command=commandId();
@@ -88,7 +88,7 @@ test('lobby Leave deletes membership and authority and requires new ID/proof wit
   expect(await counts(f)).toEqual({players:1,sessions:1,proofs:1,current:0,prepared:0});
   expect((await leave(f,'awaiting_players',{id:command})).status).toBe(401);
   expect((await sync(f,f.players[0].session)).status).toBe(401);
-  const recovery=await post('/api/player-recovery',{game_code:f.code,alias:'First',recovery_answer:f.players[0].answer});expect(recovery.status).toBe(401);
+  const recovery=await post('/api/games/player-recovery',{game_code:f.code,alias:'First',recovery_answer:f.players[0].answer});expect(recovery.status).toBe(401);
   const fresh=await join(f,'First');expect(fresh.body.player_id).not.toBe(f.players[0].body.player_id);
   socket.ws.close(1000);
 });

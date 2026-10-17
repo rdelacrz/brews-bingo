@@ -783,7 +783,9 @@ The former `get_active_game` proposal is removed: C2 is the single proposed look
 
 #### C4: `resolve_game_code` (Non-mutating)
 
-Path: `GET /api/game-codes/{code}`
+Path: `GET /api/games/codes/{code}`
+
+**Approved routing revision — 2026-10-17:** this replaces `/api/game-codes/{code}`; the old path returns 404 without an alias or redirect. Request decoding resides with the other game reads in `backend/src/api/games/reads.rs`. Code normalization, public projection and all authorization/expiry rules are unchanged.
 
 Auth scope: Anyone
 
@@ -1418,7 +1420,9 @@ Idempotent repeat handling after credential deletion and lost-response policy **
 
 #### D13: `recover_player_session` (Mutating)
 
-Path: `POST /api/player-recovery`
+Path: `POST /api/games/player-recovery`
+
+The game is selected by the submitted `game_code`; the former `/api/player-recovery` path has no alias or redirect.
 
 Auth scope: Anyone
 
@@ -2510,7 +2514,7 @@ The user authorized local implementation of Slice 1 in `PENDING.md` with the con
 | --- | --- |
 | C1 `GET /api/games` | Enabled Verified host/admin Normal account only. Optional exact `state=new\|awaiting_players\|in_progress`. Return `{slot,games,next_cursor:null}` with zero or one current nonterminal safe summary. Singleton cardinality makes ordering and pagination unnecessary. Reject cursor, limit, terminal filters, duplicate or unknown fields. A filtered empty array preserves the actual slot status. |
 | C2 `GET /api/games/current` | Same account authority, no query or body. Return `{slot,game}` where the game is nullable. `free` means Directory's reservation is absent at its final authenticated cut; `preparing` means reservation exists but initialization is unconfirmed; `occupied` includes an initialized live summary; `releasing` has no live summary while a terminal/idle-expired reservation is still held. Pending creation identity, internal operations and unpublished codes are never returned. |
-| C4 `GET /api/game-codes/{code}` | No query/body or credential required. Strictly percent-decode once, then apply existing `GameCode::from_lookup` ASCII outer-space trimming and case normalization. Return only `game_id,game_code,state,can_join_player,can_join_spectator`. Unknown, malformed, New, unpublished, terminal and idle-expired codes share safe 404; unavailable storage/peers return 503. Unknown codes never call or initialize a Game owner. |
+| C4 `GET /api/games/codes/{code}` | No query/body or credential required. Strictly percent-decode once, then apply existing `GameCode::from_lookup` ASCII outer-space trimming and case normalization. Return only `game_id,game_code,state,can_join_player,can_join_spectator`. Unknown, malformed, New, unpublished, terminal and idle-expired codes share safe 404; unavailable storage/peers return 503. Unknown codes never call or initialize a Game owner. |
 | D3 `GET /api/games/{game_id}/availability` | Canonical UUID-v7 ID. `view=entry\|account\|player` selects one context. Entry requires the sole other query field `game_code`, validated by both Directory and Game. Account/player forbid code queries and require their selected cookie. Without `view`, infer only an unambiguous single account cookie, player cookie, or anonymous code context; competing contexts are 400. Invalid selected credentials never fall back to entry. New/unpublished/terminal availability is 404 in this slice, including account availability; New dashboard summaries remain available through C1/C2. |
 
 The `CurrentGameSummary` contains exactly `game_id,state,designated_host_id,created_at,started_at,idle_due,game_code,may_operate,view_revision`. Nullable fields are explicit JSON nulls. State, host, timestamps and the host-view revision come from Game; code is disclosed only if both owners confirm publication. `may_operate` is true only for the current designated host or admin. Cross-host read permission creates no live/final grants and confers no mutation permission.
@@ -2533,7 +2537,7 @@ The user authorized local Slice 2 implementation after publication of Slice 1. T
 
 | Operation | Local contract |
 | --- | --- |
-| D13 `POST /api/player-recovery` | HTTPS, exact application Origin, JSON content type, canonical UUID-v7 `Idempotency-Key`, no query. Closed JSON object with exactly `game_code`, `alias`, `recovery_answer` strings. Existing cookies never replace proof. Normalize code with `GameCode::from_lookup`; trim alias under the existing ASCII policy and compare exact case-sensitive spelling. Directory resolves only an existing published live code, then Game rechecks actual code/lifecycle/idle deadline and retained identity. |
+| D13 `POST /api/games/player-recovery` | HTTPS, exact application Origin, JSON content type, canonical UUID-v7 `Idempotency-Key`, no query. Closed JSON object with exactly `game_code`, `alias`, `recovery_answer` strings. Existing cookies never replace proof. Normalize code with `GameCode::from_lookup`; trim alias under the existing ASCII policy and compare exact case-sensitive spelling. Directory resolves only an existing published live code, then Game rechecks actual code/lifecycle/idle deadline and retained identity. |
 | D13 fresh success | HTTP 200 `{receipt,membership,game,board}`. Membership contains the same `player_id` and current alias; `game` is the existing own-player view and `board` is explicit null before Start or the same assigned board during play. Set only the existing game-path Secure/HttpOnly/SameSite=Strict player cookie with a fresh fixed one-day expiry. No additional seat or board. |
 | D13 exact retry | Reverify the current answer before receipt lookup. Return HTTP 200 `{receipt}` only: no cookie, membership, snapshot or board. A committed-but-lost response requires fresh answer proof with a fresh command ID to obtain another session. Fingerprint normalized code/exact trimmed alias and the original decoded answer bytes using domain-separated HMAC, so changing answer bytes conflicts even if their canonical proof is equivalent. No raw or unkeyed low-entropy answer digest is stored. |
 | D14 `PUT /api/games/{game_id}/membership/recovery-answer` | Same mutation transport guards and canonical Game ID; require the actual current owner-player cookie. Closed JSON object `{recovery_answer}`. Account authority or an old answer cannot establish ownership. Normalize, verify an unchanged answer or enroll a fresh independent salt outside the write transaction, then recheck the exact current session and original verifier/version/update time before commit. |

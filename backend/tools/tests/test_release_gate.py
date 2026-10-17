@@ -275,11 +275,40 @@ class ReporterTests(unittest.TestCase):
                         gate.contract_inputs(root)
                 target.write_bytes(saved)
 
+    def test_historical_route_adapter_changes_only_the_archived_probe_url(self):
+        inputs = gate.contract_inputs()
+        script = """
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import config, { historicalRecoveryRoute as adapter } from './tools/historical_probe.config.mjs';
+const path = fileURLToPath(new URL('../docs/reviews/evidence/command-lookup-final-return.test.js', import.meta.url));
+const source = readFileSync(path, 'utf8');
+const oldRoute = '"/api/player-recovery"';
+const expected = source.replace(oldRoute, '"/api/games/player-recovery"');
+assert.equal(config.plugins[0], adapter);
+for (const id of [path, path + '?v=fixture']) {
+  const actual = adapter.transform(source, id);
+  assert.equal(actual.code, expected);
+  assert.equal(actual.code.split('\\n').length, source.split('\\n').length);
+}
+assert.equal(adapter.transform(source, path + '.other'), null);
+assert.equal(adapter.transform(source, '/fixture/current.test.js'), null);
+assert.throws(() => adapter.transform('', path));
+assert.throws(() => adapter.transform(source + oldRoute, path));
+assert.equal(readFileSync(path, 'utf8'), source);
+"""
+        result = gate.subprocess.run(["node", "--input-type=module", "-e", script],
+                                     cwd=gate.BACKEND, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(gate.contract_inputs(), inputs)
+
     def test_source_manifest_includes_approved_policy_and_github_policy_inputs(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:
             root = Path(directory)
             names = [gate.POLICY_DOCUMENT, gate.ACCEPTANCE_SUITE, ".github/workflows/validation.yml",
-                     ".github/workflows/release.yml", "docs/operations/cicd.md", "docs/plans/lld.md", "private.env"]
+                     ".github/workflows/release.yml", "docs/operations/cicd.md", "docs/plans/lld.md",
+                     "backend/tools/historical_probe.config.mjs", "private.env"]
             for name in names:
                 target = root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -393,7 +422,7 @@ class ExecutionTests(unittest.TestCase):
             self.assertEqual(result["failed"], 0)
             self.assertEqual(command.call_count, 2)
             self.assertIn("worker-tests/protected_response_snapshot.test.js", command.call_args_list[0].args[1])
-            self.assertIn(str(gate.ROOT / "docs/reviews/evidence/command-lookup-final-return.config.mjs"), command.call_args_list[1].args[1])
+            self.assertIn(str(gate.BACKEND / "tools/historical_probe.config.mjs"), command.call_args_list[1].args[1])
 
     def test_passing_local_lane_is_not_production_certification(self):
         with tempfile.TemporaryDirectory(dir=SCRATCH) as directory:

@@ -21,15 +21,13 @@ mod games;
 pub(crate) use games::decode_empty_game_body;
 
 pub use games::{
-    ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameReadRequest, GameViewSelector,
-    GamesRequest, PLAYER_COOKIE_NAME, ReadRole, ReadSelection, RecoverPlayerInput,
-    RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME, SPECTATOR_COOKIE_NAME, decode_game_read,
-    decode_games, game_cookie_path, game_read_route,
+    ADMISSION_COOKIE_NAME, AvailabilityView, DiscoveryCommand, DiscoveryRequest, GameOperation,
+    GamePayload, GameReadRequest, GameViewSelector, GamesRequest, PLAYER_COOKIE_NAME, ReadRole,
+    ReadSelection, RecoverPlayerInput, RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME,
+    SPECTATOR_COOKIE_NAME, decode_discovery, decode_game_read, decode_games, game_cookie_path,
+    game_read_route,
 };
 #[cfg(target_arch = "wasm32")]
 pub(crate) use games::{
     audit_read_rejection_context, operator_rejection_context, read_rejection_context,
 };
-
-mod discovery;
-pub use discovery::{AvailabilityView, DiscoveryCommand, DiscoveryRequest, decode_discovery};

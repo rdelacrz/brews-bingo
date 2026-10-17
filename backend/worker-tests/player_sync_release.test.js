@@ -110,7 +110,7 @@ for (const terminal of [false, true]) {
         expect(Date.now()).toBeLessThan(proof.valid_until);
         const changed = terminal
           ? await post(`/api/games/${f.id}/exit?view=player`, {}, { session: f.session })
-          : await post("/api/player-recovery", { game_code: f.code, alias: "ReleasePlayer", recovery_answer: f.answer });
+          : await post("/api/games/player-recovery", { game_code: f.code, alias: "ReleasePlayer", recovery_answer: f.answer });
         expect(changed.status).toBe(200);
         successor = terminal ? null : cookie(changed);
         await changed.text();

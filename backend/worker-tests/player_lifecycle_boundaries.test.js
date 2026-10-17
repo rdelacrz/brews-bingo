@@ -38,7 +38,7 @@ function rename(f, alias, { id = commandId(), session = f.players[0].session } =
   });
 }
 const leave = (f, state, options = {}) => post(`/api/games/${f.id}/membership/leave`, { expected_state: state }, { session: f.players[0].session, ...options });
-const recover = (f, alias = f.players[0].alias, answer = f.players[0].answer) => post("/api/player-recovery", { game_code: f.code, alias, recovery_answer: answer });
+const recover = (f, alias = f.players[0].alias, answer = f.players[0].answer) => post("/api/games/player-recovery", { game_code: f.code, alias, recovery_answer: answer });
 const sync = (f, session = f.players[0].session, view = "player") => exports.default.fetch(`${origin}/api/games/${f.id}/sync?view=${view}`, { headers: { Cookie: session } });
 async function snapshot(f, session = f.players[0].session, view = "player") {
   const response = await sync(f, session, view);

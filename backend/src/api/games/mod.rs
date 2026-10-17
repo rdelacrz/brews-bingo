@@ -4,10 +4,11 @@ mod writes;
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) use reads::read_rejection_context;
-pub use reads::{GameReadRequest, ReadRole, ReadSelection, decode_game_read, game_read_route};
+pub use reads::{
+    AvailabilityView, DiscoveryCommand, DiscoveryRequest, GameReadRequest, ReadRole, ReadSelection,
+    decode_discovery, decode_game_read, game_read_route,
+};
 
-#[cfg(test)]
-pub(super) use writes::GAME_HEADERS_MAX_BYTES;
 #[cfg(any(test, target_arch = "wasm32"))]
 pub(crate) use writes::decode_empty_game_body;
 
@@ -16,6 +17,6 @@ pub use writes::{
     PLAYER_COOKIE_NAME, RecoverPlayerInput, RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME,
     SPECTATOR_COOKIE_NAME, decode_games, game_cookie_path,
 };
-pub(super) use writes::{GAME_PATH_MAX_BYTES, GAME_QUERY_MAX_BYTES, validate_headers};
+
 #[cfg(target_arch = "wasm32")]
 pub(crate) use writes::{audit_read_rejection_context, operator_rejection_context};

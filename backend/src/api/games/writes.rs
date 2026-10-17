@@ -506,7 +506,7 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
     if path.len() > GAME_PATH_MAX_BYTES {
         return Err(ApiError::NotFound);
     }
-    if path == "/api/player-recovery" {
+    if path == "/api/games/player-recovery" {
         return Ok((GameOperation::RecoverPlayer, None));
     }
     if path == "/api/games" {
@@ -649,6 +649,58 @@ mod tests {
                 HeaderMap::new(),
             ),
         ]
+    }
+    #[test]
+    fn player_recovery_uses_games_namespace_only() {
+        let body =
+            br#"{"game_code":"AB12CD34","alias":"Alice","recovery_answer":"private-marker"}"#;
+        let h = headers();
+        let request = decode_games(
+            &Method::POST,
+            "/api/games/player-recovery",
+            None,
+            &h,
+            body,
+            ORIGIN,
+        )
+        .unwrap();
+        assert_eq!(request.operation, GameOperation::RecoverPlayer);
+        assert!(request.game_id.is_none());
+        assert!(
+            matches!(&request.payload, GamePayload::RecoverPlayer(input) if input.game_code == "AB12CD34" && input.alias == "Alice")
+        );
+        for method in [
+            Method::GET,
+            Method::PUT,
+            Method::DELETE,
+            Method::PATCH,
+            Method::OPTIONS,
+            Method::HEAD,
+        ] {
+            assert_eq!(
+                decode_games(
+                    &method,
+                    "/api/games/player-recovery",
+                    None,
+                    &h,
+                    body,
+                    ORIGIN
+                )
+                .err(),
+                Some(ApiError::MethodNotAllowed)
+            );
+        }
+        for path in [
+            "/api/player-recovery".to_owned(),
+            "/api/games/player-recovery/".to_owned(),
+            "/api/games/player-recovery/extra".to_owned(),
+            format!("/api/games/{ID}/player-recovery"),
+        ] {
+            assert_eq!(
+                decode_games(&Method::POST, &path, None, &h, body, ORIGIN).err(),
+                Some(ApiError::NotFound)
+            );
+        }
     }
     #[test]
     fn request_zeroization_erases_selected_cookie_and_optional_recovery_material() {

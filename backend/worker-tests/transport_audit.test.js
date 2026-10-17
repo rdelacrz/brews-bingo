@@ -390,7 +390,7 @@ test('captured player closures remain fenced through activity without early phys
    instance.auditCloseCalls=0;
    for(const ws of state.getWebSockets())if(JSON.parse(ws.deserializeAttachment()).connection_id===first.initial.connection_id){ws.auditOriginalClose=ws.close;ws.close=()=>{instance.auditCloseCalls++;throw new Error('audit provider close failure');};}
   });
-  const recovered=await post('/api/player-recovery',{game_code:code,alias:'RetryPlayer',recovery_answer:answer});expect(recovered.status).toBe(200);
+  const recovered=await post('/api/games/player-recovery',{game_code:code,alias:'RetryPlayer',recovery_answer:answer});expect(recovered.status).toBe(200);
   const before=await runInDurableObject(owner,(instance,state)=>({calls:instance.auditCloseCalls,row:state.storage.sql.exec('SELECT * FROM game_socket_closures WHERE connection_id=?',first.initial.connection_id).one()}));
   expect(before.row.attempt_count).toBe(1);expect(before.calls).toBe(1);
   Date.now=()=>before.row.next_attempt_at-1;

@@ -32,7 +32,7 @@ async function fixture() {
   return { id, code, actor, players };
 }
 function recover(f, answer = f.players[0].answer, options = {}) {
-  return post("/api/player-recovery", { game_code: f.code, alias: f.players[0].alias, recovery_answer: answer }, options);
+  return post("/api/games/player-recovery", { game_code: f.code, alias: f.players[0].alias, recovery_answer: answer }, options);
 }
 async function changeAnswer(f, method, answer, session = f.players[0].session, id = commandId()) {
   return exports.default.fetch(`${origin}/api/games/${f.id}/membership/recovery-answer`, {
@@ -57,6 +57,30 @@ function expectSafe(response) {
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 }
 
+test("player recovery uses the games namespace without a legacy alias or redirect", async () => {
+  const f = await fixture();
+  const before = await rows(f);
+  const input = { game_code: f.code, alias: f.players[0].alias, recovery_answer: f.players[0].answer };
+  for (const path of ["/api/player-recovery", "/api/games/player-recovery/", "/api/games/player-recovery/extra", `/api/games/${f.id}/player-recovery`]) {
+    const denied = await post(path, input);
+    expect(denied.status).toBe(404);
+    expect(denied.headers.get("set-cookie")).toBeNull();
+    expect(denied.headers.get("location")).toBeNull();
+    expect((await denied.json()).error.code).toBe("not_found");
+    expectSafe(denied);
+  }
+  const wrongMethod = await exports.default.fetch(`${origin}/api/games/player-recovery`, { headers: { Origin: origin } });
+  expect(wrongMethod.status).toBe(405);
+  const query = await post("/api/games/player-recovery?view=player", input);
+  expect(query.status).toBe(400);
+  expect(await rows(f)).toEqual(before);
+  const restored = await recover(f);
+  expect(restored.status).toBe(200);
+  expect((await restored.json()).membership.player_id).toBe(f.players[0].body.player_id);
+  expect((await sync(f, cookie(restored))).status).toBe(200);
+  expect((await sync(f, f.players[0].session)).status).toBe(401);
+});
+
 test("public recovery needs answer proof even with host or existing player credentials and never case-folds the alias", async () => {
   const f = await fixture();
   const wrong = password();
@@ -68,7 +92,7 @@ test("public recovery needs answer proof even with host or existing player crede
     expect(Object.keys(await denied.json())).toEqual(["error"]);
     expectSafe(denied);
   }
-  const caseMismatch = await post("/api/player-recovery", { game_code: f.code, alias: f.players[1].alias, recovery_answer: f.players[0].answer });
+  const caseMismatch = await post("/api/games/player-recovery", { game_code: f.code, alias: f.players[1].alias, recovery_answer: f.players[0].answer });
   expect(caseMismatch.status).toBe(401);
   expect(await rows(f)).toEqual(before);
 });
@@ -78,7 +102,7 @@ test("normalized code and proof restore one identity; receipt retries still requ
   const before = await rows(f);
   const id = commandId();
   const input = { game_code: ` ${f.code.toLowerCase()} `, alias: ` ${f.players[0].alias} `, recovery_answer: `\u2003${f.players[0].answer.toUpperCase()}\u00a0` };
-  const first = await post("/api/player-recovery", input, { id });
+  const first = await post("/api/games/player-recovery", input, { id });
   expect(first.status).toBe(200); expectSafe(first);
   const firstBody = await first.json();
   expect(first.headers.get("set-cookie")).toContain(`Path=/api/games/${f.id}`);
@@ -97,9 +121,9 @@ test("normalized code and proof restore one identity; receipt retries still requ
   expect(after.boardCells).toEqual(before.boardCells);
   const ownPlayer = after.players.find(p => p.player_id === f.players[0].body.player_id);
   expect(ownPlayer.session_epoch).toBe(before.players.find(p => p.player_id === ownPlayer.player_id).session_epoch + 1);
-  const badReplay = await post("/api/player-recovery", { ...input, recovery_answer: password() }, { id });
+  const badReplay = await post("/api/games/player-recovery", { ...input, recovery_answer: password() }, { id });
   expect(badReplay.status).toBe(401); expect(badReplay.headers.get("set-cookie")).toBeNull();
-  const goodReplay = await post("/api/player-recovery", input, { id });
+  const goodReplay = await post("/api/games/player-recovery", input, { id });
   expect(goodReplay.status).toBe(200); expect(goodReplay.headers.get("set-cookie")).toBeNull();
   expect(await goodReplay.json()).toEqual({ receipt: firstBody.receipt });
   const next = await recover(f);
@@ -177,11 +201,11 @@ test("unknown code and unavailable enrollment fail with the same safe recovery r
     reservation: [...state.storage.sql.exec("SELECT * FROM directory_global_reservation")],
     index: [...state.storage.sql.exec("SELECT * FROM directory_game_index")],
   }));
-  const first = await post("/api/player-recovery", { game_code: "ZZZZZZZZ", alias: f.players[0].alias, recovery_answer: f.players[0].answer });
+  const first = await post("/api/games/player-recovery", { game_code: "ZZZZZZZZ", alias: f.players[0].alias, recovery_answer: f.players[0].answer });
   expect(first.status).toBe(401); const body = await first.json();
   const deleted = await changeAnswer(f, "DELETE"); expect(deleted.status).toBe(200);
   const second = await recover(f); expect(second.status).toBe(401); expect(await second.json()).toEqual(body);
-  const third = await post("/api/player-recovery", { game_code: f.code, alias: "MissingPlayer", recovery_answer: f.players[0].answer });
+  const third = await post("/api/games/player-recovery", { game_code: f.code, alias: "MissingPlayer", recovery_answer: f.players[0].answer });
   expect(third.status).toBe(401); expect(await third.json()).toEqual(body);
   expect(await runInDurableObject(directory(), (_instance, state) => ({
     reservation: [...state.storage.sql.exec("SELECT * FROM directory_global_reservation")],

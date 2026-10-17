@@ -51,7 +51,7 @@ for (const cut of ["recover_player", "recovery_output"]) {
       };
     });
     try {
-      const denied = await post("/api/player-recovery", { game_code: code, alias: "DeadlinePlayer", recovery_answer: answer });
+      const denied = await post("/api/games/player-recovery", { game_code: code, alias: "DeadlinePlayer", recovery_answer: answer });
       expect([401, 503]).toContain(denied.status);
       expect(denied.headers.get("set-cookie")).toBeNull();
       expect(Object.keys(await denied.json())).toEqual(["error"]);
@@ -61,7 +61,7 @@ for (const cut of ["recover_player", "recovery_output"]) {
       }));
       expect(observed.floor).toBeGreaterThanOrEqual(observed.deadline);
       Date.now = () => observed.deadline - 1;
-      const retried = await post("/api/player-recovery", { game_code: code, alias: "DeadlinePlayer", recovery_answer: answer });
+      const retried = await post("/api/games/player-recovery", { game_code: code, alias: "DeadlinePlayer", recovery_answer: answer });
       expect(retried.status).toBe(503);
       expect(retried.headers.get("set-cookie")).toBeNull();
     } finally { Date.now = originalNow; await restore(id); }
@@ -95,7 +95,7 @@ for (const fault of ["unavailable", "wrong_sample"]) {
       };
     });
     try {
-      const denied = await post("/api/player-recovery", { game_code: code, alias: "DeadlinePlayer", recovery_answer: answer });
+      const denied = await post("/api/games/player-recovery", { game_code: code, alias: "DeadlinePlayer", recovery_answer: answer });
       expect(denied.status).toBe(503);
       expect(denied.headers.get("set-cookie")).toBeNull();
       expect(Object.keys(await denied.json())).toEqual(["error"]);

@@ -53,7 +53,7 @@ async function denied(response, status = 401) {
 }
 async function recover(f) {
   const p = f.players[0];
-  const r = await post("/api/player-recovery", { game_code: f.code, alias: p.alias, recovery_answer: p.answer });
+  const r = await post("/api/games/player-recovery", { game_code: f.code, alias: p.alias, recovery_answer: p.answer });
   expect(r.status).toBe(200);
   const current = cookie(r);
   expect((await r.json()).membership.player_id).toBe(p.body.player_id);

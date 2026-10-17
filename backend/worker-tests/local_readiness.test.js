@@ -44,7 +44,7 @@ test("local Slice9 real recovery Unicode proof and owner clock/randomness observ
     expect(joined.status).toBe(200);
     const player = (await joined.json()).player_id;
     sessions.add(cookie(joined));
-    const recovered = await post("/api/player-recovery", { game_code: code, alias, recovery_answer: `${equivalent} ${suffix}` });
+    const recovered = await post("/api/games/player-recovery", { game_code: code, alias, recovery_answer: `${equivalent} ${suffix}` });
     expect(recovered.status).toBe(200);
     const session = cookie(recovered);
     expect(sessions.has(session)).toBe(false);
@@ -52,7 +52,7 @@ test("local Slice9 real recovery Unicode proof and owner clock/randomness observ
     const synced = await exports.default.fetch(`${origin}/api/games/${id}/sync?view=player`, { headers: { Cookie: session } });
     expect(synced.status).toBe(200);
     expect((await synced.json()).snapshot.player_id).toBe(player);
-    const denied = await post("/api/player-recovery", { game_code: code, alias, recovery_answer: `${different} ${suffix}` });
+    const denied = await post("/api/games/player-recovery", { game_code: code, alias, recovery_answer: `${different} ${suffix}` });
     expect(denied.status).toBe(401);
     expect(denied.headers.has("set-cookie")).toBe(false);
     samples.push({ case: label, equivalent_accepted: true, different_denied: true });

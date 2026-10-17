@@ -33,7 +33,7 @@ Standalone TLS/contract lanes rebuild the Worker before exercising it; complete 
 
 `report.json` always says `production_release: "blocked"` and enumerates outstanding independent-review/provider/forecast/provisioning gates. The user explicitly approved [authorization-time snapshots](../../docs/plans/protected-response-policy.md) on 2026-10-14; this tool verifies that chosen contract rather than choosing it. A successful `contract` result is `passed_authorization_time_snapshot`, binds policy/test/historical-probe input hashes, and nests the original physical outcome under `superseded_receiving_cut_probe` without relabeling it passed. No production-ready flag or bypass option exists.
 
-The report binds source/schema/config/test/probe inputs to SHA-256, checks their before/after equality and records actual Worker artifact hashes. There is no inferred numeric capacity limit, forecast or provider quota. Original failed review/probe evidence remains unchanged.
+The report binds source/schema/config/test/probe inputs to SHA-256, checks their before/after equality and records actual Worker artifact hashes. There is no inferred numeric capacity limit, forecast or provider quota. Original failed review/probe evidence remains unchanged. After the player-recovery route moved to `/api/games/player-recovery`, `historical_probe.config.mjs` adapts only that URL in the archived probe at test-transform time; the archived files, assertions and failure classification remain unchanged. This test-only adapter is part of the frozen source/config inventory, not a runtime alias.
 
 ## Local measurements
 
