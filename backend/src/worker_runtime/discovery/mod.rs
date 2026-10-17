@@ -20,7 +20,7 @@ use axum::{
     response::Response,
 };
 use brews_contracts::discovery::{CurrentGame, CurrentGames, GameAvailability, GameSlot};
-use http::{HeaderValue, StatusCode};
+use http::StatusCode;
 use worker::{
     Env,
     send::{SendFuture, SendWrapper},
@@ -516,15 +516,6 @@ fn current_output(
 fn output(value: &impl serde::Serialize) -> Result<Response, DiscoveryError> {
     let bytes = game_peers::encode_limit(value, DISCOVERY_REPLY_MAX_BYTES).map_err(peer_error)?;
     let mut response = Response::new(Body::from(bytes.to_vec()));
-    for (name, value) in [
-        ("content-type", "application/json"),
-        ("cache-control", "no-store"),
-        ("referrer-policy", "no-referrer"),
-        ("x-content-type-options", "nosniff"),
-    ] {
-        response
-            .headers_mut()
-            .insert(name, HeaderValue::from_static(value));
-    }
+    super::response::private_json_headers(&mut response, "application/json");
     Ok(response)
 }

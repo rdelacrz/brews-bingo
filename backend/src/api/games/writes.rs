@@ -1,7 +1,9 @@
 //! Bounded public game transport; grammar is not authentication or authorization.
 use crate::api::{
     ApiError, BODY_LIMIT,
-    authentication::{named_cookie, session_cookie},
+    utility::{
+        command_id, decode_object, named_cookie, require_json, require_origin, session_cookie,
+    },
 };
 use brews_contracts::games::{
     AdmissionContextInput, CallManualInput, CancelGameInput, CreateGame, GAME_QUERY_KNOWN_REVISION,
@@ -93,19 +95,7 @@ impl Drop for RecoveryAnswerInput {
         self.recovery_answer.zeroize();
     }
 }
-pub(crate) fn decode_recovery_input<T: serde::de::DeserializeOwned>(
-    body: &[u8],
-) -> Result<T, ApiError> {
-    if body.len() > BODY_LIMIT
-        || body
-            .iter()
-            .find(|b| !matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
-            != Some(&b'{')
-    {
-        return Err(ApiError::InvalidInput);
-    }
-    serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)
-}
+
 /// Secret-bearing request deliberately has no Debug implementation.
 ///
 /// ```compile_fail,E0277
@@ -266,11 +256,8 @@ pub fn decode_games(
         return Err(ApiError::MethodNotAllowed);
     }
     validate_headers(headers)?;
-    if (!read || operation == GameOperation::Stream || headers.contains_key("origin"))
-        && (headers.get_all("origin").iter().count() != 1
-            || headers.get("origin").and_then(|v| v.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
+    if !read || operation == GameOperation::Stream || headers.contains_key("origin") {
+        require_origin(headers, origin)?;
     }
     let (view, known_revision) = if operation == GameOperation::HostTransferTargets {
         (None, None)
@@ -326,10 +313,8 @@ pub fn decode_games(
             brews_contracts::games::LeavePlayerInput::decode_json(body)
                 .map_err(|_| ApiError::InvalidInput)?,
         ),
-        GameOperation::RecoverPlayer => GamePayload::RecoverPlayer(decode_recovery_input(body)?),
-        GameOperation::PutRecoveryAnswer => {
-            GamePayload::RecoveryAnswer(decode_recovery_input(body)?)
-        }
+        GameOperation::RecoverPlayer => GamePayload::RecoverPlayer(decode_object(body)?),
+        GameOperation::PutRecoveryAnswer => GamePayload::RecoveryAnswer(decode_object(body)?),
         GameOperation::DeleteRecoveryAnswer => {
             decode_empty_game_body(body)?;
             GamePayload::Empty
@@ -429,15 +414,7 @@ pub(crate) fn decode_empty_game_body(body: &[u8]) -> Result<(), ApiError> {
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]
     struct EmptyGameCommand {}
-    if body.len() > BODY_LIMIT
-        || body
-            .iter()
-            .find(|byte| !matches!(byte, b' ' | b'\t' | b'\r' | b'\n'))
-            != Some(&b'{')
-    {
-        return Err(ApiError::InvalidInput);
-    }
-    serde_json::from_slice::<EmptyGameCommand>(body).map_err(|_| ApiError::InvalidInput)?;
+    decode_object::<EmptyGameCommand>(body)?;
     Ok(())
 }
 fn require_upgrade(headers: &HeaderMap) -> Result<(), ApiError> {
@@ -583,28 +560,6 @@ pub(in crate::api) fn validate_headers(headers: &HeaderMap) -> Result<(), ApiErr
         return Err(ApiError::Forbidden);
     }
     Ok(())
-}
-fn require_json(headers: &HeaderMap) -> Result<(), ApiError> {
-    if headers.get_all("content-type").iter().count() != 1
-        || !headers
-            .get("content-type")
-            .and_then(|v| v.to_str().ok())
-            .is_some_and(|v| v == "application/json" || v == "application/json; charset=utf-8")
-    {
-        return Err(ApiError::UnsupportedMediaType);
-    }
-    Ok(())
-}
-fn command_id(headers: &HeaderMap) -> Result<CommandId, ApiError> {
-    if headers.get_all("idempotency-key").iter().count() != 1 {
-        return Err(ApiError::InvalidInput);
-    }
-    headers
-        .get("idempotency-key")
-        .and_then(|v| v.to_str().ok())
-        .ok_or(ApiError::InvalidInput)?
-        .parse()
-        .map_err(|_| ApiError::InvalidInput)
 }
 
 #[cfg(test)]

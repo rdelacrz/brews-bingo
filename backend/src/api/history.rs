@@ -1,5 +1,8 @@
 //! Closed F3/F4 grammar. Authentication remains Accounts-owned.
-use super::ApiError;
+use super::{
+    ApiError,
+    utility::{require_origin, session_cookie},
+};
 use brews_domain::{games::GameState, ids::GameId};
 use http::{HeaderMap, Method};
 use serde::{Deserialize, Serialize};
@@ -25,11 +28,17 @@ impl HistoryCursor {
         )
     }
     fn parse(value: &str, outcome: Option<GameState>) -> Result<Self, ApiError> {
-        let parts: Vec<_> = value.split('.').collect();
-        let ["v1", ended, game, filter] = parts.as_slice() else {
+        let mut parts = value.split('.');
+        let (Some("v1"), Some(ended), Some(game), Some(filter), None) = (
+            parts.next(),
+            parts.next(),
+            parts.next(),
+            parts.next(),
+            parts.next(),
+        ) else {
             return Err(ApiError::InvalidInput);
         };
-        if *filter != filter_tag(outcome)
+        if filter != filter_tag(outcome)
             || ended.starts_with('0')
             || !ended.bytes().all(|b| b.is_ascii_digit())
         {
@@ -143,12 +152,8 @@ pub fn decode_history(
     if headers.contains_key("authorization") {
         return Err(ApiError::Forbidden);
     }
-    let origins = headers.get_all("origin");
-    if origins.iter().count() != 0
-        && (origins.iter().count() != 1
-            || headers.get("origin").and_then(|v| v.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
+    if headers.contains_key("origin") {
+        require_origin(headers, origin)?;
     }
     if headers.contains_key("idempotency-key") {
         return Err(ApiError::InvalidInput);
@@ -170,6 +175,6 @@ pub fn decode_history(
     };
     Ok(HistoryRequest {
         command,
-        session_token: super::authentication::session_cookie(headers)?,
+        session_token: session_cookie(headers)?,
     })
 }

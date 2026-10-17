@@ -19,7 +19,7 @@ use axum::{
     response::Response,
 };
 use brews_contracts::history::{HistoryDetail, HistoryPage};
-use http::{HeaderValue, StatusCode};
+use http::StatusCode;
 use worker::{
     Env,
     send::{SendFuture, SendWrapper},
@@ -371,15 +371,6 @@ fn output(value: &impl serde::Serialize) -> Result<Response, HistoryError> {
     let bytes = serde_json::to_vec(value).map_err(|_| ApiError::Unavailable)?;
     let mut response = Response::new(Body::from(bytes));
     *response.status_mut() = StatusCode::OK;
-    for (name, value) in [
-        ("content-type", "application/json"),
-        ("cache-control", "no-store"),
-        ("referrer-policy", "no-referrer"),
-        ("x-content-type-options", "nosniff"),
-    ] {
-        response
-            .headers_mut()
-            .insert(name, HeaderValue::from_static(value));
-    }
+    super::response::private_json_headers(&mut response, "application/json");
     Ok(response)
 }

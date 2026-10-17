@@ -1207,11 +1207,11 @@ impl GameIngress {
                     .map_err(|_| ())
             }
             GameAction::RecoverPlayer | GameAction::RecoveryOutput => {
-                crate::api::decode_recovery_input(bytes)
+                crate::api::utility::decode_object(bytes)
                     .map(GamePayload::RecoverPlayer)
                     .map_err(|_| ())
             }
-            GameAction::PutRecoveryAnswer => crate::api::decode_recovery_input(bytes)
+            GameAction::PutRecoveryAnswer => crate::api::utility::decode_object(bytes)
                 .map(GamePayload::RecoveryAnswer)
                 .map_err(|_| ()),
             GameAction::DeleteRecoveryAnswer => crate::api::decode_empty_game_body(bytes)

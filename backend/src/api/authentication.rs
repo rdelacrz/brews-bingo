@@ -1,9 +1,12 @@
 //! Bounded account-authentication transport; decoding does not establish authority.
-use super::ApiError;
+#[cfg(test)]
+use super::utility::{COOKIE_HEADER_MAX_BYTES, named_cookie};
+use super::{
+    ApiError, BODY_LIMIT,
+    utility::{command_id, decode_object, require_origin, session_cookie},
+};
 use http::{HeaderMap, Method};
 
-pub const BODY_LIMIT: usize = 4_096;
-const COOKIE_HEADER_MAX_BYTES: usize = 8_192;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AuthenticationOperation {
     Login,
@@ -78,11 +81,8 @@ pub fn decode_authentication(
     if query.is_some() {
         return Err(ApiError::InvalidInput);
     }
-    if method == Method::POST
-        && (headers.get_all("origin").iter().count() != 1
-            || headers.get("origin").and_then(|x| x.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
+    if method == Method::POST {
+        require_origin(headers, origin)?;
     }
     if body.len() > BODY_LIMIT {
         return Err(ApiError::PayloadTooLarge);
@@ -101,18 +101,7 @@ pub fn decode_authentication(
             session_token,
         });
     }
-    let key = headers
-        .get("idempotency-key")
-        .and_then(|v| v.to_str().ok())
-        .ok_or(ApiError::InvalidInput)?;
-    let id = uuid::Uuid::parse_str(key).map_err(|_| ApiError::InvalidInput)?;
-    if headers.get_all("idempotency-key").iter().count() != 1
-        || id.get_version_num() != 7
-        || id.get_variant() != uuid::Variant::RFC4122
-        || id.to_string() != key
-    {
-        return Err(ApiError::InvalidInput);
-    }
+    let command_id = command_id(headers)?;
     let media = headers
         .get("content-type")
         .and_then(|v| v.to_str().ok())
@@ -125,38 +114,28 @@ pub fn decode_authentication(
     {
         return Err(ApiError::UnsupportedMediaType);
     }
-    // Check the root without collapsing duplicate fields.
-    if body
-        .iter()
-        .find(|&&byte| !matches!(byte, b' ' | b'\t' | b'\r' | b'\n'))
-        != Some(&b'{')
-    {
-        return Err(ApiError::InvalidInput);
-    }
     let payload = match operation {
         AuthenticationOperation::Login => {
-            let p: LoginBody = serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
+            let p: LoginBody = decode_object(body)?;
             AuthenticationPayload::Login {
                 username: p.username,
                 password: p.password,
             }
         }
         AuthenticationOperation::RedeemEnrollment => {
-            let p: EnrollmentBody =
-                serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
+            let p: EnrollmentBody = decode_object(body)?;
             AuthenticationPayload::Redeem {
                 token: p.enrollment_token,
             }
         }
         AuthenticationOperation::RedeemReset => {
-            let p: ResetBody = serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
+            let p: ResetBody = decode_object(body)?;
             AuthenticationPayload::Redeem {
                 token: p.reset_token,
             }
         }
         AuthenticationOperation::CompleteEnrollment | AuthenticationOperation::CompleteReset => {
-            let p: CompleteBody =
-                serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
+            let p: CompleteBody = decode_object(body)?;
             AuthenticationPayload::Complete {
                 new_password: p.new_password,
             }
@@ -168,39 +147,9 @@ pub fn decode_authentication(
     Ok(AuthenticationRequest {
         operation,
         payload,
-        command_id: Some(key.to_owned()),
+        command_id: Some(command_id.to_string()),
         session_token,
     })
-}
-
-pub(super) fn session_cookie(headers: &HeaderMap) -> Result<Option<String>, ApiError> {
-    named_cookie(headers, "__Host-brews_session")
-}
-
-pub(super) fn named_cookie(headers: &HeaderMap, name: &str) -> Result<Option<String>, ApiError> {
-    if headers.get_all("cookie").iter().count() > 1 {
-        return Err(ApiError::InvalidInput);
-    }
-    let Some(raw) = headers.get("cookie") else {
-        return Ok(None);
-    };
-    let raw = raw.to_str().map_err(|_| ApiError::InvalidInput)?;
-    if raw.len() > COOKIE_HEADER_MAX_BYTES {
-        return Err(ApiError::InvalidInput);
-    }
-    let mut found = None;
-    for part in raw.split(';') {
-        let Some((key, value)) = part.trim().split_once('=') else {
-            continue;
-        };
-        if key == name {
-            if found.is_some() {
-                return Err(ApiError::InvalidInput);
-            }
-            found = Some(value);
-        }
-    }
-    Ok(found.map(str::to_owned))
 }
 
 #[cfg(test)]

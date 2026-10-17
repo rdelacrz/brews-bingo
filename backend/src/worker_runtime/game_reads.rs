@@ -133,14 +133,14 @@ where
 }
 fn failure(code: ReadRejection) -> Result<axum::response::Response, ApiError> {
     if matches!(code, ReadRejection::ResultNotCommitted) {
-        return games::json_response(
+        return super::response::json_bytes(
             409,
             br#"{"error":{"code":"result_not_committed","message":"game result not committed"}}"#
                 .to_vec(),
         );
     }
     if matches!(code, ReadRejection::RemainingValuesUnavailable) {
-        return games::json_response(409,br#"{"error":{"code":"remaining_values_unavailable","message":"remaining values unavailable in final view"}}"#.to_vec());
+        return super::response::json_bytes(409,br#"{"error":{"code":"remaining_values_unavailable","message":"remaining values unavailable in final view"}}"#.to_vec());
     }
     games::rejected(match code {
         ReadRejection::Unauthorized => super::game_wire::GameRejection::Unauthorized,
@@ -415,7 +415,7 @@ pub(super) async fn dispatch(
     }
     // Sequential owner cuts authorize this snapshot, not authority at delivery.
     // Later revocation may overtake it; exact invocation binding and expiry remain.
-    games::json_response(
+    super::response::json_bytes(
         200,
         projection
             .encode_json()

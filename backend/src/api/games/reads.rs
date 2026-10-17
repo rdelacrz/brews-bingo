@@ -2,7 +2,7 @@
 use super::writes::{self, GameViewSelector, PLAYER_COOKIE_NAME, SPECTATOR_COOKIE_NAME};
 use crate::api::{
     ApiError,
-    authentication::{named_cookie, session_cookie},
+    utility::{named_cookie, require_origin, session_cookie},
 };
 use brews_contracts::games::reads::ReadKind;
 use brews_domain::ids::{GameId, PlayerId};
@@ -74,11 +74,8 @@ pub fn decode_game_read(
     if !body.is_empty() || headers.contains_key("idempotency-key") {
         return Err(ApiError::InvalidInput);
     }
-    if headers.contains_key("origin")
-        && (headers.get_all("origin").iter().count() != 1
-            || headers.get("origin").and_then(|v| v.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
+    if headers.contains_key("origin") {
+        require_origin(headers, origin)?;
     }
     let mut player_id = None;
     let role = if kind.account_only() {

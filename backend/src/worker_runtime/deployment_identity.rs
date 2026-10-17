@@ -58,7 +58,7 @@ pub(super) async fn handle(State(env): State<SendWrapper<Env>>, request: Request
                 return Err(ApiError::InvalidInput);
             }
             let bytes = serde_json::to_vec(&identity(&env)?).map_err(|_| ApiError::Unavailable)?;
-            super::games::json_response(200, bytes)
+            super::response::json_bytes(200, bytes)
         }
         .await;
         result.unwrap_or_else(super::edge::failure)

@@ -1,5 +1,8 @@
 //! Closed, allocation-conscious Slice 1 GET grammar. Cookies never imply fallback.
-use super::{ApiError, games};
+use super::{
+    ApiError, games,
+    utility::{named_cookie, require_origin, session_cookie},
+};
 use brews_domain::{
     games::{GameCode, GameState},
     ids::GameId,
@@ -103,11 +106,8 @@ pub fn decode_discovery(
         return Err(ApiError::MethodNotAllowed);
     }
     games::validate_headers(headers)?;
-    if headers.contains_key("origin")
-        && (headers.get_all("origin").iter().count() != 1
-            || headers.get("origin").and_then(|v| v.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
+    if headers.contains_key("origin") {
+        require_origin(headers, origin)?;
     }
     if headers.contains_key("idempotency-key") {
         return Err(ApiError::InvalidInput);
@@ -157,15 +157,9 @@ pub fn decode_discovery(
     if !body.is_empty() {
         return Err(ApiError::InvalidInput);
     }
-    let account = Zeroizing::new(super::authentication::session_cookie(headers)?);
-    let player = Zeroizing::new(super::authentication::named_cookie(
-        headers,
-        super::PLAYER_COOKIE_NAME,
-    )?);
-    let spectator = Zeroizing::new(super::authentication::named_cookie(
-        headers,
-        super::SPECTATOR_COOKIE_NAME,
-    )?);
+    let account = Zeroizing::new(session_cookie(headers)?);
+    let player = Zeroizing::new(named_cookie(headers, super::PLAYER_COOKIE_NAME)?);
+    let spectator = Zeroizing::new(named_cookie(headers, super::SPECTATOR_COOKIE_NAME)?);
     let (command, token) = if path == "/api/games" {
         let mut state = None;
         for (key, value) in query_fields(query)? {

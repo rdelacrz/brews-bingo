@@ -20,6 +20,7 @@ mod management;
 mod operator_peers;
 mod operator_runtime;
 mod removals;
+mod response;
 mod runtime;
 mod users;
 mod wire;

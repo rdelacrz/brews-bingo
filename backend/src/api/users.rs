@@ -1,5 +1,8 @@
 //! Bounded public Users transport; account authority is proved by the owner.
-use super::ApiError;
+use super::{
+    ApiError,
+    utility::{command_id, decode_object, require_json, require_origin, session_cookie},
+};
 use brews_contracts::{management::ManagementCommand, users::CreateUsername};
 use brews_domain::{
     accounts::AccountRole,
@@ -152,13 +155,8 @@ pub fn decode_users(
     if headers.contains_key("authorization") {
         return Err(ApiError::Forbidden);
     }
-    let origins = headers.get_all("origin");
-    let origin_count = origins.iter().count();
-    if (method != Method::GET || origin_count != 0)
-        && (origin_count != 1
-            || headers.get("origin").and_then(|value| value.to_str().ok()) != Some(origin))
-    {
-        return Err(ApiError::Forbidden);
+    if method != Method::GET || headers.contains_key("origin") {
+        require_origin(headers, origin)?;
     }
     if !matches!(route, Route::Collection) && query.is_some() {
         return Err(ApiError::InvalidInput);
@@ -180,46 +178,23 @@ pub fn decode_users(
         Route::Disable(account_id) => ManagementCommand::DisableAccount { account_id },
         Route::Enable(account_id) => ManagementCommand::EnableAccount { account_id },
         Route::Create(role) => {
-            if headers.get_all("content-type").iter().count() != 1
-                || !headers
-                    .get("content-type")
-                    .and_then(|value| value.to_str().ok())
-                    .is_some_and(|value| {
-                        value == "application/json" || value == "application/json; charset=utf-8"
-                    })
-            {
-                return Err(ApiError::UnsupportedMediaType);
-            }
-            if body
-                .iter()
-                .find(|byte| !matches!(byte, b' ' | b'\t' | b'\r' | b'\n'))
-                != Some(&b'{')
-            {
-                return Err(ApiError::InvalidInput);
-            }
-            // Parse the original bytes so duplicate fields remain observable.
-            let CreateUsername { username } =
-                serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
+            require_json(headers)?;
+            let CreateUsername { username } = decode_object(body)?;
             ManagementCommand::CreateAccount { username, role }
         }
     };
-    let keys = headers.get_all("idempotency-key");
-    let command_id = match (command.is_mutating(), keys.iter().count()) {
-        (true, 1) => Some(
-            keys.iter()
-                .next()
-                .and_then(|value| value.to_str().ok())
-                .ok_or(ApiError::InvalidInput)?
-                .parse()
-                .map_err(|_| ApiError::InvalidInput)?,
-        ),
+    let command_id = match (
+        command.is_mutating(),
+        headers.get_all("idempotency-key").iter().count(),
+    ) {
+        (true, 1) => Some(command_id(headers)?),
         (false, 0) => None,
         _ => return Err(ApiError::InvalidInput),
     };
     Ok(UsersRequest {
         command,
         command_id,
-        session_token: super::authentication::session_cookie(headers)?,
+        session_token: session_cookie(headers)?,
     })
 }
 

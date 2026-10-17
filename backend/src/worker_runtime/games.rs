@@ -1,4 +1,5 @@
 //! Public game ingress; all authority and game commits stay in private owners.
+use super::response::json_bytes;
 use super::{
     edge, game_peers,
     game_wire::{GameAction, GameCookieWire, GameIngress, GameOwnerResponse, GameRejection},
@@ -15,7 +16,7 @@ use axum::{
     response::Response,
 };
 use brews_domain::ids::GameId;
-use http::{HeaderValue, StatusCode};
+use http::HeaderValue;
 use worker::{
     Env, Headers, Method, RequestInit,
     send::{SendFuture, SendWrapper},
@@ -259,7 +260,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             {
                 return rejected(failure);
             }
-            json_response(
+            json_bytes(
                 200,
                 response.encode_json().map_err(|_| ApiError::Unavailable)?,
             )
@@ -270,7 +271,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             {
                 return rejected(failure);
             }
-            json_response(
+            json_bytes(
                 200,
                 serde_json::to_vec(response).map_err(|_| ApiError::Unavailable)?,
             )
@@ -292,7 +293,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             {
                 return Ok(failure);
             }
-            json_response(
+            json_bytes(
                 200,
                 response.encode_json().map_err(|_| ApiError::Unavailable)?,
             )
@@ -355,7 +356,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                     return Ok(failure);
                 }
             }
-            let mut output = json_response(
+            let mut output = json_bytes(
                 200,
                 response.encode_json().map_err(|_| ApiError::Unavailable)?,
             )?;
@@ -407,7 +408,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             clear_player_cookie,
         } => {
             if *clear_player_cookie {
-                let mut output = json_response(
+                let mut output = json_bytes(
                     200,
                     response.encode_json().map_err(|_| ApiError::Unavailable)?,
                 )?;
@@ -479,7 +480,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                         fence_recovery_output(env, &ingress, *deadline, observed_at).await?;
                         return rejected(GameRejection::Unauthorized);
                     }
-                    json_response(
+                    json_bytes(
                         200,
                         response.encode_json().map_err(|_| ApiError::Unavailable)?,
                     )
@@ -524,7 +525,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                         fence_recovery_output(env, &ingress, *valid_until, observed_at).await?;
                         return rejected(GameRejection::Unauthorized);
                     }
-                    json_response(
+                    json_bytes(
                         200,
                         response.encode_json().map_err(|_| ApiError::Unavailable)?,
                     )
@@ -686,14 +687,14 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                 }
                 return rejected(GameRejection::Unauthorized);
             }
-            json_response(
+            json_bytes(
                 200,
                 response.encode_json().map_err(|_| ApiError::Unavailable)?,
             )
         }
         GameOwnerResponse::Success { response, cookie } => {
             let bytes = response.encode_json().map_err(|_| ApiError::Unavailable)?;
-            let mut output = json_response(response.status(), bytes)?;
+            let mut output = json_bytes(response.status(), bytes)?;
             match cookie {
                 GameCookieWire::Spectator { .. } | GameCookieWire::SpectatorAdmission { .. } => {
                     return Err(ApiError::Unavailable);
@@ -774,7 +775,7 @@ fn recovery_output(
     } else {
         serde_json::json!({"receipt":receipt})
     };
-    let mut response = json_response(
+    let mut response = json_bytes(
         200,
         serde_json::to_vec(&value).map_err(|_| ApiError::Unavailable)?,
     )?;
@@ -939,16 +940,7 @@ fn set_cookie(
     );
     Ok(())
 }
-pub(super) fn json_response(status: u16, bytes: Vec<u8>) -> Result<Response, ApiError> {
-    http::Response::builder()
-        .status(status)
-        .header("Content-Type", "application/json; charset=utf-8")
-        .header("Cache-Control", "no-store")
-        .header("Referrer-Policy", "no-referrer")
-        .header("X-Content-Type-Options", "nosniff")
-        .body(Body::from(bytes))
-        .map_err(|_| ApiError::Unavailable)
-}
+
 fn rejected_spectator_entry(
     ingress: &GameIngress,
     code: GameRejection,
@@ -991,11 +983,9 @@ pub(super) fn rejected(code: GameRejection) -> Result<Response, ApiError> {
         GameRejection::RecoveryBlocked => (429, "recovery_blocked", "player recovery blocked"),
         GameRejection::Unavailable => (503, "service_unavailable", "game service unavailable"),
     };
-    let mut response = json_response(
+    json_bytes(
         status,
         serde_json::to_vec(&serde_json::json!({"error":{"code":code,"message":message}}))
             .map_err(|_| ApiError::Unavailable)?,
-    )?;
-    *response.status_mut() = StatusCode::from_u16(status).map_err(|_| ApiError::Unavailable)?;
-    Ok(response)
+    )
 }

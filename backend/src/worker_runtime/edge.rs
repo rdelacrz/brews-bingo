@@ -159,7 +159,10 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
     } else if result.authority.is_some() {
         return Err(ApiError::Unavailable);
     }
-    let mut response = json_response(result.status, result.body)?;
+    let mut response = super::response::json_bytes(
+        result.status,
+        serde_json::to_vec(&result.body).map_err(|_| ApiError::Unavailable)?,
+    )?;
     match &result.cookie {
         CookieWire::None => {}
         CookieWire::Clear => {
@@ -243,27 +246,7 @@ fn command(decoded: AuthenticationRequest) -> Result<AuthCommand, ApiError> {
         _ => return Err(ApiError::InvalidInput),
     })
 }
-fn json_response(status: u16, body: serde_json::Value) -> Result<Response, ApiError> {
-    let mut response = Response::new(Body::from(
-        serde_json::to_vec(&body).map_err(|_| ApiError::Unavailable)?,
-    ));
-    *response.status_mut() = StatusCode::from_u16(status).map_err(|_| ApiError::Unavailable)?;
-    response.headers_mut().insert(
-        "content-type",
-        HeaderValue::from_static("application/json; charset=utf-8"),
-    );
-    response
-        .headers_mut()
-        .insert("cache-control", HeaderValue::from_static("no-store"));
-    response
-        .headers_mut()
-        .insert("referrer-policy", HeaderValue::from_static("no-referrer"));
-    response.headers_mut().insert(
-        "x-content-type-options",
-        HeaderValue::from_static("nosniff"),
-    );
-    Ok(response)
-}
+
 pub(super) fn failure(error: ApiError) -> Response {
     let status = match error {
         ApiError::InvalidInput => 400,
@@ -284,13 +267,12 @@ pub(super) fn failure(error: ApiError) -> Response {
         ApiError::Unavailable => "service_unavailable",
     };
     // Serialization failure must still return a safe response.
-    json_response(
-        status,
-        serde_json::json!({"error":{"code":code,"message":error.to_string()}}),
-    )
-    .unwrap_or_else(|_| {
-        let mut response = Response::new(Body::empty());
-        *response.status_mut() = StatusCode::SERVICE_UNAVAILABLE;
-        response
-    })
+    serde_json::to_vec(&serde_json::json!({"error":{"code":code,"message":error.to_string()}}))
+        .map_err(|_| ApiError::Unavailable)
+        .and_then(|bytes| super::response::json_bytes(status, bytes))
+        .unwrap_or_else(|_| {
+            let mut response = Response::new(Body::empty());
+            *response.status_mut() = StatusCode::SERVICE_UNAVAILABLE;
+            response
+        })
 }

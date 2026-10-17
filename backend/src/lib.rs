@@ -31,6 +31,7 @@ mod worker_runtime {
     mod game_recovery;
     mod game_wire;
     mod operator_peers;
+    mod response;
     mod history {
         pub(super) mod wire;
     }

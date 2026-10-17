@@ -1,5 +1,8 @@
 //! Developer-only management transport; no account authority comes from this body.
-use super::ApiError;
+use super::{
+    ApiError,
+    utility::{command_id, decode_object, require_json},
+};
 use brews_contracts::management::ManagementCommand;
 use brews_domain::ids::CommandId;
 use http::{HeaderMap, Method};
@@ -49,35 +52,13 @@ pub fn decode_cli(
     if body.len() > super::BODY_LIMIT {
         return Err(ApiError::PayloadTooLarge);
     }
-    if headers.get_all("content-type").iter().count() != 1
-        || !headers
-            .get("content-type")
-            .and_then(|value| value.to_str().ok())
-            .is_some_and(|value| {
-                value == "application/json" || value == "application/json; charset=utf-8"
-            })
-    {
-        return Err(ApiError::UnsupportedMediaType);
-    }
-    if body
-        .iter()
-        .find(|byte| !matches!(byte, b' ' | b'\t' | b'\r' | b'\n'))
-        != Some(&b'{')
-    {
-        return Err(ApiError::InvalidInput);
-    }
-    let command: ManagementCommand =
-        serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
-    let keys = headers.get_all("idempotency-key");
-    let command_id = match (command.is_mutating(), keys.iter().count()) {
-        (true, 1) => Some(
-            keys.iter()
-                .next()
-                .and_then(|value| value.to_str().ok())
-                .ok_or(ApiError::InvalidInput)?
-                .parse()
-                .map_err(|_| ApiError::InvalidInput)?,
-        ),
+    require_json(headers)?;
+    let command: ManagementCommand = decode_object(body)?;
+    let command_id = match (
+        command.is_mutating(),
+        headers.get_all("idempotency-key").iter().count(),
+    ) {
+        (true, 1) => Some(command_id(headers)?),
         (false, 0) => None,
         _ => return Err(ApiError::InvalidInput),
     };
