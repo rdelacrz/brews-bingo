@@ -1,8 +1,8 @@
 //! Closed passive-read grammar. Cookie selectors never confer authority.
-use super::{
+use super::writes::{self, GameViewSelector, PLAYER_COOKIE_NAME, SPECTATOR_COOKIE_NAME};
+use crate::api::{
     ApiError,
-    decode::named_cookie,
-    games::{self, GameViewSelector, PLAYER_COOKIE_NAME, SPECTATOR_COOKIE_NAME},
+    authentication::{named_cookie, session_cookie},
 };
 use brews_contracts::games::reads::ReadKind;
 use brews_domain::ids::{GameId, PlayerId};
@@ -35,7 +35,7 @@ impl Drop for GameReadRequest {
     }
 }
 pub fn game_read_route(path: &str) -> Option<(GameId, ReadKind)> {
-    if path.len() > games::GAME_PATH_MAX_BYTES {
+    if path.len() > writes::GAME_PATH_MAX_BYTES {
         return None;
     }
     let rest = path.strip_prefix("/api/games/")?;
@@ -70,7 +70,7 @@ pub fn decode_game_read(
     if method != Method::GET {
         return Err(ApiError::MethodNotAllowed);
     }
-    games::validate_headers(headers)?;
+    writes::validate_headers(headers)?;
     if !body.is_empty() || headers.contains_key("idempotency-key") {
         return Err(ApiError::InvalidInput);
     }
@@ -83,7 +83,7 @@ pub fn decode_game_read(
     let mut player_id = None;
     let role = if kind.account_only() {
         if let Some(q) = query {
-            if kind != ReadKind::Boards || q.len() > games::GAME_QUERY_MAX_BYTES || !q.is_ascii() {
+            if kind != ReadKind::Boards || q.len() > writes::GAME_QUERY_MAX_BYTES || !q.is_ascii() {
                 return Err(ApiError::InvalidInput);
             }
             let raw = q.strip_prefix("player_id=").ok_or(ApiError::InvalidInput)?;
@@ -117,7 +117,7 @@ pub fn decode_game_read(
             }
         }
     } else {
-        match games::read_query(query, headers, false)?
+        match writes::read_query(query, headers, false)?
             .0
             .ok_or(ApiError::InvalidInput)?
         {
@@ -127,7 +127,7 @@ pub fn decode_game_read(
         }
     };
     let token = match role {
-        ReadRole::Account => super::decode::session_cookie(headers)?,
+        ReadRole::Account => session_cookie(headers)?,
         ReadRole::Player => named_cookie(headers, PLAYER_COOKIE_NAME)?,
         ReadRole::Spectator => named_cookie(headers, SPECTATOR_COOKIE_NAME)?,
     };
@@ -157,7 +157,7 @@ pub(crate) fn read_rejection_context(
     if matches!(kind, ReadKind::Membership | ReadKind::OwnBoard) {
         return Ok(None);
     }
-    games::validate_headers(headers)?;
+    writes::validate_headers(headers)?;
     if !kind.account_only()
         && query.is_some_and(|q| {
             q.split('&')
@@ -166,7 +166,7 @@ pub(crate) fn read_rejection_context(
     {
         return Ok(None);
     }
-    Ok(super::decode::session_cookie(headers)?.map(|token| (id, kind, token)))
+    Ok(session_cookie(headers)?.map(|token| (id, kind, token)))
 }
 
 #[cfg(test)]

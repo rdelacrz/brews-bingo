@@ -44,7 +44,7 @@ The user authorized local Slice 2 implementation after Slice 1 publication. Its 
 
 Local contracts and gate evidence: [API notes](api-design.md#local-slice-2-player-recovery-implementation-choices), [LLD Section 3.15](lld.md#315-local-player-recovery-and-private-answer-maintenance-checkpoint). Final executed gates: 756 native tests in both profiles, 12 doctests, 247 fresh release Workerd cases and 95 actual HTTPS/WSS checks. At the verification checkpoint no Slice 2 commit or push had occurred. Commit/push is now separately authorized with the final-review gate still pending; no deployment or provisioning has occurred.
 
-References: API D13/D14; DO-049–052/085–087. Optional answer normalization and verifier enrollment at initial player admission already exist; do not duplicate that foundation. Production KDF/Unicode certification remains in Slice 9.
+References: API D13/D14; DO-049–052/085–087. Optional answer normalization and verifier enrollment at initial player admission already exist; do not duplicate that foundation. Deployed functional recovery/Unicode validation remains in Slice 9; the [dedicated Argon2 performance gate was removed](argon2-default-policy.md).
 
 ## Slice 3 — Player alias and explicit Leave lifecycle
 
@@ -110,7 +110,7 @@ The user authorized local environment isolation, remote-target full-game testing
 - [x] Complete bounded independent reviews and integrated local verification of isolation, frozen-artifact tools, workflows, serving identity and remote-target harness, including cleanup. The runner exits 0; the final direct full-game run passes 96 checks against fresh local artifacts. See [review/evidence](../reviews/cicd-snapshot-2026-10-14.md) for exact cuts, preserved failures and limitations, including the unclassified earlier terminal-sync failure. This does not certify provider state or actual staging.
 - [ ] Obtain separate publication authorization for this continuation; no commit/push is implied.
 
-No actual staging/production deployment or infrastructure/secret provisioning has occurred. The eight external production checkboxes remain open, as does unrelated Slice 2 review. Current verification belongs in LLD 3.24 and the new continuation review, not rewritten historical reports.
+No actual staging/production deployment or infrastructure/secret provisioning has occurred. The seven remaining external production checkboxes remain open after the separately approved Argon2-gate removal, as does unrelated Slice 2 review. Current verification belongs in LLD 3.24 and the new continuation review, not rewritten historical reports.
 
 ## Slice 6 — Dedicated authorized read APIs
 
@@ -179,7 +179,7 @@ Verified **local-only** deliverables, separate from the production gates below:
 
 - [x] Implement, exercise and independently review the bounded local maximum-configured-game resource observations and safe probe; record the exact workload, unavailable counters and parser-only repair reconciliation.
 
-No new numbered Slice 10 is inferred, no owner event/History forecast is fabricated, and local instrumented SQL/bytes/wall-time observations cannot certify provider capacity or all worst-case workloads. The existing eight production gates below stay unchecked until their exact acceptance criteria are met. The user authorized publication with “push”; exact remote `main` and `origin/main` readback matched `1f742c92b0c394864644890d8478f4563bcae5e4`, with a clean worktree. [Publication reconciliation](../reviews/game-resource-continuation-publication-reconciliation.json) records that result; the dated review/evidence retain their immutable prepublication cut. This request authorizes no new implementation or deployment.
+No new numbered Slice 10 is inferred, no owner event/History forecast is fabricated, and local instrumented SQL/bytes/wall-time observations cannot certify provider capacity or all worst-case workloads. At this historical publication cut all eight production gates remained unchecked; the later user revision removes the dedicated Argon2 performance gate, leaving seven below. The user authorized publication with “push”; exact remote `main` and `origin/main` readback matched `1f742c92b0c394864644890d8478f4563bcae5e4`, with a clean worktree. [Publication reconciliation](../reviews/game-resource-continuation-publication-reconciliation.json) records that result; the dated review/evidence retain their immutable prepublication cut. This request authorizes no new implementation or deployment.
 
 **Historical foundation checkpoint (2026-10-13):** no CI provider or protected-response policy had been selected at that cut. [Publication reconciliation](../reviews/runtime-readiness-slice-publication-reconciliation.json) binds the frozen source/config/schema/probe commit blobs and records remote `main` equality at `b158f1375d9de0b3308de47da1a5bdd1e9647047`; the worktree was clean before continuation. Its eight provider gates and independent slice reviews were not closed by publication. Later approved work and the current checklist below govern present status.
 
@@ -191,9 +191,9 @@ No new numbered Slice 10 is inferred, no owner event/History forecast is fabrica
 - [x] Implement and pass the mandatory authorization-time snapshot acceptance; preserve the original probe and its physical result without treating it as passing current-policy evidence.
 - [x] Document operator, isolation, readiness, deployment verification and compatible-backout/forward-fix prerequisites in the [CI/CD guide](../operations/cicd.md) and restore worksheet. No provider drill is claimed.
 
-**Remaining production acceptance, not absent local features:** all eight items below still lack their required external evidence. No actual deployment inventory, target origin, reviewed readiness or provider execution credentials are available in this session. Owner forecast and separately authorized provider setup/execution are prerequisites, not values or measurements to invent.
+**Remaining production acceptance, not absent local features:** all seven items below still lack their required external evidence. The formerly required Argon2 performance gate was removed, not completed. No actual deployment inventory, target origin, reviewed readiness or provider execution credentials are available in this session. Owner forecast and separately authorized provider setup/execution are prerequisites, not values or measurements to invent.
 
-- [ ] Measure production Argon2 memory/CPU/latency and concurrent authentication/recovery impact; certify work factors, supported verifier bounds and resource/concurrency limits on the actual target.
+**Removed by explicit user revision (2026-10-14):** the dedicated Argon2 work-factor/performance certification gate is no longer required. Use the existing pinned library default, Argon2id v19 / 19 MiB / 2 iterations / parallelism 1. [The approved revision](argon2-default-policy.md) preserves salt/PHC bounds, auth/recovery correctness and remaining deployed security/load checks; historical measurements are retained, not counted as a passing gate.
 - [ ] Validate pinned Unicode normalization/case-fold/whitespace behavior and clock/CSPRNG/SDK behavior across required deployed paths.
 - [ ] Obtain the owner-provided peak event/History forecast and benchmark maximum legal games per Object: storage, rows read/written, requests, CPU/duration, alarms and WSS amplification.
 - [ ] Reverify applicable provider quotas and demonstrate the approved two-times headroom; stop for architecture/cost review if the capacity gate fails.
@@ -204,7 +204,6 @@ No new numbered Slice 10 is inferred, no owner event/History forecast is fabrica
 
 | Gate | Verified local support | Evidence still required |
 | --- | --- | --- |
-| Argon2 target | Native/Workerd KDF and recovery observations; bounded verifier validation. | Target memory/CPU/latency, concurrent auth/recovery and reviewed production factors/caps. |
 | Unicode/clock/CSPRNG/SDK | Pinned implementation and selected native/Workerd route regressions. | Required deployed-path behavior and target runtime validation. |
 | Owner forecast / maximum game | Published maximum-configured-game native and sampled Workerd resource probe. | Owner peak event/History forecast and full forecast/max-game provider load, including row work, CPU, alarms and WSS amplification. |
 | Quotas / two-times headroom | Dated public limits reference and safe resource summaries. | Applicable account/plan/configured quotas and measured headroom under the approved workload. |

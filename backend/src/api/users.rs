@@ -219,7 +219,7 @@ pub fn decode_users(
     Ok(UsersRequest {
         command,
         command_id,
-        session_token: super::decode::session_cookie(headers)?,
+        session_token: super::authentication::session_cookie(headers)?,
     })
 }
 
@@ -869,7 +869,7 @@ mod tests {
         for (length, accepted) in [(8192, true), (8193, false)] {
             headers.insert("cookie", "x".repeat(length).parse().unwrap());
             let users = decode_users(&Method::GET, "/api/users", None, &headers, b"", ORIGIN);
-            let auth = super::super::decode::decode(
+            let auth = super::super::authentication::decode_authentication(
                 &Method::GET,
                 "/api/session",
                 None,

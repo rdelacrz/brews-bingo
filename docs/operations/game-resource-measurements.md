@@ -16,7 +16,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 backend/tools/game_resource_probe.py \
 
 Use a **new private output directory outside the repository**. The probe reuses the existing local runner's process deadlines, opaque test identities, source-before/after hashes, fresh Worker build and stable artifact checks. It runs actual native `game_resources` tests in debug and optimized `release-assertions`, then the actual local Workerd `game_resources.test.js`. It stores structured safe metric summaries and command exit/output hashes, never raw child output or private assertion payloads. Resource values must be finite/nonnegative/JavaScript-safe; containers and strings are bounded; credentials, private snapshots/boards/bindings and credential-like identifiers are denied by the metric parser. This is a producer-specific safe-data boundary, not a general arbitrary-secret detector.
 
-The normal full native and Worker suites also execute the resource tests. Existing unrelated test assertions/deadlines and the retained final-return diagnostic must remain unchanged. A passing isolated resource probe proves only its named observations. The full release runner now requires the approved snapshot-policy acceptance, verified in the [CI/CD continuation](../reviews/cicd-snapshot-2026-10-14.md); the older receiving-cut assertion remains a separately preserved historical failure. Production release remains blocked by the eight external Slice 9 gates, not by that superseded assertion.
+The normal full native and Worker suites also execute the resource tests. Existing unrelated test assertions/deadlines and the retained final-return diagnostic must remain unchanged. A passing isolated resource probe proves only its named observations. The full release runner now requires the approved snapshot-policy acceptance, verified in the [CI/CD continuation](../reviews/cicd-snapshot-2026-10-14.md); the older receiving-cut assertion remains a separately preserved historical failure. Production release remains blocked by the seven remaining external Slice 9 gates, not by that superseded assertion.
 
 ## Workload and interpretation
 
@@ -32,7 +32,7 @@ Wall time is not active provider CPU. Serialized response/frame **byte counts** 
 
 - Owner-provided peak games/events/History forecast and time horizon. No numeric values are assumed here.
 - Applicable account/plan/configured provider quotas, maximum-game **plus forecast** load, storage/row work/requests/provider CPU/duration/alarms/WSS amplification and measured two-times headroom.
-- Deployed KDF memory/CPU/concurrency and clock/CSPRNG/SDK/Unicode validation.
+- Deployed clock/CSPRNG/SDK/Unicode and functional login/recovery validation. The [dedicated Argon2 performance gate is removed](../plans/argon2-default-policy.md); existing library defaults and PHC bounds remain.
 - Other maximal configuration/active-connection/error/replay branches and worst-case workloads not actually exercised.
 - Authorized isolated provider backup/copy/log/restore, provisioning/secret/operator and deployed release/security/load procedures.
 - Final Slice 2/6/7 reviews/acceptance beyond the separately approved and locally verified `RUNTIME-FINAL-01` response contract.

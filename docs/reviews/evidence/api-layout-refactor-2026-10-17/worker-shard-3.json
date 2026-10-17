@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/home/orangepi/Workspace/brews-bingo/backend/node_modules/.bin/vitest",
+    "run",
+    "--config",
+    "/root/.hermes/cache/scratch/brews-api-layout-gates-01/worker-shard-3.config.mjs",
+    "--shard=3/3",
+    "--exclude",
+    "worker-tests/protected_response_snapshot.test.js",
+    "--reporter=default",
+    "--reporter=json"
+  ],
+  "elapsed_wall_seconds": 229.4151476500001,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "0fe0df0e94693b9619d456daa0c2a06faa4d8bae4f726d2dd7c44601c4a290b8",
+  "stdout_sha256": "b18e631a734bd95f1c8f597680557d06b3df0440f8cfe9d7cbbe310a1ec03e40",
+  "timed_out": false
+}

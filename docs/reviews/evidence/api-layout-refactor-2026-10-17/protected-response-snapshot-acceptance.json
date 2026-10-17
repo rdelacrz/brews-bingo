@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/home/orangepi/Workspace/brews-bingo/backend/node_modules/.bin/vitest",
+    "run",
+    "worker-tests/protected_response_snapshot.test.js",
+    "--reporter=json"
+  ],
+  "elapsed_wall_seconds": 45.11146359699978,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "c480f28d43e5a899c90d9aeebcacbb63f2cd7e6d5b4d46ea90990a6a6f4cd3d6",
+  "timed_out": false
+}

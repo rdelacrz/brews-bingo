@@ -60,6 +60,10 @@ class ReporterTests(unittest.TestCase):
         value = {"marker": "LOCAL-SLICE9-MEASUREMENTS", "target": "native", "history": [{"vm_steps": 42}]}
         text = "  LOCAL-SLICE9-MEASUREMENTS " + json.dumps(value)
         self.assertEqual(gate.measurement_lines(text, "native"), [value])
+        obsolete = value | {"argon2": {"hash_wall_ns": 42}}
+        with self.assertRaises(gate.GateError):
+            gate.measurement_lines("LOCAL-SLICE9-MEASUREMENTS " + json.dumps(obsolete), "native")
+        self.assertFalse(any("KDF" in blocker or "Argon2" in blocker for blocker in gate.PRODUCTION_BLOCKERS))
         self.assertEqual(gate.measurement_lines("No marker", "native"), [])
         for change in ({"target": "wrong"}, {"unknown": "field"}, {"history": [{"cookie": "unit fixture"}]},
                        {"pending": ["Bearer unit fixture"]}):

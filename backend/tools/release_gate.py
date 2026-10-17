@@ -43,7 +43,7 @@ ACCEPTANCE_CASES = frozenset(
 PRODUCTION_BLOCKERS = (
     "Slice2 final independent review",
     "Slice6/7 final independent review",
-    "Actual deployed KDF memory/CPU/latency/concurrency and Unicode/clock/CSPRNG/SDK validation",
+    "Actual deployed Unicode/clock/CSPRNG/SDK validation",
     "Owner-provided peak event/History forecast and maximum-legal-game per-owner load",
     "Current provider quotas and measured two-times headroom",
     "Provider copy/backup/log retention and expiry-preserving restore validation",
@@ -230,7 +230,7 @@ def parse_tls(text: str, key: str) -> dict:
 def measurement_lines(text: str, target: str) -> list[dict]:
     summaries = []
     allowed = {"marker", "target", "profile", "arch", "os", "sqlite_version", "timing",
-               "history", "argon2", "recovery", "unicode", "pending", "clock", "csprng"}
+               "history", "recovery", "unicode", "pending", "clock", "csprng"}
     forbidden = {"password", "cookie", "session", "token", "verifier", "salt", "answer", "key", "secret", "credentials", "digest"}
     def check(value: object) -> None:
         if isinstance(value, dict):

@@ -157,12 +157,12 @@ pub fn decode_discovery(
     if !body.is_empty() {
         return Err(ApiError::InvalidInput);
     }
-    let account = Zeroizing::new(super::decode::session_cookie(headers)?);
-    let player = Zeroizing::new(super::decode::named_cookie(
+    let account = Zeroizing::new(super::authentication::session_cookie(headers)?);
+    let player = Zeroizing::new(super::authentication::named_cookie(
         headers,
         super::PLAYER_COOKIE_NAME,
     )?);
-    let spectator = Zeroizing::new(super::decode::named_cookie(
+    let spectator = Zeroizing::new(super::authentication::named_cookie(
         headers,
         super::SPECTATOR_COOKIE_NAME,
     )?);

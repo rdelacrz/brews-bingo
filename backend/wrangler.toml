@@ -9,7 +9,7 @@ command = "worker-build --release"
 [vars]
 APP_ORIGIN = "https://localhost:8787"
 # RATE_LIMIT_KEY is a required secret, supplied only in ephemeral tests here.
-# Production KDF cost/capacity measurement and secret provisioning are not done.
+# Argon2 uses the approved library defaults; secret provisioning is not done.
 
 [durable_objects]
 bindings = [{ name = "ACCOUNTS", class_name = "AccountsObject" }, { name = "GAME_DIRECTORY", class_name = "GameDirectoryObject" }, { name = "GAMES", class_name = "GameObject" }]

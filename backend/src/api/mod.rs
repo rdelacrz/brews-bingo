@@ -1,7 +1,10 @@
 //! Bounded HTTP transport parsing.
-mod decode;
+mod authentication;
+pub use authentication::{
+    AuthenticationOperation, AuthenticationPayload, AuthenticationRequest, BODY_LIMIT,
+    decode_authentication,
+};
 pub mod error;
-pub use decode::{BODY_LIMIT, Decoded, Operation, Payload, decode};
 pub use error::ApiError;
 mod developer;
 pub use developer::{CliRequest, authenticate_cli, decode_cli};
@@ -21,18 +24,15 @@ pub(crate) use games::decode_empty_game_body;
 )]
 pub(crate) use games::decode_recovery_input;
 pub use games::{
-    ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameViewSelector, GamesRequest,
-    PLAYER_COOKIE_NAME, RecoverPlayerInput, RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME,
-    SPECTATOR_COOKIE_NAME, decode_games, game_cookie_path,
+    ADMISSION_COOKIE_NAME, GameOperation, GamePayload, GameReadRequest, GameViewSelector,
+    GamesRequest, PLAYER_COOKIE_NAME, ReadRole, ReadSelection, RecoverPlayerInput,
+    RecoveryAnswerInput, SPECTATOR_ADMISSION_COOKIE_NAME, SPECTATOR_COOKIE_NAME, decode_game_read,
+    decode_games, game_cookie_path, game_read_route,
 };
 #[cfg(target_arch = "wasm32")]
-pub(crate) use games::{audit_read_rejection_context, operator_rejection_context};
+pub(crate) use games::{
+    audit_read_rejection_context, operator_rejection_context, read_rejection_context,
+};
 
 mod discovery;
 pub use discovery::{AvailabilityView, DiscoveryCommand, DiscoveryRequest, decode_discovery};
-
-mod game_reads;
-pub use game_reads::{GameReadRequest, ReadRole, ReadSelection, decode_game_read, game_read_route};
-
-#[cfg(target_arch = "wasm32")]
-pub(crate) use game_reads::read_rejection_context;

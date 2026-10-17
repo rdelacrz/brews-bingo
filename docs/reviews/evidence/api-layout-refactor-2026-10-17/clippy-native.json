@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "clippy",
+    "--workspace",
+    "--all-targets",
+    "--all-features",
+    "--locked",
+    "--",
+    "-D",
+    "warnings"
+  ],
+  "elapsed_wall_seconds": 6.645728100999804,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "f5e9474928e662a0124123393dc2bbda2f975fc22c08988c5aad9ee7b2c99e42",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "timed_out": false
+}

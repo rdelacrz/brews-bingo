@@ -64,4 +64,4 @@ The user separately approved [authorization-time snapshots](../plans/protected-r
 
 ## Unfinished external prerequisites
 
-Supported physical-copy/backup/log controls and deletion, target namespace/account isolation, trusted-time/authority evidence retention, real provider restore execution, owner peak forecast, capacity/quota/headroom measurement, deployed KDF/runtime validation, operator/bootstrap/secret procedures and deployment/backout drills remain pending. No current credentials or provider identifiers are invented here.
+Supported physical-copy/backup/log controls and deletion, target namespace/account isolation, trusted-time/authority evidence retention, real provider restore execution, owner peak forecast, capacity/quota/headroom measurement, deployed functional/runtime validation (not the removed dedicated Argon2 performance gate), operator/bootstrap/secret procedures and deployment/backout drills remain pending. No current credentials or provider identifiers are invented here.

@@ -38,31 +38,24 @@ test("local Slice9 real recovery Unicode proof and owner clock/randomness observ
     const context = await post(`/api/games/${id}/admission-context`, { game_code: code }, { id: null });
     expect(context.status).toBe(200);
     const alias = `Readiness${index}`;
-    const enrollStart = Date.now();
     const joined = await post(`/api/games/${id}/players`, {
       game_code: code, alias, recovery_answer: `\u2003${source} ${suffix}\u00a0`,
     }, { session: cookie(context) });
     expect(joined.status).toBe(200);
-    const enrollWallMs = Date.now() - enrollStart;
     const player = (await joined.json()).player_id;
     sessions.add(cookie(joined));
-    const verifyStart = Date.now();
     const recovered = await post("/api/player-recovery", { game_code: code, alias, recovery_answer: `${equivalent} ${suffix}` });
     expect(recovered.status).toBe(200);
-    const verifyWallMs = Date.now() - verifyStart;
     const session = cookie(recovered);
     expect(sessions.has(session)).toBe(false);
     sessions.add(session);
     const synced = await exports.default.fetch(`${origin}/api/games/${id}/sync?view=player`, { headers: { Cookie: session } });
     expect(synced.status).toBe(200);
     expect((await synced.json()).snapshot.player_id).toBe(player);
-    const mismatchStart = Date.now();
     const denied = await post("/api/player-recovery", { game_code: code, alias, recovery_answer: `${different} ${suffix}` });
     expect(denied.status).toBe(401);
     expect(denied.headers.has("set-cookie")).toBe(false);
-    samples.push({ case: label, enroll_operations: 1, verify_operations: 2,
-      enroll_wall_ms: enrollWallMs, verify_wall_ms: verifyWallMs,
-      mismatch_wall_ms: Date.now() - mismatchStart, equivalent_accepted: true, different_denied: true });
+    samples.push({ case: label, equivalent_accepted: true, different_denied: true });
   }
   const after = Date.now();
   const clock = await runInDurableObject(owner(id), (_instance, state) => {
@@ -74,15 +67,11 @@ test("local Slice9 real recovery Unicode proof and owner clock/randomness observ
   expect(clock.last_observed_ms).toBeGreaterThanOrEqual(clock.created_at);
   expect(clock.last_observed_ms).toBeLessThanOrEqual(after);
   expect(sessions.size).toBe(8);
-  for (const sample of samples) {
-    for (const key of ["enroll_wall_ms", "verify_wall_ms", "mismatch_wall_ms"]) {
-      expect(Number.isFinite(sample[key]) && sample[key] >= 0).toBe(true);
-    }
-  }
+
   // The host runner persists this safe line to its scratch artifact; Workerd has no host filesystem writes.
   console.log(`LOCAL-SLICE9-MEASUREMENTS ${JSON.stringify({ marker: "LOCAL-SLICE9-MEASUREMENTS",
-    target: "actual-local-Workerd", timing: "wall milliseconds, Date.now resolution, not provider CPU",
+    target: "actual-local-Workerd",
     recovery: samples, clock: { observations: 2, created_within_request_window: true, durable_clock_within_request_window: true },
     csprng: { owner_generated_session_samples: sessions.size, distinct: true, cryptographic_quality_certified: false },
-    pending: ["deployed Unicode/clock/CSPRNG", "provider CPU/memory/quotas/headroom", "production profile/bounds/concurrency", "maximum legal game and owner forecast", "RUNTIME-FINAL-01", "Slice2/6/7 acceptance"] })}`);
+    pending: ["deployed Unicode/clock/CSPRNG", "provider CPU/memory/quotas/headroom", "maximum legal game and owner forecast", "Slice2/6/7 acceptance"] })}`);
 }, 120_000);

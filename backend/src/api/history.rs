@@ -170,6 +170,6 @@ pub fn decode_history(
     };
     Ok(HistoryRequest {
         command,
-        session_token: super::decode::session_cookie(headers)?,
+        session_token: super::authentication::session_cookie(headers)?,
     })
 }

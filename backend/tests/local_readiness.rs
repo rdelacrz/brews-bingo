@@ -353,15 +353,6 @@ fn local_slice9_measurements() {
     let history = history_measurements();
     let runtime = OsRuntime;
     let policy = AuthPolicy::default();
-    let secret = zeroize::Zeroizing::new(security::new_token(&runtime).unwrap());
-    let (phc, hash_ns) = timed(|| {
-        zeroize::Zeroizing::new(security::hash_password(&secret, policy, &runtime).unwrap())
-    });
-    let (valid, verify_ns) = timed(|| security::verify_password(&secret, &phc).unwrap());
-    assert!(valid);
-    let other = zeroize::Zeroizing::new(security::new_token(&runtime).unwrap());
-    let (invalid, mismatch_ns) = timed(|| security::verify_password(&other, &phc).unwrap());
-    assert!(!invalid);
     let mut recovery = Vec::new();
     let mut key = zeroize::Zeroizing::new([0u8; 32]);
     runtime.fill_random(key.as_mut()).unwrap();
@@ -389,24 +380,18 @@ fn local_slice9_measurements() {
             zeroize::Zeroizing::new(format!("{} {}", equivalent.trim(), suffix.as_str()));
         let different =
             zeroize::Zeroizing::new(format!("{} {}", different.trim(), suffix.as_str()));
-        let (normalized, normalize_ns) =
-            timed(|| game::recovery_answers::normalize(&input).unwrap());
-        let (verifier, enroll_ns) =
-            timed(|| game::recovery_answers::enroll(&normalized, policy, &runtime).unwrap());
-        let (valid, verify_ns) = timed(|| {
-            security::verify_password(
-                &game::recovery_answers::normalize(&equivalent).unwrap(),
-                &verifier,
-            )
-            .unwrap()
-        });
-        let (invalid, mismatch_ns) = timed(|| {
-            security::verify_password(
-                &game::recovery_answers::normalize(&different).unwrap(),
-                &verifier,
-            )
-            .unwrap()
-        });
+        let normalized = game::recovery_answers::normalize(&input).unwrap();
+        let verifier = game::recovery_answers::enroll(&normalized, policy, &runtime).unwrap();
+        let valid = security::verify_password(
+            &game::recovery_answers::normalize(&equivalent).unwrap(),
+            &verifier,
+        )
+        .unwrap();
+        let invalid = security::verify_password(
+            &game::recovery_answers::normalize(&different).unwrap(),
+            &verifier,
+        )
+        .unwrap();
         assert!(valid);
         assert!(!invalid);
         let context = owner
@@ -415,55 +400,47 @@ fn local_slice9_measurements() {
             .cookie
             .unwrap();
         let alias = format!("Readiness{}", recovery.len());
-        let (joined, route_enroll_ns) = timed(|| {
-            owner
-                .join_player(
-                    fresh_command(&runtime),
-                    context.token(),
-                    None,
-                    brews_contracts::games::JoinPlayer {
-                        game_code: code.clone(),
-                        alias: alias.clone(),
-                        recovery_answer: Some(
-                            serde_json::from_value(json!(input.as_str())).unwrap(),
-                        ),
-                    },
-                )
-                .unwrap()
-        });
+        let joined = owner
+            .join_player(
+                fresh_command(&runtime),
+                context.token(),
+                None,
+                brews_contracts::games::JoinPlayer {
+                    game_code: code.clone(),
+                    alias: alias.clone(),
+                    recovery_answer: Some(serde_json::from_value(json!(input.as_str())).unwrap()),
+                },
+            )
+            .unwrap();
         let old = joined.cookie.unwrap();
-        let (restored, route_verify_ns) = timed(|| {
-            owner
-                .recover_player(
-                    fresh_command(&runtime),
-                    &code,
-                    &alias,
-                    &equivalent,
-                    "192.0.2.41",
-                )
-                .unwrap()
-        });
+        let restored = owner
+            .recover_player(
+                fresh_command(&runtime),
+                &code,
+                &alias,
+                &equivalent,
+                "192.0.2.41",
+            )
+            .unwrap();
         let fresh = restored.cookie.unwrap();
         assert!(owner.player_view(old.token()).is_err());
         assert!(owner.recovered_player_view(fresh.token()).is_ok());
-        let (denied, route_mismatch_ns) = timed(|| {
-            owner
-                .recover_player(
-                    fresh_command(&runtime),
-                    &code,
-                    &alias,
-                    &different,
-                    "192.0.2.41",
-                )
-                .err()
-        });
+        let denied = owner
+            .recover_player(
+                fresh_command(&runtime),
+                &code,
+                &alias,
+                &different,
+                "192.0.2.41",
+            )
+            .err();
         assert_eq!(
             denied,
             Some(brews_backend::game::GameError::InvalidRecovery)
         );
-        recovery.push(json!({"owner_route":{"enroll_operations":1,"recover_operations":2,"enroll_wall_ns":route_enroll_ns,"recover_wall_ns":route_verify_ns,"mismatch_wall_ns":route_mismatch_ns,"fresh_session_accepted":true,"old_session_denied":true},"case":case,"normalize_operations":3,"enroll_operations":1,"verify_operations":2,"normalize_wall_ns":normalize_ns,"enroll_wall_ns":enroll_ns,"verify_wall_ns":verify_ns,"mismatch_wall_ns":mismatch_ns,"equivalent_accepted":valid,"different_denied":!invalid}));
+        recovery.push(json!({"owner_route":{"fresh_session_accepted":true,"old_session_denied":true},"case":case,"equivalent_accepted":valid,"different_denied":!invalid}));
     }
-    let summary = json!({"marker":"LOCAL-SLICE9-MEASUREMENTS","target":"native","profile":if cfg!(debug_assertions){"assertions-enabled"}else{"assertions-disabled"},"arch":std::env::consts::ARCH,"os":std::env::consts::OS,"sqlite_version":rusqlite::version(),"timing":"wall, not provider CPU","history":history,"argon2":{"m_cost_kib":policy.m_cost,"t_cost":policy.t_cost,"p_cost":policy.p_cost,"hash_operations":1,"verify_operations":2,"hash_wall_ns":hash_ns,"verify_wall_ns":verify_ns,"mismatch_wall_ns":mismatch_ns,"rng":"OS /dev/urandom, no fallback"},"recovery":recovery,"unicode":{"nfc":unicode_normalization::UNICODE_VERSION,"casefold":unicode_casefold::UNICODE_VERSION,"rust_whitespace":std::char::UNICODE_VERSION},"pending":["production profile/bounds/concurrency","provider CPU/memory/quotas/headroom","maximum legal game and owner forecast","deployed clock/CSPRNG/Unicode","RUNTIME-FINAL-01","Slice2/6/7 acceptance"]});
+    let summary = json!({"marker":"LOCAL-SLICE9-MEASUREMENTS","target":"native","profile":if cfg!(debug_assertions){"assertions-enabled"}else{"assertions-disabled"},"arch":std::env::consts::ARCH,"os":std::env::consts::OS,"sqlite_version":rusqlite::version(),"timing":"History query wall time, not provider CPU","history":history,"recovery":recovery,"unicode":{"nfc":unicode_normalization::UNICODE_VERSION,"casefold":unicode_casefold::UNICODE_VERSION,"rust_whitespace":std::char::UNICODE_VERSION},"pending":["provider CPU/memory/quotas/headroom","maximum legal game and owner forecast","deployed clock/CSPRNG/Unicode","Slice2/6/7 acceptance"]});
     // The host runner captures this safe line; tests never write machine-specific files.
     println!(
         "LOCAL-SLICE9-MEASUREMENTS {}",

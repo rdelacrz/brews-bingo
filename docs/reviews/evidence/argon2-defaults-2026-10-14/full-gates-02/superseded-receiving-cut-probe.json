@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/home/orangepi/Workspace/brews-bingo/backend/node_modules/.bin/vitest",
+    "run",
+    "--config",
+    "/home/orangepi/Workspace/brews-bingo/docs/reviews/evidence/command-lookup-final-return.config.mjs",
+    "--reporter=json"
+  ],
+  "elapsed_wall_seconds": 6.332820579991676,
+  "exit_code": 1,
+  "raw_output_persisted": false,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "4354261ef8fcdbbf548bbf3cc62185606a6ba5ea2614c249ceadc54c341c72e2",
+  "timed_out": false
+}

@@ -1,0 +1,13 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "build"
+  ],
+  "elapsed_wall_seconds": 12.492963822965976,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "46e2d0f3506f7e53f099db68bdbd93dbe028ab4186d5be8dd640c1ffaea06587",
+  "stdout_sha256": "0dcc2d49a320072332b87eb00c36e262e4c49f3c9b4aad81a60d734a184a92e4",
+  "timed_out": false
+}

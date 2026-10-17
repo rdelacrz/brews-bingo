@@ -84,9 +84,10 @@ Auth bodies are bounded to 4 KiB; usernames and passwords follow the approved
 Retries never replay credentials/cookies. Consumed links return generic invalid-link;
 committed setup/reset with a lost response recovers through password login.
 
-Production Argon2 capacity, quota forecasts and release gates remain unverified.
-The default 19 MiB / 2 / 1 setting is a benchmark starting point, not deployment
-approval. Socket subscriptions cannot be created by this slice. Close intents are
+Quota forecasts and remaining release gates are unverified. The approved
+[Argon2 default policy](../docs/plans/argon2-default-policy.md) uses the existing
+19 MiB / 2 / 1 library profile without a dedicated hashing-performance gate.
+This does not grant deployment approval. Socket subscriptions cannot be created by this slice. Close intents are
 retained, but GameObject delivery, acknowledgements and retry/backoff are deferred.
 Do not enable socket ingress until that sender is implemented; queuing an intent
 does not establish socket closure.

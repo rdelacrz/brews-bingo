@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/root/.hermes/installs/76f6e7e5145b5f39/environments/be6386d61ed3469eb9bf25a3ab5f18d2/venv/bin/python3",
+    "tests/dedicated_reads_https_wss.py"
+  ],
+  "elapsed_wall_seconds": 26.015789556000072,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "a69a7b96c09f7ecaa8267812b48844d005cf4350179d218f9f72decb499aae13",
+  "timed_out": false
+}

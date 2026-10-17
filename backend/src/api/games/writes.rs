@@ -1,5 +1,8 @@
 //! Bounded public game transport; grammar is not authentication or authorization.
-use super::{ApiError, BODY_LIMIT, decode::named_cookie};
+use crate::api::{
+    ApiError, BODY_LIMIT,
+    authentication::{named_cookie, session_cookie},
+};
 use brews_contracts::games::{
     AdmissionContextInput, CallManualInput, CancelGameInput, CreateGame, GAME_QUERY_KNOWN_REVISION,
     GAME_QUERY_VIEW, GAME_VIEW_ACCOUNT, GAME_VIEW_PLAYER, JoinPlayer, RevisionCommand, WinnerInput,
@@ -176,7 +179,7 @@ pub(crate) fn operator_rejection_context(
     Ok((
         game.ok_or(ApiError::InvalidInput)?,
         purpose,
-        super::decode::session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
+        session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
     ))
 }
 
@@ -224,7 +227,7 @@ pub(crate) fn audit_read_rejection_context(
     Ok((
         id.parse().map_err(|_| ApiError::InvalidInput)?,
         purpose,
-        super::decode::session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
+        session_cookie(headers)?.ok_or(ApiError::InvalidInput)?,
     ))
 }
 
@@ -282,7 +285,7 @@ pub fn decode_games(
     if operation == GameOperation::Stream {
         require_upgrade(headers)?;
     }
-    if body.len() > super::BODY_LIMIT {
+    if body.len() > BODY_LIMIT {
         return Err(ApiError::PayloadTooLarge);
     }
     if read {
@@ -409,7 +412,7 @@ pub fn decode_games(
     {
         (named_cookie(headers, PLAYER_COOKIE_NAME)?, None)
     } else {
-        (super::decode::session_cookie(headers)?, None)
+        (session_cookie(headers)?, None)
     };
     Ok(GamesRequest {
         operation,
@@ -564,7 +567,7 @@ fn route(path: &str) -> Result<(GameOperation, Option<GameId>), ApiError> {
     };
     Ok((operation, Some(id)))
 }
-pub(super) fn validate_headers(headers: &HeaderMap) -> Result<(), ApiError> {
+pub(in crate::api) fn validate_headers(headers: &HeaderMap) -> Result<(), ApiError> {
     if headers.len() > GAME_HEADERS_MAX_FIELDS
         || headers
             .iter()
@@ -852,7 +855,7 @@ mod tests {
                     &path,
                     None,
                     &h,
-                    &vec![b' '; super::super::BODY_LIMIT + 1],
+                    &vec![b' '; BODY_LIMIT + 1],
                     ORIGIN
                 )
                 .err(),
@@ -911,7 +914,7 @@ mod tests {
             );
         }
         let mut body = b"{}".to_vec();
-        body.resize(super::super::BODY_LIMIT, b' ');
+        body.resize(BODY_LIMIT, b' ');
         assert!(decode_games(&Method::POST, "/api/games", None, &headers(), &body, ORIGIN).is_ok());
         let path = format!("/api/games/{ID}/sync");
         assert_eq!(

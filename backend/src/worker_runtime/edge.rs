@@ -6,7 +6,10 @@ use crate::limits::{
 };
 use crate::observability::{self, Boundary, Failure};
 use crate::{
-    api::{self, ApiError, BODY_LIMIT, Decoded, Operation, Payload},
+    api::{
+        self, ApiError, AuthenticationOperation, AuthenticationPayload, AuthenticationRequest,
+        BODY_LIMIT,
+    },
     auth::AuthCommand,
     security::token_digest,
 };
@@ -53,7 +56,7 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             .map_err(|_| ApiError::PayloadTooLarge)?
             .to_vec(),
     );
-    let decoded = api::decode(
+    let decoded = api::decode_authentication(
         &parts.method,
         parts.uri.path(),
         parts.uri.query(),
@@ -192,39 +195,47 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
     }
     Ok(response)
 }
-fn command(decoded: Decoded) -> Result<AuthCommand, ApiError> {
-    let Decoded {
+fn command(decoded: AuthenticationRequest) -> Result<AuthCommand, ApiError> {
+    let AuthenticationRequest {
         operation,
         payload,
         session_token,
         ..
     } = decoded;
     Ok(match (operation, payload) {
-        (Operation::Login, Payload::Login { username, password }) => {
+        (AuthenticationOperation::Login, AuthenticationPayload::Login { username, password }) => {
             AuthCommand::Login { username, password }
         }
-        (Operation::Current, Payload::Empty) => AuthCommand::Current {
+        (AuthenticationOperation::Current, AuthenticationPayload::Empty) => AuthCommand::Current {
             token: session_token,
         },
-        (Operation::Logout, Payload::Empty) => AuthCommand::Logout {
+        (AuthenticationOperation::Logout, AuthenticationPayload::Empty) => AuthCommand::Logout {
             token: session_token,
         },
-        (Operation::RedeemEnrollment, Payload::Redeem { token }) => AuthCommand::Redeem {
-            purpose: AccessLinkPurpose::Enrollment,
-            token,
-        },
-        (Operation::RedeemReset, Payload::Redeem { token }) => AuthCommand::Redeem {
-            purpose: AccessLinkPurpose::PasswordReset,
-            token,
-        },
-        (Operation::CompleteEnrollment, Payload::Complete { new_password }) => {
-            AuthCommand::Complete {
-                scope: SessionScope::EnrollmentOnly,
-                token: session_token.ok_or(ApiError::InvalidInput)?,
-                new_password,
+        (AuthenticationOperation::RedeemEnrollment, AuthenticationPayload::Redeem { token }) => {
+            AuthCommand::Redeem {
+                purpose: AccessLinkPurpose::Enrollment,
+                token,
             }
         }
-        (Operation::CompleteReset, Payload::Complete { new_password }) => AuthCommand::Complete {
+        (AuthenticationOperation::RedeemReset, AuthenticationPayload::Redeem { token }) => {
+            AuthCommand::Redeem {
+                purpose: AccessLinkPurpose::PasswordReset,
+                token,
+            }
+        }
+        (
+            AuthenticationOperation::CompleteEnrollment,
+            AuthenticationPayload::Complete { new_password },
+        ) => AuthCommand::Complete {
+            scope: SessionScope::EnrollmentOnly,
+            token: session_token.ok_or(ApiError::InvalidInput)?,
+            new_password,
+        },
+        (
+            AuthenticationOperation::CompleteReset,
+            AuthenticationPayload::Complete { new_password },
+        ) => AuthCommand::Complete {
             scope: SessionScope::PasswordResetOnly,
             token: session_token.ok_or(ApiError::InvalidInput)?,
             new_password,

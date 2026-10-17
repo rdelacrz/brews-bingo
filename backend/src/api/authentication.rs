@@ -1,10 +1,11 @@
+//! Bounded account-authentication transport; decoding does not establish authority.
 use super::ApiError;
 use http::{HeaderMap, Method};
 
 pub const BODY_LIMIT: usize = 4_096;
 const COOKIE_HEADER_MAX_BYTES: usize = 8_192;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Operation {
+pub enum AuthenticationOperation {
     Login,
     Current,
     RedeemEnrollment,
@@ -13,15 +14,15 @@ pub enum Operation {
     CompleteReset,
     Logout,
 }
-pub enum Payload {
+pub enum AuthenticationPayload {
     Login { username: String, password: String },
     Redeem { token: String },
     Complete { new_password: String },
     Empty,
 }
-pub struct Decoded {
-    pub operation: Operation,
-    pub payload: Payload,
+pub struct AuthenticationRequest {
+    pub operation: AuthenticationOperation,
+    pub payload: AuthenticationPayload,
     pub command_id: Option<String>,
     pub session_token: Option<String>,
 }
@@ -47,26 +48,26 @@ struct CompleteBody {
     new_password: String,
 }
 
-pub fn decode(
+pub fn decode_authentication(
     method: &Method,
     path: &str,
     query: Option<&str>,
     headers: &HeaderMap,
     body: &[u8],
     origin: &str,
-) -> Result<Decoded, ApiError> {
+) -> Result<AuthenticationRequest, ApiError> {
     let operation = match path {
-        "/api/auth/login" => Operation::Login,
-        "/api/session" => Operation::Current,
-        "/api/auth/enrollment/redeem" => Operation::RedeemEnrollment,
-        "/api/auth/enrollment/complete" => Operation::CompleteEnrollment,
-        "/api/auth/password-reset/redeem" => Operation::RedeemReset,
-        "/api/auth/password-reset/complete" => Operation::CompleteReset,
-        "/api/auth/logout" => Operation::Logout,
+        "/api/auth/login" => AuthenticationOperation::Login,
+        "/api/session" => AuthenticationOperation::Current,
+        "/api/auth/enrollment/redeem" => AuthenticationOperation::RedeemEnrollment,
+        "/api/auth/enrollment/complete" => AuthenticationOperation::CompleteEnrollment,
+        "/api/auth/password-reset/redeem" => AuthenticationOperation::RedeemReset,
+        "/api/auth/password-reset/complete" => AuthenticationOperation::CompleteReset,
+        "/api/auth/logout" => AuthenticationOperation::Logout,
         _ => return Err(ApiError::NotFound),
     };
     let session_token = session_cookie(headers)?;
-    let expected = if operation == Operation::Current {
+    let expected = if operation == AuthenticationOperation::Current {
         Method::GET
     } else {
         Method::POST
@@ -86,13 +87,16 @@ pub fn decode(
     if body.len() > BODY_LIMIT {
         return Err(ApiError::PayloadTooLarge);
     }
-    if matches!(operation, Operation::Current | Operation::Logout) {
+    if matches!(
+        operation,
+        AuthenticationOperation::Current | AuthenticationOperation::Logout
+    ) {
         if !body.is_empty() {
             return Err(ApiError::InvalidInput);
         }
-        return Ok(Decoded {
+        return Ok(AuthenticationRequest {
             operation,
-            payload: Payload::Empty,
+            payload: AuthenticationPayload::Empty,
             command_id: None,
             session_token,
         });
@@ -130,36 +134,38 @@ pub fn decode(
         return Err(ApiError::InvalidInput);
     }
     let payload = match operation {
-        Operation::Login => {
+        AuthenticationOperation::Login => {
             let p: LoginBody = serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
-            Payload::Login {
+            AuthenticationPayload::Login {
                 username: p.username,
                 password: p.password,
             }
         }
-        Operation::RedeemEnrollment => {
+        AuthenticationOperation::RedeemEnrollment => {
             let p: EnrollmentBody =
                 serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
-            Payload::Redeem {
+            AuthenticationPayload::Redeem {
                 token: p.enrollment_token,
             }
         }
-        Operation::RedeemReset => {
+        AuthenticationOperation::RedeemReset => {
             let p: ResetBody = serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
-            Payload::Redeem {
+            AuthenticationPayload::Redeem {
                 token: p.reset_token,
             }
         }
-        Operation::CompleteEnrollment | Operation::CompleteReset => {
+        AuthenticationOperation::CompleteEnrollment | AuthenticationOperation::CompleteReset => {
             let p: CompleteBody =
                 serde_json::from_slice(body).map_err(|_| ApiError::InvalidInput)?;
-            Payload::Complete {
+            AuthenticationPayload::Complete {
                 new_password: p.new_password,
             }
         }
-        Operation::Current | Operation::Logout => Payload::Empty,
+        AuthenticationOperation::Current | AuthenticationOperation::Logout => {
+            AuthenticationPayload::Empty
+        }
     };
-    Ok(Decoded {
+    Ok(AuthenticationRequest {
         operation,
         payload,
         command_id: Some(key.to_owned()),
@@ -216,7 +222,7 @@ mod tests {
                 h.insert("origin", v.parse().unwrap());
             }
             assert!(matches!(
-                decode(
+                decode_authentication(
                     &Method::POST,
                     "/api/auth/login",
                     None,
@@ -232,7 +238,7 @@ mod tests {
     #[test]
     fn body_bound_is_enforced_before_parsing() {
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::POST,
                 "/api/auth/login",
                 None,
@@ -259,7 +265,7 @@ mod tests {
                 h.insert("idempotency-key", k.parse().unwrap());
             }
             assert!(matches!(
-                decode(
+                decode_authentication(
                     &Method::POST,
                     "/api/auth/login",
                     None,
@@ -270,7 +276,7 @@ mod tests {
                 Err(ApiError::InvalidInput)
             ));
         }
-        let d = decode(
+        let d = decode_authentication(
             &Method::POST,
             "/api/auth/login",
             None,
@@ -291,7 +297,7 @@ mod tests {
         h.insert("content-type", "text/plain".parse().unwrap());
         let body=serde_json::to_vec(&serde_json::json!({"username":"ExactCaseUser","password":String::from_utf8(vec![0;10]).unwrap()})).unwrap();
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::POST,
                 "/api/auth/login",
                 None,
@@ -306,12 +312,22 @@ mod tests {
     #[test]
     fn all_seven_operations_accept_their_exact_payload() {
         let cases = [
-            (Method::GET, "/api/session", Operation::Current, None),
-            (Method::POST, "/api/auth/logout", Operation::Logout, None),
+            (
+                Method::GET,
+                "/api/session",
+                AuthenticationOperation::Current,
+                None,
+            ),
+            (
+                Method::POST,
+                "/api/auth/logout",
+                AuthenticationOperation::Logout,
+                None,
+            ),
             (
                 Method::POST,
                 "/api/auth/enrollment/redeem",
-                Operation::RedeemEnrollment,
+                AuthenticationOperation::RedeemEnrollment,
                 Some(
                     serde_json::json!({"enrollment_token":String::from_utf8(vec![0;43]).unwrap()}),
                 ),
@@ -319,19 +335,19 @@ mod tests {
             (
                 Method::POST,
                 "/api/auth/password-reset/redeem",
-                Operation::RedeemReset,
+                AuthenticationOperation::RedeemReset,
                 Some(serde_json::json!({"reset_token":String::from_utf8(vec![0;43]).unwrap()})),
             ),
             (
                 Method::POST,
                 "/api/auth/enrollment/complete",
-                Operation::CompleteEnrollment,
+                AuthenticationOperation::CompleteEnrollment,
                 Some(serde_json::json!({"new_password":String::from_utf8(vec![0;10]).unwrap()})),
             ),
             (
                 Method::POST,
                 "/api/auth/password-reset/complete",
-                Operation::CompleteReset,
+                AuthenticationOperation::CompleteReset,
                 Some(serde_json::json!({"new_password":String::from_utf8(vec![0;10]).unwrap()})),
             ),
         ];
@@ -340,11 +356,15 @@ mod tests {
                 .map(|p| serde_json::to_vec(&p).unwrap())
                 .unwrap_or_default();
             let mut h = headers();
-            if matches!(op, Operation::Current | Operation::Logout) {
+            if matches!(
+                op,
+                AuthenticationOperation::Current | AuthenticationOperation::Logout
+            ) {
                 h.remove("idempotency-key");
                 h.remove("content-type");
             }
-            let d = decode(&method, path, None, &h, &body, "https://localhost:8787").unwrap();
+            let d = decode_authentication(&method, path, None, &h, &body, "https://localhost:8787")
+                .unwrap();
             assert_eq!(d.operation, op);
         }
     }
@@ -398,7 +418,7 @@ mod tests {
             let body = [prefix, json.as_slice()].concat();
             assert!(
                 matches!(
-                    decode(
+                    decode_authentication(
                         &Method::POST,
                         path,
                         None,
@@ -469,7 +489,7 @@ mod tests {
                 .parse()
                 .unwrap(),
         );
-        let d = decode(
+        let d = decode_authentication(
             &Method::GET,
             "/api/session",
             None,
@@ -486,7 +506,7 @@ mod tests {
                 .unwrap(),
         );
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::GET,
                 "/api/session",
                 None,
@@ -505,7 +525,7 @@ mod tests {
             br#"{"username":"ExactCaseUser","username":"OtherCaseUser","password":""}"#.as_slice(),
         ] {
             assert!(matches!(
-                decode(
+                decode_authentication(
                     &Method::POST,
                     "/api/auth/login",
                     None,
@@ -520,7 +540,7 @@ mod tests {
     #[test]
     fn internal_paths_unknown_apis_wrong_methods_and_query_inputs_reject() {
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::GET,
                 "/internal/auth",
                 None,
@@ -531,7 +551,7 @@ mod tests {
             Err(ApiError::NotFound)
         ));
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::GET,
                 "/api/not-a-route",
                 None,
@@ -542,7 +562,7 @@ mod tests {
             Err(ApiError::NotFound)
         ));
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::GET,
                 "/api/auth/login",
                 None,
@@ -553,7 +573,7 @@ mod tests {
             Err(ApiError::MethodNotAllowed)
         ));
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::GET,
                 "/api/session",
                 Some("token"),
@@ -566,7 +586,7 @@ mod tests {
     }
     #[test]
     fn get_current_is_bodyless_and_has_no_origin_or_retry_requirement() {
-        let d = decode(
+        let d = decode_authentication(
             &Method::GET,
             "/api/session",
             None,
@@ -575,10 +595,10 @@ mod tests {
             "https://localhost:8787",
         )
         .unwrap();
-        assert_eq!(d.operation, Operation::Current);
+        assert_eq!(d.operation, AuthenticationOperation::Current);
         assert!(d.command_id.is_none());
         assert!(matches!(
-            decode(
+            decode_authentication(
                 &Method::GET,
                 "/api/session",
                 None,
@@ -603,7 +623,7 @@ mod tests {
     #[test]
     fn valid_login_dispatches_without_normalizing_credentials() {
         let body=serde_json::to_vec(&serde_json::json!({"username": " ExactCaseUser ", "password": String::from_utf8(vec![0;10]).unwrap()})).unwrap();
-        let d = decode(
+        let d = decode_authentication(
             &Method::POST,
             "/api/auth/login",
             None,
@@ -612,9 +632,9 @@ mod tests {
             "https://localhost:8787",
         )
         .unwrap();
-        assert_eq!(d.operation, Operation::Login);
+        assert_eq!(d.operation, AuthenticationOperation::Login);
         match d.payload {
-            Payload::Login { username, password } => {
+            AuthenticationPayload::Login { username, password } => {
                 assert_eq!(username, " ExactCaseUser ");
                 assert_eq!(password.as_bytes(), &[0; 10]);
             }

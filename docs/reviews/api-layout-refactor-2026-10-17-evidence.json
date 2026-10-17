@@ -1,0 +1,95 @@
+{
+  "kind": "api_module_layout_refactor_local_verification_not_production_certification",
+  "recorded_at": "2026-10-17T03:24:19.380260+00:00",
+  "baseline_commit": "2992962a20a512422ee5ec1796e9fdebc89f4a33",
+  "renames": {
+    "backend/src/api/decode.rs": "backend/src/api/authentication.rs",
+    "backend/src/api/games.rs": "backend/src/api/games/writes.rs",
+    "backend/src/api/game_reads.rs": "backend/src/api/games/reads.rs"
+  },
+  "new_module_index": "backend/src/api/games/mod.rs",
+  "documentation_removed_by_user": "backend/src/directory/README.md",
+  "authentication_names": [
+    "AuthenticationRequest",
+    "AuthenticationOperation",
+    "AuthenticationPayload",
+    "decode_authentication"
+  ],
+  "comparison": {
+    "mechanical_file_comparisons_passed": 7,
+    "unrelated_baseline_files_preserved": 433,
+    "old_source_paths_removed": [
+      "backend/src/api/decode.rs",
+      "backend/src/api/games.rs",
+      "backend/src/api/game_reads.rs"
+    ],
+    "new_source_paths": [
+      "backend/src/api/authentication.rs",
+      "backend/src/api/games/writes.rs",
+      "backend/src/api/games/reads.rs",
+      "backend/src/api/games/mod.rs"
+    ],
+    "http_contracts_and_validation_logic_unchanged": true
+  },
+  "release_input_count": 297,
+  "release_report_sha256": "aa05c8c3b85850e4c744829684804e789da8aa395448af9ed6d69a980b82beaf",
+  "source_unchanged": true,
+  "artifact_unchanged": true,
+  "native_debug_passed": 959,
+  "native_release_assertions_passed": 959,
+  "doctests_passed": 12,
+  "general_worker_passed": 723,
+  "general_worker_suites": 39,
+  "snapshot_contract_passed": 20,
+  "snapshot_contract_status": "passed_authorization_time_snapshot",
+  "historical_probe": {
+    "failed": 1,
+    "finding": "RUNTIME-FINAL-01",
+    "observed_returned_status": 200,
+    "passed": 0,
+    "raw_exit_code": 1,
+    "skipped": 0,
+    "status": "failed_acceptance_assertion",
+    "superseded": true
+  },
+  "tls_check_count": 373,
+  "python_tests_passed": 135,
+  "graph": {
+    "sources_verified": 265,
+    "manifest_sha256": "fb7744c9b1c2f9b737aeaaa34b829c1f47600629313c45817c936b6389b000d2",
+    "documentation_refreshed": false
+  },
+  "worker_artifact_sha256": {
+    "backend/build/index.js": "40a1af52a746a9b13c6af4939ad39ce281f2ffe42dfce83c213cc9ea2360a281",
+    "backend/build/index_bg.wasm": "ccea3b32ff70b28d5fa61f791b0f2fc667a4d0c5a718593536f78fd2efae6da6",
+    "backend/build/worker/shim.mjs": "ac99177861405a6046923cbacabbd6adfa1853a56d0c679b9f5e09097c2f4728",
+    "target/wasm32-unknown-unknown/release/brews_backend.wasm": "7aded7ac2eb01e047fe5fb6f1ec1d9ec964d91e1b5c9e56ee98b5c4b1ee93973"
+  },
+  "archive_sha256": {
+    "cargo-version.json": "22a59b14532aa4440aa2f02c892840bae6a267cd3e982cf59656232df6f7a4c0",
+    "cli-build.json": "f5839a9991d1ff8f3dfbcf13c5565fe1e9c89e49625c57e020bad2b06c377c4c",
+    "clippy-native.json": "37b34cd64473d4d9e4ddebac43223ec5629235738d058ed4d255cdf7cb0d4fb3",
+    "clippy-wasm.json": "14de995ce55f80319f9133b89fff3c1c737cdc7af519fdd6dc92123a337144fa",
+    "doctests.json": "11d39e8467c6355b952208c902c291a3da469b8ca4a6086cb4fb0f9c78a17df6",
+    "format.json": "2af111020fd844aebddaf30efd3cef75d8f747753401e7147fbfcb1e6b803ada",
+    "native-debug.json": "3a6eb7bdb73eb94b1905e3caf79bd92565a0f0d09be6d078edc0935b26a9a939",
+    "native-release-assertions.json": "154dd887279ad1388c2559e55a3cdcc24454cbb0f36bcff0eb300fb1da946420",
+    "protected-response-snapshot-acceptance.json": "236df7d03dee8432be7b40a01fc3c02b82924bdcbb5585406ba4ea255fcdd7f5",
+    "report.json": "aa05c8c3b85850e4c744829684804e789da8aa395448af9ed6d69a980b82beaf",
+    "superseded-receiving-cut-probe.json": "7b0800da9f95b1319b869e84658a468ac8e52740698ebf431f601e3631c2b495",
+    "tls-dedicated_reads.json": "4e110bb38ff316b19ab42be01f64f9ada0a91957afe1016412443d22088564e3",
+    "tls-game_audit.json": "7a7cb721aea13529046b872df90b215f414cd595308cf6c66e3c93f877fa93b9",
+    "tls-gameplay.json": "f52dc3840916dcd3ae6047395bf57d6db5aa5093e2f8da2757d93d353d2ac706",
+    "tls-operator.json": "81a333291ae53fd0734340c43e2036059f44e72832d5ffc32c5cb9bc38aeb7c2",
+    "worker-build.json": "8f990b9979a436a6dfbd92792ca6f360c318c61bd699aa45b75cabbf03d65eae",
+    "worker-shard-1.json": "a6cc51f6c0423eb1d594312d9436294ffb833267621e34cf33e0a4b07d756542",
+    "worker-shard-2.json": "9e4d84a54d6abe816dde7feb5646e14bf9a0d52f398ff2487154370f9eb7eb4e",
+    "worker-shard-3.json": "cf009c299ec7b693c684ee35686963c612d98694c8282d39e1980d6a40d995b9",
+    "python-safe-summary.json": "9b0d29275adc416682d8e88bef6a5520f3d5aee043f51e7d31d27f3b352d8636"
+  },
+  "local_execution_exit_code": 0,
+  "deployment": "none",
+  "production_release": "blocked",
+  "publication_authorized": true,
+  "publication": "pre_commit_verification"
+}

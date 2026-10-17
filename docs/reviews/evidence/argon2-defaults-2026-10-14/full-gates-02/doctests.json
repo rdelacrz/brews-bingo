@@ -1,0 +1,16 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--workspace",
+    "--all-features",
+    "--locked",
+    "--doc"
+  ],
+  "elapsed_wall_seconds": 2.192787582986057,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "b3c90dc4a58f32f06725bbba157999243f1cf9d280dd876fbdd043e22dcfc8e9",
+  "stdout_sha256": "2158cc409d5207c1c0784a7f003cd8cdc53cce2e415d03223d2275d2ff873f8d",
+  "timed_out": false
+}

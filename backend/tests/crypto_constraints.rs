@@ -21,9 +21,14 @@ fn named_crypto_limits_preserve_the_approved_profile() {
 }
 
 #[test]
-fn auth_and_environment_defaults_use_the_same_kdf_profile() {
+fn auth_and_environment_defaults_match_the_pinned_argon2_library() {
     let policy = AuthPolicy::default();
+    let defaults = argon2::Params::default();
     assert_eq!(policy.m_cost, ARGON2_DEFAULT_MEMORY_KIB);
     assert_eq!(policy.t_cost, ARGON2_DEFAULT_ITERATIONS);
     assert_eq!(policy.p_cost, ARGON2_PARALLELISM);
+    assert_eq!(policy.m_cost, defaults.m_cost());
+    assert_eq!(policy.t_cost, defaults.t_cost());
+    assert_eq!(policy.p_cost, defaults.p_cost());
+    assert_eq!(PASSWORD_HASH_BYTES, argon2::Params::DEFAULT_OUTPUT_LEN);
 }

@@ -1,0 +1,19 @@
+{
+  "command": [
+    "cargo",
+    "nextest",
+    "run",
+    "--workspace",
+    "--all-features",
+    "--locked",
+    "--no-tests=fail",
+    "--success-output",
+    "immediate"
+  ],
+  "elapsed_wall_seconds": 122.00389399199048,
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stderr_sha256": "4cb78ed6ade10b69f43ffa9d91916584fc67d11cdd684ba235cc1d5886a4c22f",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "timed_out": false
+}

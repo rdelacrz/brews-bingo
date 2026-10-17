@@ -221,14 +221,26 @@ class DeploymentTests(unittest.TestCase):
             d.manual_protection(good)
 
     def test_external_gates_required_separately(self):
+        self.assertEqual(d.GATES, ("unicode_clock_csprng_sdk", "owner_forecast_max_game",
+                                  "quotas_two_times_headroom", "history_query_cost",
+                                  "copies_retention_restore", "isolation_secrets_bootstrap",
+                                  "deployed_security_load_operations"))
         proof = {"status": "passed", "evidence_sha256": "a" * 64}
         value = {"schema": 1, "commit": self.commit, "manifest_sha256": self.digest, "inventory_sha256": d.sha(d.canonical(targets())), "reviewed_by": "reviewer", "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(), "runtime_final_01": proof, "slice_reviews": proof, "autodeploy_disabled": True, "gates": {name: proof.copy() for name in d.GATES}}
         d.readiness(value, self.manifest, self.digest, targets())
+        obsolete = copy.deepcopy(value)
+        obsolete["gates"]["argon2_target"] = proof.copy()
+        with self.assertRaises(d.DeploymentError):
+            d.readiness(obsolete, self.manifest, self.digest, targets())
         for name in d.GATES:
             bad = copy.deepcopy(value)
             bad["gates"][name]["status"] = "OPEN"
             with self.subTest(gate=name), self.assertRaises(d.DeploymentError):
                 d.readiness(bad, self.manifest, self.digest, targets())
+            missing = copy.deepcopy(value)
+            del missing["gates"][name]
+            with self.subTest(missing_gate=name), self.assertRaises(d.DeploymentError):
+                d.readiness(missing, self.manifest, self.digest, targets())
         for change in ({"autodeploy_disabled": False}, {"manifest_sha256": "b" * 64}, {"expires_at": "2000-01-01T00:00:00Z"}):
             with self.assertRaises(d.DeploymentError):
                 d.readiness(value | change, self.manifest, self.digest, targets())

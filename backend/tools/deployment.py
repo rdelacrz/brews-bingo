@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CLASSES = {"ACCOUNTS": "AccountsObject", "GAME_DIRECTORY": "GameDirectoryObject", "GAMES": "GameObject"}
 ASSETS = ("backend/build/index.js", "backend/build/index_bg.wasm", "backend/build/package.json", "backend/build/worker/shim.mjs", "target/debug/brews", "target/wasm32-unknown-unknown/release/brews_backend.wasm")
 TOOLS = {"rust": "1.99.0", "wrangler": "4.147.0", "worker_build": "0.8.7", "nextest": "0.9.140", "python": "3.14", "node": "22.16.0"}
-GATES = ("argon2_target", "unicode_clock_csprng_sdk", "owner_forecast_max_game", "quotas_two_times_headroom", "history_query_cost", "copies_retention_restore", "isolation_secrets_bootstrap", "deployed_security_load_operations")
+GATES = ("unicode_clock_csprng_sdk", "owner_forecast_max_game", "quotas_two_times_headroom", "history_query_cost", "copies_retention_restore", "isolation_secrets_bootstrap", "deployed_security_load_operations")
 MAX_JSON = 2 * 1024 * 1024
 MAX_ARCHIVE = 128 * 1024 * 1024
 
