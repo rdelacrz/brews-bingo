@@ -521,21 +521,21 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             self.fence_operator_output_expiry(now)?;
             return Err(GameError::Unauthorized);
         }
-        let cut = self
+        let (checked_at, cut) = self
             .db
             .transaction(|| {
                 validate_schema(self.db)?;
                 let now = self.discovery_clock().map_err(|_| StorageError)?;
                 match self.read_at(selection, token, account, observed, now) {
                     Err(GameError::Storage) => Err(StorageError),
-                    out => Ok(out),
+                    out => Ok((now, out)),
                 }
             })
             .map_err(|_| GameError::Storage)?;
         let cut = match cut {
             Ok(c) => c,
             Err(GameError::Unauthorized | GameError::Expired | GameError::NotFound) => {
-                self.fence_operator_output_expiry(now)?;
+                self.fence_operator_output_expiry(checked_at)?;
                 return Err(GameError::Unauthorized);
             }
             Err(e) => return Err(e),
@@ -543,7 +543,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         if cut.binding.identity != binding.identity
             || cut.binding.host_assignment_revision != binding.host_assignment_revision
         {
-            self.fence_operator_output_expiry(now)?;
+            self.fence_operator_output_expiry(checked_at)?;
             return Err(GameError::Unauthorized);
         }
         let deadline = binding.valid_until.min(cut.binding.valid_until);
@@ -633,6 +633,70 @@ mod tests {
             svc.release_read(s, "", Some(&a), &[], &cut.binding, &cut.projection),
             Err(GameError::Storage)
         );
+    }
+    struct SampledClock<'a> {
+        base: &'a TestRuntime,
+        samples: std::cell::RefCell<std::collections::VecDeque<i64>>,
+    }
+    impl Runtime for SampledClock<'_> {
+        fn now_ms(&self) -> i64 {
+            self.samples
+                .borrow_mut()
+                .pop_front()
+                .unwrap_or(self.base.now.get())
+        }
+        fn fill_random(&self, bytes: &mut [u8]) -> Result<(), crate::auth::AuthError> {
+            self.base.fill_random(bytes)
+        }
+    }
+    #[test]
+    fn dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback() {
+        for fault in [false, true] {
+            let db = Sqlite::new();
+            let rt = TestRuntime::new();
+            initialized(&db, &rt);
+            let svc = service(&db, &rt);
+            let original = authority(&rt, 2);
+            let account = GameAccountAuthority::from_trusted_peer(
+                original.account_id(),
+                original.session_id(),
+                original.role(),
+                original.credential_epoch(),
+                rt.now.get() + 1000,
+            )
+            .unwrap();
+            let s = selection(&db, &rt);
+            let cut = svc.capture_read(s, "", Some(&account), &[], false).unwrap();
+            let expiry = account.expires_at();
+            rt.now.set(expiry - 1);
+            let clock = SampledClock {
+                base: &rt,
+                samples: std::cell::RefCell::new([expiry - 1, expiry].into()),
+            };
+            let sampled = GameService::new(&db, &clock, AuthPolicy::default(), &[9; 32]).unwrap();
+            if fault {
+                db.execute("CREATE TRIGGER deny_read_fence BEFORE UPDATE ON game_metadata BEGIN SELECT RAISE(IGNORE); END", &[]).unwrap();
+            }
+            assert_eq!(
+                sampled.release_read(s, "", Some(&account), &[], &cut.binding, &cut.projection),
+                Err(if fault {
+                    GameError::Storage
+                } else {
+                    GameError::Unauthorized
+                }),
+            );
+            if !fault {
+                assert_eq!(
+                    db.query("SELECT last_observed_ms FROM game_metadata", &[])
+                        .unwrap(),
+                    vec![vec![int(expiry)]],
+                );
+                assert!(matches!(
+                    sampled.capture_read(s, "", Some(&account), &[], false),
+                    Err(GameError::Storage)
+                ));
+            }
+        }
     }
     #[test]
     fn dedicated_release_payload_changed_at_same_identity_is_withheld() {

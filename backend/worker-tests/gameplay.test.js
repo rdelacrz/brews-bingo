@@ -717,6 +717,78 @@ async function cancelledHistory() {
   await Promise.all(closed);
   return f;
 }
+for (const summary of [false, true]) {
+  for (const fault of ["none", "ignore", "sync"]) {
+    test(`History final local account expiry fences rollback for ${summary ? "summary" : "detail"}, ${fault}`, async () => {
+      const { id, actor } = await cancelledHistory();
+      const expiry = await inOwner((_instance, state) => state.storage.sql.exec("SELECT expires_at FROM account_sessions WHERE account_id=? AND scope='normal' AND revoked_at IS NULL", actor.accountId).one().expires_at);
+      const originalNow = Date.now;
+      Date.now = () => expiry - 1;
+      await runInDurableObject(owner(id), (instance, state) => {
+        instance.localHistorySync = state.storage.sync.bind(state.storage);
+        instance.localHistorySyncs = [];
+        if (fault === "ignore") state.storage.sql.exec("CREATE TRIGGER local_history_fault BEFORE UPDATE ON game_metadata WHEN NEW.last_observed_ms>=? BEGIN SELECT RAISE(IGNORE); END".replace("?", String(expiry)));
+        state.storage.sync = async () => {
+          const floor = state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms;
+          instance.localHistorySyncs.push(floor);
+          if (fault === "sync" && floor >= expiry) throw new Error("test-only local History sync failure");
+          return instance.localHistorySync();
+        };
+      });
+      await inOwner(instance => {
+        instance.localHistoryFetch = instance.fetch.bind(instance);
+        instance.localHistoryProofs = 0;
+        instance.fetch = async request => {
+          const response = await instance.localHistoryFetch(request.clone());
+          if (new URL(request.url).pathname === "/game-authority" && (await request.clone().json()).action === "authorize") {
+            expect((await response.clone().json()).outcome.result).toBe("authorized");
+            if (++instance.localHistoryProofs === 2) {
+              let samples = 0;
+              Date.now = () => ++samples === 1 ? expiry - 1 : expiry;
+            }
+          }
+          return response;
+        };
+      });
+      try {
+        const denied = await owner(id).fetch("https://game.internal/history", {
+          method: "POST", body: JSON.stringify({ game_id: id, token: actor.session.split("=", 2)[1], summary }),
+        });
+        expect(denied.status).toBe(200);
+        expect((await denied.json()).outcome).toEqual({ result: fault === "none" ? "unauthorized" : "unavailable" });
+        expect(await inOwner(instance => instance.localHistoryProofs)).toBe(2);
+        if (fault === "none") {
+          const observed = await runInDurableObject(owner(id), (instance, state) => ({
+            floor: state.storage.sql.exec("SELECT last_observed_ms FROM game_metadata").one().last_observed_ms,
+            syncs: instance.localHistorySyncs,
+          }));
+          expect(observed.floor).toBe(expiry);
+          expect(observed.syncs).toEqual([expiry - 1, expiry]);
+          await inOwner(instance => { instance.fetch = instance.localHistoryFetch; delete instance.localHistoryFetch; });
+          Date.now = () => expiry - 1;
+          const retried = await historyGet(`/api/history/${id}`, actor.session);
+          expect([401, 503]).toContain(retried.status);
+          expect(retried.headers.get("set-cookie")).toBeNull();
+          expect(Object.keys(await retried.json())).toEqual(["error"]);
+        }
+      } finally {
+        Date.now = originalNow;
+        await inOwner(instance => {
+          if (instance.localHistoryFetch) instance.fetch = instance.localHistoryFetch;
+          delete instance.localHistoryFetch;
+          delete instance.localHistoryProofs;
+        });
+        await runInDurableObject(owner(id), (instance, state) => {
+          state.storage.sync = instance.localHistorySync;
+          delete instance.localHistorySync;
+          delete instance.localHistorySyncs;
+          state.storage.sql.exec("DROP TRIGGER IF EXISTS local_history_fault");
+        });
+      }
+    });
+  }
+}
+
 test("History final Accounts await expiry is durably fenced before denial and survives reconstruction", async () => {
   const { id, actor } = await cancelledHistory();
   const expiry = await runInDurableObject(owner(id), (_instance, state) => state.storage.sql.exec("SELECT expires_at FROM game_history").one().expires_at);

@@ -54,6 +54,9 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                     now
                 };
                 let result = (|| {
+                    if !observe && now >= authority.expires_at() {
+                        self.fence_read_deadline(now)?;
+                    }
                     super::authorize(&authority, now)?;
                     let record = self.record_optional()?.ok_or(GameError::NotFound)?;
                     if record.id != game_id {

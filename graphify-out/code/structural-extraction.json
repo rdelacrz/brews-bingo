@@ -8053,7 +8053,7 @@
       "label": ".fence_read_deadline()",
       "file_type": "code",
       "source_file": "backend/src/db/game/history.rs",
-      "source_location": "L139",
+      "source_location": "L142",
       "_origin": "ast"
     },
     {
@@ -9253,7 +9253,7 @@
       "label": ".player_socket_is_fenced()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "_origin": "ast"
     },
     {
@@ -9285,7 +9285,7 @@
       "label": ".membership_session()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L157",
+      "source_location": "L168",
       "_origin": "ast"
     },
     {
@@ -9293,7 +9293,7 @@
       "label": ".rename_my_alias()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L169",
+      "source_location": "L180",
       "_origin": "ast"
     },
     {
@@ -9309,7 +9309,7 @@
       "label": ".leave_player()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "_origin": "ast"
     },
     {
@@ -9621,7 +9621,7 @@
       "label": ".manage_recovery_answer()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "_origin": "ast"
     },
     {
@@ -9629,7 +9629,7 @@
       "label": ".validate_recovery_outcome()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L463",
+      "source_location": "L468",
       "_origin": "ast"
     },
     {
@@ -9637,7 +9637,7 @@
       "label": ".recovered_player_view()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L475",
+      "source_location": "L480",
       "_origin": "ast"
     },
     {
@@ -9645,7 +9645,7 @@
       "label": ".recovered_player_deadline()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L487",
+      "source_location": "L492",
       "_origin": "ast"
     },
     {
@@ -9653,7 +9653,7 @@
       "label": ".recovery_output_receipt()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L495",
+      "source_location": "L500",
       "_origin": "ast"
     },
     {
@@ -9661,7 +9661,7 @@
       "label": ".pending_recovery_socket_closes()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L511",
+      "source_location": "L516",
       "_origin": "ast"
     },
     {
@@ -9669,7 +9669,7 @@
       "label": ".due_recovery_socket_closes()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L514",
+      "source_location": "L519",
       "_origin": "ast"
     },
     {
@@ -9677,7 +9677,7 @@
       "label": ".socket_close_rows()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "_origin": "ast"
     },
     {
@@ -9685,7 +9685,7 @@
       "label": ".acknowledge_recovery_socket_close()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L540",
+      "source_location": "L545",
       "_origin": "ast"
     },
     {
@@ -9693,7 +9693,7 @@
       "label": ".retry_recovery_socket_close()",
       "file_type": "code",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L551",
+      "source_location": "L556",
       "_origin": "ast"
     },
     {
@@ -9913,11 +9913,59 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_src_db_game_reads_sampledclock",
+      "label": "SampledClock",
+      "file_type": "code",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L637",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_db_game_reads_rs_refcell",
+      "label": "RefCell",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_db_game_reads_rs_vecdeque",
+      "label": "VecDeque",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_db_game_reads_sampledclock_now_ms",
+      "label": ".now_ms()",
+      "file_type": "code",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L642",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_db_game_reads_sampledclock_fill_random",
+      "label": ".fill_random()",
+      "file_type": "code",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L648",
+      "_origin": "ast"
+    },
+    {
+      "id": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "label": "dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback()",
+      "file_type": "code",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L653",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_src_db_game_reads_dedicated_release_payload_changed_at_same_identity_is_withheld",
       "label": "dedicated_release_payload_changed_at_same_identity_is_withheld()",
       "file_type": "code",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L638",
+      "source_location": "L702",
       "_origin": "ast"
     },
     {
@@ -9925,7 +9973,7 @@
       "label": "dedicated_release_identity_epoch_role_assignment_and_deleted_record_deny()",
       "file_type": "code",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L658",
+      "source_location": "L722",
       "_origin": "ast"
     },
     {
@@ -18701,7 +18749,7 @@
       "label": "audit_game_transport_failure()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L722",
+      "source_location": "L734",
       "_origin": "ast"
     },
     {
@@ -18709,7 +18757,7 @@
       "label": "same_receipt()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L732",
+      "source_location": "L744",
       "_origin": "ast"
     },
     {
@@ -18717,7 +18765,7 @@
       "label": "answer_receipt()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L739",
+      "source_location": "L751",
       "_origin": "ast"
     },
     {
@@ -18725,7 +18773,7 @@
       "label": "membership_receipt()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L748",
+      "source_location": "L760",
       "_origin": "ast"
     },
     {
@@ -18733,7 +18781,7 @@
       "label": "recovery_output()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "_origin": "ast"
     },
     {
@@ -18757,7 +18805,7 @@
       "label": "release_audience_output()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "_origin": "ast"
     },
     {
@@ -18765,7 +18813,7 @@
       "label": "fence_recovery_output()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L862",
+      "source_location": "L874",
       "_origin": "ast"
     },
     {
@@ -18773,7 +18821,7 @@
       "label": "set_cookie()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L917",
+      "source_location": "L929",
       "_origin": "ast"
     },
     {
@@ -18781,7 +18829,7 @@
       "label": "rejected_spectator_entry()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "_origin": "ast"
     },
     {
@@ -18789,7 +18837,7 @@
       "label": "rejected()",
       "file_type": "code",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L972",
+      "source_location": "L984",
       "_origin": "ast"
     },
     {
@@ -21337,7 +21385,7 @@
       "_origin": "ast"
     },
     {
-      "id": "vecdeque",
+      "id": "backend_tests_auth_audit_rs_vecdeque",
       "label": "VecDeque",
       "file_type": "code",
       "source_file": "",
@@ -26489,8 +26537,8 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_tests_games_core_history_history_release_rechecks_expiry_authority_without_writing_after_await",
-      "label": "history_release_rechecks_expiry_authority_without_writing_after_await()",
+      "id": "backend_tests_games_core_history_history_release_success_is_write_free_but_account_expiry_fences_rollback",
+      "label": "history_release_success_is_write_free_but_account_expiry_fences_rollback()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/history.rs",
       "source_location": "L379",
@@ -26501,7 +26549,7 @@
       "label": "immutable_history_survives_actual_file_reopen_after_final_grants_exit()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/history.rs",
-      "source_location": "L404",
+      "source_location": "L417",
       "_origin": "ast"
     },
     {
@@ -27281,11 +27329,19 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tests_games_core_player_recovery_recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable",
+      "label": "recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable()",
+      "file_type": "code",
+      "source_file": "backend/tests/games_core/player_recovery.rs",
+      "source_location": "L450",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tests_games_core_player_recovery_in_progress_recovery_preserves_complete_board_matching_layout_and_history",
       "label": "in_progress_recovery_preserves_complete_board_matching_layout_and_history()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L450",
+      "source_location": "L509",
       "_origin": "ast"
     },
     {
@@ -27293,7 +27349,7 @@
       "label": "entropy_failure_unsupported_stored_profile_and_phc_fail_without_epoch_or_failure_accounting()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L490",
+      "source_location": "L549",
       "_origin": "ast"
     },
     {
@@ -27301,7 +27357,7 @@
       "label": "aged_recovery_commands_are_rejected_after_receipt_cleanup_and_idle_denial_is_uniform()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L526",
+      "source_location": "L585",
       "_origin": "ast"
     },
     {
@@ -27309,7 +27365,7 @@
       "label": "recovery_rate_keys_are_domain_and_game_separated_without_raw_alias_or_caller()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L560",
+      "source_location": "L619",
       "_origin": "ast"
     },
     {
@@ -27317,7 +27373,7 @@
       "label": "slice_one_schema_forward_migration_preserves_rows_and_rejects_missing_or_altered_namespace()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L611",
+      "source_location": "L670",
       "_origin": "ast"
     },
     {
@@ -27325,7 +27381,7 @@
       "label": "FaultReadback",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L649",
+      "source_location": "L708",
       "_origin": "ast"
     },
     {
@@ -27341,7 +27397,7 @@
       "label": ".query()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "_origin": "ast"
     },
     {
@@ -27365,7 +27421,7 @@
       "label": ".execute()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L666",
+      "source_location": "L725",
       "_origin": "ast"
     },
     {
@@ -27373,7 +27429,7 @@
       "label": ".transaction()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "_origin": "ast"
     },
     {
@@ -27389,7 +27445,7 @@
       "label": "recovery_authority_readback_faults_after_actual_writes_roll_back_epoch_session_and_receipt()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L685",
+      "source_location": "L744",
       "_origin": "ast"
     },
     {
@@ -27397,7 +27453,7 @@
       "label": "close_retry_backoff_is_durable_bounded_and_ack_ignored_write_retains_work()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L720",
+      "source_location": "L779",
       "_origin": "ast"
     },
     {
@@ -34269,7 +34325,7 @@
       "label": "restore()",
       "file_type": "code",
       "source_file": "backend/worker-tests/player_recovery_deadlines.test.js",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -81877,7 +81933,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/history.rs",
-      "source_location": "L139",
+      "source_location": "L142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -81887,7 +81943,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/history.rs",
-      "source_location": "L139",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -81898,7 +81954,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/history.rs",
-      "source_location": "L139",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -81932,7 +81988,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/history.rs",
-      "source_location": "L65",
+      "source_location": "L58",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89147,7 +89203,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89157,7 +89213,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89168,7 +89224,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89179,7 +89235,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89190,7 +89246,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89201,7 +89257,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -89212,7 +89268,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L139",
+      "source_location": "L150",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89223,7 +89279,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L157",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89233,7 +89289,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L157",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -89244,7 +89300,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L157",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89255,7 +89311,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L157",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89266,7 +89322,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L157",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89277,7 +89333,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89287,7 +89343,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89298,7 +89354,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -89309,7 +89365,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89320,7 +89376,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89331,7 +89387,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89341,7 +89397,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89352,7 +89408,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -89363,7 +89419,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -89374,7 +89430,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89385,7 +89441,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L251",
+      "source_location": "L262",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -89646,7 +89702,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L177",
+      "source_location": "L188",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89657,7 +89713,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L179",
+      "source_location": "L190",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89668,7 +89724,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L180",
+      "source_location": "L191",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89679,7 +89735,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L263",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89690,7 +89746,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L265",
+      "source_location": "L276",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -89701,7 +89757,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L266",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90583,7 +90639,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90593,7 +90649,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -90604,7 +90660,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -90615,7 +90671,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90626,7 +90682,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90637,7 +90693,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L376",
+      "source_location": "L381",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90648,7 +90704,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L463",
+      "source_location": "L468",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90658,7 +90714,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L463",
+      "source_location": "L468",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -90669,7 +90725,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L463",
+      "source_location": "L468",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90680,7 +90736,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L463",
+      "source_location": "L468",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90691,7 +90747,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L475",
+      "source_location": "L480",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90701,7 +90757,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L475",
+      "source_location": "L480",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90712,7 +90768,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L475",
+      "source_location": "L480",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90723,7 +90779,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L475",
+      "source_location": "L480",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90734,7 +90790,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L487",
+      "source_location": "L492",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90744,7 +90800,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L487",
+      "source_location": "L492",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90755,7 +90811,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L487",
+      "source_location": "L492",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90766,7 +90822,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L495",
+      "source_location": "L500",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90776,7 +90832,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L495",
+      "source_location": "L500",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -90787,7 +90843,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L495",
+      "source_location": "L500",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90798,7 +90854,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L495",
+      "source_location": "L500",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90809,7 +90865,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L495",
+      "source_location": "L500",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90820,7 +90876,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L511",
+      "source_location": "L516",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90830,7 +90886,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L511",
+      "source_location": "L516",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90841,7 +90897,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L511",
+      "source_location": "L516",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90852,7 +90908,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L511",
+      "source_location": "L516",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90863,7 +90919,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L511",
+      "source_location": "L516",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90874,7 +90930,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L514",
+      "source_location": "L519",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90884,7 +90940,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L514",
+      "source_location": "L519",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90895,7 +90951,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L514",
+      "source_location": "L519",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90906,7 +90962,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L514",
+      "source_location": "L519",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90917,7 +90973,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L514",
+      "source_location": "L519",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90928,7 +90984,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -90938,7 +90994,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -90949,7 +91005,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -90960,7 +91016,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90971,7 +91027,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90982,7 +91038,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L519",
+      "source_location": "L524",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -90993,7 +91049,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L540",
+      "source_location": "L545",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91003,7 +91059,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L540",
+      "source_location": "L545",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -91014,7 +91070,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L540",
+      "source_location": "L545",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -91025,7 +91081,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L540",
+      "source_location": "L545",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -91036,7 +91092,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L551",
+      "source_location": "L556",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91046,7 +91102,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L551",
+      "source_location": "L556",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -91057,7 +91113,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L551",
+      "source_location": "L556",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -91068,7 +91124,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L551",
+      "source_location": "L556",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -91190,7 +91246,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L382",
+      "source_location": "L387",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91201,7 +91257,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L391",
+      "source_location": "L396",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91212,7 +91268,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L399",
+      "source_location": "L404",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91223,7 +91279,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L465",
+      "source_location": "L470",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91234,7 +91290,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L466",
+      "source_location": "L471",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91245,7 +91301,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L477",
+      "source_location": "L482",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91256,7 +91312,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L489",
+      "source_location": "L494",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91267,7 +91323,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L501",
+      "source_location": "L506",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91278,7 +91334,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L512",
+      "source_location": "L517",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -91289,7 +91345,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L516",
+      "source_location": "L521",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92215,11 +92271,116 @@
     },
     {
       "source": "backend_src_db_game_reads",
+      "target": "backend_src_db_game_reads_sampledclock",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L637",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock",
+      "target": "backend_src_db_game_reads_rs_testruntime",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L638",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock",
+      "target": "backend_src_db_game_reads_rs_refcell",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L639",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock",
+      "target": "backend_src_db_game_reads_rs_vecdeque",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L639",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock",
+      "target": "backend_src_auth_mod_runtime",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L641",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock",
+      "target": "backend_src_db_game_reads_sampledclock_now_ms",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L642",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock",
+      "target": "backend_src_db_game_reads_sampledclock_fill_random",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L648",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock_fill_random",
+      "target": "backend_src_db_game_reads_rs_result",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L648",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_sampledclock_fill_random",
+      "target": "backend_src_auth_error_autherror",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L648",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads",
+      "target": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L653",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads",
       "target": "backend_src_db_game_reads_dedicated_release_payload_changed_at_same_identity_is_withheld",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L638",
+      "source_location": "L702",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92229,7 +92390,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L658",
+      "source_location": "L722",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92388,13 +92549,46 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "target": "backend_src_db_game_reads_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L658",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "target": "backend_src_db_game_reads_selection",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L668",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "target": "backend_src_db_game_reads_gameservice_d_r_capture_read",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L669",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_src_db_game_reads_dedicated_release_payload_changed_at_same_identity_is_withheld",
       "target": "backend_src_db_game_reads_service",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L642",
+      "source_location": "L706",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92405,7 +92599,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L644",
+      "source_location": "L708",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92416,7 +92610,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L645",
+      "source_location": "L709",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92427,7 +92621,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L663",
+      "source_location": "L727",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92438,7 +92632,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L665",
+      "source_location": "L729",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92449,7 +92643,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L666",
+      "source_location": "L730",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131171,7 +131365,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L722",
+      "source_location": "L734",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131181,7 +131375,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L722",
+      "source_location": "L734",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131192,7 +131386,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L722",
+      "source_location": "L734",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131203,7 +131397,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L722",
+      "source_location": "L734",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131214,7 +131408,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L722",
+      "source_location": "L734",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131225,7 +131419,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L732",
+      "source_location": "L744",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131235,7 +131429,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L732",
+      "source_location": "L744",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131246,7 +131440,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L732",
+      "source_location": "L744",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131257,7 +131451,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L732",
+      "source_location": "L744",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131268,7 +131462,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L732",
+      "source_location": "L744",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131279,7 +131473,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L739",
+      "source_location": "L751",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131289,7 +131483,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L739",
+      "source_location": "L751",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131300,7 +131494,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L739",
+      "source_location": "L751",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131311,7 +131505,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L739",
+      "source_location": "L751",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131322,7 +131516,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L739",
+      "source_location": "L751",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131333,7 +131527,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L748",
+      "source_location": "L760",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131343,7 +131537,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L748",
+      "source_location": "L760",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131354,7 +131548,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L748",
+      "source_location": "L760",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131365,7 +131559,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L748",
+      "source_location": "L760",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131376,7 +131570,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L748",
+      "source_location": "L760",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131387,7 +131581,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131397,7 +131591,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131408,7 +131602,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131419,7 +131613,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131430,7 +131624,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131441,7 +131635,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131452,7 +131646,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131463,7 +131657,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131474,7 +131668,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L758",
+      "source_location": "L770",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131485,7 +131679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131495,7 +131689,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131506,7 +131700,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131517,7 +131711,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131528,7 +131722,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131539,7 +131733,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131550,7 +131744,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131561,7 +131755,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L793",
+      "source_location": "L805",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131572,7 +131766,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L862",
+      "source_location": "L874",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131582,7 +131776,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L862",
+      "source_location": "L874",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131593,7 +131787,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L862",
+      "source_location": "L874",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131604,7 +131798,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L862",
+      "source_location": "L874",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131615,7 +131809,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L862",
+      "source_location": "L874",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131626,7 +131820,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L917",
+      "source_location": "L929",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131636,7 +131830,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L917",
+      "source_location": "L929",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131647,7 +131841,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L917",
+      "source_location": "L929",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131658,7 +131852,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L917",
+      "source_location": "L929",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131669,7 +131863,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L917",
+      "source_location": "L929",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131680,7 +131874,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131690,7 +131884,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131701,7 +131895,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131712,7 +131906,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131723,7 +131917,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131734,7 +131928,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L944",
+      "source_location": "L956",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131745,7 +131939,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L972",
+      "source_location": "L984",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131755,7 +131949,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L972",
+      "source_location": "L984",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -131766,7 +131960,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L972",
+      "source_location": "L984",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -131777,7 +131971,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L972",
+      "source_location": "L984",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131788,7 +131982,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L972",
+      "source_location": "L984",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -131910,7 +132104,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L520",
+      "source_location": "L526",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131921,7 +132115,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L587",
+      "source_location": "L599",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131932,7 +132126,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L601",
+      "source_location": "L613",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131943,7 +132137,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L783",
+      "source_location": "L795",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131954,7 +132148,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L805",
+      "source_location": "L817",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131965,7 +132159,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L806",
+      "source_location": "L818",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -131976,7 +132170,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L948",
+      "source_location": "L960",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -143919,7 +144113,7 @@
     },
     {
       "source": "backend_tests_auth_audit",
-      "target": "vecdeque",
+      "target": "backend_tests_auth_audit_rs_vecdeque",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/auth_audit.rs",
@@ -143973,7 +144167,7 @@
     },
     {
       "source": "backend_tests_auth_audit_scriptedruntime",
-      "target": "vecdeque",
+      "target": "backend_tests_auth_audit_rs_vecdeque",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/auth_audit.rs",
@@ -165105,7 +165299,7 @@
     },
     {
       "source": "backend_tests_games_core_history",
-      "target": "backend_tests_games_core_history_history_release_rechecks_expiry_authority_without_writing_after_await",
+      "target": "backend_tests_games_core_history_history_release_success_is_write_free_but_account_expiry_fences_rollback",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/history.rs",
@@ -165119,7 +165313,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/history.rs",
-      "source_location": "L404",
+      "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167708,7 +167902,7 @@
     },
     {
       "source": "backend_tests_games_core_player_recovery",
-      "target": "backend_tests_games_core_player_recovery_in_progress_recovery_preserves_complete_board_matching_layout_and_history",
+      "target": "backend_tests_games_core_player_recovery_recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
@@ -167718,11 +167912,21 @@
     },
     {
       "source": "backend_tests_games_core_player_recovery",
+      "target": "backend_tests_games_core_player_recovery_in_progress_recovery_preserves_complete_board_matching_layout_and_history",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core/player_recovery.rs",
+      "source_location": "L509",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_player_recovery",
       "target": "backend_tests_games_core_player_recovery_entropy_failure_unsupported_stored_profile_and_phc_fail_without_epoch_or_failure_accounting",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L490",
+      "source_location": "L549",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167732,7 +167936,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L526",
+      "source_location": "L585",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167742,7 +167946,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L560",
+      "source_location": "L619",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167752,7 +167956,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L611",
+      "source_location": "L670",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167762,7 +167966,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L649",
+      "source_location": "L708",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167772,7 +167976,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L650",
+      "source_location": "L709",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -167783,7 +167987,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L653",
+      "source_location": "L712",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -167794,7 +167998,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L655",
+      "source_location": "L714",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167804,7 +168008,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167814,7 +168018,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -167825,7 +168029,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -167836,7 +168040,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167847,7 +168051,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167858,7 +168062,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L656",
+      "source_location": "L715",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167869,7 +168073,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L666",
+      "source_location": "L725",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167879,7 +168083,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L666",
+      "source_location": "L725",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -167890,7 +168094,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L666",
+      "source_location": "L725",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -167901,7 +168105,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L666",
+      "source_location": "L725",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167912,7 +168116,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167922,7 +168126,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -167933,7 +168137,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -167944,7 +168148,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167955,7 +168159,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167966,7 +168170,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -167977,7 +168181,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167988,7 +168192,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L677",
+      "source_location": "L736",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -167999,7 +168203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L685",
+      "source_location": "L744",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168009,7 +168213,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L720",
+      "source_location": "L779",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168245,13 +168449,46 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_games_core_player_recovery_recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable",
+      "target": "backend_tests_games_core_player_recovery_prepared",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core/player_recovery.rs",
+      "source_location": "L452",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_player_recovery_recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable",
+      "target": "backend_tests_games_core_player_recovery_faultreadback_query",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core/player_recovery.rs",
+      "source_location": "L463",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_player_recovery_recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable",
+      "target": "backend_tests_games_core_player_recovery_recover",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core/player_recovery.rs",
+      "source_location": "L493",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_games_core_player_recovery_in_progress_recovery_preserves_complete_board_matching_layout_and_history",
       "target": "backend_tests_games_core_player_recovery_faultreadback_query",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L457",
+      "source_location": "L516",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168262,7 +168499,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L492",
+      "source_location": "L551",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168273,7 +168510,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L496",
+      "source_location": "L555",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168284,7 +168521,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L552",
+      "source_location": "L611",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168295,7 +168532,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L561",
+      "source_location": "L620",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168306,7 +168543,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L563",
+      "source_location": "L622",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168317,7 +168554,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L564",
+      "source_location": "L623",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168328,7 +168565,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L613",
+      "source_location": "L672",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168339,7 +168576,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L614",
+      "source_location": "L673",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168350,7 +168587,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L700",
+      "source_location": "L759",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168361,7 +168598,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L721",
+      "source_location": "L780",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168372,7 +168609,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_recovery.rs",
-      "source_location": "L727",
+      "source_location": "L786",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -191640,7 +191877,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/player_recovery_deadlines.test.js",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -191651,7 +191888,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/player_recovery_deadlines.test.js",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -214846,7 +215083,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/player_recovery_deadlines.test.js",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -214857,7 +215094,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/player_recovery_deadlines.test.js",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219533,7 +219770,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L93",
+      "source_location": "L104",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219545,7 +219782,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L94",
+      "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219557,7 +219794,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L180",
+      "source_location": "L191",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219569,7 +219806,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L197",
+      "source_location": "L208",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219581,7 +219818,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L220",
+      "source_location": "L231",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219593,7 +219830,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_lifecycle.rs",
-      "source_location": "L266",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219773,7 +220010,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L403",
+      "source_location": "L408",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219785,7 +220022,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L413",
+      "source_location": "L418",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219797,7 +220034,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L416",
+      "source_location": "L421",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219809,7 +220046,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L446",
+      "source_location": "L451",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219821,7 +220058,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L503",
+      "source_location": "L508",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219833,7 +220070,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L505",
+      "source_location": "L510",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219845,7 +220082,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L529",
+      "source_location": "L534",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219857,7 +220094,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L532",
+      "source_location": "L537",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219869,7 +220106,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/player_recovery.rs",
-      "source_location": "L563",
+      "source_location": "L568",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220006,6 +220243,30 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "target": "backend_src_db_game_initialized",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L657",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_src_db_game_reads_dedicated_release_fences_actual_inner_expiry_sample_and_rejects_rollback",
+      "target": "backend_src_db_game_authority",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/src/db/game/reads.rs",
+      "source_location": "L659",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_src_db_game_reads_dedicated_release_payload_changed_at_same_identity_is_withheld",
       "target": "backend_src_db_game_initialized",
       "relation": "calls",
@@ -220013,7 +220274,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L641",
+      "source_location": "L705",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220025,7 +220286,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L643",
+      "source_location": "L707",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220037,7 +220298,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L662",
+      "source_location": "L726",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220049,7 +220310,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/db/game/reads.rs",
-      "source_location": "L664",
+      "source_location": "L728",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221393,7 +221654,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L778",
+      "source_location": "L790",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221405,7 +221666,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/src/worker_runtime/games.rs",
-      "source_location": "L986",
+      "source_location": "L998",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225305,7 +225566,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core/history.rs",
-      "source_location": "L453",
+      "source_location": "L466",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225378,6 +225639,18 @@
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core/player_recovery.rs",
       "source_location": "L418",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_player_recovery_recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable",
+      "target": "backend_src_db_game_migration_migrate_game",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend/tests/games_core/player_recovery.rs",
+      "source_location": "L503",
       "weight": 1.0,
       "_origin": "ast"
     },

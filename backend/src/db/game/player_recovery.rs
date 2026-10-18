@@ -300,7 +300,12 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             self.admit(command, now)?;
             let epoch = advance(proof.epoch)?;
             let expires = add_time(now, PLAYER_SESSION_MS)?;
-            self.detach_player_connections(proof.player, now)?;
+            if self.detach_player_connections(proof.player, now)? {
+                self.set_view_revision(
+                    crate::game::HOST_VIEW,
+                    advance(self.view_revision(crate::game::HOST_VIEW)?)?,
+                )?;
+            }
             self.db.execute(
                 "UPDATE game_players SET session_epoch=? WHERE player_id=? AND session_epoch=?",
                 &[int(epoch), text(proof.player), int(proof.epoch)],

@@ -376,7 +376,7 @@ fn history_rejects_corrupt_snapshot_and_ignored_clock_write_without_changes() {
     assert!(super::all_rows(&f) == before);
 }
 #[test]
-fn history_release_rechecks_expiry_authority_without_writing_after_await() {
+fn history_release_success_is_write_free_but_account_expiry_fences_rollback() {
     let f = Fixture::new();
     f.start_two_player_game();
     super::end_without_winner(&f, f.command(90));
@@ -387,12 +387,25 @@ fn history_release_rechecks_expiry_authority_without_writing_after_await() {
     let h = f.service().history_for_response(proof, game).unwrap();
     assert!(super::all_rows(&f) == before);
     let proof = f.auth().authorize_game_account(&f.token).unwrap();
-    f.rt.now.set(proof.expires_at());
+    let expiry = proof.expires_at();
+    f.rt.now.set(expiry);
     assert_eq!(
         f.service().history_for_response(proof, game).err(),
         Some(GameError::Unauthorized)
     );
-    assert!(super::all_rows(&f) == before);
+    assert_eq!(
+        f.game
+            .query("SELECT last_observed_ms FROM game_metadata", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(expiry)]],
+    );
+    f.rt.now.set(expiry - 1);
+    assert_eq!(
+        f.service()
+            .history_for_response(f.auth().authorize_game_account(&f.token).unwrap(), game)
+            .err(),
+        Some(GameError::Storage),
+    );
     assert!(
         h.players
             .windows(2)

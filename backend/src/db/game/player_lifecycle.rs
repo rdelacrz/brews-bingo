@@ -74,7 +74,18 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         &self,
         player: brews_domain::ids::PlayerId,
         now: i64,
-    ) -> Result<(), GameError> {
+    ) -> Result<bool, GameError> {
+        let current = self.db.query(
+            SQL_SELECT_CURRENT_PLAYER_CONNECTIONS,
+            &[
+                text(PLAYER_KIND),
+                text(player),
+                int((super::OBSERVED_CONNECTION_LIMIT + 1) as i64),
+            ],
+        )?;
+        if current.len() > super::OBSERVED_CONNECTION_LIMIT {
+            return Err(GameError::Storage);
+        }
         // A grant may already have a native socket even if acceptance rolled back.
         let closes = self.db.query(
             SQL_SELECT_CURRENT_AND_PREPARED_PLAYER_CONNECTIONS,
@@ -133,7 +144,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
         {
             return Err(GameError::Storage);
         }
-        Ok(())
+        Ok(!current.is_empty())
     }
     /// Exact durable detachment proof, independent of provider close completion.
     pub fn player_socket_is_fenced(
@@ -282,18 +293,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
             if before.len() != 1 {
                 return Err(GameError::Storage);
             }
-            let current = self.db.query(
-                SQL_SELECT_CURRENT_PLAYER_CONNECTIONS,
-                &[
-                    text(PLAYER_KIND),
-                    text(session.player),
-                    int((super::OBSERVED_CONNECTION_LIMIT + 1) as i64),
-                ],
-            )?;
-            if current.len() > super::OBSERVED_CONNECTION_LIMIT {
-                return Err(GameError::Storage);
-            }
-            self.detach_player_connections(session.player, now)?;
+            let was_connected = self.detach_player_connections(session.player, now)?;
             let retained = expected_state == GameState::InProgress;
             let revision =
                 if retained {
@@ -334,7 +334,7 @@ impl<D: Database, R: Runtime> GameService<'_, D, R> {
                 }
                     revision
                 };
-            if !retained || !current.is_empty() {
+            if !retained || was_connected {
                 self.set_view_revision(HOST_VIEW, advance(self.view_revision(HOST_VIEW)?)?)?;
             }
             let expiry = retained.then_some(session.expires);

@@ -493,9 +493,10 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             response,
             valid_until,
         } => {
+            let original_deadline = *valid_until;
             let observed_at = super::runtime::WorkerRuntime.now_ms();
-            if observed_at >= *valid_until {
-                fence_recovery_output(env, &ingress, *valid_until, observed_at).await?;
+            if observed_at >= original_deadline {
+                fence_recovery_output(env, &ingress, original_deadline, observed_at).await?;
                 return rejected(GameRejection::Unauthorized);
             }
             let checked: GameOwnerResponse = game_peers::call(
@@ -509,6 +510,11 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             )
             .await
             .map_err(|_| ApiError::Unavailable)?;
+            let observed_at = super::runtime::WorkerRuntime.now_ms();
+            if observed_at >= original_deadline {
+                fence_recovery_output(env, &ingress, original_deadline, observed_at).await?;
+                return rejected(GameRejection::Unauthorized);
+            }
             checked
                 .validate_for(&ingress)
                 .map_err(|_| ApiError::Unavailable)?;
@@ -520,9 +526,9 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                     if !same_receipt(answer_receipt(response)?, answer_receipt(current)?)? {
                         return Err(ApiError::Unavailable);
                     }
-                    let observed_at = super::runtime::WorkerRuntime.now_ms();
-                    if observed_at >= *valid_until {
-                        fence_recovery_output(env, &ingress, *valid_until, observed_at).await?;
+                    let deadline = original_deadline.min(*valid_until);
+                    if observed_at >= deadline {
+                        fence_recovery_output(env, &ingress, deadline, observed_at).await?;
                         return rejected(GameRejection::Unauthorized);
                     }
                     json_bytes(
@@ -541,11 +547,12 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
             valid_until,
         } => {
             if let GameCookieWire::Player { token, expires_at } = cookie {
+                let original_deadline = valid_until.ok_or(ApiError::Unavailable)?;
                 ingress.operation = GameAction::RecoveryOutput;
                 ingress.session_token = Some(token.to_owned());
                 let observed_at = super::runtime::WorkerRuntime.now_ms();
-                if let Some(deadline) = valid_until.filter(|deadline| *deadline <= observed_at) {
-                    fence_recovery_output(env, &ingress, deadline, observed_at).await?;
+                if observed_at >= original_deadline {
+                    fence_recovery_output(env, &ingress, original_deadline, observed_at).await?;
                     return rejected(GameRejection::InvalidRecovery);
                 }
                 // A new owner cut follows each await; an expired initial cut is never retried.
@@ -560,6 +567,11 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                 )
                 .await
                 .map_err(|_| ApiError::Unavailable)?;
+                let observed_at = super::runtime::WorkerRuntime.now_ms();
+                if observed_at >= original_deadline {
+                    fence_recovery_output(env, &ingress, original_deadline, observed_at).await?;
+                    return rejected(GameRejection::InvalidRecovery);
+                }
                 checked
                     .validate_for(&ingress)
                     .map_err(|_| ApiError::Unavailable)?;
@@ -574,14 +586,14 @@ async fn dispatch(env: &Env, request: Request) -> Result<Response, ApiError> {
                                 expires_at: current_expiry,
                             },
                     } => {
-                        let observed_at = super::runtime::WorkerRuntime.now_ms();
                         if current_expiry != *expires_at
                             || !same_receipt(receipt, &current_receipt)?
                         {
                             return Err(ApiError::Unavailable);
                         }
-                        if observed_at >= valid_until {
-                            fence_recovery_output(env, &ingress, valid_until, observed_at).await?;
+                        let deadline = original_deadline.min(valid_until);
+                        if observed_at >= deadline {
+                            fence_recovery_output(env, &ingress, deadline, observed_at).await?;
                             return rejected(GameRejection::InvalidRecovery);
                         }
                         recovery_output(

@@ -447,6 +447,65 @@ fn recovery_closure_ledger_survives_reconstruction_and_ack_does_not_delete_succe
 }
 
 #[test]
+fn recovery_advances_host_revision_only_for_current_presence_and_replay_is_stable() {
+    for presence in ["offline", "prepared", "connected", "host_revision_fault"] {
+        let (f, code, old, answer) = prepared();
+        if presence != "offline" {
+            let grant = f
+                .service()
+                .prepare_player_connection(old.token(), id(&f.rt, 40).parse().unwrap())
+                .unwrap();
+            if presence != "prepared" {
+                f.service().accept_player_connection(&grant).unwrap();
+            }
+        }
+        let host_revision = || {
+            f.game
+                .query(
+                    "SELECT revision FROM game_view_revisions WHERE view_key='host'",
+                    &[],
+                )
+                .unwrap()
+        };
+        let before = host_revision();
+        if presence == "host_revision_fault" {
+            f.game.conn.borrow().execute_batch("CREATE TRIGGER recovery_host_fault BEFORE UPDATE ON game_view_revisions WHEN OLD.view_key='host' BEGIN SELECT RAISE(IGNORE); END").unwrap();
+            assert_eq!(
+                recover(&f, &code, &answer, 32).err(),
+                Some(GameError::Storage)
+            );
+            assert_eq!(epoch(&f), 0);
+            assert_eq!(host_revision(), before);
+            assert_eq!(
+                f.game
+                    .query("SELECT count(*) FROM game_current_connections", &[])
+                    .unwrap(),
+                vec![vec![SqlValue::Integer(1)]]
+            );
+            assert!(
+                f.service()
+                    .pending_recovery_socket_closes()
+                    .unwrap()
+                    .is_empty()
+            );
+            continue;
+        }
+        recover(&f, &code, &answer, 32).unwrap();
+        let after = host_revision();
+        if presence == "connected" {
+            let SqlValue::Integer(revision) = before[0][0] else {
+                panic!("revision")
+            };
+            assert_eq!(after, vec![vec![SqlValue::Integer(revision + 1)]]);
+        } else {
+            assert_eq!(after, before);
+        }
+        migrate_game(&f.game).unwrap();
+        assert!(recover(&f, &code, &answer, 32).unwrap().cookie.is_none());
+        assert_eq!(host_revision(), after);
+    }
+}
+#[test]
 fn in_progress_recovery_preserves_complete_board_matching_layout_and_history() {
     let f = Fixture::new();
     let (code, old, other, _) = f.start_two_player_game();

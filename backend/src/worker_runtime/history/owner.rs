@@ -47,14 +47,14 @@ impl GameObject {
                 })?;
             let history = match service.history_for_response(current, game_id) {
                 Ok(history) => history,
-                Err(GameError::NotFound) => {
+                Err(error @ (GameError::NotFound | GameError::Unauthorized)) => {
                     // Only denial may await here; success must use the final Accounts proof.
                     self.state
                         .storage()
                         .sync()
                         .await
                         .map_err(|_| GameError::Storage)?;
-                    return Err(GameError::NotFound);
+                    return Err(error);
                 }
                 Err(error) => return Err(error),
             };
