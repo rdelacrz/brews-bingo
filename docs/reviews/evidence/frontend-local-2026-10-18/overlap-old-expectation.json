@@ -1,0 +1,28 @@
+{
+  "exit_code": 1,
+  "raw_output_persisted": false,
+  "stdout_sha256": "af2660b29d2c25371e4acc123e53cdad5b137def8fa62d4dd719fe04cec9a30e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cases": [
+    {
+      "case": "snapshot final-await changed_view resynchronizes without releasing captured output",
+      "status": "passed"
+    },
+    {
+      "case": "snapshot final-await closed_authority resynchronizes without releasing captured output",
+      "status": "passed"
+    },
+    {
+      "case": "snapshot final-await overlapping_send resynchronizes without releasing captured output",
+      "status": "failed",
+      "failure_sha256": "a7cb8c5592f76b845caed8598706985ec37722456d443046da3335dcd82b9577",
+      "timed_out": false,
+      "numeric_assertions": [],
+      "source_locations": [
+        "worker-tests/game_object.test.js:615:68"
+      ]
+    }
+  ],
+  "passed": 2,
+  "failed": 1
+}

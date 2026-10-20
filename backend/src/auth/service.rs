@@ -26,6 +26,8 @@ use zeroize::Zeroizing;
 const SQL_READ_CLOCK_FENCE: &str =
     "SELECT last_observed_ms,command_floor_ms FROM storage_metadata WHERE singleton=1";
 const SQL_OBSERVE_CLOCK: &str = "UPDATE storage_metadata SET last_observed_ms=?,command_floor_ms=max(command_floor_ms,?) WHERE singleton=1";
+const SQL_REVOKE_REPLACED_ENROLLMENT_SESSION: &str =
+    "UPDATE account_sessions SET revoked_at=? WHERE session_id=? AND revoked_at IS NULL";
 
 impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
     pub fn new(
@@ -97,7 +99,12 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
             AuthCommand::Login { username, password } => self.login(username, password, &context),
             AuthCommand::Current { token } => self.current(token.as_deref()),
             AuthCommand::Logout { token } => self.logout(token.as_deref()),
-            AuthCommand::Redeem { purpose, token } => self.redeem(*purpose, token, &context),
+            AuthCommand::Redeem { purpose, token } => self.redeem(*purpose, token, None, &context),
+            AuthCommand::RedeemWithSession {
+                purpose,
+                token,
+                session_token,
+            } => self.redeem(*purpose, token, session_token.as_deref(), &context),
             AuthCommand::Complete {
                 scope,
                 token,
@@ -353,6 +360,7 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
         &self,
         purpose: AccessLinkPurpose,
         token: &str,
+        session_token: Option<&str>,
         context: &RequestContext,
     ) -> Result<AuthOutcome, AuthError> {
         let subject = token
@@ -379,6 +387,17 @@ impl<'a, D: Database, R: Runtime> AuthService<'a, D, R> {
             let purpose_tag=purpose.to_string();let link_id=id.to_string();
             let fp=super::receipts::fingerprint("redeem",&[&purpose_tag,&link_id])?;
             if self.receipt(a.id,command,fp,now)?.is_some() {return Err(AuthError::InvalidLink);}
+            if purpose == AccessLinkPurpose::Enrollment
+                && let Some(session_token) = session_token
+                && let Some(session) = self.session(session_token)?
+                && session.revoked.is_none()
+            {
+                self.enqueue_session_closes(session.id, now)?;
+                self.db.execute(
+                    SQL_REVOKE_REPLACED_ENROLLMENT_SESSION,
+                    &[SqlValue::Integer(now), SqlValue::Text(session.id.to_string())],
+                )?;
+            }
             let deadline=add_deadline(now,SESSION_LIFETIME_MS)?;
             let (s,token)=self.issue_session(&a,scope,now,deadline)?;
             self.record_receipt(a.id,command,fp,super::receipts::CommandOutcome::Redeem{account_id:a.id,link_id:id,session_id:s.id,session_expires_at:deadline},now)?;

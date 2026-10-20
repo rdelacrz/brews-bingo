@@ -1,0 +1,14 @@
+{
+  "name": "brews-bingo-web-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "css": "tailwindcss -i tailwind.css -o public/assets/app.css --minify",
+    "test": "python3 -m unittest discover -s tools -p 'test_*.py'"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@tailwindcss/cli": "4.2.1",
+    "tailwindcss": "4.2.1"
+  }
+}

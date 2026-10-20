@@ -308,13 +308,13 @@ Path: `POST /api/auth/enrollment/redeem`
 
 Auth scope: Anyone
 
-A valid enrollment token is required. Resolve its DO-027 verifier and, in one AccountsObject transaction, validate account binding, purpose, expiry, unused/unrevoked state, current epoch, enabled state and `PendingEnrollment`; atomically consume it and create the restricted password-setup session. At most one concurrent redemption succeeds.
+A valid enrollment token is required. Resolve its DO-027 verifier and, in one AccountsObject transaction, validate account binding, purpose, expiry, unused/unrevoked state, current epoch, enabled state and `PendingEnrollment`; atomically consume it and create the restricted password-setup session. If the request presents a cookie token that resolves to an unrevoked account-session record, revoke that exact browser session and enqueue its normal close work in the same transaction, only after the enrollment token has passed validation. An absent or non-resolving cookie does not block enrollment; an invalid enrollment token never revokes the presented session. Other account sessions and the credential epoch are unchanged. At most one concurrent redemption succeeds.
 
 ##### Request
 
 The enrollment token is sensitive bearer proof and must be sent in the HTTPS body only. It appears only in the fragment of its canonical configured HTTPS link; the client reads it from the fragment, immediately removes the fragment with `history.replaceState`, then posts the token. Do not put it in the URL path/query, logs, cookies or client-selected account/role/expiry fields.
 
-No existing normal session is required; token binding, expiry and single-use state are server-validated.
+No existing normal session is required; token binding, expiry and single-use state are server-validated. A successful response replaces the browser's prior account cookie with the restricted enrollment session.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |

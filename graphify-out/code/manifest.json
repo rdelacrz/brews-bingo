@@ -5,13 +5,13 @@
     "backend/src/api/developer.rs": "56e9580f8a6d1b22a15861ff3528ab2d1f6d70082da606b33f62e2ba6804bea8",
     "backend/src/api/error.rs": "72fe28064f643c6c1a11202d39efca945abb7692f9eb31c4a57d34498cd64866",
     "backend/src/api/games/mod.rs": "e98dcc4595b51873eac4b9c544cb80a1c7106035fcb92647d78c63e844df0d9c",
-    "backend/src/api/games/reads.rs": "c76ffe21a5472f4606cd2754ece176ac851322966a8c4d2005d0700b3a8fc3d5",
+    "backend/src/api/games/reads.rs": "11c7fda6b8d012fcbb3fa710812472850617902e3e39d112d2f467e3f655f4d9",
     "backend/src/api/games/writes.rs": "dfbbee17de1e191d3ba007c6d8898a7d90db01eb3bcaa0c7bd39c1c2509edd27",
     "backend/src/api/history.rs": "3241c4f2f6d729b4848d15a3ce7934a5a73a0bcd9130eb7fb53b7279787f6ffd",
     "backend/src/api/mod.rs": "d1841548ed767093038dab8ad75998ba02ccda5adc4d5d1d540a00ca7989b429",
     "backend/src/api/users.rs": "17b2ed9abd801bd79967e3a95daa7c96bc49aeb9fa5abbab2ae9374462a3747a",
     "backend/src/api/utility.rs": "d405b550271481133f28af8abcf4d5ec559e83731c825892c88b9b93e790326a",
-    "backend/src/auth/command.rs": "cf6ba53acbf7d3cdc00ce7945cfddc1c8c80c27991c4cab4694e7be740fd7554",
+    "backend/src/auth/command.rs": "544f084766118c10170de763ecb83be23dec6e31e8c5643315b3c1a694ca1440",
     "backend/src/auth/error.rs": "548c982afe7f40d9c498a90f185247ff9ca376d193234628e7657b430bcc8f0f",
     "backend/src/auth/game_authority.rs": "980d0bbcfb40c368c36f3b59051b15b9eb01354932c0f6dec3c1c501d382e632",
     "backend/src/auth/host_recipient.rs": "64045719a4faba84e268d38c4010843992f82011aeb5f76745662d012ae8e446",
@@ -31,7 +31,7 @@
     "backend/src/auth/rate.rs": "42bb69d445063c883937ad8f3371e71a4e0869152226b99f08adaacc4be939c4",
     "backend/src/auth/receipts.rs": "e24b9e9daae49b0a427df27c6131e7ef1db569215d1f337eac04eac315d9ce1f",
     "backend/src/auth/records.rs": "3abcf03768d018b9f3fde78c90e31f48e4e1cb2b950ccf0894e821089995bdd2",
-    "backend/src/auth/service.rs": "3f1ad90f65199cd4b31d6b07ff2253ddb68df3d8b3081c13c24d40d8097aa284",
+    "backend/src/auth/service.rs": "9f335a81ac50de501c54a348ca1e0dc2a9de83e9fd0c4f3a1d051479a6af6442",
     "backend/src/auth/tests.rs": "4a11d9f5ebfa13c3603e3362dd8858ec4c84ba71732209f75a55bcdb2dc1c789",
     "backend/src/config/mod.rs": "8e3f8a4aca47046a2019cb69b94fa618bb3444dc3d7719512093817531a160a9",
     "backend/src/db/account_expiry.rs": "ac66bab27bca1fab6aedbc5bc360fce59ea2862c5be94ad4c561d91d00645a42",
@@ -91,22 +91,22 @@
     "backend/src/worker_runtime/discovery/owner.rs": "7b4527da3ab56f0c798d3e97627fb149181097611f4e54667b70a490245e3b33",
     "backend/src/worker_runtime/discovery/reservation_lookup.rs": "6e7ad6b945216aede5b3f343d2a82ba03de0438cd5c29f90d6466f58fc68eb10",
     "backend/src/worker_runtime/discovery/wire.rs": "60f3757e09094f1b87d2c846a0a9a046c772ad4ea349c79b0afd8cfb45f0e45f",
-    "backend/src/worker_runtime/edge.rs": "f55f36cb06c888f689e10c86bc1c65532e34152f65cf7c69f04f7a4f2c3e1fe7",
+    "backend/src/worker_runtime/edge.rs": "3bb02087daec3bd47aaf3b016d27ceca250f2a3804e71e8126d0fab5906af5ed",
     "backend/src/worker_runtime/game_accounts.rs": "e8e7ac5146bd59c7073cfa753943312e63c069d2806867322bb4f7fbb7098813",
     "backend/src/worker_runtime/game_directory.rs": "ddb78b992526f15425543d69893abf7ec22157c78756d0cdb48ce8f5dbee2eda",
-    "backend/src/worker_runtime/game_object.rs": "5a7fb47056e32a7362999b3ac0f4fc8eb2eb67be799553108b9963bb5f141aaa",
+    "backend/src/worker_runtime/game_object.rs": "7d461ef1f706df43e60e746e31c9d1d71eada9a9292abd95736c935d9cb2d5b9",
     "backend/src/worker_runtime/game_peers.rs": "05801a47f2984c238aff8826e69acc447ed9740146a6c517242251079fe5d911",
     "backend/src/worker_runtime/game_reads.rs": "ae6df3668e098c00ad48dd8e610e0be4813cb681b3d248f7b064e31c537bd032",
     "backend/src/worker_runtime/game_recovery/mod.rs": "ea8a49e739f0a60b44e1bcc3fb5dd95bb3cb14b2e01277d498b92a1077334615",
     "backend/src/worker_runtime/game_recovery/wire.rs": "f6f794cdc1da1c309216d6a75e974d90ad32292a4c2baa3b1bcf4937ec335088",
-    "backend/src/worker_runtime/game_sockets.rs": "665770cbd91f75810bb2b3db18a77b6227e73feece8ab7022c4f8fc7c1c3bd2d",
+    "backend/src/worker_runtime/game_sockets.rs": "bbf7a59e21bc4e460eed7ae62991d998647400e0e5300b7c2caeba10a21c00fa",
     "backend/src/worker_runtime/game_wire.rs": "624ae862c70326e760304ac26c92e4a65a6c481f8f4f1d04402519f4e518f4d5",
     "backend/src/worker_runtime/games.rs": "8a252a3cef9c37e794812692514c0ef513c28d11b99b53d0eaac25963f613057",
     "backend/src/worker_runtime/history/mod.rs": "fb37d0e898fb8bb1866550b7d446f32ede5343ce368c8c5e54161cd56b8231e4",
     "backend/src/worker_runtime/history/owner.rs": "7c429e476a17d5786ab244c1ffac7eed87481113e2111b76d860df674831de60",
     "backend/src/worker_runtime/history/wire.rs": "97934c721f9a3e2a10dc53fe15b4f69bd3d0bc35889cf6528938e17d06d9abd8",
     "backend/src/worker_runtime/management.rs": "3998d389bf2cba495a78726cb4e716bf92c10d4d0d06e29e622d46af685fe8cf",
-    "backend/src/worker_runtime/mod.rs": "459d98595e08d4014c5b890a2dfcedba711ebdcab0a1bf6ca7e89ff3c9cf1a0d",
+    "backend/src/worker_runtime/mod.rs": "df06e4947192584d0f7657d8c3c128fce9ac427812a1e63aec854b5f12ecbc50",
     "backend/src/worker_runtime/operator_peers.rs": "a22e513165d7f1d954b608bb9849e47c951ae3a8013287ae01321a0c85ae619f",
     "backend/src/worker_runtime/operator_runtime.rs": "27f5bcd272e1ec14b253b9cb32fee8ee230c578665cd40a0985ab26f9bdbafbc",
     "backend/src/worker_runtime/removals.rs": "7ab0b192cb171d6ae7db2a21f3d28cabc7d7c7ddc4577e96f06f1e4c7dbe3652",
@@ -167,14 +167,14 @@
     "backend/tests/storage_management.rs": "eef4e000c9cff21d3bb2b7bb91a34a1e9c7c7295896fe5278766900875a52538",
     "backend/tests/support/mod.rs": "fc744fcf29c9a205e95a569219e408bdb10215102c2a5cbb48f91b8abe1b5560",
     "backend/tests/users_core.rs": "cd5f9d1d89e40f8c8210c54b6426ad799e52eed2096be419c835e3847b490c1c",
-    "backend/tools/deployment.py": "3da7574ff02a2d5e27a949e98d5588670d99e184a0cedb173ba9b96ad4d31df7",
+    "backend/tools/deployment.py": "9f61b93febddace547747bea1e21ca2f932a5e7663cf64165459af74249c982b",
     "backend/tools/game_resource_probe.py": "b7980bd2ff9fc5034e4c9093977d68531625cc65cc233b3460fd08a27bf33fd7",
     "backend/tools/historical_probe.config.mjs": "82b64357068b3c64bc28e3bce14ea9802cc27daf4981137278102322104949c5",
-    "backend/tools/release_gate.py": "667ed6339a236bc88c4cbad8eed2e8c052b44b6199dc876cf3363b0acfbf2290",
+    "backend/tools/release_gate.py": "5c492436bfc12f9eddc7a8a137202804c0929ecc18d16be42f2bc4e1f26cb6b0",
     "backend/tools/tests/test_deployment.py": "3b243cb049530915d6df2c2a5caaa41fc15be497f776feab0b879e82e251f00a",
     "backend/tools/tests/test_full_game_e2e.py": "11a2559e8fd992d50cf4667b7f21349cb169ff8582785800502139fd472df16c",
     "backend/tools/tests/test_game_resource_probe.py": "d3aec495eddaf1ca654633e603c934c6cb285da49258a0dfcac82e438dcee79f",
-    "backend/tools/tests/test_release_gate.py": "4b2a6572a58c9c6c6d41e14a224d34ddee5255427c3eabb7e6219c6c18cb4c9e",
+    "backend/tools/tests/test_release_gate.py": "6b6a34584d82f9d7ee10b1313e33dbb3879a4fa0f9a766ee82641db9a9c6b901",
     "backend/vitest.config.js": "7301e8f6aa68beb6f2af5b4fbdc5633a5420c626665330c67d7f77861b2c7c4e",
     "backend/worker-tests/alarms.test.js": "35e3471b8bcb4d637af5d121813455697fd97459d90ef559a2073c2e5e4347a2",
     "backend/worker-tests/auth_audit.test.js": "1fd8d2508d07aa233ab110650e90cc2d0f7ad12c001ae9f1dfc34ceb4f9d17d8",
@@ -182,13 +182,14 @@
     "backend/worker-tests/command_lookup_repairs.test.js": "f7403260215189cf343ede3a203e76531bce5fbc86356a28ebe46e0dca8125b8",
     "backend/worker-tests/deployment_identity.test.js": "4172bbdd9e583dac72523cc403cc361f002ea8d7a975be876d4ec867ca73940d",
     "backend/worker-tests/developer.test.js": "ae455553f7019b305ba0590db45ee42783dfb161b69a3b25982d0afb444b5d99",
-    "backend/worker-tests/discovery.test.js": "77f3b64da0760867a3997e6cb7fa1705113bbf8b7033d7a78ebc42536626654e",
+    "backend/worker-tests/discovery.test.js": "e757e76338f3535d291621c5085a1d2d15a501f0ef3447b706662ab64b4a8bd8",
     "backend/worker-tests/discovery_boundaries.test.js": "4a0f2f90c9d387d662ee48f01f2f43b3e9d8fcad0e342b8fd2467bc5bcac8e9a",
     "backend/worker-tests/discovery_deadlines.test.js": "de641708c22eb027648f84ace25a10927637d554290259cdd887a6f889914ce8",
     "backend/worker-tests/discovery_expiry.test.js": "6fb293c6441ea1427b5bfa2c1f7d907f2105ea52e7b6eb4d6db1c8e0b4f1bfd8",
+    "backend/worker-tests/enrollment_session_replacement.test.js": "4003a9662b9b221374a41857ed8238bfb6dc018c0e71720937bfdfb986a6032b",
     "backend/worker-tests/fixtures.js": "1feffc2da7dc51b5d066b72a3133b21828343c17c98489207dae8cb5fb8d18b1",
     "backend/worker-tests/game_audit_repairs.test.js": "52a089e35bbc6821cca666686dac29f144ca909786746806b93f8db583ccab6e",
-    "backend/worker-tests/game_object.test.js": "f0f4dfaf877b2764eee69a4a0e16556dfe1852fb97c05d993c0146e450c299b6",
+    "backend/worker-tests/game_object.test.js": "de8a6ec7f8f39b1be36f20241dc51020762a9d37f8b7d65175963986980b0234",
     "backend/worker-tests/game_recovery.test.js": "e3c75179a8c55059dd113ef016baada38f7ff434fa5ab8863ac6a94847643c43",
     "backend/worker-tests/game_resources.test.js": "b58f85da273caa682ee6615b5273de01684f052f246a8125e9ad81d49d7cbc54",
     "backend/worker-tests/game_storage_audit.test.js": "8d5fd17c9948ddd2d5d4c4c41987aefd37731e0a131c07714e6e2a9cf8330f9b",
@@ -210,6 +211,8 @@
     "backend/worker-tests/read_routes.test.js": "7f5297dc6b88b10d55ddcbd9849f6ac92360ecaf780fb39a125d58e60b805ad2",
     "backend/worker-tests/removal-recovery.test.js": "77a42c8f802906aaa70176a3aa3d07a9de75d40ee6f6e255d25e8e3094bcd5a1",
     "backend/worker-tests/security.test.js": "d9e33b3027e948774b3efa18656fcb823453613828faf4ff9201dd0f0b23660d",
+    "backend/worker-tests/session_clock.test.js": "a16a5b5b5feafc6b10ea15dc706822026adba87157640473b60d7b5b4ecfbd2f",
+    "backend/worker-tests/snapshot_serialization.test.js": "3fb65739e106f8bfb705fce6d6925f25006258d5c65a558575c5ed9f297d3893",
     "backend/worker-tests/spectators.test.js": "3deb7c624cbab3f03f84739a4e92ef725a5cb587c0caf6e2fd1501f3adf67c35",
     "backend/worker-tests/storage_bounds.test.js": "65909115863bcfccbd37fe53b19cf0460c0f0b846a91b2a88a913e2e93c8abf6",
     "backend/worker-tests/transactions.test.js": "e8084290f07b9b4ee5b7ce17cede79b6275a781f78474c716955de65c5e32566",
@@ -230,6 +233,17 @@
     "cli/tests/client/mod.rs": "513ecd696bb7ab997f4abae1c1e9241dc42cd9081eb363b4df7823706f351b3f",
     "cli/tests/fixtures/mod.rs": "fd81a5e940268ddbd4f3ef7d21691b736979f531aedf75f3263399effbbfd667",
     "cli/tests/help.rs": "9de57e09d7a91d76275480cc2262ba7f4191631d20b1c5dd313dbc84065150a7",
+    "platform/web/src/main.rs": "5cf3e6d47b3a41a8fb61a68c8a3e9020b5b477eed43ed2348bc8133a28b03dd5",
+    "platform/web/tests/additional.mjs": "687449d1fab3a0f6698e26fc7143433b825d8659a7dc61ada2ccf0532575f2e2",
+    "platform/web/tests/auth-queue.mjs": "e41cccec2ddebccabff86e25a057239eb6f979a4fa2a7b7075301c0bd74948f5",
+    "platform/web/tests/browser.mjs": "268e9bcaebf74107643f868f608ee0ad980ff6b45efa84c13e2f75a680bb865b",
+    "platform/web/tests/endings.mjs": "8c9ba632e090620393654dde94f8b1d1f0778a54df81175c75e1582560eb051e",
+    "platform/web/tests/theme.mjs": "a64f30514f3f64c6f079a16c84ec5fe8330550f549c4afcfe84e0160d23cc495",
+    "platform/web/tools/browser_acceptance.py": "98d626e1d4d1ca47da0708c73a19c256d42c4f3e165661bc7ed5f264f78071ae",
+    "platform/web/tools/build.py": "deed1c0fad989eedabf43d4217014ccb4b760e8cf1ddabb4026e142f05b22fdd",
+    "platform/web/tools/local_worker.py": "1695f84c00827fed56f62202eab62aab6d6b5dae4a9964f74fbaa206bcb319cd",
+    "platform/web/tools/test_packaging.py": "54da7050830fa46f6d7011599c09d1f6b6f47af64e04d4b9c0bc6e856a80ab40",
+    "platform/web/tools/test_theme.py": "f9ddfc9f8a856f38f33472949d5b60f686cf7d642105cd4da1879dc381e1b6e4",
     "shared/config/src/env/backend.rs": "3abc9856467e9217b4da7a1c0ad52a65fa543fd7b91a6946d50f4c2e36255950",
     "shared/config/src/env/cli.rs": "0deccac66a81606d65299510c9b8ed85a1d0dbcee226666f26e8623e4eeff2c2",
     "shared/config/src/env/error.rs": "5efdac5abc4a0b9ec65b5eb10a85345ce2de9ac79ee06e8bae4782fac12d7021",
@@ -267,33 +281,77 @@
     "shared/domain/src/ids.rs": "2656ffdabbf74c630e62dccebdb3cb93cb69072219f3a221ac425605eb22810b",
     "shared/domain/src/ids/error.rs": "6471d183fbfe3b86e1ef914243751c27c7fb50df7e6f299ade1ddb213e2c0e11",
     "shared/domain/src/lib.rs": "2ed1d9dd49270fd45e3ce38c31d5877472dc854c042c324a5cb7b33de807d3bd",
-    "shared/domain/tests/account_constraints.rs": "9c0143bf597f8aa5575381bb735917bf57bf9730603624e90de636092bb18ffc"
+    "shared/domain/tests/account_constraints.rs": "9c0143bf597f8aa5575381bb735917bf57bf9730603624e90de636092bb18ffc",
+    "shared/ui/src/app.rs": "2a593a6cb6539dfb28e50bedd89b84bc5ea096515142d13d898248d35b895aa8",
+    "shared/ui/src/client/browser.rs": "77e511056490fdb3eaa5d22be9ea2daca41ac23879363adffa2981bca1369365",
+    "shared/ui/src/client/command.rs": "6c0c066ad71dde92eadae6747a5f620d91224cb65a5bc714b36f89ba839bd1e1",
+    "shared/ui/src/client/mod.rs": "8062bf7027809d13f46804f773d2543e4a3937aca83e8ef9e678c5107869d36a",
+    "shared/ui/src/components/dialog.rs": "4a3ea8fce68649aceab1d2ef44123d93213f7c347ac7f3e37f31f056291de34e",
+    "shared/ui/src/components/keyed.rs": "b28856ee16b9c5654b53eaa9329b6686138160582f74ec688e2e2f19581f261d",
+    "shared/ui/src/components/mod.rs": "5838e316f6e3b548ca942b2b019e7992ae6b18ca5faa945e381eb9b634934f4d",
+    "shared/ui/src/components/password_text_field.rs": "b3cf2fd7e662f78bdf857fcc468834d8d4aed50bd1ac2c5cc377967f68abb58b",
+    "shared/ui/src/components/time.rs": "2148aecb705dec7a771448aab02c797f36401596c516106d611fefff067831f5",
+    "shared/ui/src/features/auth/input.rs": "d4684f2c43ce3948855cc750e7d6994a07950c80caefdab94753e6729c2c3e68",
+    "shared/ui/src/features/auth/login.rs": "7c610a5b2bf36476ad9e881b8dc001f4d23d71727b066869a6f1668b26df40a4",
+    "shared/ui/src/features/auth/mod.rs": "bf5e9ae3555fe624cd9f155cf74f42325010c8bfffcebd2a4008346853d43a94",
+    "shared/ui/src/features/auth/password.rs": "df1222f5991827b3e50d9201dc77ab34898cf1d5ebdea4c24734c85451fb33b1",
+    "shared/ui/src/features/auth/wire.rs": "140bc8525f70a36538a5a0d23887c84fcf087bfbac1c3b4c352fb2ede5e16acb",
+    "shared/ui/src/features/game/active/mod.rs": "ae53bdd463ee84c172c169ede58372d41f2e3e0f53a2f290260e20fd8a82e107",
+    "shared/ui/src/features/game/active/speech.rs": "4c9820fe7c3425019e4ab7337b03a154b65f5594f2cacc20dca8d4d43014beb7",
+    "shared/ui/src/features/game/command.rs": "25118704849d8fd7c18ec08bd71b150cb61e4623d7f2c7ca9794921bc11f1b5c",
+    "shared/ui/src/features/game/entry/mod.rs": "38624f7af5dc1d5694926db681a0b374075a08791a36d7438ecbc364a512e056",
+    "shared/ui/src/features/game/finished/mod.rs": "2d9e375b76e78df873da8815054da43a33ed4dca6edf8275f1bada68064e07cc",
+    "shared/ui/src/features/game/mod.rs": "be3a95f0fc7f2016a299b46142693cd7eb6b6547cb4d33d48f2de057772db56e",
+    "shared/ui/src/features/game/model.rs": "fd3dbc0748b92db194d2f4ff9b7ec8d939edd024e761ed9c26c8f6cde97ecffa",
+    "shared/ui/src/features/game/preparation/configuration.rs": "c8b23fc1ba9393ac5c1bdfe74c1cd7a6259dd7ad848e27fb1ad8203f0855673f",
+    "shared/ui/src/features/game/preparation/mod.rs": "bced842134ab4633579545d7ea8045725c6aa69d38eb07823d83e6b2f9bfb6cf",
+    "shared/ui/src/features/game/settings/mod.rs": "d95e34517ddebda0c742e3444a44d33d3893b46d917c7d4b283497af75e3f925",
+    "shared/ui/src/features/game/settings/operator.rs": "5f527a691f27572926cd8b30f878147155972cadf0398c01643354771b2bce38",
+    "shared/ui/src/features/game/settings/participant.rs": "26c599fee3b0fdd7c788b094b92a9dba10c504e9b80a26b14a9d939e9d33d7d3",
+    "shared/ui/src/features/game/transport.rs": "6112bbfd02bbf1205e669521ee1847fcac4de331228119329a3c1bef71002c2d",
+    "shared/ui/src/features/game/waiting/mod.rs": "187311bd05b4973e5f257bac2c6c5f351097b662dadb787bbb26aa44a76b4a76",
+    "shared/ui/src/features/history/list.rs": "f58962528d81c3220c65ca9b7319e059a90df9a95b530ecf20c07658d013b312",
+    "shared/ui/src/features/history/mod.rs": "c8f13e4d9033889202ca8aff76ac06d48fefa60ba8ec13122a1c622dfeb5a621",
+    "shared/ui/src/features/home/dashboard.rs": "dbca99f4910de7ec846a01304ac40c8d05a2697da7fcfa6819e24c69678ee32c",
+    "shared/ui/src/features/home/mod.rs": "7038f79a67cb40bca2a3ca6308420d514ae338a4dd6b5c248b59416285c109bf",
+    "shared/ui/src/features/home/policy.rs": "d35ff7d0a3cfe81427d223dcb905cabd6a8cac1b00772472aae2204e13199a14",
+    "shared/ui/src/features/mod.rs": "1805b24c101c1dc9ee8b3d64f4e563aaf7ddbd8e023584daa40da476dc967242",
+    "shared/ui/src/features/recovery/mod.rs": "86805fb843d7665b60a9cceec5a21723f2d8e774aea00d072466e7be9ded74ba",
+    "shared/ui/src/features/users/handoff.rs": "e8ce0d82501d96cb3b2248a286ea88c69690d95a00e3d9fc73dea12cc9d7c310",
+    "shared/ui/src/features/users/mod.rs": "ad0c0e4f926ad67d7920909c1bf7b7aeeec6dc7dc0eb5f39d000b3f5de303097",
+    "shared/ui/src/features/users/policy.rs": "a4d29472439a480ba8fa7440431b43da3a1b9e293c0c57067470d5eadc44538d",
+    "shared/ui/src/features/users/target.rs": "49551a6bd5b0a968a6bb0a64745874840a24287ecebf0f8055a52cc4918036de",
+    "shared/ui/src/layouts/base_layout.rs": "47056c425f515bfc584992dc3685a0280a437b1380d536e3bbd7e1ee8ff83a20",
+    "shared/ui/src/layouts/mod.rs": "485e66282edf66acd6585bafb47417eb0e8c4787387de7ced1af2073537ed031",
+    "shared/ui/src/lib.rs": "5fd6a8efab86d4b9c650f68898458f6c98f5b40926cb1bc10f10253a1c368ab0",
+    "shared/ui/src/routes.rs": "d4bf73b61df35b5042f2108dfeea5e05daae2225b78de59c87357f8f5a209f95",
+    "shared/ui/src/session.rs": "17f758bcffff7f1ceeaf48287d9a96b46ea4c3160e7ff9b613ad7da8325ff81a"
   },
-  "nodes": 5132,
-  "edges": 15590,
-  "communities": 224,
+  "nodes": 5798,
+  "edges": 16897,
+  "communities": 248,
   "health": {
-    "node_count": 5132,
+    "node_count": 5798,
     "unverified_node_count": 0,
-    "raw_edge_count": 17235,
+    "raw_edge_count": 18920,
     "non_object_edges": 0,
     "missing_endpoint_edges": 0,
-    "dangling_endpoint_edges": 1103,
+    "dangling_endpoint_edges": 1350,
     "self_loop_edges": 0,
-    "valid_candidate_edges": 16132,
-    "exact_duplicate_edges": 123,
-    "directed_unique_endpoint_pairs": 15591,
-    "directed_same_endpoint_collapsed_edges": 541,
-    "undirected_unique_endpoint_pairs": 15579,
-    "undirected_same_endpoint_collapsed_edges": 553,
-    "same_endpoint_group_count": 401,
-    "relation_variant_groups": 34,
+    "valid_candidate_edges": 17570,
+    "exact_duplicate_edges": 151,
+    "directed_unique_endpoint_pairs": 16892,
+    "directed_same_endpoint_collapsed_edges": 678,
+    "undirected_unique_endpoint_pairs": 16879,
+    "undirected_same_endpoint_collapsed_edges": 691,
+    "same_endpoint_group_count": 479,
+    "relation_variant_groups": 45,
     "source_file_variant_groups": 0,
-    "source_location_variant_groups": 146,
-    "context_variant_groups": 135,
+    "source_location_variant_groups": 180,
+    "context_variant_groups": 155,
     "post_build_graph_type": "DiGraph",
-    "post_build_node_count": 5132,
-    "post_build_edge_count": 15590,
+    "post_build_node_count": 5798,
+    "post_build_edge_count": 16897,
     "post_build_error": "",
     "producer_suppression": {
       "path": "/root/.local/share/uv/tools/graphifyy/lib/python3.12/site-packages/graphify/extract.py",
@@ -364,6 +422,36 @@
     },
     "examples": [
       {
+        "source": "shared_ui_src_features_game_mod_gamecontext",
+        "target": "shared_ui_src_features_game_mod_rs_signal",
+        "edge_count": 14,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "shared/ui/src/features/game/mod.rs"
+        ],
+        "source_locations": [
+          "L32",
+          "L33",
+          "L34",
+          "L35",
+          "L36",
+          "L37",
+          "L38",
+          "L39",
+          "L40",
+          "L41",
+          "L42",
+          "L43",
+          "L44",
+          "L45"
+        ],
+        "contexts": [
+          "field"
+        ]
+      },
+      {
         "source": "backend_src_db_game_record",
         "target": "backend_src_db_game_rs_option",
         "edge_count": 12,
@@ -394,7 +482,7 @@
       {
         "source": "backend_src_auth_command_authcommand",
         "target": "backend_src_auth_command_rs_string",
-        "edge_count": 7,
+        "edge_count": 9,
         "relations": [
           "references"
         ],
@@ -408,11 +496,37 @@
           "L19",
           "L23",
           "L24",
-          "L27"
+          "L28",
+          "L29",
+          "L32"
         ],
         "contexts": [
           "field",
           "generic_arg"
+        ]
+      },
+      {
+        "source": "shared_ui_src_features_auth_wire_authreply",
+        "target": "shared_ui_src_features_auth_wire_rs_option",
+        "edge_count": 8,
+        "relations": [
+          "references"
+        ],
+        "source_files": [
+          "shared/ui/src/features/auth/wire.rs"
+        ],
+        "source_locations": [
+          "L11",
+          "L13",
+          "L15",
+          "L17",
+          "L19",
+          "L21",
+          "L23",
+          "L25"
+        ],
+        "contexts": [
+          "field"
         ]
       },
       {
@@ -436,53 +550,6 @@
         ],
         "contexts": [
           "field"
-        ]
-      },
-      {
-        "source": "backend_src_worker_runtime_game_wire_gameingress",
-        "target": "backend_src_worker_runtime_game_wire_rs_option",
-        "edge_count": 7,
-        "relations": [
-          "references"
-        ],
-        "source_files": [
-          "backend/src/worker_runtime/game_wire.rs"
-        ],
-        "source_locations": [
-          "L1123",
-          "L1124",
-          "L1125",
-          "L1126",
-          "L1127",
-          "L1128",
-          "L1130"
-        ],
-        "contexts": [
-          "field"
-        ]
-      },
-      {
-        "source": "shared_contracts_src_management_managementcommand",
-        "target": "shared_contracts_src_management_rs_accountid",
-        "edge_count": 7,
-        "relations": [
-          "references"
-        ],
-        "source_files": [
-          "shared/contracts/src/management.rs"
-        ],
-        "source_locations": [
-          "L20",
-          "L24",
-          "L32",
-          "L35",
-          "L38",
-          "L41",
-          "L44"
-        ],
-        "contexts": [
-          "field",
-          "generic_arg"
         ]
       }
     ]

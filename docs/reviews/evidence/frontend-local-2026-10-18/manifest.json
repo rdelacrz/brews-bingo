@@ -1,0 +1,83 @@
+{
+  "browser_and_initial_native_source_difference": [
+    "backend/worker-tests/game_object.test.js"
+  ],
+  "browser_check_count": 35,
+  "browser_errors": 0,
+  "compiled_inputs_unchanged_since_browser_run": true,
+  "deployment": "none",
+  "documentation_graph_refreshed": false,
+  "evidence_file_sha256": {
+    "backend-tools-tests.json": "2132cb3b6074154671b89c1045029dfe0adc6105bd0ad44a64836d6c8635d9bb",
+    "browser-attempts.json": "76cf44611b7c0b7d657b87fdfdf78a846ff0bc6f297f0ac1f0da66483b203700",
+    "browser-final.json": "8d8a709978a2c80e3ce6da4267e4eb5d0c9fab87f94c389416872dee33d10c82",
+    "frontend-artifacts.json": "01f29ac86aab0bc682084fd60e8d6915aee8000d19496f6e686698f8d89ff455",
+    "home-desktop.png": "38a9dc46b3a64cd51565c012deb3bed806663fd9fa64080f3f4be07614f6095b",
+    "home-mobile.png": "f1b883b09a7ded1e4ae180846e8856c3f1d3ee733f9f3cf2f790441d0bd06a15",
+    "initial-release-gates.json": "0b1ba329f45abe472f23146660955d111395cde08621029f376af84ad882ccd3",
+    "initial-source-inputs.json": "74278afc9e1f30792b36db287f6310c08c70b7b949604b7fcabb3a20b244c3f9",
+    "overlap-new-expectation.json": "aea95cc96debe87b48f39669f1e786f14d3b1386babf8cf22d0fafb6bcdd4fe4",
+    "overlap-old-expectation.json": "21d4887cf58054c7a068ed433f0b84afb7fa831b90e37d2dd501e811b643c0e1",
+    "packaging-tests.json": "a111e799c9357892af7b966f6d3fdba8ed6c60a8d99ae95c65ba2d3d18547e07",
+    "palette-contrast.json": "01d006d536cec5fac57661f197031cf7393ce6a3df7038a13b4cea0ad9cb5b6b",
+    "release-gates.json": "159f1327676bbc6255838a9649b06bb466ace88f870dacedca5302731d148d07",
+    "reviews/review-04-core-execution.json": "84ab04181b9b59715a0c17fb138271cd6d79e4dd6ad919b178c739065869405a",
+    "reviews/review-04-core.md": "d2f614a6da0c85f784414fc821213dec93a94d54921cfbc98349c769654c900b",
+    "reviews/review-05-dashboard-execution.json": "304fb71891568aa8f220de3a41f02625e42671e498a0da22ce404696dcf432c1",
+    "reviews/review-05-dashboard.md": "6908f086755d0d369349f448782d2abe4f8ace4c8ca057931a9dfd5aab390ad4",
+    "reviews/review-05-game-execution.json": "c67a421f046f200310a76da59b3bb47ca33efe05053871f307e4abdf97d66699",
+    "reviews/review-05-game.md": "e58aeb98b1ddb855ad553c489fca867a5bfb9cf6b26c26ac27fe1fa5194af806",
+    "reviews/review-06-backend-execution.json": "8c0d4ef58539bfe6736f6db6da1775c4f24cc2eb576b43589663cc18badcc5c7",
+    "reviews/review-06-backend.md": "28c3792b8d053860e31a7ed26357d79a7a78dade28e56ea89b05dce6214b7051",
+    "reviews/review-07-core-execution.json": "4d6e2ea6f300c13582c88266478f19f8c192377f6475ccfd4de4c55d789662a8",
+    "reviews/review-07-core.md": "52433faf8f4968ed5140915e81aed5c2957503efe319bf03726a90f4aa6d34c0",
+    "reviews/review-08-backend-execution.json": "dc701892245e607039463d2748ef3a0fbf102611aa8fdc3fc2b042021515f244",
+    "reviews/review-08-backend.md": "b634c0871239b44e0df900a2c6bcb5654b3109cf1d71c2546d2aa99bbe69a37d",
+    "snapshot-contention-reproducer.json": "106a328c8e7a348bcb5ab1d20ecc72eb3f6bb603492d6bf5a725b9ac7d12c223",
+    "source-diff.json": "86215194be4d8f8800c75f67e5a16862ed7e5b18028d456ff0a124dd36ad956e",
+    "source-inputs.json": "80d4b809c686dfb607101d2ba7dd74cffdcb970592378182656cfc5511d0daf9"
+  },
+  "frontend_artifact_set_sha256": "d01fa96b20009fa5670b1cc91112c326e8f72fff5d0c328b1bb2628209832ee1",
+  "frontend_asset_count": 49,
+  "gate_report_sha256": "159f1327676bbc6255838a9649b06bb466ace88f870dacedca5302731d148d07",
+  "gate_status": "passed",
+  "graph_code_sources_verified": 319,
+  "historical_browser_reports_summarized": 39,
+  "publication": "none",
+  "raw_runtime_payloads_or_logs_archived": false,
+  "reviews": {
+    "review-04-core": "d2f614a6da0c85f784414fc821213dec93a94d54921cfbc98349c769654c900b",
+    "review-05-dashboard": "6908f086755d0d369349f448782d2abe4f8ace4c8ca057931a9dfd5aab390ad4",
+    "review-05-game": "e58aeb98b1ddb855ad553c489fca867a5bfb9cf6b26c26ac27fe1fa5194af806",
+    "review-06-backend": "28c3792b8d053860e31a7ed26357d79a7a78dade28e56ea89b05dce6214b7051",
+    "review-07-core": "52433faf8f4968ed5140915e81aed5c2957503efe319bf03726a90f4aa6d34c0",
+    "review-08-backend": "b634c0871239b44e0df900a2c6bcb5654b3109cf1d71c2546d2aa99bbe69a37d"
+  },
+  "screenshots": {
+    "home-desktop.png": "38a9dc46b3a64cd51565c012deb3bed806663fd9fa64080f3f4be07614f6095b",
+    "home-mobile.png": "f1b883b09a7ded1e4ae180846e8856c3f1d3ee733f9f3cf2f790441d0bd06a15"
+  },
+  "source_input_count": 362,
+  "source_sha256": "e58340a76dc4ad314354d43ac82132340e15631a470ff768b518ba6426c0489a",
+  "superseded_historical_probe": {
+    "failed": 1,
+    "finding": "RUNTIME-FINAL-01",
+    "observed_returned_status": 200,
+    "passed": 0,
+    "raw_exit_code": 1,
+    "skipped": 0,
+    "status": "failed_acceptance_assertion",
+    "superseded": true
+  },
+  "verified_counts": {
+    "backend_tools": 136,
+    "doctests": 12,
+    "frontend_packaging": 2,
+    "general_worker": 741,
+    "native_debug": 1038,
+    "native_release_assertions": 1038,
+    "snapshot_policy_worker": 20,
+    "tls_https_wss": 375
+  },
+  "worker_artifacts_unchanged_since_browser_run": true
+}

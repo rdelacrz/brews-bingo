@@ -1,0 +1,31 @@
+[package]
+name = "brews-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+brews-config = { path = "../config", default-features = false, features = ["frontend"] }
+brews-contracts = { path = "../contracts", features = ["games", "users"] }
+brews-domain = { path = "../domain" }
+dioxus = { version = "=0.7.10", default-features = false, features = ["macro", "html", "signals", "hooks", "document", "router", "mounted"] }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+url.workspace = true
+uuid = { workspace = true, features = ["v7", "js"] }
+futures-util = { version = "0.3", features = ["sink"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-net = { version = "0.6", default-features = false, features = ["websocket"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window", "Location", "History", "Document", "Element", "HtmlElement", "HtmlInputElement", "Navigator", "Clipboard", "Storage", "Event", "EventTarget", "VisibilityState", "SpeechSynthesis", "SpeechSynthesisUtterance", "Crypto", "Request", "RequestInit", "RequestCredentials", "RequestCache", "Response", "Headers", "AbortController", "AbortSignal"] }
+
+[lints]
+workspace = true

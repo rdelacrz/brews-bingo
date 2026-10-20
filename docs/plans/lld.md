@@ -904,8 +904,8 @@ Preserve VIEW-01–VIEW-16 as stable experience IDs; add **VIEW-17** for the pub
 
 **Styling foundation:** All proposed screens and shared presentation components use the Dioxus-integrated Tailwind approach in [Section 3.6](#styling-design). Visual tokens/layout details remain reviewable; the styling framework is selected, not TBD.
 
-- **`AppShell` / `BrandHeader`:** visible **Brews Bingo** title and **Rockville Brews** identity, one clear page heading, Home navigation, and a compact session/connection area. Public Home remains accessible rather than automatically replacing `/` with Games.
-- **`AccountNavigation`:** Games for normal host/admin sessions; Users only for normal admin sessions; account username, role badge and **Log out**. Before login show **Host / admin login**. This includes the requested admin login without removing the approved host login path. Restricted enrollment/reset sessions do not get privileged navigation.
+- **`AppShell` / `BrandHeader`:** visible **Brews Bingo** logo linking to Home, **Rockville Brews** venue identity, one clear page heading, and a compact session/connection area. No separate Home text button. Public Home remains accessible rather than automatically replacing `/` with Games.
+- **`AccountNavigation`:** Games for normal host/admin sessions; Users only for normal admin sessions; account username, role badge and **Log out**. Before login show one **Login** button at the top right for the shared host/admin login path, with no duplicate below the Home form. Restricted enrollment/reset sessions do not get privileged navigation.
 - **`GameHeader`:** lifecycle label, published code if any, caller's role/view mode, and permitted designated-host reference. Use a safe account-display projection when provided; ordinary hosts must not query admin-only Users just to render a host name. New games have no code yet; do not introduce a persisted game-title field merely for a heading.
 - **`CapabilityGate`:** render controls from current server-derived permissions plus lifecycle, not route names or a client role selector. Read-only host/admin viewing is not a participant admission and does not consume player/spectator capacity. The board and membership panels must use the explicitly authorized account or participant context; never combine projections accidentally when both sessions exist.
 - On narrow screens use a single-column layout, labelled navigation menu and full-width primary actions. On wider screens use a main content column plus a secondary rules/roster panel. Play can use a wider control/board split; venue mode dedicates most space to calls. Breakpoints are content-driven implementation details, not new platform scope.
@@ -955,7 +955,7 @@ Preserve VIEW-01–VIEW-16 as stable experience IDs; add **VIEW-17** for the pub
 
 **Components/layout**
 - Branded header, concise “Join a game at Rockville Brews” heading, and a central `GameCodeForm` with **Game code** label, text field, helper text and primary **Join** button. Submit by button or Enter.
-- Header **Host / admin login** button; for an already validated normal account show **Games**, plus **Users** only for admins. Keep attendee entry usable in either case.
+- Header **Login** button only; for an already validated normal account show **Games**, plus **Users** only for admins. Keep attendee entry usable in either case.
 - Secondary **Recover player access** link to VIEW-11. An optional **Continue your game** card may appear only after validating the caller's existing session/membership; a remembered code alone cannot produce a resume grant.
 
 **Behavior/states:** Trim outer ASCII spaces, accept case-insensitive code input and display its uppercase form; require exactly eight A–Z/0–9 characters and reject internal spaces. Do not silently truncate pasted values. Show inline format errors, a checking state, and a safe unavailable/not-joinable response for invalid/closed codes under the final error contract. Successful lookup opens VIEW-08 or restores verified existing membership; it never creates a game or seat itself. Network failure leaves the code editable with Retry. Do not list public live-game participants or historical games.
@@ -965,7 +965,7 @@ Preserve VIEW-01–VIEW-16 as stable experience IDs; add **VIEW-17** for the pub
 
 **Purpose/access:** One account login form for both roles; no role picker, self-registration or public admin bootstrap. Sources: HLD-061/063/074–075, DO-020/021/030–034. Contracts: A1, A2, A7.
 
-**Components:** Username, password, a proposed show/hide-password control, primary **Log in**, **Back to Home**, and help text directing users needing setup/reset to an authorized admin/developer for a link. Use password-manager-compatible fields; show current-session status without reading HttpOnly cookies.
+**Components:** Username, password with inline accessible clear control, a proposed show/hide-password control, primary **Log in**, and help text directing users needing setup/reset to an authorized admin/developer for a link. Use password-manager-compatible fields; show current-session status without reading HttpOnly cookies. The shared header logo is the Home navigation; do not duplicate a bottom Home link.
 
 **Validation/navigation:** Trim boundary ASCII whitespace from username, preserve its remaining case, apply 10–50 ASCII characters/no internal ASCII whitespace, and compare case-sensitively. Preserve the password exactly; do not trim, case-fold or silently truncate it. Password policy is Section 9.1; control-character browser/transport behavior and maximum size remain unresolved, not silently narrowed by a field widget. Successful normal login opens Games (or a revalidated same-app protected destination); do not replay a previously failed mutation after login.
 
@@ -1094,7 +1094,7 @@ Show pool-size versus non-free-cell validation, invalid integer/coordinate error
 <a id="view-11"></a>
 #### VIEW-11 — Player recovery and private answer settings
 
-**Recovery mode (`/recover`):** Game-code field, exact current-alias field, private answer input, **Recover access**, **Back to Home/Join**, and a concise no-alternative-recovery explanation. Prefill a nonsecret code only; do not enumerate remembered aliases or expose whether another player enrolled an answer. Contracts: D13 with C4/D3 as needed; DO-045/049–052/080/085–087.
+**Recovery mode (`/recover`):** Game-code field, exact current-alias field, private answer input, **Recover access**, and a concise no-alternative-recovery explanation. The shared header logo is the Home navigation; do not duplicate a bottom Home link. Prefill a nonsecret code only; do not enumerate remembered aliases or expose whether another player enrolled an answer. Contracts: D13 with C4/D3 as needed; DO-045/049–052/080/085–087.
 
 Send proof to the backend without treating client comparison as authority. Approved answer comparison is versioned Unicode NFC → trim outer Unicode whitespace → case-fold, preserving internal whitespace/punctuation; this does not change case-sensitive alias rules. Invalid proof uses safe generic feedback, and throttling follows server-provided retry availability rather than a client promise. Clear proof from form state after the attempt flow. A successful recovery replaces prior player sessions/sockets and opens the existing lobby or same assigned board; it consumes no new seat. A lost issuance response requires fresh proof rather than replaying a cookie. Closed games, forgotten aliases and missing/forgotten answers have no fallback, host override or terminal recovery.
 
@@ -1225,15 +1225,44 @@ For each implementation slice, extend the existing per-operation contract in `ap
 | UI-AC-16 | Users is admin-only; creation roles are explicit/immutable, self/last-admin/hosted-game removal guards hold, enable preserves lifecycle, and links are one-time private handoffs with honest pending-close feedback. |
 | UI-AC-17 | Keyboard, focus, labels, contrast, non-color statuses, large-board mobile inspection and venue-distance readability are exercised. Optional speech handles unsupported/blocked devices without blocking gameplay or repeating resync backlog. |
 
-### 4.6 Remaining UI review and implementation gates
+### 4.6 Remaining UI rollout and acceptance gates
 
-- Review proposed screen grouping/routes, action copy, visual tokens and responsive behavior (LLD-001/026); LLD-028 selects Dioxus-integrated Tailwind. The above fills the design inventory, not Dioxus modules or a prototype.
-- Finalize Users filters/paging/action-capability projections and private-link handoff edge cases (LLD-002), without changing DO-105–107 protections or adding role editing.
-- Finalize the API seams in Section 4.4, including ordinary-host transfer-target discovery; a UI dependency is not approval of an unreviewed public account-list API.
-- Settle optional speech ownership/controls, browser/assistive-technology matrix and measurable venue/accessibility targets (LLD-014). The proposed local opt-in behavior is not yet a separately approved audio policy.
-- Resolve browser input/transport of all permitted ASCII controls and still-unselected password/answer size caps without silent narrowing, truncation or new normalization.
-- Confirm frontend handling of navigation/unload, account/participant coexistence, unknown command outcomes and terminal Exit races against the final contracts. Do not add implicit game cancellation or broaden session grants.
-- Implement and execute UI-AC-01–UI-AC-17 only after separate implementation authorization. All 107 approved DO decisions remain unchanged by these UI proposals.
+The 2026-10-18 user request authorizes local Dioxus web implementation of the planned views. Section 4.7 records that implementation; the checklist above remains an acceptance specification, not a blanket claim that every browser, device or provider has passed it.
+
+- Screen grouping, action copy and responsive styling are implemented with the selected Dioxus/Tailwind stack. Later changes to authority, lifecycle, input or retention policies still require their own review.
+- Users paging/action guards, private-link handoff and ordinary-host transfer-target discovery use the approved API contracts, not a new public account-list endpoint or copied storage schema.
+- Password input supports the approved ASCII policy and explicit control-character escapes without truncation; backend/domain rules remain authoritative for all inputs.
+- Cross-browser and assistive-technology coverage, audible speech behavior and measurable venue-distance targets remain external acceptance work. Per-device opt-in speech does not establish cross-device ownership or add voice/language/rate policy.
+- Local navigation, unknown-command, cookie/session and terminal-Exit checks are documented in the implementation review. They do not authorize deployment, remote provisioning or publication.
+- Production frontend asset promotion and the existing provider/security/load/restore gates remain separate. Local Workerd/Chromium results are not deployed Cloudflare acceptance.
+
+### 4.7 Local Dioxus web implementation boundary (2026-10-18)
+
+The implementation is in `shared/ui`, with a thin browser launcher and local packaging under `platform/web`. Dioxus is pinned to 0.7.10; the locked Tailwind pipeline scans shared Rust views. The visual system uses warm neutrals, restrained blue actions and system fonts, without remote fonts, scripts or a service worker.
+
+**Implemented view inventory:**
+
+| Planned views | Local implementation |
+| --- | --- |
+| VIEW-17 | Public Home and eight-character code entry at `/`, including for signed-in accounts. |
+| VIEW-01–03 | `/login`, `/enroll`, `/password-reset`; fragment capture/scrubbing, setup and reset completion, safe restricted-session guidance. |
+| VIEW-04–05 | Guarded `/games`, `/games/new`, saved preparation and explicit Save/Resume/Open actions; current-slot and History projections. |
+| VIEW-06–10 | Explicit account/player/spectator game contexts; operator and read-only account lobbies/play, admission, player lobby/own board, calls, qualification and one selected winner. |
+| VIEW-11–12 | Recovery, private answer maintenance, pre-start role changes, explicit Leave/restore, spectator lobby/play, fullscreen presentation and gesture-enabled speech. |
+| VIEW-13–14 | Authorized terminal views with server-ended UTC time and scoped Exit; separate read-only, filtered/paged History and selectable final boards. |
+| VIEW-15–16 | Admin Users/provisioning/private-link handoff, fixed guard explanations, connection/permission/expiry states and original-command reconciliation. |
+
+The UI depends on shared contracts/domain/config, not the backend crate. `get_frontend_config()` supplies the existing public build inputs; the API root is restricted to same-origin `/api`. HttpOnly cookies are never read by application code. Account and participant contexts remain separate, and routing never grants authority.
+
+Account-cookie changes and destructive session revalidation share a bounded origin-wide Web Locks lane. Restricted password completion checks the expected account, scope and original deadline inside that same lane. Queued secrets are discarded on cancellation; a request that was never dispatched does not initiate a second blocked session read. Identity-keyed view boundaries clear stale private hook state. Server Date plus monotonic elapsed time drives conservative expiry/command clocks; device wall time is not authority.
+
+Gameplay uses full authorized snapshots and ACKs, with HTTP commands retaining their original ID/body on uncertainty. Periodic HTTP revalidation continues draining socket messages and policy closes, never rolls back a newer snapshot, and does not renew session TTLs. No optimistic board generation/marks, automatic award, offline mutation queue or new-ID replay of an unknown command is added. Shared board rendering provides keyboard-focusable horizontal inspection and non-color status labels.
+
+Two supporting runtime changes are included: the session response supplies a standard Date header, and per-Game snapshot sends are serialized rather than treating benign overlapping broadcasts as a reason to retire a healthy socket. Existing authorization, identity, expiry, revision, delivery-credit and final-send checks remain in place; no public endpoint or storage schema is added by these changes.
+
+The local Workers Static Assets configuration runs `/api`, `/api/*` and `/_dev/*` through the Worker before SPA fallback. Packaged assets use no-store/no-referrer headers and an exact-loader CSP. The local harness uses ephemeral state and test-only credentials, not existing accounts or deployment secrets.
+
+Executed checks, review closure, source/artifact bindings and remaining limitations are recorded in [`frontend-local-implementation-2026-10-18.md`](../reviews/frontend-local-implementation-2026-10-18.md). Build/run commands are in [`platform/web/README.md`](../../platform/web/README.md). Exports, native desktop support and production deployment/provisioning are not part of this local slice.
 
 ## 5. Durable Object design — external reference
 
@@ -1354,6 +1383,8 @@ $argon2id$v=19$m=<m>,t=<t>,p=<p>$<salt-base64>$<hash-base64>
 - A pepper is different from the required per-password salt. No pepper, secret-management dependency or pepper-rotation scheme is selected by this decision.
 
 #### 9.2.2 Setup, reset and login integration
+
+**Enrollment-link redemption:** validate the link first, then atomically revoke only the current browser account session (if its cookie resolves to an unrevoked session record), enqueue the existing session-close work and issue the new restricted EnrollmentOnly session. Invalid links leave the old session untouched; other sessions and the credential epoch are unchanged.
 
 1. **Setup/reset:** require the already-defined restricted-session authority and validate Section 9.1 before hashing. Hash the exact decoded password bytes without trimming, case conversion, Unicode normalization or truncation. Apply this on the trusted backend, not solely in browser validation or client-side hashing.
 2. Generate a fresh secure salt and use the crate's high-level password-hashing API with the explicit accepted profile. Store only the complete encoded verifier, retaining the existing `None`-before-setup semantics. Treat randomness/configuration/hashing failure as failure, never as permission to store an unsalted/weak fallback or complete password setup.

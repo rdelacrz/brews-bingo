@@ -216,9 +216,10 @@ fn command(decoded: AuthenticationRequest) -> Result<AuthCommand, ApiError> {
             token: session_token,
         },
         (AuthenticationOperation::RedeemEnrollment, AuthenticationPayload::Redeem { token }) => {
-            AuthCommand::Redeem {
+            AuthCommand::RedeemWithSession {
                 purpose: AccessLinkPurpose::Enrollment,
                 token,
+                session_token,
             }
         }
         (AuthenticationOperation::RedeemReset, AuthenticationPayload::Redeem { token }) => {

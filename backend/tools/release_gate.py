@@ -95,8 +95,8 @@ def source_hashes(root: Path) -> dict[str, str]:
               "docs/reviews/evidence/command-lookup-final-return.test.js"}
         or p.startswith("docs/plans/") and Path(p).suffix == ".md"
         or p.startswith(".github/") and Path(p).suffix in {".yml", ".yaml", ".json", ".toml", ".md", ".py", ".js", ".mjs"}
-        or p.split("/")[0] in {"backend", "cli", "shared"}
-        and Path(p).suffix in {".rs", ".py", ".js", ".mjs", ".toml", ".json", ".sql"}
+        or p.split("/")[0] in {"backend", "cli", "shared", "platform"}
+        and Path(p).suffix in {".rs", ".py", ".js", ".mjs", ".toml", ".json", ".sql", ".css", ".html", ".svg"}
     )}
     return {p: digest((root / p).read_bytes()) for p in sorted(selected) if (root / p).is_file()}
 

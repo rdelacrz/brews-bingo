@@ -1,0 +1,8 @@
+{
+  "scope": "core",
+  "exit_code": 0,
+  "seconds": 102.60076504400058,
+  "stdout_sha256": "edeee622d00f970f250b427ca601b463a55b50ee6bd90421fb6f70d6bd168aa8",
+  "stderr_sha256": "3a052c9ba1c9e9e87bd61ddae2ca7399da714145d18955cb3c5ec0df84e07fb2",
+  "raw_output_persisted": false
+}

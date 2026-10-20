@@ -64,8 +64,7 @@ enum RegistryAvailability {
 pub struct GameObject {
     pub(super) state: State,
     pub(super) env: Env,
-    pub(super) sending:
-        std::cell::RefCell<std::collections::BTreeSet<brews_domain::ids::ConnectionId>>,
+    pub(super) snapshot_send: futures_util::lock::Mutex<()>,
     pub(super) transport_retry: std::cell::Cell<bool>,
 }
 impl GameObject {
@@ -1870,7 +1869,7 @@ impl DurableObject for GameObject {
         Self {
             state,
             env,
-            sending: Default::default(),
+            snapshot_send: Default::default(),
             transport_retry: Default::default(),
         }
     }

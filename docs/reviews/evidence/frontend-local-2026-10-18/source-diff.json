@@ -1,0 +1,6 @@
+{
+  "backend/worker-tests/game_object.test.js": {
+    "after": "de8a6ec7f8f39b1be36f20241dc51020762a9d37f8b7d65175963986980b0234",
+    "before": "f0f4dfaf877b2764eee69a4a0e16556dfe1852fb97c05d993c0146e450c299b6"
+  }
+}

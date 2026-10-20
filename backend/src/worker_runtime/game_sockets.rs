@@ -619,27 +619,12 @@ impl GameObject {
         service: &GameService<'_, OwnerDatabase, WorkerRuntime>,
         db: &OwnerDatabase,
     ) -> Result<(), GameError> {
+        // An overlapping broadcast waits; contention must not retire a healthy socket.
+        let _send = self.snapshot_send.lock().await;
         if ready_state(ws)? != 1 {
             return Err(GameError::Unauthorized);
         }
         let hint = Attachment::read(ws)?;
-        if !self.sending.borrow_mut().insert(hint.connection_id) {
-            // Concurrent protected output must resynchronize, never silently drop a revision.
-            return Err(GameError::Conflict);
-        }
-        struct InFlight<'a> {
-            owner: &'a GameObject,
-            id: ConnectionId,
-        }
-        impl Drop for InFlight<'_> {
-            fn drop(&mut self) {
-                self.owner.sending.borrow_mut().remove(&self.id);
-            }
-        }
-        let _flight = InFlight {
-            owner: self,
-            id: hint.connection_id,
-        };
         let view = self.connection_view(&hint, service, db).await?;
         let current_hint = Attachment::read(ws)?;
         if !hint.same_authority(&current_hint) {

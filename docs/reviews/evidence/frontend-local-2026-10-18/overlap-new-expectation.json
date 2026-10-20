@@ -1,0 +1,22 @@
+{
+  "exit_code": 0,
+  "raw_output_persisted": false,
+  "stdout_sha256": "eb681bd055e0673ecf4f53996c7b7ec12850625d1a10d675a10a730977f6e40b",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cases": [
+    {
+      "case": "snapshot final-await changed_view preserves authority and serializes overlap",
+      "status": "passed"
+    },
+    {
+      "case": "snapshot final-await closed_authority preserves authority and serializes overlap",
+      "status": "passed"
+    },
+    {
+      "case": "snapshot final-await overlapping_send preserves authority and serializes overlap",
+      "status": "passed"
+    }
+  ],
+  "passed": 3,
+  "failed": 0
+}

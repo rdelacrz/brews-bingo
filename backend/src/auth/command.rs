@@ -18,6 +18,11 @@ pub enum AuthCommand {
         purpose: AccessLinkPurpose,
         token: String,
     },
+    RedeemWithSession {
+        purpose: AccessLinkPurpose,
+        token: String,
+        session_token: Option<String>,
+    },
     Complete {
         scope: SessionScope,
         token: String,
@@ -33,6 +38,7 @@ impl fmt::Debug for AuthCommand {
             Self::Login { .. } => "Login([redacted])",
             Self::Current { .. } => "Current([redacted])",
             Self::Redeem { .. } => "Redeem([redacted])",
+            Self::RedeemWithSession { .. } => "RedeemWithSession([redacted])",
             Self::Complete { .. } => "Complete([redacted])",
             Self::Logout { .. } => "Logout([redacted])",
         })
@@ -44,6 +50,16 @@ impl Drop for AuthCommand {
             Self::Login { password, .. } => password.zeroize(),
             Self::Current { token } | Self::Logout { token } => token.zeroize(),
             Self::Redeem { token, .. } => token.zeroize(),
+            Self::RedeemWithSession {
+                token,
+                session_token,
+                ..
+            } => {
+                token.zeroize();
+                if let Some(session_token) = session_token {
+                    session_token.zeroize();
+                }
+            }
             Self::Complete {
                 token,
                 new_password,
@@ -68,6 +84,19 @@ mod tests {
         .unwrap();
         assert_eq!(format!("{command:?}"), "Login([redacted])");
         assert_eq!(serde_json::to_value(&command).unwrap()["type"], "login");
+        let redemption = AuthCommand::RedeemWithSession {
+            purpose: AccessLinkPurpose::Enrollment,
+            token: "link-secret-fixture".into(),
+            session_token: Some("session-secret-fixture".into()),
+        };
+        let debug = format!("{redemption:?}");
+        assert_eq!(debug, "RedeemWithSession([redacted])");
+        assert!(!debug.contains("link-secret-fixture"));
+        assert!(!debug.contains("session-secret-fixture"));
+        assert_eq!(
+            serde_json::to_value(&redemption).unwrap()["type"],
+            "redeem_with_session"
+        );
         assert!(
             serde_json::from_value::<AuthCommand>(
                 serde_json::json!({"type":"logout","token":null,"account_id":"unexpected"})

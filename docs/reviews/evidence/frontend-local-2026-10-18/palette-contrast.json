@@ -1,0 +1,83 @@
+{
+  "scope": "design-token foreground/background pairs only; not full WCAG or assistive-device certification",
+  "css_sha256": "7a6d55e5a1c4a1419949284a1a2ba6e8824c77497ee222dc14c96996099187b9",
+  "minimum_required_ratio": 4.5,
+  "check_count": 15,
+  "checks": [
+    {
+      "foreground": "ink",
+      "background": "paper",
+      "ratio": 14.114475220526003
+    },
+    {
+      "foreground": "ink",
+      "background": "surface",
+      "ratio": 15.36897919548347
+    },
+    {
+      "foreground": "ink",
+      "background": "soft",
+      "ratio": 13.620248642683876
+    },
+    {
+      "foreground": "muted",
+      "background": "paper",
+      "ratio": 5.992614383695616
+    },
+    {
+      "foreground": "muted",
+      "background": "surface",
+      "ratio": 6.5252419484669035
+    },
+    {
+      "foreground": "muted",
+      "background": "soft",
+      "ratio": 5.782779497672059
+    },
+    {
+      "foreground": "accent",
+      "background": "paper",
+      "ratio": 10.528765397488717
+    },
+    {
+      "foreground": "accent",
+      "background": "surface",
+      "ratio": 11.464569090943499
+    },
+    {
+      "foreground": "accent",
+      "background": "soft",
+      "ratio": 10.160094539380149
+    },
+    {
+      "foreground": "danger",
+      "background": "paper",
+      "ratio": 6.930344501499723
+    },
+    {
+      "foreground": "danger",
+      "background": "surface",
+      "ratio": 7.546318144806883
+    },
+    {
+      "foreground": "danger",
+      "background": "soft",
+      "ratio": 6.687674448754002
+    },
+    {
+      "foreground": "green",
+      "background": "paper",
+      "ratio": 6.196308109982792
+    },
+    {
+      "foreground": "green",
+      "background": "surface",
+      "ratio": 6.747040109053524
+    },
+    {
+      "foreground": "green",
+      "background": "soft",
+      "ratio": 5.9793407693905785
+    }
+  ]
+}

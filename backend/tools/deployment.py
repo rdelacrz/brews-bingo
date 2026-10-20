@@ -137,7 +137,7 @@ def source_names(root: Path) -> list[str]:
     names = git(root, "ls-files", "-z").split("\0")
     fixed = {"Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
              "AGENTS.md", "docs/rust-best-practices.md", "docs/operations/cicd.md"}
-    return sorted(name for name in names if name and (name in fixed or (name.split("/")[0] in {"backend", "cli", "shared"} and Path(name).suffix in {".rs", ".py", ".js", ".mjs", ".toml", ".json", ".sql"}) or name.startswith(".github/") and Path(name).suffix in {".yml", ".yaml", ".json", ".toml", ".md", ".py", ".js", ".mjs"} or name.startswith("docs/reviews/evidence/command-lookup-final-return.") or name.startswith("docs/plans/") and name.endswith(".md")) and not any(part in {"node_modules", "build", "target", "__pycache__"} or part.startswith(".env") or part.startswith(".dev.vars") for part in PurePosixPath(name).parts))
+    return sorted(name for name in names if name and (name in fixed or (name.split("/")[0] in {"backend", "cli", "shared", "platform"} and Path(name).suffix in {".rs", ".py", ".js", ".mjs", ".toml", ".json", ".sql", ".css", ".html", ".svg"}) or name.startswith(".github/") and Path(name).suffix in {".yml", ".yaml", ".json", ".toml", ".md", ".py", ".js", ".mjs"} or name.startswith("docs/reviews/evidence/command-lookup-final-return.") or name.startswith("docs/plans/") and name.endswith(".md")) and not any(part in {"node_modules", "build", "target", "__pycache__"} or part.startswith(".env") or part.startswith(".dev.vars") for part in PurePosixPath(name).parts))
 
 
 def safe_file(root: Path, name: str) -> Path:

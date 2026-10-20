@@ -22,11 +22,18 @@ target
 
 # Local Worker/build/test artifacts and secrets
 /node_modules/
+/.wrangler/
 /backend/build/
 /backend/.wrangler/
 /backend/node_modules/
+/platform/web/node_modules/
+/platform/web/public/assets/app.css
+/platform/web/.wrangler/
+/platform/web/test-results/
+/platform/web/playwright-report/
 /coverage/
 /test-results/
+__pycache__/
 *.log
 .env
 .env.*

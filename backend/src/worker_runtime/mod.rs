@@ -59,6 +59,7 @@ pub async fn fetch(
     _context: Context,
 ) -> Result<http::Response<Body>> {
     crate::observability::init();
+    let session_clock = request.uri().path() == "/api/session";
     let router = Router::new()
         .route("/api/auth/login", any(edge::handle))
         .route("/api/session", any(edge::handle))
@@ -79,10 +80,18 @@ pub async fn fetch(
         .route("/api/games/{*path}", any(games::handle))
         .fallback(edge::handle)
         .with_state(SendWrapper::new(env));
-    router
+    let mut response = router
         .oneshot(request.map(Body::new))
         .await
-        .map_err(|_| worker::Error::RustError("HTTP routing failed".to_owned()))
+        .map_err(|_| worker::Error::RustError("HTTP routing failed".to_owned()))?;
+    // Browsers calibrate command timestamps without trusting their wall clock.
+    if session_clock {
+        let date: String = js_sys::Date::new_0().to_utc_string().into();
+        if let Ok(value) = http::HeaderValue::from_str(&date) {
+            response.headers_mut().insert(http::header::DATE, value);
+        }
+    }
+    Ok(response)
 }
 
 /// Singleton account authority per environment. There is no public admin/seed API.

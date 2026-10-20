@@ -308,7 +308,9 @@ assert.equal(readFileSync(path, 'utf8'), source);
             root = Path(directory)
             names = [gate.POLICY_DOCUMENT, gate.ACCEPTANCE_SUITE, ".github/workflows/validation.yml",
                      ".github/workflows/release.yml", "docs/operations/cicd.md", "docs/plans/lld.md",
-                     "backend/tools/historical_probe.config.mjs", "private.env"]
+                     "backend/tools/historical_probe.config.mjs", "platform/web/src/main.rs",
+                     "platform/web/index.html", "platform/web/package-lock.json",
+                     "platform/web/public/assets/favicon.svg", "shared/ui/assets/theme.css", "private.env"]
             for name in names:
                 target = root / name
                 target.parent.mkdir(parents=True, exist_ok=True)

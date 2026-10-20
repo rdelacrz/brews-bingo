@@ -136,10 +136,20 @@ pub fn decode_discovery(
                 | "sec-fetch-mode"
                 | "sec-fetch-site"
                 | "sec-fetch-user"
+                | "sec-fetch-storage-access"
                 | "priority"
+                | "dnt"
+                | "sec-gpc"
                 | "sec-ch-ua"
                 | "sec-ch-ua-mobile"
                 | "sec-ch-ua-platform"
+                | "sec-ch-ua-arch"
+                | "sec-ch-ua-bitness"
+                | "sec-ch-ua-full-version"
+                | "sec-ch-ua-full-version-list"
+                | "sec-ch-ua-model"
+                | "sec-ch-ua-platform-version"
+                | "sec-ch-ua-wow64"
                 | "cf-connecting-ip"
                 | "cf-ray"
                 | "cf-visitor"
@@ -637,6 +647,37 @@ mod tests {
 
     const ID: &str = "01890f3e-53b7-7d28-9b05-4f65092d5701";
     const ORIGIN: &str = "https://app.test";
+    #[test]
+    fn discovery_accepts_browser_privacy_metadata_without_accepting_application_headers() {
+        let mut headers = HeaderMap::new();
+        headers.insert("cookie", "__Host-brews_session=opaque".parse().unwrap());
+        for name in [
+            "dnt",
+            "sec-gpc",
+            "sec-fetch-storage-access",
+            "sec-ch-ua-model",
+            "sec-ch-ua-platform-version",
+        ] {
+            headers.insert(name, "1".parse().unwrap());
+        }
+        for path in ["/api/games/current", "/api/games"] {
+            let selected =
+                decode_discovery(&Method::GET, path, None, &headers, b"", ORIGIN).unwrap();
+            assert_eq!(selected.session_token.as_deref(), Some("opaque"));
+            headers.insert("x-view", "account".parse().unwrap());
+            assert_eq!(
+                decode_discovery(&Method::GET, path, None, &headers, b"", ORIGIN).err(),
+                Some(ApiError::InvalidInput)
+            );
+            headers.remove("x-view");
+            headers.insert("idempotency-key", ID.parse().unwrap());
+            assert_eq!(
+                decode_discovery(&Method::GET, path, None, &headers, b"", ORIGIN).err(),
+                Some(ApiError::InvalidInput)
+            );
+            headers.remove("idempotency-key");
+        }
+    }
     fn decode(action: &str, q: Option<&str>, cookie: &str) -> Result<GameReadRequest, ApiError> {
         let mut h = HeaderMap::new();
         h.insert("cookie", cookie.parse().unwrap());

@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@source "../../shared/ui/src/**/*.rs";
+@source "./src/**/*.rs";
+@import "../../shared/ui/assets/theme.css";

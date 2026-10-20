@@ -1,0 +1,8 @@
+{
+  "scope": "game",
+  "exit_code": 0,
+  "seconds": 156.80197219700494,
+  "stdout_sha256": "bf7871784af2bd8a26795318040f649cf730a0098576c0a577a7237255ebc790",
+  "stderr_sha256": "8ebc489fb5a85309f5b48ab174732efd0404c6d5955a9c44755781128aa67274",
+  "raw_output_persisted": false
+}

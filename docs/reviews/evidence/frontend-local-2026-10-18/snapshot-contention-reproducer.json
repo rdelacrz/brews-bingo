@@ -1,0 +1,22 @@
+{
+  "after_fix": {
+    "asserted_close_attempts": 0,
+    "asserted_read_statuses": [
+      200,
+      200
+    ],
+    "exit_code": 0,
+    "passed_cases": 1
+  },
+  "after_fix_checks_are_from_passing_real_test_assertions": true,
+  "before_fix": {
+    "artifact_digest_captured": false,
+    "exit_code": 1,
+    "expected_close_attempts": 0,
+    "observed_close_attempts": 2
+  },
+  "before_fix_game_sockets_sha256": "665770cbd91f75810bb2b3db18a77b6227e73feece8ab7022c4f8fc7c1c3bd2d",
+  "permanent_regression": "backend/worker-tests/snapshot_serialization.test.js",
+  "probe_source_sha256": "08a391df5c444ee39de369a16e119075b1e38b410910802c424c15fcce26ea22",
+  "scope": "local Workerd controlled interleaving, not provider acceptance"
+}

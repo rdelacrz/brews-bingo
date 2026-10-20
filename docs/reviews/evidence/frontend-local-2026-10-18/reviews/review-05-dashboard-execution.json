@@ -1,0 +1,8 @@
+{
+  "scope": "dashboard",
+  "exit_code": 0,
+  "seconds": 197.97995377900952,
+  "stdout_sha256": "edea3231571c6461d5d93272b083fbe262e44c67d5264f8b1ea65c88862f24f6",
+  "stderr_sha256": "42ccfb6a39aade2602de4880c392179f749f3a8f52c98fef8467cd7eadff4a84",
+  "raw_output_persisted": false
+}

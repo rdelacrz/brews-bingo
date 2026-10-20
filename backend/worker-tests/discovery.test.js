@@ -85,6 +85,33 @@ test("discovery returns honest free and New slots with read-only cross-host/admi
   expect((await get(`/api/games/${id}/availability?view=account`, actor.session)).status).toBe(404);
 });
 
+test("a verified Admin sees a free slot and can create a game as an operator", async () => {
+  const admin = await enroll("FreeSlotAdminOperator");
+  await inOwner((_instance, state) =>
+    state.storage.sql.exec("UPDATE accounts SET role='admin' WHERE account_id=?", admin.accountId),
+  );
+
+  expect(await value("/api/games/current", admin.session)).toEqual({ slot: "free", game: null });
+  const created = await post("/api/games", {}, { session: admin.session });
+  expect(created.status).toBe(200);
+  expect((await created.json()).result).toBe("created");
+  expect((await value("/api/games/current", admin.session)).slot).toBe("occupied");
+});
+
+test("privacy-enabled browser metadata does not hide an occupied game from Admin", async () => {
+  const { actor, id } = await newGame();
+  await inOwner((_instance, state) => state.storage.sql.exec("UPDATE accounts SET role='admin' WHERE account_id=?", actor.accountId));
+  const headers = {"Sec-GPC":"1", DNT:"1", "Sec-Fetch-Storage-Access":"none", "Sec-CH-UA-Model":"Android", "Sec-CH-UA-Platform-Version":"14"};
+  const response = await get("/api/games/current", actor.session, headers);
+  expect(response.status).toBe(200);
+  const current = await response.json();
+  expect(current.slot).toBe("occupied");
+  expect(current.game.game_id).toBe(id);
+  expect(current.game.may_operate).toBe(true);
+  expect((await get("/api/games", actor.session, headers)).status).toBe(200);
+  expect((await get("/api/games/current", actor.session, {...headers, "X-View":"account"})).status).toBe(400);
+});
+
 test("discovery grammar rejects retry, bearer, body, filters, unknown selectors and ambiguous cookies", async () => {
   const { actor, id } = await newGame();
   for (const path of ["/api/games?state=resolved", "/api/games?limit=1", "/api/games?cursor=x", "/api/games?state=new&state=new", "/api/games/current?view=account", `/api/games/${id}/availability?view=entry`, `/api/games/${id}/availability?view=account&game_code=ABCD1234`, `/api/games/${id}/availability?view=unknown`]) expect((await get(path, actor.session)).status).toBe(400);

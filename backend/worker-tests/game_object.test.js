@@ -612,7 +612,7 @@ test("lost player cookie retries are receipt-only and missing retry context cann
   await runInDurableObject(env.GAMES.get(env.GAMES.idFromName(id)), (_instance, state) => expect([...state.storage.sql.exec("SELECT session_id FROM game_sessions")]).toHaveLength(1));
 });
 
-test.each(["changed_view", "closed_authority", "overlapping_send"])("snapshot final-await %s resynchronizes without releasing captured output", async change => {
+test.each(["changed_view", "closed_authority", "overlapping_send"])("snapshot final-await %s preserves authority and serializes overlap", async change => {
   const { actor, id } = await openLobby();
   const connection = await stream(id, actor.session, "account");
   ack(connection);
@@ -620,26 +620,43 @@ test.each(["changed_view", "closed_authority", "overlapping_send"])("snapshot fi
   await expect.poll(() => runInDurableObject(owner, (_instance, state) => [...state.storage.sql.exec("SELECT delivery_id FROM game_delivery_pending")].length)).toBe(0);
   const emitted = [];
   connection.socket.addEventListener("message", event => emitted.push(event.data));
-  const ended = closed(connection.socket);
+  const ended = change === "overlapping_send" ? null : closed(connection.socket);
   await holdConnectionProofs(1);
   await runInDurableObject(owner, (_instance, state) => state.storage.sql.exec("UPDATE game_view_revisions SET revision=revision+1"));
   const pending = runInDurableObject(owner, instance => instance.alarm().catch(() => {}));
-  await expect.poll(() => inOwner(instance => instance.testHeld.length)).toBe(1);
-  await runInDurableObject(owner, (_instance, state) => expect([...state.storage.sql.exec("SELECT delivery_id FROM game_delivery_pending")]).toHaveLength(1));
-  if (change === "changed_view") {
-    await runInDurableObject(owner, (_instance, state) => state.storage.sql.exec("UPDATE game_view_revisions SET revision=revision+1"));
-  } else if (change === "overlapping_send") {
-    await runInDurableObject(owner, instance => instance.alarm().catch(() => {}));
-  } else {
-    const identity = await inOwner(instance => instance.testHeld[0].identity);
-    const request = { caller: "accounts", action: "close_account", target: { operation_id: commandId(), ...identity, created_at: Date.now() } };
-    const reply = await owner.fetch("https://game.internal/close-account", { method: "POST", body: JSON.stringify(request) });
-    expect((await reply.json()).request).toEqual(request);
+  let overlapping;
+  try {
+    await expect.poll(() => inOwner(instance => instance.testHeld.length)).toBe(1);
+    await runInDurableObject(owner, (_instance, state) => expect([...state.storage.sql.exec("SELECT delivery_id FROM game_delivery_pending")]).toHaveLength(1));
+    if (change === "changed_view") {
+      await runInDurableObject(owner, (_instance, state) => state.storage.sql.exec("UPDATE game_view_revisions SET revision=revision+1"));
+    } else if (change === "overlapping_send") {
+      let settled = false;
+      overlapping = runInDurableObject(owner, instance => instance.alarm().catch(() => {})).finally(() => { settled = true; });
+      // The overlapping send waits for the held proof, not for socket retirement.
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(settled).toBe(false);
+    } else {
+      const identity = await inOwner(instance => instance.testHeld[0].identity);
+      const request = { caller: "accounts", action: "close_account", target: { operation_id: commandId(), ...identity, created_at: Date.now() } };
+      const reply = await owner.fetch("https://game.internal/close-account", { method: "POST", body: JSON.stringify(request) });
+      expect((await reply.json()).request).toEqual(request);
+    }
+    await releaseConnectionProofs();
+    await Promise.all([pending, overlapping]);
+    if (change === "overlapping_send") {
+      await expect.poll(() => emitted.length).toBe(1);
+      expect(JSON.parse(emitted[0]).view_revision).toBe(connection.initial.view_revision + 1);
+      expect(connection.socket.readyState).toBe(1);
+    } else {
+      expect((await ended).code).toBe(change === "closed_authority" ? 1008 : 1013);
+      expect(emitted).toEqual([]);
+    }
+  } finally {
+    await releaseConnectionProofs();
+    await Promise.allSettled([pending, overlapping]);
+    connection.socket.close();
   }
-  await releaseConnectionProofs();
-  await pending;
-  expect((await ended).code).toBe(change === "closed_authority" ? 1008 : 1013);
-  expect(emitted).toEqual([]);
 });
 
 test("genuine hibernation preserves outstanding credit and reconstructed native presence", async () => {
