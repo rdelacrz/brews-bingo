@@ -62,8 +62,8 @@ pub(super) fn AccountDetail(
                     dl { class: "stats",
                         div { dt { "Account ID" } dd { "{account.account_id}" } }
                         div { dt { "Role" } dd { "{role_label(account.role)}" } }
-                        div { dt { "Lifecycle" } dd { "{status_label(account.status)}" } }
-                        div { dt { "Access" } dd { if account.disabled { "Disabled" } else { "Enabled" } } }
+                        div { dt { "Lifecycle" } dd { StatusBadge { label: status_label(account.status), tone: StatusTone::from(account.status) } } }
+                        div { dt { "Access" } dd { StatusBadge { label: if account.disabled { "Disabled" } else { "Enabled" }, tone: if account.disabled { StatusTone::Danger } else { StatusTone::Success } } } }
                         div { dt { "Created" } dd { "{utc_time(account.created_at)}" } }
                     }
                     if account.disabled { p { class: "muted", "Enabling preserves the lifecycle. Enrollment or reset completion may still be required." } }

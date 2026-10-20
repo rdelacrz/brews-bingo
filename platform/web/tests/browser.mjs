@@ -8,6 +8,8 @@ import {
 } from "./additional.mjs";
 import { endings, deleteAccount } from "./endings.mjs";
 import { queuedAuthentication } from "./auth-queue.mjs";
+import { currentGameLayout, gameStatusLayout, statusBadge } from "./status-badge.mjs";
+import { lobbyLayout } from "./lobby-layout.mjs";
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
@@ -549,7 +551,8 @@ try {
   await step("create-and-open-lobby", async () => {
     await admin.goto(origin + "/games");
     await admin.getByRole("heading", { name: "Games", exact: true }).waitFor();
-    assert((await api(admin, "/api/session")).body.account.role === "Admin", "game-create-actor-is-admin");
+    const adminAccount = (await api(admin, "/api/session")).body.account;
+    assert(adminAccount.role === "Admin", "game-create-actor-is-admin");
     let slotReadIntercepts = 0;
     await admin.route("**/api/games/current", async (route) => {
       if (route.request().method() === "GET") {
@@ -592,6 +595,7 @@ try {
     await admin.getByRole("link", { name: "Resume setup", exact: true }).waitFor();
     assert(privacyReads > 0, "privacy-enabled-game-lookup-was-sent");
     await admin.unroute("**/api/games/current");
+    await currentGameLayout(admin, "New", "neutral", undefined, adminAccount.username);
     await admin.getByRole("link", { name: "Resume setup", exact: true }).click();
     await admin.getByRole("heading", { name: "Game setup", exact: true }).waitFor();
     phase = "unsaved-draft-resume";
@@ -634,12 +638,22 @@ try {
     await admin
       .getByRole("heading", { name: "Waiting for the host to start" })
       .waitFor();
+    await gameStatusLayout(admin, "Awaiting players", "warning");
+    await admin.locator(".designated-host-line .designated-host-alias").getByText(adminAccount.username, { exact: true }).waitFor();
     const view = await snapshot(admin, "account");
     assert(
       view.status === 200 && view.body.game.state === "awaiting_players",
       "lobby-readback",
     );
     gameCode = view.body.game_code;
+    await lobbyLayout(admin, gameCode, 0, 20, 0, 0, 50, 0, true);
+    await statusBadge(admin, "Awaiting players", "warning");
+    await statusBadge(admin, "Live", "success");
+    await admin.goto(origin + "/games");
+    await admin.getByRole("link", { name: "Open lobby", exact: true }).waitFor();
+    await currentGameLayout(admin, "Awaiting players", "warning", gameCode, adminAccount.username);
+    await admin.getByRole("link", { name: "Open lobby", exact: true }).click();
+    await admin.getByRole("heading", { name: "Waiting for the host to start" }).waitFor();
   });
   await step("player-and-spectator-admission", async () => {
     for (const alias of ["BrowserOne", "BrowserTwo"]) {
@@ -686,6 +700,7 @@ try {
         socket.opened && socket.received > 0 && socket.sent > 0
       )), "websocket-open-snapshot-ack");
     }
+    await lobbyLayout(admin, gameCode, 2, 20, 2, 1, 50, 1);
   });
   await membershipManagement({ ...harness, players, gameId, gameCode });
   await hostTransfer({ ...harness, host, hostId, gameId });
@@ -768,6 +783,7 @@ try {
       .getByRole("heading", { name: "Game result", exact: true })
       .waitFor();
     const result = await api(admin, `/api/games/${gameId}/result?view=account`);
+    await statusBadge(admin, "Resolved", "success");
     assert(
       result.status === 200 &&
         result.body.result?.state === "resolved" &&
@@ -794,6 +810,7 @@ try {
       .getByRole("link", { name: "View history", exact: true })
       .first()
       .waitFor();
+    await statusBadge(admin, "Resolved", "success");
     await admin
       .getByRole("link", { name: "View history", exact: true })
       .first()
@@ -801,6 +818,7 @@ try {
     await admin
       .getByRole("heading", { name: "A game to remember", exact: true })
       .waitFor();
+    await statusBadge(admin, "Resolved", "success");
     await admin
       .getByLabel("Inspect a player's final board", { exact: true })
       .selectOption({ index: 1 });
@@ -853,7 +871,7 @@ try {
           ? location.pathname.split("/").pop()
           : "other",
         connection: [
-          ...document.querySelectorAll('p.badge[role="status"]'),
+          ...document.querySelectorAll('.connection-status .status-badge'),
         ].map((node) => node.textContent),
         controls: [
           "Switch to spectator",
@@ -896,7 +914,7 @@ try {
             return { present: !!button, disabled: button?.disabled };
           }),
           exactConnection: [
-            ...document.querySelectorAll('p.badge[role="status"]'),
+            ...document.querySelectorAll('.connection-status .status-badge'),
           ].map((node) => node.textContent),
           invalidFrame: document.body.textContent.includes(
             "invalid or out of order",

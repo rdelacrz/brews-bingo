@@ -1,4 +1,5 @@
 use super::{CodeBadge, GameContext, Rules};
+use crate::components::{StatusBadge, StatusTone};
 use brews_contracts::{discovery::GameAvailability, games::GameView};
 use dioxus::prelude::*;
 use serde_json::json;
@@ -9,21 +10,40 @@ pub(super) fn Lobby() -> Element {
     let Some(snapshot) = (game.snapshot)() else {
         return rsx! {};
     };
-    rsx! {div {class:"stack",
+    rsx! {div {class:"stack lobby-content",
         h2 {"Waiting for the host to start"}
         p {class:"lead","Boards are assigned when the game starts."}
         match snapshot {
             GameView::Host {game:summary,game_code,configuration,players,connected_player_count,spectator_count,connected_spectator_count,..}=>rsx!{
                 if let Some(code)=game_code {CodeBadge {code:code.as_str().to_string()}}
-                div {class:"stats",
-                    p {class:"stat","{players.len()} / {configuration.player_capacity} occupied player seats"}
-                    p {class:"stat","{connected_player_count} connected players"}
-                    p {class:"stat","{spectator_count} / {configuration.spectator_capacity} occupied spectator seats"}
-                    p {class:"stat","{connected_spectator_count} connected spectators"}
+                dl {class:"lobby-metrics", "aria-label":"Lobby attendance summary",
+                    div {class:"lobby-metric",
+                        dt {"Players"}
+                        dd {
+                            div {class:"lobby-metric-total", strong {"{players.len()}"} span {"/ {configuration.player_capacity} seats"}}
+                            p {class:"lobby-metric-presence", span {class:if connected_player_count > 0 {"presence-dot connected"} else {"presence-dot"}, "aria-hidden":"true"} "{connected_player_count} connected"}
+                        }
+                    }
+                    div {class:"lobby-metric",
+                        dt {"Spectators"}
+                        dd {
+                            div {class:"lobby-metric-total", strong {"{spectator_count}"} span {"/ {configuration.spectator_capacity} seats"}}
+                            p {class:"lobby-metric-presence", span {class:if connected_spectator_count > 0 {"presence-dot connected"} else {"presence-dot"}, "aria-hidden":"true"} "{connected_spectator_count} connected"}
+                        }
+                    }
                 }
-                section {class:"card stack",h3 {"Player attendance"}
-                    if players.is_empty(){p {class:"empty-state","No admitted players yet."}}
-                    for player in players {p {"{player.alias} · ",if player.connected{"Connected"}else{"Disconnected — seat retained"}}}
+                section {class:"card stack attendance-card",
+                    div {class:"attendance-heading",
+                        h3 {"Player attendance"}
+                        span {class:"attendance-count", "{players.len()} / {configuration.player_capacity}"}
+                    }
+                    if players.is_empty(){p {class:"empty-state attendance-empty","No players have joined yet. Share the game code to invite your group."}}
+                    else {div {class:"attendance-list", role:"list", "aria-label":"Admitted players",
+                        for player in players {div { key:"{player.player_id}", class:"attendance-row", role:"listitem",
+                            p { "{player.alias}" }
+                            StatusBadge { label: if player.connected { "Connected" } else { "Disconnected — seat retained" }, tone: if player.connected { StatusTone::Success } else { StatusTone::Warning } }
+                        }}
+                    }}
                 }
                 Rules {configuration}
                 if (game.may_operate)(){

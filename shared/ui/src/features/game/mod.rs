@@ -14,7 +14,9 @@ pub(in crate::features) use entry::player_entry_membership;
 pub use preparation::CreateGame;
 
 use crate::{
-    components::{Keyed, Notice, PageTitle},
+    components::{
+        DesignatedHostAlias, Keyed, Notice, PageTitle, StatusBadge, StatusTone, game_state_label,
+    },
     session::AccountSession,
 };
 use brews_contracts::{
@@ -273,10 +275,18 @@ fn GameScreen(id: GameId, context: ViewContext) -> Element {
     let snapshot = (game.snapshot)();
     let notice = (game.notice)();
     let status = (game.status)();
+    let game_state = snapshot.as_ref().map(model::state);
     rsx! {
         div { class: "stack",
             PageTitle { eyebrow: format!("{} view",context.as_str()), title: "Your game".to_string(), description: "Single Line · Rockville Brews".to_string() }
-            p { class: "badge", role: "status", "{status.label()}" }
+            if let Some(state) = game_state {
+                div { class: "game-live-status-row", role: "status",
+                    StatusBadge { label: status.label(), tone: status.tone() }
+                    StatusBadge { label: game_state_label(state), tone: StatusTone::from(state) }
+                }
+            } else {
+                div { class: "connection-status", role: "status", StatusBadge { label: status.label(), tone: status.tone() } }
+            }
             if let Some(error) = (game.error)() { Notice { message: error } }
             Feedback { command: game.command, game_id: id.to_string(), view: context.as_str().to_string(),enabled:game.fresh() }
             if (game.cancelled)() {
@@ -285,11 +295,9 @@ fn GameScreen(id: GameId, context: ViewContext) -> Element {
             } else if notice.is_some() {
                 finished::AudienceResult {}
             } else if let Some(snapshot) = snapshot {
-                p { class: "badge", "{model::state_label(model::state(&snapshot))}" }
                 if context==ViewContext::Account && !model::terminal(&snapshot) {
-                    if let GameView::Host{game:summary,..}=&snapshot{p {class:"muted","Designated host account: {summary.designated_host_id}"}}
-                    if (game.may_operate)() { p { class: "notice", "Operator access confirmed by the server. Admin actions preserve the designated host." } }
-                    else { p { class: "notice", "Read-only account view. Operator controls require current server permission." } }
+                    if let GameView::Host{game:summary,..}=&snapshot{p {class:"designated-host-line", span {"Designated host"} DesignatedHostAlias { account_id: summary.designated_host_id }}}
+                    if !(game.may_operate)() { p { class: "muted", "Read-only account view. Operator controls require current server permission." } }
                 }
                 match model::state(&snapshot) {
                     brews_domain::games::GameState::New => rsx! { preparation::SavedSetup {} },
@@ -404,11 +412,14 @@ fn cancelled_before_start(response: &GameResponse) -> bool {
 #[component]
 fn CodeBadge(code: String) -> Element {
     let mut error = use_signal(|| None::<String>);
+    let mut copied = use_signal(|| false);
     rsx! {
-        div { class: "card stack",
-            span { class: "eyebrow", "Game code" }
-            strong { class: "game-code", "{code}" }
-            button { class: "button secondary", onclick: move |_| { let code=code.clone(); async move { if let Err(reason)=crate::client::copy_text(&code).await { error.set(Some(reason.to_string())); } } }, "Copy game code" }
+        div { class: "card game-code-card",
+            div { class: "game-code-content",
+                span { class: "eyebrow", "Game code" }
+                strong { class: "game-code", "{code}" }
+            }
+            button { class: "button secondary code-copy-button", r#type: "button", "aria-label": if copied() { "Game code copied" } else { "Copy game code" }, onclick: move |_| { let code=code.clone(); async move { match crate::client::copy_text(&code).await { Ok(()) => { copied.set(true); error.set(None); }, Err(reason) => error.set(Some(reason.to_string())) } } }, if copied() { "Copied" } else { "Copy code" } }
             if let Some(message) = error() { Notice { message } }
         }
     }

@@ -1,7 +1,9 @@
 use super::command::{Feedback, use_game_command};
 use crate::{
     client,
-    components::{Keyed, Notice, PageTitle, PasswordTextField},
+    components::{
+        Keyed, Notice, PageTitle, PasswordTextField, StatusBadge, StatusTone, game_state_label,
+    },
 };
 use brews_contracts::{
     discovery::GameEntry,
@@ -188,7 +190,7 @@ fn FreshAdmission(entry: GameEntry) -> Element {
     };
     rsx! {section {class:"card stack",
         h2 {"Choose how to participate"}
-        p {class:"badge","{super::model::state_label(entry.state)}"}
+        StatusBadge { label: game_state_label(entry.state), tone: StatusTone::from(entry.state) }
         form {class:"form",onsubmit:move |event|{
             event.prevent_default();
             if disabled || !allowed {return;}

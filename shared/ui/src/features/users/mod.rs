@@ -102,8 +102,8 @@ fn UsersWorkspace() -> Element {
                                 tr { key: "{account.account_id}",
                                     td { "{username_display(&account.username)}" }
                                     td { "{role_label(account.role)}" }
-                                    td { "{status_label(account.status)}" }
-                                    td { if account.disabled { "Disabled" } else { "Enabled" } }
+                                    td { StatusBadge { label: status_label(account.status), tone: StatusTone::from(account.status) } }
+                                    td { StatusBadge { label: if account.disabled { "Disabled" } else { "Enabled" }, tone: if account.disabled { StatusTone::Danger } else { StatusTone::Success } } }
                                     td { "{utc_time(account.created_at)}" }
                                     td { button { class: "button ghost", disabled: locked(), onclick: move |_| { if !locked() { command.error.set(None); link.set(None); creating.set(false); selected.set(Some(account.account_id)); } }, "Manage" } }
                                 }

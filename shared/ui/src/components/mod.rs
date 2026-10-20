@@ -1,11 +1,15 @@
 //! Reusable semantic views; none of these components changes game state.
+mod designated_host_alias;
 mod dialog;
 mod keyed;
 mod password_text_field;
+mod status_badge;
 mod time;
+pub(crate) use designated_host_alias::DesignatedHostAlias;
 pub use dialog::Confirm;
 pub use keyed::Keyed;
 pub(crate) use password_text_field::PasswordTextField;
+pub(crate) use status_badge::{StatusBadge, StatusTone, game_state_label};
 pub(crate) use time::{use_clock, utc_time};
 
 use crate::client::CommandState;

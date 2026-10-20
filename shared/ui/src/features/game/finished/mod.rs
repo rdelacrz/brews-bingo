@@ -1,5 +1,5 @@
 use super::{GameContext, model::ViewContext};
-use crate::components::{Board, Calls, utc_time};
+use crate::components::{Board, Calls, StatusBadge, StatusTone, game_state_label, utc_time};
 use brews_contracts::games::GameView;
 use dioxus::prelude::*;
 
@@ -52,7 +52,7 @@ pub(super) fn AudienceResult() -> Element {
         return rsx! {};
     };
     rsx! {section {class:"card stack",h2 {"Game ended"}
-        p {class:"badge","{super::model::state_label(notice.state)}"}
+        StatusBadge { label: game_state_label(notice.state), tone: StatusTone::from(notice.state) }
         p {class:"muted","Ended: {utc_time(notice.ended_at)}"}
         if let Some(winner)=notice.winner{p {class:"lead","Winner: {winner.alias}"}}else{p {"Ended without a winner"}}
         Calls {calls:notice.calls}

@@ -2,7 +2,7 @@ mod speech;
 use super::{CodeBadge, GameContext, model};
 use crate::{
     client,
-    components::{Board, Calls, Confirm, Notice},
+    components::{Board, Calls, Confirm, Notice, StatusBadge, StatusTone},
 };
 use brews_contracts::games::{GameView, reads::RemainingValues};
 use dioxus::prelude::*;
@@ -113,7 +113,8 @@ fn HostControls() -> Element {
             label {class:"field","Player board" select {value:selected().unwrap_or_default(),onchange:move |e|selected.set(Some(e.value())),option {value:"","Choose a player"}for player in &players{option {value:player.player_id.to_string(),"{player.alias}"}}}}
             if let Some(player)=inspect {
                 h3 {"{player.alias}"}
-                p {class:"muted",if player.connected{"Connected"}else{"Not connected — qualification is independent of presence"}}
+                StatusBadge { label: if player.connected { "Connected" } else { "Not connected" }, tone: if player.connected { StatusTone::Success } else { StatusTone::Warning } }
+                if !player.connected { p { class: "muted", "Qualification is independent of presence." } }
                 if let Some(board)=&player.board{p {class:"muted",{board.qualifying_lines.iter().map(model::line_label).collect::<Vec<_>>().join(" · ")}}Board {board:board.clone()}}
             }
         }
@@ -121,7 +122,7 @@ fn HostControls() -> Element {
             if !players.iter().any(|p|p.board.as_ref().is_some_and(|b|b.qualified)){p {"No boards qualify yet."}}
             for player in players.iter().filter(|p|p.board.as_ref().is_some_and(|b|b.qualified)){
                 {let id=player.player_id.to_string();let alias=player.alias.clone();rsx!{
-                    div {class:"actions",p {"{player.alias} · Qualified"}
+                    div {class:"actions",p {"{player.alias}"} StatusBadge { label: "Qualified", tone: StatusTone::Success }
                         if (game.may_operate)(){button {class:"button secondary",disabled:!game.operate(),onclick:move |_|{selected.set(Some(id.clone()));award.set(Some((id.clone(),alias.clone(),summary.view_revision)));},"Select as winner"}}
                     }
                 }}

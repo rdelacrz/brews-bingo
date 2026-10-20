@@ -44,6 +44,20 @@ class BrandThemeTests(unittest.TestCase):
             with self.subTest(foreground=foreground, background=background):
                 self.assertGreaterEqual(contrast(self.colors[foreground], self.colors[background]), 3)
 
+    def test_all_status_tones_have_accessible_text_contrast(self):
+        for tone in ('neutral', 'info', 'warning', 'success', 'danger'):
+            with self.subTest(tone=tone):
+                match = re.search(r'\.status-' + tone + r'\s*\{([^}]+)\}', self.css)
+                assert match is not None, f'Missing status tone: {tone}'
+                block = match[1]
+
+                def color(property_name):
+                    match = re.search(r'(?<![\w-])' + property_name + r':\s*([^;]+);', block)
+                    assert match is not None, f'Missing {property_name}: {tone}'
+                    value = match[1]
+                    return self.colors[value[6:-1]] if value.startswith('var(--') else value
+                self.assertGreaterEqual(contrast(color('color'), color('background')), 4.5)
+
     def test_fonts_are_local_woff2_and_licensed(self):
         urls = re.findall(r'url\("([^"]+)"\)', self.css)
         self.assertEqual(len(urls), 2)

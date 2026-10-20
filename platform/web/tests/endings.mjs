@@ -1,3 +1,5 @@
+import { statusBadge } from "./status-badge.mjs";
+
 export async function endings(h) {
   const {
     admin,
@@ -122,8 +124,10 @@ export async function endings(h) {
     await admin.getByRole("button", { name: "Retry current game lookup", exact: true }).click();
     await admin.getByRole("button", { name: "Refresh current game", exact: true }).waitFor();
     await admin.getByRole("button", { name: "Refresh current game", exact: true }).click();
-    assert(await admin.getByRole("link", { name: "Create game", exact: true }).isEnabled(), "create-game-route-remains-actionable-while-slot-occupied");
-    await admin.getByRole("link", { name: "Create game", exact: true }).click();
+    await admin.getByRole("link", { name: "Resume setup", exact: true }).waitFor();
+    assert((await admin.getByRole("link", { name: "Create game", exact: true }).count()) === 0, "create-game-hidden-while-slot-occupied");
+    // Direct navigation must still explain conflicts even though Games hides creation.
+    await admin.goto(origin + "/games/new");
     await admin.getByText("The global game slot is occupied or coordinating. A second game cannot be created.", { exact: true }).waitFor();
     assert((await admin.getByText("Check the submitted fields and try again.", { exact: true }).count()) === 0, "occupied-slot-not-reported-as-invalid-form");
     await admin.getByRole("button", { name: "Create game", exact: true }).click();
@@ -161,6 +165,7 @@ export async function endings(h) {
       .getByRole("table", { name: "Game board", exact: true })
       .waitFor();
     await admin.getByLabel("Manual value", { exact: true }).fill("100");
+    await statusBadge(admin, "In progress", "info");
     await issueCall(admin, "Call value", 1, id);
     await click(admin, "End without winner");
     await admin.getByRole("dialog").getByRole("button").last().click();
@@ -173,6 +178,7 @@ export async function endings(h) {
       "no-winner-original-resolved",
     );
     const history = (await api(admin, `/api/history/${id}`)).body.history;
+    await statusBadge(admin, "Cancelled", "danger");
     assert(
       history.outcome === "cancelled" && history.winner === null,
       "cancelled-without-winner",
@@ -189,6 +195,7 @@ export async function endings(h) {
     await slotFree();
     await admin.goto(origin + "/games");
     await admin.getByRole("heading", { name: "Games", exact: true }).waitFor();
+    await admin.locator(".current-game").getByRole("link", { name: "Create game", exact: true }).waitFor();
     assert((await admin.getByRole("button", { name: "Refresh current game", exact: true }).count()) === 0, "refresh-hidden-with-no-nonterminal-game");
   });
   await step(
@@ -211,6 +218,7 @@ export async function endings(h) {
       await admin
         .getByRole("heading", { name: "Final player boards", exact: true })
         .waitFor();
+      await statusBadge(admin, "Cancelled", "danger");
       await admin.setViewportSize({ width: 320, height: 780 });
       await admin
         .getByLabel("Inspect a player's final board", { exact: true })

@@ -403,7 +403,7 @@ export async function membershipManagement({
         );
         assert(
           (await replacement
-            .locator('p.badge[role="status"]')
+            .locator('.game-live-status-row .status-badge').filter({ hasText: /^Live$/ })
             .textContent()) === "Live",
           "replacement-remains-live",
         );
@@ -447,10 +447,13 @@ export async function hostTransfer({
           .snapshot?.game.designated_host_id === hostId,
       "host-transfer-readback",
     );
+    await admin.goto(`${origin}/games/${gameId}/account`);
+    await admin.locator(".designated-host-line .designated-host-alias").getByText("BrowserHost", { exact: true }).waitFor();
     await host.reload();
     await host
       .getByRole("button", { name: "Start game", exact: true })
       .waitFor();
+    await host.locator(".designated-host-line .designated-host-alias").getByText("BrowserHost", { exact: true }).waitFor();
   });
   await step(
     "hosted-account-guard-explains-the-required-next-step",

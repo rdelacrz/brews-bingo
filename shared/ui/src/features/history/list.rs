@@ -1,4 +1,3 @@
-use super::{state_label, use_clock, utc_time};
 use crate::{client, components::*, session::AccountSession};
 use brews_contracts::history::HistoryPage;
 use dioxus::prelude::*;
@@ -181,7 +180,7 @@ pub(crate) fn HistoryList() -> Element {
                                             }
                                             td {
 
-                                                "{state_label(game.outcome)}"
+                                                StatusBadge { label: game_state_label(game.outcome), tone: StatusTone::from(game.outcome) }
                                             }
                                             td {
 

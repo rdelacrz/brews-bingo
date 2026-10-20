@@ -55,6 +55,16 @@ pub(super) enum Connection {
     Unsupported,
 }
 impl Connection {
+    pub fn tone(self) -> crate::components::StatusTone {
+        use crate::components::StatusTone;
+        match self {
+            Self::Live => StatusTone::Success,
+            Self::Connecting | Self::Synchronizing => StatusTone::Info,
+            Self::Reconnecting | Self::Paused => StatusTone::Warning,
+            Self::Denied | Self::Expired => StatusTone::Danger,
+            Self::Ended | Self::Unsupported => StatusTone::Neutral,
+        }
+    }
     pub fn label(self) -> &'static str {
         match self {
             Self::Connecting => "Connecting",
@@ -91,15 +101,7 @@ pub(super) fn state(view: &GameView) -> GameState {
         | GameView::FinalPlayer { state, .. } => *state,
     }
 }
-pub(super) fn state_label(state: GameState) -> &'static str {
-    match state {
-        GameState::New => "New",
-        GameState::AwaitingPlayers => "Awaiting players",
-        GameState::InProgress => "In progress",
-        GameState::Resolved => "Resolved",
-        GameState::Cancelled => "Cancelled",
-    }
-}
+
 pub(super) fn terminal(view: &GameView) -> bool {
     matches!(state(view), GameState::Resolved | GameState::Cancelled)
 }
@@ -328,6 +330,24 @@ impl TerminalNotice {
 #[allow(clippy::unwrap_used, reason = "Fixed test fixtures.")]
 mod tests {
     use super::*;
+    #[test]
+    fn connection_badges_distinguish_live_waiting_and_denied_states() {
+        use crate::components::StatusTone;
+        for (connection, tone) in [
+            (Connection::Connecting, StatusTone::Info),
+            (Connection::Synchronizing, StatusTone::Info),
+            (Connection::Live, StatusTone::Success),
+            (Connection::Reconnecting, StatusTone::Warning),
+            (Connection::Paused, StatusTone::Warning),
+            (Connection::Denied, StatusTone::Danger),
+            (Connection::Expired, StatusTone::Danger),
+            (Connection::Ended, StatusTone::Neutral),
+            (Connection::Unsupported, StatusTone::Neutral),
+        ] {
+            assert_eq!(connection.tone(), tone);
+            assert!(!connection.label().is_empty());
+        }
+    }
     use brews_contracts::games::{GameSummary, SnapshotKind};
     use brews_domain::games::GameConfiguration;
     const ID: &str = "01890f3e-53b7-7d28-9b05-4f65092d5701";

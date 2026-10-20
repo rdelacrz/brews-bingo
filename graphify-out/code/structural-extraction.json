@@ -36445,7 +36445,7 @@
       "label": "runningLeave()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L487",
+      "source_location": "L490",
       "_origin": "ast"
     },
     {
@@ -36453,7 +36453,7 @@
       "label": "finalExits()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L547",
+      "source_location": "L550",
       "_origin": "ast"
     },
     {
@@ -36485,7 +36485,7 @@
       "label": "{ origin, username, enrollment, output }",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L16",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -36493,7 +36493,7 @@
       "label": "completed",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L19",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -36501,7 +36501,7 @@
       "label": "errors",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L20",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -36509,7 +36509,7 @@
       "label": "httpStatuses",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L21",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -36517,7 +36517,7 @@
       "label": "gameReplies",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L22",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -36525,7 +36525,7 @@
       "label": "contexts",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L23",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -36533,7 +36533,7 @@
       "label": "players",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L24",
+      "source_location": "L26",
       "_origin": "ast"
     },
     {
@@ -36541,7 +36541,7 @@
       "label": "assert()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L27",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -36549,7 +36549,7 @@
       "label": "wait()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L34",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -36557,7 +36557,7 @@
       "label": "openAccountMenu()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L35",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -36565,7 +36565,7 @@
       "label": "step()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L41",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
@@ -36573,7 +36573,7 @@
       "label": "context()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L47",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -36581,7 +36581,7 @@
       "label": "api()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L207",
+      "source_location": "L209",
       "_origin": "ast"
     },
     {
@@ -36589,7 +36589,7 @@
       "label": "snapshot()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L216",
+      "source_location": "L218",
       "_origin": "ast"
     },
     {
@@ -36597,7 +36597,7 @@
       "label": "until()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L229",
+      "source_location": "L231",
       "_origin": "ast"
     },
     {
@@ -36605,7 +36605,7 @@
       "label": "click()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L237",
+      "source_location": "L239",
       "_origin": "ast"
     },
     {
@@ -36613,7 +36613,7 @@
       "label": "resolveOriginalUntil()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L240",
+      "source_location": "L242",
       "_origin": "ast"
     },
     {
@@ -36621,7 +36621,7 @@
       "label": "issueCall()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L252",
+      "source_location": "L254",
       "_origin": "ast"
     },
     {
@@ -36629,7 +36629,7 @@
       "label": "password",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L301",
+      "source_location": "L303",
       "_origin": "ast"
     },
     {
@@ -36645,7 +36645,7 @@
       "label": "endings()",
       "file_type": "code",
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L1",
+      "source_location": "L3",
       "_origin": "ast"
     },
     {
@@ -36653,7 +36653,95 @@
       "label": "deleteAccount()",
       "file_type": "code",
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L288",
+      "source_location": "L296",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_lobby_layout",
+      "label": "lobby-layout.mjs",
+      "file_type": "code",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_lobby_layout_check",
+      "label": "check()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_lobby_layout_observed",
+      "label": "observed()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_lobby_layout_lobbylayout",
+      "label": "lobbyLayout()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge",
+      "label": "status-badge.mjs",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge_colors",
+      "label": "colors",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge_check",
+      "label": "check()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge_observed",
+      "label": "observed()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge_statusbadge",
+      "label": "statusBadge()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge_currentgamelayout",
+      "label": "currentGameLayout()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L51",
+      "_origin": "ast"
+    },
+    {
+      "id": "platform_web_tests_status_badge_gamestatuslayout",
+      "label": "gameStatusLayout()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L128",
       "_origin": "ast"
     },
     {
@@ -36897,11 +36985,19 @@
       "_origin": "ast"
     },
     {
+      "id": "platform_web_tools_test_theme_brandthemetests_test_all_status_tones_have_accessible_text_contrast",
+      "label": ".test_all_status_tones_have_accessible_text_contrast()",
+      "file_type": "code",
+      "source_file": "platform/web/tools/test_theme.py",
+      "source_location": "L47",
+      "_origin": "ast"
+    },
+    {
       "id": "platform_web_tools_test_theme_brandthemetests_test_fonts_are_local_woff2_and_licensed",
       "label": ".test_fonts_are_local_woff2_and_licensed()",
       "file_type": "code",
       "source_file": "platform/web/tools/test_theme.py",
-      "source_location": "L47",
+      "source_location": "L61",
       "_origin": "ast"
     },
     {
@@ -42625,6 +42721,38 @@
       "_origin": "ast"
     },
     {
+      "id": "shared_ui_src_components_designated_host_alias",
+      "label": "designated_host_alias.rs",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_designated_host_alias_designatedhostalias",
+      "label": "DesignatedHostAlias()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_designated_host_alias_rs_accountid",
+      "label": "AccountId",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_designated_host_alias_rs_element",
+      "label": "Element",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
       "id": "shared_ui_src_components_dialog",
       "label": "dialog.rs",
       "file_type": "code",
@@ -42821,7 +42949,7 @@
       "label": "visible_text()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L17",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -42837,7 +42965,7 @@
       "label": "Notice()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L32",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -42853,7 +42981,7 @@
       "label": "Loading()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L42",
+      "source_location": "L46",
       "_origin": "ast"
     },
     {
@@ -42861,7 +42989,7 @@
       "label": "PageTitle()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L52",
+      "source_location": "L56",
       "_origin": "ast"
     },
     {
@@ -42869,7 +42997,7 @@
       "label": "CommandFeedback()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L80",
+      "source_location": "L84",
       "_origin": "ast"
     },
     {
@@ -42877,7 +43005,7 @@
       "label": "BoardProps",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L99",
+      "source_location": "L103",
       "_origin": "ast"
     },
     {
@@ -42901,7 +43029,7 @@
       "label": ".eq()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L103",
+      "source_location": "L107",
       "_origin": "ast"
     },
     {
@@ -42917,7 +43045,7 @@
       "label": "Board()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L111",
+      "source_location": "L115",
       "_origin": "ast"
     },
     {
@@ -42925,7 +43053,7 @@
       "label": "BoardGrid()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L134",
+      "source_location": "L138",
       "_origin": "ast"
     },
     {
@@ -42941,7 +43069,7 @@
       "label": "CallsProps",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L188",
+      "source_location": "L192",
       "_origin": "ast"
     },
     {
@@ -42949,7 +43077,7 @@
       "label": ".eq()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L192",
+      "source_location": "L196",
       "_origin": "ast"
     },
     {
@@ -42957,7 +43085,7 @@
       "label": "Calls()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L202",
+      "source_location": "L206",
       "_origin": "ast"
     },
     {
@@ -43006,6 +43134,102 @@
       "file_type": "code",
       "source_file": "",
       "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge",
+      "label": "status_badge.rs",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_statustone",
+      "label": "StatusTone",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_statustone_class",
+      "label": ".class()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_rs_from",
+      "label": "From",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_statustone_from",
+      "label": ".from()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_rs_self",
+      "label": "Self",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_game_state_label",
+      "label": "game_state_label()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L48",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_statusbadge",
+      "label": "StatusBadge()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L60",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_rs_string",
+      "label": "String",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_rs_element",
+      "label": "Element",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_every_game_state_has_a_distinct_tone_and_readable_label",
+      "label": "every_game_state_has_a_distinct_tone_and_readable_label()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L69",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_status_badge_account_lifecycle_tones_do_not_depend_on_disablement",
+      "label": "account_lifecycle_tones_do_not_depend_on_disablement()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L89",
       "_origin": "ast"
     },
     {
@@ -43949,7 +44173,7 @@
       "label": "Join()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L19",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -43973,7 +44197,7 @@
       "label": "Lookup()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L27",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -43981,7 +44205,7 @@
       "label": "existing_membership()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L47",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -44013,7 +44237,7 @@
       "label": "probe_membership()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L53",
+      "source_location": "L55",
       "_origin": "ast"
     },
     {
@@ -44021,7 +44245,7 @@
       "label": "player_entry_membership()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "_origin": "ast"
     },
     {
@@ -44029,7 +44253,7 @@
       "label": "validate_spectator_cleanup()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "_origin": "ast"
     },
     {
@@ -44037,7 +44261,7 @@
       "label": "membership_present()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "_origin": "ast"
     },
     {
@@ -44053,7 +44277,7 @@
       "label": "Admission()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L125",
+      "source_location": "L127",
       "_origin": "ast"
     },
     {
@@ -44061,7 +44285,7 @@
       "label": "FreshAdmission()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L143",
+      "source_location": "L145",
       "_origin": "ast"
     },
     {
@@ -44069,7 +44293,7 @@
       "label": "only_completed_spectator_cleanup_allows_rechecking_participation()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L276",
+      "source_location": "L278",
       "_origin": "ast"
     },
     {
@@ -44077,7 +44301,7 @@
       "label": "only_absent_membership_allows_fresh_admission()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L303",
+      "source_location": "L305",
       "_origin": "ast"
     },
     {
@@ -44085,7 +44309,7 @@
       "label": "either_existing_role_requires_restoration()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L324",
+      "source_location": "L326",
       "_origin": "ast"
     },
     {
@@ -44133,7 +44357,7 @@
       "label": "GameContext",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L30",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -44173,7 +44397,7 @@
       "label": ".can_command()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L49",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -44181,7 +44405,7 @@
       "label": ".fresh()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L52",
+      "source_location": "L54",
       "_origin": "ast"
     },
     {
@@ -44189,7 +44413,7 @@
       "label": ".operate()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L66",
+      "source_location": "L68",
       "_origin": "ast"
     },
     {
@@ -44197,7 +44421,7 @@
       "label": ".call_view_current()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L69",
+      "source_location": "L71",
       "_origin": "ast"
     },
     {
@@ -44205,7 +44429,7 @@
       "label": ".path()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L78",
+      "source_location": "L80",
       "_origin": "ast"
     },
     {
@@ -44213,7 +44437,7 @@
       "label": ".refresh()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L81",
+      "source_location": "L83",
       "_origin": "ast"
     },
     {
@@ -44221,7 +44445,7 @@
       "label": ".clear()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L89",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -44229,7 +44453,7 @@
       "label": ".restore()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L102",
+      "source_location": "L104",
       "_origin": "ast"
     },
     {
@@ -44237,7 +44461,7 @@
       "label": ".exit()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "_origin": "ast"
     },
     {
@@ -44245,7 +44469,7 @@
       "label": ".send()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L121",
+      "source_location": "L123",
       "_origin": "ast"
     },
     {
@@ -44261,7 +44485,7 @@
       "label": "StreamState",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L149",
+      "source_location": "L151",
       "_origin": "ast"
     },
     {
@@ -44269,7 +44493,7 @@
       "label": ".before_command()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L154",
+      "source_location": "L156",
       "_origin": "ast"
     },
     {
@@ -44285,7 +44509,7 @@
       "label": "GamePage()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L167",
+      "source_location": "L169",
       "_origin": "ast"
     },
     {
@@ -44301,7 +44525,7 @@
       "label": "GameScreen()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L190",
+      "source_location": "L192",
       "_origin": "ast"
     },
     {
@@ -44309,7 +44533,7 @@
       "label": "command_destination()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "_origin": "ast"
     },
     {
@@ -44317,7 +44541,7 @@
       "label": "call_snapshot_current()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L366",
+      "source_location": "L374",
       "_origin": "ast"
     },
     {
@@ -44325,7 +44549,7 @@
       "label": "call_revision()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L371",
+      "source_location": "L379",
       "_origin": "ast"
     },
     {
@@ -44333,7 +44557,7 @@
       "label": "cancelled_before_start()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L384",
+      "source_location": "L392",
       "_origin": "ast"
     },
     {
@@ -44341,7 +44565,7 @@
       "label": "CodeBadge()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L405",
+      "source_location": "L413",
       "_origin": "ast"
     },
     {
@@ -44349,7 +44573,7 @@
       "label": "Rules()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L418",
+      "source_location": "L429",
       "_origin": "ast"
     },
     {
@@ -44357,7 +44581,7 @@
       "label": "receipt()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L437",
+      "source_location": "L448",
       "_origin": "ast"
     },
     {
@@ -44373,7 +44597,7 @@
       "label": "delayed_switch_success_routes_without_a_source_snapshot()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L449",
+      "source_location": "L460",
       "_origin": "ast"
     },
     {
@@ -44381,7 +44605,7 @@
       "label": "departure_pauses_streams_without_treating_pending_as_success()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L488",
+      "source_location": "L499",
       "_origin": "ast"
     },
     {
@@ -44389,7 +44613,7 @@
       "label": "exit_receipt_keeps_the_parent_owned_destination()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L529",
+      "source_location": "L540",
       "_origin": "ast"
     },
     {
@@ -44397,7 +44621,7 @@
       "label": "observed_call_receipt_does_not_require_stream_reconnection()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L555",
+      "source_location": "L566",
       "_origin": "ast"
     },
     {
@@ -44465,11 +44689,19 @@
       "_origin": "ast"
     },
     {
+      "id": "shared_ui_src_features_game_model_connection_tone",
+      "label": ".tone()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L58",
+      "_origin": "ast"
+    },
+    {
       "id": "shared_ui_src_features_game_model_connection_label",
       "label": ".label()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L58",
+      "source_location": "L68",
       "_origin": "ast"
     },
     {
@@ -44477,7 +44709,7 @@
       "label": "GameUiError",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L74",
+      "source_location": "L84",
       "_origin": "ast"
     },
     {
@@ -44485,15 +44717,7 @@
       "label": "state()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L85",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_model_state_label",
-      "label": "state_label()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L94",
+      "source_location": "L95",
       "_origin": "ast"
     },
     {
@@ -44501,7 +44725,7 @@
       "label": "terminal()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L103",
+      "source_location": "L105",
       "_origin": "ast"
     },
     {
@@ -44509,7 +44733,7 @@
       "label": "line_label()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "_origin": "ast"
     },
     {
@@ -44525,7 +44749,7 @@
       "label": "calls()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L115",
+      "source_location": "L117",
       "_origin": "ast"
     },
     {
@@ -44541,7 +44765,7 @@
       "label": "access_expired()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L128",
+      "source_location": "L130",
       "_origin": "ast"
     },
     {
@@ -44549,7 +44773,7 @@
       "label": "cap()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L131",
+      "source_location": "L133",
       "_origin": "ast"
     },
     {
@@ -44565,7 +44789,7 @@
       "label": "validate_frame()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "_origin": "ast"
     },
     {
@@ -44581,7 +44805,7 @@
       "label": "validate_stream_frame()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "_origin": "ast"
     },
     {
@@ -44589,7 +44813,7 @@
       "label": "validate_http_snapshot()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "_origin": "ast"
     },
     {
@@ -44597,7 +44821,7 @@
       "label": "validate_transition()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L205",
+      "source_location": "L207",
       "_origin": "ast"
     },
     {
@@ -44605,7 +44829,7 @@
       "label": "same_identity()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L226",
+      "source_location": "L228",
       "_origin": "ast"
     },
     {
@@ -44613,7 +44837,7 @@
       "label": "TerminalNotice",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L259",
+      "source_location": "L261",
       "_origin": "ast"
     },
     {
@@ -44621,7 +44845,15 @@
       "label": ".decode()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_features_game_model_connection_badges_distinguish_live_waiting_and_denied_states",
+      "label": "connection_badges_distinguish_live_waiting_and_denied_states()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L334",
       "_origin": "ast"
     },
     {
@@ -44629,7 +44861,7 @@
       "label": "host()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L335",
+      "source_location": "L355",
       "_origin": "ast"
     },
     {
@@ -44637,7 +44869,7 @@
       "label": "frame()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L356",
+      "source_location": "L376",
       "_origin": "ast"
     },
     {
@@ -44645,7 +44877,7 @@
       "label": "authorized_http_read_cannot_replace_a_newer_socket_snapshot()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L371",
+      "source_location": "L391",
       "_origin": "ast"
     },
     {
@@ -44653,7 +44885,7 @@
       "label": "overtaken_http_reads_still_reject_identity_and_lifecycle_changes()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L415",
+      "source_location": "L435",
       "_origin": "ast"
     },
     {
@@ -44661,7 +44893,7 @@
       "label": "queued_frames_are_discarded_only_when_covered_by_authorized_http_state()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L463",
+      "source_location": "L483",
       "_origin": "ast"
     },
     {
@@ -44669,7 +44901,7 @@
       "label": "full_frames_reject_wrong_context_game_expiry_and_revision_rollback()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L524",
+      "source_location": "L544",
       "_origin": "ast"
     },
     {
@@ -44677,7 +44909,7 @@
       "label": "full_snapshot_can_skip_from_new_to_resolved_without_allowing_rollback()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L556",
+      "source_location": "L576",
       "_origin": "ast"
     },
     {
@@ -44685,7 +44917,7 @@
       "label": "participant_identity_cannot_change_in_the_same_context()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L656",
+      "source_location": "L676",
       "_origin": "ast"
     },
     {
@@ -44693,7 +44925,7 @@
       "label": "deadline_never_extends_and_expiry_is_closed()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L709",
+      "source_location": "L729",
       "_origin": "ast"
     },
     {
@@ -44701,7 +44933,7 @@
       "label": "expiry_does_not_depend_on_transport_progress()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L716",
+      "source_location": "L736",
       "_origin": "ast"
     },
     {
@@ -44709,7 +44941,7 @@
       "label": "context_selection_is_closed_and_explicit()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L725",
+      "source_location": "L745",
       "_origin": "ast"
     },
     {
@@ -45245,7 +45477,7 @@
       "label": "Lobby()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/waiting/mod.rs",
-      "source_location": "L7",
+      "source_location": "L8",
       "_origin": "ast"
     },
     {
@@ -45269,7 +45501,7 @@
       "label": "history_path()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L6",
+      "source_location": "L5",
       "_origin": "ast"
     },
     {
@@ -45293,7 +45525,7 @@
       "label": "HistoryList()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L19",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -45309,7 +45541,7 @@
       "label": "cursor_is_bound_to_filter_and_encoded_as_one_value()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L238",
+      "source_location": "L237",
       "_origin": "ast"
     },
     {
@@ -45321,19 +45553,11 @@
       "_origin": "ast"
     },
     {
-      "id": "shared_ui_src_features_history_mod_state_label",
-      "label": "state_label()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L10",
-      "_origin": "ast"
-    },
-    {
       "id": "shared_ui_src_features_history_mod_historypage",
       "label": "HistoryPage()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L21",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -45349,7 +45573,7 @@
       "label": "HistoryDetail()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L34",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -45365,7 +45589,7 @@
       "label": "Detail()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L47",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -45381,7 +45605,7 @@
       "label": "Dashboard()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L12",
+      "source_location": "L7",
       "_origin": "ast"
     },
     {
@@ -204286,7 +204510,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L487",
+      "source_location": "L490",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204296,7 +204520,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L547",
+      "source_location": "L550",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204455,7 +204679,7 @@
     },
     {
       "source": "platform_web_tests_browser",
-      "target": "ref_node_crypto",
+      "target": "platform_web_tests_status_badge",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -204466,7 +204690,40 @@
     },
     {
       "source": "platform_web_tests_browser",
-      "target": "ref_node_path",
+      "target": "platform_web_tests_status_badge_currentgamelayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
+      "target": "platform_web_tests_status_badge_gamestatuslayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
+      "target": "platform_web_tests_status_badge_statusbadge",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
+      "target": "platform_web_tests_lobby_layout",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -204477,11 +204734,44 @@
     },
     {
       "source": "platform_web_tests_browser",
+      "target": "platform_web_tests_lobby_layout_lobbylayout",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
+      "target": "ref_node_crypto",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
+      "target": "ref_node_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
       "target": "platform_web_tests_browser_origin_username_enrollment_output",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204491,7 +204781,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204501,7 +204791,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204511,7 +204801,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204521,7 +204811,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L22",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204531,7 +204821,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L23",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204541,7 +204831,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L24",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204551,7 +204841,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204561,7 +204851,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204571,7 +204861,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204581,7 +204871,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L41",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204591,7 +204881,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204601,7 +204891,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L207",
+      "source_location": "L209",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204611,7 +204901,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L216",
+      "source_location": "L218",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204621,7 +204911,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L229",
+      "source_location": "L231",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204631,7 +204921,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L237",
+      "source_location": "L239",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204641,7 +204931,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L240",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204651,7 +204941,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L252",
+      "source_location": "L254",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204661,7 +204951,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L301",
+      "source_location": "L303",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204672,7 +204962,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204683,7 +204973,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L218",
+      "source_location": "L220",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204694,7 +204984,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L221",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204705,24 +204995,13 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L225",
+      "source_location": "L227",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "platform_web_tests_browser_until",
       "target": "platform_web_tests_browser_wait",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L233",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "platform_web_tests_browser_until",
-      "target": "platform_web_tests_browser_assert",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -204732,13 +205011,24 @@
       "_origin": "ast"
     },
     {
+      "source": "platform_web_tests_browser_until",
+      "target": "platform_web_tests_browser_assert",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L237",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "platform_web_tests_browser_resolveoriginaluntil",
       "target": "platform_web_tests_browser_until",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L241",
+      "source_location": "L243",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204749,7 +205039,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L245",
+      "source_location": "L247",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204760,7 +205050,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L253",
+      "source_location": "L255",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204771,7 +205061,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L259",
+      "source_location": "L261",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204782,7 +205072,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L266",
+      "source_location": "L268",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204793,7 +205083,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L267",
+      "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204804,7 +205094,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204815,7 +205105,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L530",
+      "source_location": "L532",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204826,7 +205116,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L531",
+      "source_location": "L533",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204837,7 +205127,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L532",
+      "source_location": "L534",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204848,7 +205138,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L533",
+      "source_location": "L535",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204859,7 +205149,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L534",
+      "source_location": "L536",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204870,7 +205160,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L535",
+      "source_location": "L537",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204881,7 +205171,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L536",
+      "source_location": "L538",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204892,7 +205182,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L537",
+      "source_location": "L539",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204903,7 +205193,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L538",
+      "source_location": "L540",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204914,7 +205204,29 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L539",
+      "source_location": "L541",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_endings",
+      "target": "platform_web_tests_status_badge",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/endings.mjs",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_endings",
+      "target": "platform_web_tests_status_badge_statusbadge",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/endings.mjs",
+      "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204924,7 +205236,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L1",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204934,7 +205246,196 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L288",
+      "source_location": "L296",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_lobby_layout",
+      "target": "platform_web_tests_lobby_layout_check",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_lobby_layout",
+      "target": "platform_web_tests_lobby_layout_observed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_lobby_layout",
+      "target": "platform_web_tests_lobby_layout_lobbylayout",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_lobby_layout_lobbylayout",
+      "target": "platform_web_tests_lobby_layout_observed",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_lobby_layout_lobbylayout",
+      "target": "platform_web_tests_lobby_layout_check",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/lobby-layout.mjs",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge",
+      "target": "platform_web_tests_status_badge_colors",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge",
+      "target": "platform_web_tests_status_badge_check",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge",
+      "target": "platform_web_tests_status_badge_observed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge",
+      "target": "platform_web_tests_status_badge_statusbadge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge",
+      "target": "platform_web_tests_status_badge_currentgamelayout",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge",
+      "target": "platform_web_tests_status_badge_gamestatuslayout",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L128",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_statusbadge",
+      "target": "platform_web_tests_status_badge_observed",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_statusbadge",
+      "target": "platform_web_tests_status_badge_check",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_currentgamelayout",
+      "target": "platform_web_tests_status_badge_check",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_currentgamelayout",
+      "target": "platform_web_tests_status_badge_observed",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_currentgamelayout",
+      "target": "platform_web_tests_status_badge_statusbadge",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_gamestatuslayout",
+      "target": "platform_web_tests_status_badge_observed",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L132",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_status_badge_gamestatuslayout",
+      "target": "platform_web_tests_status_badge_check",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/status-badge.mjs",
+      "source_location": "L139",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205719,11 +206220,21 @@
     },
     {
       "source": "platform_web_tools_test_theme_brandthemetests",
-      "target": "platform_web_tools_test_theme_brandthemetests_test_fonts_are_local_woff2_and_licensed",
+      "target": "platform_web_tools_test_theme_brandthemetests_test_all_status_tones_have_accessible_text_contrast",
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tools/test_theme.py",
       "source_location": "L47",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tools_test_theme_brandthemetests",
+      "target": "platform_web_tools_test_theme_brandthemetests_test_fonts_are_local_woff2_and_licensed",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tools/test_theme.py",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205757,6 +206268,17 @@
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tools/test_theme.py",
       "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tools_test_theme_brandthemetests_test_all_status_tones_have_accessible_text_contrast",
+      "target": "platform_web_tools_test_theme_contrast",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tools/test_theme.py",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224697,6 +225219,82 @@
       "_origin": "ast"
     },
     {
+      "source": "shared_ui_src_components_designated_host_alias",
+      "target": "crate",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L1",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_designated_host_alias",
+      "target": "userresponse",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_designated_host_alias",
+      "target": "shared_ui_src_components_designated_host_alias_rs_accountid",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_designated_host_alias",
+      "target": "prelude",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L4",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_designated_host_alias",
+      "target": "shared_ui_src_components_designated_host_alias_designatedhostalias",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_designated_host_alias_designatedhostalias",
+      "target": "shared_ui_src_components_designated_host_alias_rs_accountid",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_designated_host_alias_designatedhostalias",
+      "target": "shared_ui_src_components_designated_host_alias_rs_element",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/designated_host_alias.rs",
+      "source_location": "L8",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
       "source": "shared_ui_src_components_dialog",
       "target": "prelude",
       "relation": "imports_from",
@@ -225129,29 +225727,7 @@
     },
     {
       "source": "shared_ui_src_components_mod",
-      "target": "confirm",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L6",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_components_mod",
-      "target": "keyed",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L7",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_components_mod",
-      "target": "passwordtextfield",
+      "target": "designatedhostalias",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
@@ -225162,7 +225738,7 @@
     },
     {
       "source": "shared_ui_src_components_mod",
-      "target": "time",
+      "target": "confirm",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
@@ -225173,7 +225749,18 @@
     },
     {
       "source": "shared_ui_src_components_mod",
-      "target": "shared_ui_src_client_command_commandstate",
+      "target": "keyed",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/mod.rs",
+      "source_location": "L10",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_mod",
+      "target": "passwordtextfield",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
@@ -225184,7 +225771,7 @@
     },
     {
       "source": "shared_ui_src_components_mod",
-      "target": "games",
+      "target": "status_badge",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
@@ -225195,7 +225782,7 @@
     },
     {
       "source": "shared_ui_src_components_mod",
-      "target": "games",
+      "target": "time",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
@@ -225206,11 +225793,44 @@
     },
     {
       "source": "shared_ui_src_components_mod",
+      "target": "shared_ui_src_client_command_commandstate",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/mod.rs",
+      "source_location": "L15",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_mod",
+      "target": "games",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/mod.rs",
+      "source_location": "L16",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_mod",
+      "target": "games",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/mod.rs",
+      "source_location": "L17",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_mod",
       "target": "prelude",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L14",
+      "source_location": "L18",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -225221,7 +225841,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L17",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225231,7 +225851,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L17",
+      "source_location": "L21",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225242,7 +225862,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L32",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225252,7 +225872,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L32",
+      "source_location": "L36",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225263,7 +225883,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L32",
+      "source_location": "L36",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225274,7 +225894,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225284,7 +225904,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L42",
+      "source_location": "L46",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225295,7 +225915,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L52",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225305,18 +225925,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L52",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_components_mod_pagetitle",
-      "target": "shared_ui_src_components_mod_rs_string",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L52",
+      "source_location": "L56",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225327,7 +225936,18 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L52",
+      "source_location": "L56",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_mod_pagetitle",
+      "target": "shared_ui_src_components_mod_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/mod.rs",
+      "source_location": "L56",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225338,7 +225958,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L52",
+      "source_location": "L56",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225349,7 +225969,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L80",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225359,7 +225979,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L80",
+      "source_location": "L84",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225370,7 +225990,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L80",
+      "source_location": "L84",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225381,7 +226001,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L99",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225391,7 +226011,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L100",
+      "source_location": "L104",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -225402,7 +226022,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L102",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225412,7 +226032,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L103",
+      "source_location": "L107",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225422,7 +226042,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L103",
+      "source_location": "L107",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225433,7 +226053,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L111",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225443,7 +226063,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L111",
+      "source_location": "L115",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225454,7 +226074,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L111",
+      "source_location": "L115",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225465,7 +226085,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225475,7 +226095,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225486,7 +226106,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -225497,7 +226117,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225508,7 +226128,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225519,7 +226139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L188",
+      "source_location": "L192",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225529,7 +226149,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L189",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -225540,7 +226160,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L189",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -225551,7 +226171,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L191",
+      "source_location": "L195",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225561,7 +226181,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L192",
+      "source_location": "L196",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225571,7 +226191,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L192",
+      "source_location": "L196",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225582,7 +226202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L202",
+      "source_location": "L206",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225592,7 +226212,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L202",
+      "source_location": "L206",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -225603,7 +226223,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/mod.rs",
-      "source_location": "L202",
+      "source_location": "L206",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225737,6 +226357,249 @@
       "source_location": "L5",
       "weight": 1.0,
       "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "brews_domain",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L1",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "prelude",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "shared_ui_src_components_status_badge_statustone",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_ui_src_components_status_badge_statustone_class",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_ui_src_components_status_badge_rs_from",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_domain_src_games_gamestate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L26",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_ui_src_components_status_badge_statustone_from",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone_from",
+      "target": "shared_domain_src_games_gamestate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L27",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone_from",
+      "target": "shared_ui_src_components_status_badge_rs_self",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L27",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_ui_src_components_status_badge_rs_from",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_domain_src_accounts_accountstatus",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L38",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone",
+      "target": "shared_ui_src_components_status_badge_statustone_from",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone_from",
+      "target": "shared_domain_src_accounts_accountstatus",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L39",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statustone_from",
+      "target": "shared_ui_src_components_status_badge_rs_self",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L39",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "shared_ui_src_components_status_badge_game_state_label",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_game_state_label",
+      "target": "shared_domain_src_games_gamestate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "shared_ui_src_components_status_badge_statusbadge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statusbadge",
+      "target": "shared_ui_src_components_status_badge_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L60",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statusbadge",
+      "target": "shared_ui_src_components_status_badge_statustone",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L60",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge_statusbadge",
+      "target": "shared_ui_src_components_status_badge_rs_element",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L60",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "super",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L66",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "shared_ui_src_components_status_badge_every_game_state_has_a_distinct_tone_and_readable_label",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_status_badge",
+      "target": "shared_ui_src_components_status_badge_account_lifecycle_tones_do_not_depend_on_disablement",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/status_badge.rs",
+      "source_location": "L89",
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -228476,7 +229339,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L6",
+      "source_location": "L8",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228487,7 +229350,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228498,7 +229361,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228509,7 +229372,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L15",
+      "source_location": "L17",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228520,7 +229383,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228531,7 +229394,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228541,7 +229404,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228552,7 +229415,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228563,7 +229426,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228573,7 +229436,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228584,7 +229447,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L27",
+      "source_location": "L29",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228595,7 +229458,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228605,7 +229468,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228616,7 +229479,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228627,7 +229490,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228638,7 +229501,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228649,7 +229512,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228659,7 +229522,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228670,7 +229533,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228681,7 +229544,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228692,7 +229555,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228703,7 +229566,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228713,7 +229576,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228724,7 +229587,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228735,7 +229598,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228746,7 +229609,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228757,7 +229620,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L75",
+      "source_location": "L77",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228768,7 +229631,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228778,7 +229641,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228789,7 +229652,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228800,7 +229663,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228811,7 +229674,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228822,7 +229685,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L96",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228833,7 +229696,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228843,7 +229706,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228854,7 +229717,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228865,7 +229728,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228876,7 +229739,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228887,7 +229750,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L108",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -228898,7 +229761,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228908,7 +229771,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228919,7 +229782,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228930,7 +229793,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L143",
+      "source_location": "L145",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228940,7 +229803,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L143",
+      "source_location": "L145",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -228951,7 +229814,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L143",
+      "source_location": "L145",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -228962,7 +229825,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L272",
+      "source_location": "L274",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228973,7 +229836,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L273",
+      "source_location": "L275",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228984,7 +229847,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L276",
+      "source_location": "L278",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228994,7 +229857,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L303",
+      "source_location": "L305",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229004,7 +229867,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L324",
+      "source_location": "L326",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229015,7 +229878,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L50",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229026,7 +229889,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L63",
+      "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229037,7 +229900,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L79",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229048,7 +229911,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L90",
+      "source_location": "L92",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229059,7 +229922,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229070,7 +229933,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L127",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229210,7 +230073,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -229218,28 +230081,6 @@
     {
       "source": "shared_ui_src_features_game_mod",
       "target": "shared_ui_src_features_game_mod_rs_gameid",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L24",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod",
-      "target": "command",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L25",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod",
-      "target": "prelude",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -229250,7 +230091,7 @@
     },
     {
       "source": "shared_ui_src_features_game_mod",
-      "target": "model",
+      "target": "command",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -229261,11 +230102,33 @@
     },
     {
       "source": "shared_ui_src_features_game_mod",
+      "target": "prelude",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L28",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod",
+      "target": "model",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L29",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod",
       "target": "shared_ui_src_features_game_mod_gamecontext",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229275,7 +230138,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -229286,7 +230149,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -229297,7 +230160,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -229308,7 +230171,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -229316,72 +230179,6 @@
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_model_viewcontext",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L33",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L34",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L34",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_contracts_src_games_gameview",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L34",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L35",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L35",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_model_terminalnotice",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -229403,22 +230200,22 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "target": "shared_ui_src_features_game_mod_rs_option",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L37",
+      "source_location": "L36",
       "weight": 1.0,
-      "context": "field",
+      "context": "generic_arg",
       "_origin": "ast"
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_model_connection",
+      "target": "shared_contracts_src_games_gameview",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L37",
+      "source_location": "L36",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -229429,7 +230226,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L38",
+      "source_location": "L37",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -229440,9 +230237,31 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L38",
+      "source_location": "L37",
       "weight": 1.0,
       "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_model_terminalnotice",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L37",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L38",
+      "weight": 1.0,
+      "context": "field",
       "_origin": "ast"
     },
     {
@@ -229458,7 +230277,7 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
+      "target": "shared_ui_src_features_game_model_connection",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -229480,6 +230299,17 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_signal",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -229502,17 +230332,6 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_contracts_src_discovery_gameavailability",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L41",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_signal",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -229520,28 +230339,6 @@
       "source_location": "L42",
       "weight": 1.0,
       "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L42",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_string",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L42",
-      "weight": 1.0,
-      "context": "generic_arg",
       "_origin": "ast"
     },
     {
@@ -229557,22 +230354,22 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "target": "shared_ui_src_features_game_mod_rs_option",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L44",
+      "source_location": "L43",
       "weight": 1.0,
-      "context": "field",
+      "context": "generic_arg",
       "_origin": "ast"
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_streamstate",
+      "target": "shared_contracts_src_discovery_gameavailability",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L44",
+      "source_location": "L43",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -229583,7 +230380,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L45",
+      "source_location": "L44",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -229594,7 +230391,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L45",
+      "source_location": "L44",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -229605,14 +230402,25 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L45",
+      "source_location": "L44",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_command_gamecommand",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L45",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -229623,11 +230431,66 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_streamstate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L46",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L47",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L47",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L47",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_command_gamecommand",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L48",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_gamecontext_can_command",
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L49",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229637,7 +230500,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L52",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229647,7 +230510,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L66",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229657,7 +230520,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L69",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229667,7 +230530,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L78",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229677,7 +230540,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L78",
+      "source_location": "L80",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -229688,7 +230551,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L81",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229698,7 +230561,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229708,7 +230571,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229719,7 +230582,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229729,7 +230592,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229739,7 +230602,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229750,7 +230613,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L121",
+      "source_location": "L123",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229760,7 +230623,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L121",
+      "source_location": "L123",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229771,7 +230634,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L149",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229781,7 +230644,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L154",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229791,7 +230654,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L154",
+      "source_location": "L156",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -229802,7 +230665,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229812,7 +230675,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229823,7 +230686,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229834,7 +230697,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L167",
+      "source_location": "L169",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -229845,7 +230708,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L190",
+      "source_location": "L192",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229855,7 +230718,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L190",
+      "source_location": "L192",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229866,7 +230729,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L190",
+      "source_location": "L192",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229877,7 +230740,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L190",
+      "source_location": "L192",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -229888,7 +230751,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229898,7 +230761,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229909,7 +230772,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229920,7 +230783,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229931,7 +230794,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229942,7 +230805,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -229953,7 +230816,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L322",
+      "source_location": "L330",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -229964,7 +230827,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L366",
+      "source_location": "L374",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -229974,7 +230837,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L366",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229985,7 +230848,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L366",
+      "source_location": "L374",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -229996,7 +230859,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L371",
+      "source_location": "L379",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230006,7 +230869,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L371",
+      "source_location": "L379",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230017,7 +230880,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L371",
+      "source_location": "L379",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230028,7 +230891,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L384",
+      "source_location": "L392",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230038,7 +230901,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L384",
+      "source_location": "L392",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230049,7 +230912,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L405",
+      "source_location": "L413",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230059,7 +230922,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L405",
+      "source_location": "L413",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230070,7 +230933,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L405",
+      "source_location": "L413",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230081,7 +230944,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L418",
+      "source_location": "L429",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230091,7 +230954,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L418",
+      "source_location": "L429",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230102,7 +230965,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L418",
+      "source_location": "L429",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230113,7 +230976,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L431",
+      "source_location": "L442",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230124,7 +230987,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L432",
+      "source_location": "L443",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230135,7 +230998,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L437",
+      "source_location": "L448",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230145,7 +231008,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L437",
+      "source_location": "L448",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230156,7 +231019,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L437",
+      "source_location": "L448",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230167,7 +231030,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L449",
+      "source_location": "L460",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230177,7 +231040,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L488",
+      "source_location": "L499",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230187,7 +231050,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L529",
+      "source_location": "L540",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230197,7 +231060,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L555",
+      "source_location": "L566",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230208,7 +231071,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L50",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230219,7 +231082,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L54",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230230,7 +231093,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L67",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230241,7 +231104,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230252,7 +231115,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230263,7 +231126,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L104",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230274,7 +231137,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L111",
+      "source_location": "L113",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230285,7 +231148,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L113",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230296,7 +231159,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L122",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230307,7 +231170,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L123",
+      "source_location": "L125",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230318,7 +231181,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L129",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230329,7 +231192,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L135",
+      "source_location": "L137",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230340,7 +231203,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L233",
+      "source_location": "L235",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230351,7 +231214,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L239",
+      "source_location": "L241",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230362,7 +231225,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L248",
+      "source_location": "L250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230373,7 +231236,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L254",
+      "source_location": "L256",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230384,7 +231247,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L256",
+      "source_location": "L258",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230395,7 +231258,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L367",
+      "source_location": "L375",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230406,7 +231269,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L465",
+      "source_location": "L476",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230417,7 +231280,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L498",
+      "source_location": "L509",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230428,7 +231291,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L512",
+      "source_location": "L523",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230439,7 +231302,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L530",
+      "source_location": "L541",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230561,11 +231424,32 @@
     },
     {
       "source": "shared_ui_src_features_game_model_connection",
-      "target": "shared_ui_src_features_game_model_connection_label",
+      "target": "shared_ui_src_features_game_model_connection_tone",
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
       "source_location": "L58",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_model_connection_tone",
+      "target": "shared_ui_src_components_status_badge_statustone",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L58",
+      "weight": 1.0,
+      "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_model_connection",
+      "target": "shared_ui_src_features_game_model_connection_label",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L68",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230575,7 +231459,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L74",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230585,7 +231469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L85",
+      "source_location": "L95",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230595,7 +231479,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L85",
+      "source_location": "L95",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230606,30 +231490,9 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L85",
+      "source_location": "L95",
       "weight": 1.0,
       "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_model",
-      "target": "shared_ui_src_features_game_model_state_label",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_model_state_label",
-      "target": "shared_domain_src_games_gamestate",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "context": "parameter_type",
       "_origin": "ast"
     },
     {
@@ -230638,7 +231501,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L103",
+      "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230648,7 +231511,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L103",
+      "source_location": "L105",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230659,7 +231522,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230669,7 +231532,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230680,7 +231543,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L106",
+      "source_location": "L108",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230691,7 +231554,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L115",
+      "source_location": "L117",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230701,7 +231564,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L115",
+      "source_location": "L117",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230712,7 +231575,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L115",
+      "source_location": "L117",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230723,7 +231586,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L115",
+      "source_location": "L117",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230734,7 +231597,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L128",
+      "source_location": "L130",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230744,7 +231607,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L128",
+      "source_location": "L130",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230755,7 +231618,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L128",
+      "source_location": "L130",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230766,7 +231629,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L131",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230776,7 +231639,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L131",
+      "source_location": "L133",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230787,7 +231650,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L131",
+      "source_location": "L133",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230798,7 +231661,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L131",
+      "source_location": "L133",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230809,7 +231672,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230819,7 +231682,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230830,7 +231693,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230841,7 +231704,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230852,7 +231715,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230863,7 +231726,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230874,7 +231737,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230885,7 +231748,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L146",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230896,7 +231759,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230906,7 +231769,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230917,7 +231780,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230928,7 +231791,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230939,7 +231802,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230950,7 +231813,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230961,7 +231824,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230972,7 +231835,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L166",
+      "source_location": "L168",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230983,7 +231846,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230993,7 +231856,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231004,7 +231867,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231015,7 +231878,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231026,7 +231889,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -231037,7 +231900,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L191",
+      "source_location": "L193",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231048,7 +231911,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231058,7 +231921,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231069,7 +231932,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231080,7 +231943,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -231091,7 +231954,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L205",
+      "source_location": "L207",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231102,7 +231965,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231112,7 +231975,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231123,7 +231986,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231134,35 +231997,13 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L259",
+      "source_location": "L261",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "shared_ui_src_features_game_model_terminalnotice",
       "target": "shared_ui_src_features_game_model_rs_string",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L261",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_model_terminalnotice",
-      "target": "shared_ui_src_features_game_model_rs_gameid",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L262",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_model_terminalnotice",
-      "target": "shared_domain_src_games_gamestate",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
@@ -231173,7 +232014,18 @@
     },
     {
       "source": "shared_ui_src_features_game_model_terminalnotice",
-      "target": "shared_domain_src_games_winningpattern",
+      "target": "shared_ui_src_features_game_model_rs_gameid",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L264",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_model_terminalnotice",
+      "target": "shared_domain_src_games_gamestate",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
@@ -231184,11 +232036,22 @@
     },
     {
       "source": "shared_ui_src_features_game_model_terminalnotice",
+      "target": "shared_domain_src_games_winningpattern",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L267",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_model_terminalnotice",
       "target": "shared_ui_src_features_game_model_rs_vec",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L266",
+      "source_location": "L268",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -231199,7 +232062,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L266",
+      "source_location": "L268",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231210,7 +232073,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L268",
+      "source_location": "L270",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -231221,7 +232084,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L268",
+      "source_location": "L270",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231232,7 +232095,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231242,7 +232105,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231253,7 +232116,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231264,7 +232127,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -231275,7 +232138,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231286,7 +232149,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L278",
+      "source_location": "L280",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -231297,9 +232160,19 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L330",
+      "source_location": "L332",
       "weight": 1.0,
       "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_model",
+      "target": "shared_ui_src_features_game_model_connection_badges_distinguish_live_waiting_and_denied_states",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/model.rs",
+      "source_location": "L334",
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -231308,7 +232181,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L331",
+      "source_location": "L351",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -231319,7 +232192,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L332",
+      "source_location": "L352",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -231330,7 +232203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L335",
+      "source_location": "L355",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231340,7 +232213,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L335",
+      "source_location": "L355",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -231351,7 +232224,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L356",
+      "source_location": "L376",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231361,7 +232234,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L356",
+      "source_location": "L376",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231372,7 +232245,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L356",
+      "source_location": "L376",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -231383,7 +232256,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L371",
+      "source_location": "L391",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231393,7 +232266,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L415",
+      "source_location": "L435",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231403,7 +232276,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L463",
+      "source_location": "L483",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231413,7 +232286,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L524",
+      "source_location": "L544",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231423,7 +232296,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L556",
+      "source_location": "L576",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231433,7 +232306,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L656",
+      "source_location": "L676",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231443,7 +232316,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L709",
+      "source_location": "L729",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231453,7 +232326,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L716",
+      "source_location": "L736",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231463,7 +232336,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L725",
+      "source_location": "L745",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231474,7 +232347,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L154",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231485,7 +232358,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L161",
+      "source_location": "L163",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231496,7 +232369,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L174",
+      "source_location": "L176",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231507,7 +232380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L176",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231518,7 +232391,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L181",
+      "source_location": "L183",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231529,7 +232402,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L197",
+      "source_location": "L199",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231540,7 +232413,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L206",
+      "source_location": "L208",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231551,7 +232424,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L218",
+      "source_location": "L220",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231562,7 +232435,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L338",
+      "source_location": "L358",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231573,7 +232446,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L362",
+      "source_location": "L382",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231584,7 +232457,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L372",
+      "source_location": "L392",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231595,7 +232468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L417",
+      "source_location": "L437",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231606,7 +232479,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L464",
+      "source_location": "L484",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231617,7 +232490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L525",
+      "source_location": "L545",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231628,7 +232501,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L527",
+      "source_location": "L547",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231639,7 +232512,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L575",
+      "source_location": "L595",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231650,7 +232523,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/model.rs",
-      "source_location": "L658",
+      "source_location": "L678",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233543,7 +234416,7 @@
     },
     {
       "source": "shared_ui_src_features_game_waiting_mod",
-      "target": "brews_contracts",
+      "target": "components",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/waiting/mod.rs",
@@ -233554,11 +234427,22 @@
     },
     {
       "source": "shared_ui_src_features_game_waiting_mod",
-      "target": "prelude",
+      "target": "brews_contracts",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/waiting/mod.rs",
       "source_location": "L3",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_waiting_mod",
+      "target": "prelude",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/waiting/mod.rs",
+      "source_location": "L4",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -233569,7 +234453,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/waiting/mod.rs",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -233580,7 +234464,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/waiting/mod.rs",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233590,14 +234474,14 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/waiting/mod.rs",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
     },
     {
       "source": "shared_ui_src_features_history_list",
-      "target": "super",
+      "target": "crate",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
@@ -233608,7 +234492,7 @@
     },
     {
       "source": "shared_ui_src_features_history_list",
-      "target": "crate",
+      "target": "historypage",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
@@ -233619,7 +234503,7 @@
     },
     {
       "source": "shared_ui_src_features_history_list",
-      "target": "historypage",
+      "target": "prelude",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
@@ -233630,22 +234514,11 @@
     },
     {
       "source": "shared_ui_src_features_history_list",
-      "target": "prelude",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L4",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_history_list",
       "target": "shared_ui_src_features_history_list_history_path",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233655,7 +234528,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -233666,7 +234539,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -233677,7 +234550,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L19",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233687,7 +234560,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L19",
+      "source_location": "L18",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -233698,7 +234571,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L236",
+      "source_location": "L235",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -233709,7 +234582,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L238",
+      "source_location": "L237",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233720,7 +234593,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L30",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233748,7 +234621,7 @@
     },
     {
       "source": "shared_ui_src_features_history_mod",
-      "target": "shared_domain_src_games_gamestate",
+      "target": "gamestate",
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
@@ -233781,32 +234654,11 @@
     },
     {
       "source": "shared_ui_src_features_history_mod",
-      "target": "shared_ui_src_features_history_mod_state_label",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L10",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_history_mod_state_label",
-      "target": "shared_domain_src_games_gamestate",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L10",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_history_mod",
       "target": "shared_ui_src_features_history_mod_historypage",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L21",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233816,7 +234668,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L21",
+      "source_location": "L11",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -233827,7 +234679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L34",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233837,7 +234689,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L34",
+      "source_location": "L24",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -233848,7 +234700,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L34",
+      "source_location": "L24",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -233859,7 +234711,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L47",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233869,7 +234721,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L47",
+      "source_location": "L37",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -233880,7 +234732,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L47",
+      "source_location": "L37",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -233902,7 +234754,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L7",
+      "source_location": "L2",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -233913,7 +234765,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L8",
+      "source_location": "L3",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -233924,7 +234776,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L9",
+      "source_location": "L4",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -233935,7 +234787,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L12",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233945,7 +234797,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L12",
+      "source_location": "L7",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -250557,6 +251409,18 @@
       "_origin": "ast"
     },
     {
+      "source": "platform_web_tests_endings_endings",
+      "target": "platform_web_tests_status_badge_statusbadge",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "platform/web/tests/endings.mjs",
+      "source_location": "L168",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "platform_web_tools_browser_acceptance_main",
       "target": "platform_web_tools_local_worker_local_worker",
       "relation": "calls",
@@ -250900,7 +251764,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L151",
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -250912,7 +251776,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/game/entry/mod.rs",
-      "source_location": "L184",
+      "source_location": "L186",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -250924,7 +251788,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L208",
+      "source_location": "L210",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -250996,7 +251860,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L25",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251008,7 +251872,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L30",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251020,7 +251884,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/history/list.rs",
-      "source_location": "L31",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251032,7 +251896,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L55",
+      "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251044,7 +251908,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/history/mod.rs",
-      "source_location": "L58",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251056,7 +251920,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L17",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251068,7 +251932,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/home/dashboard.rs",
-      "source_location": "L24",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },

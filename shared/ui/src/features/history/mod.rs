@@ -7,16 +7,6 @@ use brews_domain::games::GameState;
 use dioxus::prelude::*;
 pub(crate) use list::HistoryList;
 
-pub(crate) fn state_label(state: GameState) -> &'static str {
-    match state {
-        GameState::New => "New",
-        GameState::AwaitingPlayers => "Awaiting players",
-        GameState::InProgress => "In progress",
-        GameState::Resolved => "Resolved",
-        GameState::Cancelled => "Cancelled",
-    }
-}
-
 #[component]
 pub fn HistoryPage() -> Element {
     let account = use_context::<AccountSession>();
@@ -113,7 +103,7 @@ fn Detail(game_id: String) -> Element {
             if let Some(history) = history.filter(|history| history.expires_at > client::now_ms()) {
                 section { class: "card stack",
                     h2 { "{history.game_code.as_str()}" }
-                    p { class: "badge", "{state_label(history.outcome)}" }
+                    StatusBadge { label: game_state_label(history.outcome), tone: StatusTone::from(history.outcome) }
                     if history.outcome == GameState::Resolved { if let Some(winner) = &history.winner { p { "Winner: {winner.alias}" } } }
                     p { class: "muted", "Designated host: {history.designated_host_id}" }
                     dl { class: "stats",

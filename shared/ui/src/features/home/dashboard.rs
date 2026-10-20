@@ -1,9 +1,4 @@
-use crate::{
-    client,
-    components::*,
-    features::history::{HistoryList, state_label},
-    session::AccountSession,
-};
+use crate::{client, components::*, features::history::HistoryList, session::AccountSession};
 use brews_contracts::discovery::{CurrentGame, GameSlot};
 use brews_domain::games::GameState;
 use dioxus::prelude::*;
@@ -45,6 +40,26 @@ pub(super) fn Dashboard() -> Element {
         };
     }
     let result = current.read().clone();
+    let pending = current.state()() == UseResourceState::Pending;
+    let can_create = result.as_ref().is_some_and(|result| match result {
+        Ok(current) => current.game.is_none() && current.slot == GameSlot::Free,
+        // A failed lookup is not evidence that the slot is occupied.
+        Err(_) => true,
+    });
+    let refresh_label = result.as_ref().and_then(|result| match result {
+        Err(_) => Some("Retry current game lookup"),
+        Ok(current)
+            if current
+                .game
+                .as_ref()
+                .map_or(current.slot != GameSlot::Free, |game| {
+                    !matches!(game.state, GameState::Resolved | GameState::Cancelled)
+                }) =>
+        {
+            Some("Refresh current game")
+        }
+        Ok(_) => None,
+    });
     rsx! {
         section {
             class: "stack",
@@ -53,43 +68,37 @@ pub(super) fn Dashboard() -> Element {
                 title: "Games",
                 description: "Your current game and the games worth remembering.",
             }
-            div {
-                class: "actions",
-                if result.as_ref().is_some_and(|result| {
-                    result.as_ref().is_ok_and(|current| {
-                        current.game.as_ref().is_some_and(|game| {
-                            !matches!(game.state, GameState::Resolved | GameState::Cancelled)
-                        })
-                    })
-                }) {
-                    button {
-                        class: "button secondary",
-                        onclick: move |_| refresh += 1,
-                        "Refresh current game"
-                    }
-                } else if result.as_ref().is_some_and(Result::is_err) {
-                    button {
-                        class: "button secondary",
-                        onclick: move |_| refresh += 1,
-                        "Retry current game lookup"
-                    }
-                }
-                a { class: "button", href: "/games/new", "Create game" }
-                if account.admin() {
-                    a {
-                        class: "button ghost",
-                        href: "/users",
-                        "Manage users"
-                    }
-                }
-            }
             section {
-                class: "card stack",
-                h2 {
-
-                    "Current game"
+                class: "card stack current-game",
+                div {
+                    class: "current-game-heading",
+                    h2 { "Current game" }
+                    if let Some(label) = refresh_label {
+                        button {
+                            class: "button secondary icon-button",
+                            r#type: "button",
+                            "aria-label": label,
+                            title: label,
+                            disabled: pending,
+                            onclick: move |_| refresh += 1,
+                            svg {
+                                view_box: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                stroke_width: "2",
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                "aria-hidden": "true",
+                                "focusable": "false",
+                                path { d: "M3 12a9 9 0 0 1 15.36-6.36L21 8" }
+                                path { d: "M21 3v5h-5" }
+                                path { d: "M21 12a9 9 0 0 1-15.36 6.36L3 16" }
+                                path { d: "M8 16H3v5" }
+                            }
+                        }
+                    }
                 }
-                if current.state()() == UseResourceState::Pending {
+                if pending {
                     Loading {
 
                     }
@@ -112,35 +121,24 @@ pub(super) fn Dashboard() -> Element {
                                         message: "The game's idle deadline was reached. Refreshing the current slot…",
                                     }
                                 } else {
-                                    p {
-                                        class: "badge",
-                                        "{state_label(game.state)}"
-                                    }
-                                    p {
-                                        class: "game-code",
-                                        "{game.game_code.as_ref().map_or(\"Not published\", |code| code.as_str())}"
-                                    }
-                                    p {
-                                        class: "muted",
-                                        "Designated host: {game.designated_host_id}"
-                                    }
-                                    p {
-
-                                        "Created: {utc_time(game.created_at)}"
-                                    }
-                                    if let Some(due) = game.idle_due {
-                                        p {
-
-                                            "Idle deadline: {utc_time(due)}"
+                                    div {
+                                        class: "game-status-row",
+                                        StatusBadge { label: game_state_label(game.state), tone: StatusTone::from(game.state) }
+                                        if let Some(code) = &game.game_code {
+                                            span { class: "game-publication published", "aria-label": "Published game code", "{code.as_str()}" }
+                                        } else {
+                                            span { class: "game-publication", "Not published" }
                                         }
                                     }
-                                    if game.may_operate {
-                                        if account.admin() {
-                                            Notice {
-                                                message: "Admin account view: operator access is verified by the server.",
-                                            }
+                                    dl {
+                                        class: "game-metadata",
+                                        div { class: "metadata-wide", dt { "Designated host" } dd { DesignatedHostAlias { account_id: game.designated_host_id } } }
+                                        div { dt { "Created" } dd { "{utc_time(game.created_at)}" } }
+                                        if let Some(due) = game.idle_due {
+                                            div { dt { "Idle deadline" } dd { "{utc_time(due)}" } }
                                         }
-                                    } else {
+                                    }
+                                    if !game.may_operate {
                                         Notice {
                                             message: "Read-only account view. The designated host or an admin operates this game.",
                                         }
@@ -190,6 +188,9 @@ pub(super) fn Dashboard() -> Element {
                             }
                         },
                     }
+                }
+                if can_create && !pending {
+                    a { class: "button", href: "/games/new", "Create game" }
                 }
             }
             HistoryList {
