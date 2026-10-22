@@ -345,6 +345,91 @@ small {
   margin: 0;
   min-width: 0;
 }
+.game-page {
+  gap: 20px;
+}
+.game-page-header {
+  position: relative;
+  z-index: 2;
+  gap: 12px;
+  padding: 22px 24px;
+  border: 1px solid #e4daca;
+  border-radius: 16px;
+  background: linear-gradient(115deg, #fffdf9 0%, #fbf5e9 100%);
+  box-shadow: 0 8px 28px #210c0308;
+}
+.game-page-header .eyebrow {
+  margin: 0;
+}
+.game-page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.game-page-title-row h1 {
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(2.3rem, 5vw, 3.4rem);
+}
+.game-page-description {
+  margin: 0;
+}
+.game-options-anchor {
+  position: relative;
+  flex: 0 0 auto;
+}
+.game-options-trigger {
+  gap: 9px;
+  min-height: 44px;
+  padding-inline: 16px;
+  font-weight: 650;
+}
+.game-options-trigger svg {
+  width: 19px;
+  height: 19px;
+}
+.game-options-label {
+  display: inline;
+}
+.game-options-dismiss {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  background: transparent;
+}
+.game-options-panel {
+  position: absolute;
+  z-index: 71;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  gap: 12px;
+  width: min(460px, calc(100vw - 36px));
+  max-height: min(72svh, 720px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  border: 1px solid #d9cbb5;
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 20px 56px #210c0330;
+}
+.game-options-panel > h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+.game-options-panel > .card {
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.game-options-panel .button {
+  align-self: stretch;
+}
+.game-options-panel .form {
+  max-width: none;
+}
 .game-live-status-row {
   display: flex;
   align-items: center;
@@ -1150,6 +1235,42 @@ dialog::backdrop {
   }
   .attendance-empty {
     padding: 20px 14px;
+  }
+  .game-page {
+    gap: 15px;
+  }
+  .game-page-header {
+    gap: 10px;
+    padding: 17px 16px;
+    border-radius: 14px;
+  }
+  .game-page-title-row {
+    gap: 8px;
+  }
+  .game-page-title-row h1 {
+    font-size: clamp(2.2rem, 10vw, 3rem);
+  }
+  .game-options-trigger {
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    padding: 0;
+  }
+  .game-options-label {
+    display: none;
+  }
+  .game-options-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: -16px;
+    bottom: auto;
+    width: min(460px, calc(100vw - 36px));
+    max-height: min(68svh, 600px);
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .game-options-panel > .card {
+    padding: 14px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

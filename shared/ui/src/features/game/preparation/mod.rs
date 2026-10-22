@@ -128,7 +128,6 @@ pub(super) fn SavedSetup() -> Element {
         if dirty(){p {class:"notice","Save your changes before opening the lobby."}}
         p {class:"muted","Save all edits before opening the lobby. Publication fixes the saved configuration and issues a game code."}
         if publish() {Confirm {title:"Publish the saved setup?".to_string(),busy:!game.operate(),onconfirm:move |_| {publish.set(false);spawn(async move{game.send("POST","lobby",json!({"expected_revision":summary.view_revision})).await;});},oncancel:move |_|publish.set(false),p {"The lobby uses the last saved configuration. It cannot be edited after publication."}}}
-        super::settings::OperatorSettings {allow_navigation:false}
         button {class:"button ghost",onclick:move |_|{if dirty(){discard.set(true);}else{navigator.push("/games");}},"Back to Games"}
         if discard(){Confirm {title:"Discard unsaved setup edits?".to_string(),busy:game.command.blocked(),oncancel:move |_|discard.set(false),onconfirm:move |_|{navigator.push("/games");},p {"Your last saved setup remains available. This does not cancel the game."}}}
     } }

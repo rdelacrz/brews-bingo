@@ -9,6 +9,8 @@ pub fn Confirm(
     onconfirm: EventHandler<()>,
     oncancel: EventHandler<()>,
     #[props(default)] busy: bool,
+    #[props(default = "Go back".to_string())] cancel_label: String,
+    #[props(default)] confirm_label: Option<String>,
 ) -> Element {
     let id = use_hook(|| {
         format!(
@@ -18,6 +20,7 @@ pub fn Confirm(
     });
     let title_id = format!("{id}-title");
     let mounted_id = id.clone();
+    let confirm_label = confirm_label.unwrap_or_else(|| title.clone());
     #[cfg(target_arch = "wasm32")]
     {
         let cleanup_id = id.clone();
@@ -68,14 +71,14 @@ pub fn Confirm(
                     autofocus: true,
                     disabled: busy,
                     onclick: move |_| oncancel.call(()),
-                    "Go back"
+                    "{cancel_label}"
                 }
                 button {
                     class: "button danger",
                     r#type: "button",
                     disabled: busy,
                     onclick: move |_| onconfirm.call(()),
-                    "{title}"
+                    "{confirm_label}"
                 }
             }
             if busy {

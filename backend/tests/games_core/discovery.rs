@@ -141,7 +141,7 @@ fn discovery_availability_counts_valid_observed_connections_without_reconciliati
         };
         assert_eq!(player_count, 2);
         assert_eq!(connected_player_count, expected);
-        assert_eq!(can_start, expected == 2);
+        assert_eq!(can_start, expected >= 1);
         assert!(!can_join_player);
         assert!(can_join_spectator);
     }
@@ -191,7 +191,7 @@ fn discovery_availability_counts_valid_observed_connections_without_reconciliati
         cut.value,
         DiscoveryValue::Availability(brews_contracts::discovery::GameAvailability::Account {
             connected_player_count: 1,
-            can_start: false,
+            can_start: true,
             ..
         })
     ));

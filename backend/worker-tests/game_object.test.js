@@ -175,7 +175,7 @@ test("two genuine hibernating player streams permit atomic public Start", async 
   first.socket.close(1000); second.socket.close(1000);
 });
 
-test("a repeated player stream supersedes its predecessor without counting two players", async () => {
+test("a repeated player stream counts once and permits single-player Start", async () => {
   const { actor, lobby, id } = await openLobby();
   const alice = await join(id, lobby.game_code, "Alice");
   const original = await stream(id, alice.session);
@@ -185,10 +185,13 @@ test("a repeated player stream supersedes its predecessor without counting two p
   expect(replacement.initial.connection_id).not.toBe(original.initial.connection_id);
   const host = await sync(id, actor.session, "account");
   expect(host.snapshot.connected_player_count).toBe(1);
-  const denied = await post(`/api/games/${id}/start`, { expected_revision: host.view_revision }, { session: actor.session });
-  expect(denied.status).toBe(409);
+  const started = await post(`/api/games/${id}/start`, { expected_revision: host.view_revision }, { session: actor.session });
+  expect(started.status).toBe(200);
+  const frame = await replacement.next();
+  expect(frame.view.state).toBe("in_progress");
+  expect(frame.view.board.cells).toHaveLength(25);
   await runInDurableObject(env.GAMES.get(env.GAMES.idFromName(id)), (_instance, state) => {
-    expect([...state.storage.sql.exec("SELECT player_id FROM game_boards")]).toEqual([]);
+    expect([...state.storage.sql.exec("SELECT player_id FROM game_boards")]).toHaveLength(1);
     expect([...state.storage.sql.exec("SELECT connection_id FROM game_current_connections WHERE viewer_kind='player'")]).toEqual([{ connection_id: replacement.initial.connection_id }]);
     expect([...state.storage.sql.exec("SELECT connection_id FROM game_delivery_connections")]).toEqual([{ connection_id: replacement.initial.connection_id }]);
   });

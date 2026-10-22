@@ -1390,6 +1390,88 @@ fn player_connections_are_durable_fenced_and_presence_changes_only_host_views() 
 }
 
 #[test]
+fn start_requires_one_connected_player_and_assigns_a_board_to_that_player() {
+    use brews_contracts::games::{GameResponse, GameView};
+
+    let f = Fixture::new();
+    let code = f.open(&GameConfiguration::default());
+    let player = f.player(&code, 20, "Solo");
+    let player_id = f
+        .game
+        .query("SELECT player_id FROM game_players", &[])
+        .unwrap();
+    let initial = f
+        .service()
+        .account_view(f.auth().authorize_game_account(&f.token).unwrap(), &[])
+        .unwrap();
+    let reservation = f
+        .directory()
+        .confirm_reservation(initial.game_id())
+        .unwrap();
+    assert_eq!(
+        f.service()
+            .start(
+                f.auth().authorize_game_account(&f.token).unwrap(),
+                f.command(50),
+                initial.view_revision(),
+                &reservation,
+                &[],
+            )
+            .err(),
+        Some(GameError::Conflict)
+    );
+    assert_eq!(
+        f.game
+            .query("SELECT count(*) FROM game_boards", &[])
+            .unwrap(),
+        vec![vec![SqlValue::Integer(0)]]
+    );
+
+    let connection = f
+        .service()
+        .prepare_player_connection(player.token(), id(&f.rt, 40).parse().unwrap())
+        .unwrap();
+    f.service().accept_player_connection(&connection).unwrap();
+    let observed = [connection.connection_id()];
+    let ready = f
+        .service()
+        .account_view(
+            f.auth().authorize_game_account(&f.token).unwrap(),
+            &observed,
+        )
+        .unwrap();
+    assert!(matches!(
+        ready,
+        GameView::Host {
+            connected_player_count: 1,
+            ..
+        }
+    ));
+    assert!(matches!(
+        f.service()
+            .start(
+                f.auth().authorize_game_account(&f.token).unwrap(),
+                f.command(51),
+                ready.view_revision(),
+                &reservation,
+                &observed,
+            )
+            .unwrap(),
+        GameResponse::Started { .. }
+    ));
+    assert_eq!(
+        f.game.query("SELECT state FROM game_record", &[]).unwrap(),
+        vec![vec![SqlValue::Text("in_progress".into())]]
+    );
+    assert_eq!(
+        f.game
+            .query("SELECT player_id FROM game_boards", &[])
+            .unwrap(),
+        player_id,
+    );
+}
+
+#[test]
 fn start_counts_observed_valid_players_and_assigns_every_retained_member_atomically() {
     use brews_contracts::games::{GameResponse, GameView};
     let f = Fixture::new();

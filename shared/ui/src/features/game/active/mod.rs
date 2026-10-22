@@ -1,4 +1,3 @@
-mod speech;
 use super::{CodeBadge, GameContext, model};
 use crate::{
     client,
@@ -31,9 +30,8 @@ pub(super) fn Play() -> Element {
             if let Some(value)=latest{p {"Current call"}strong {role:"status","aria-live":"polite","{value}"}}
             else{p {"No values called yet"}}
         }
-        speech::SpeechControls {}
         match snapshot {
-            GameView::Host {..}=>rsx!{HostControls {} super::settings::OperatorSettings {}},
+            GameView::Host {..}=>rsx!{HostControls {}},
             GameView::Player {alias,board,..}=>rsx!{
                 h2 {"{alias}’s board"}
                 if let Some(board)=board {
@@ -41,19 +39,31 @@ pub(super) fn Play() -> Element {
                     p {class:"muted",{board.qualifying_lines.iter().map(model::line_label).collect::<Vec<_>>().join(" · ")}}
                     Board {board}
                 }else{Notice {message:"The assigned board is unavailable. Reconnect to synchronize."}}
-                super::settings::ParticipantSettings {}
             },
             GameView::Spectator {exhausted,..}=>rsx!{
                 if exhausted{p {class:"notice","All values have been called. The host will select a winner or end the game."}}
                 button {class:"button secondary",onclick:move |_|venue.set(!venue()),if venue(){"Exit display mode"}else{"Display mode"}}
-                button {class:"button ghost",onclick:move |_|{speech::fullscreen();},"Toggle fullscreen"}
-                super::settings::ParticipantSettings {}
+                button {class:"button ghost",onclick:move |_|toggle_game_fullscreen(),"Toggle fullscreen"}
             },
             _=>rsx!{},
         }
-        section {class:"card stack",h2 {"Call history"}Calls {calls}}
+        section {class:"card stack",Calls {calls}}
     }}
 }
+
+#[cfg(target_arch = "wasm32")]
+fn toggle_game_fullscreen() {
+    if let Some(document) = web_sys::window().and_then(|window| window.document()) {
+        if document.fullscreen_element().is_some() {
+            document.exit_fullscreen();
+        } else if let Some(element) = document.get_element_by_id("game-venue") {
+            let _ = element.request_fullscreen();
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn toggle_game_fullscreen() {}
 
 #[component]
 fn HostControls() -> Element {

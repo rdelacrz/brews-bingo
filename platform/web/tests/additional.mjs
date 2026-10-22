@@ -6,6 +6,12 @@ async function openAccountMenu(page) {
   if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
   await page.locator(".account-menu-panel").waitFor();
 }
+async function openGameOptions(page) {
+  const toggle = page.getByRole("button", { name: "Options", exact: true });
+  await toggle.waitFor();
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+  await page.locator("#game-options-panel").waitFor();
+}
 
 export async function accountManagement({
   admin,
@@ -190,6 +196,7 @@ export async function membershipManagement({
       .waitFor();
   });
   await step("alias-and-recovery-answer-settings", async () => {
+    await openGameOptions(original);
     await click(original, "Alias and recovery settings");
     await original
       .getByLabel("New case-sensitive alias", { exact: true })
@@ -313,6 +320,7 @@ export async function membershipManagement({
     async () => {
       const player = players[0];
       mark("switch-spectator-open");
+      await openGameOptions(player);
       await click(player, "Switch to spectator");
       mark("switch-spectator-confirm");
       await player.getByRole("dialog").getByRole("button").last().click();
@@ -327,6 +335,7 @@ export async function membershipManagement({
         "switched-spectator-authority",
       );
       mark("switch-player-open");
+      await openGameOptions(player);
       await click(player, "Switch to player");
       await player
         .getByLabel("Player alias", { exact: true })
@@ -438,6 +447,7 @@ export async function hostTransfer({
         .count()) === 0,
       "other-host-read-only",
     );
+    await openGameOptions(admin);
     await click(admin, "Transfer host");
     await click(admin, "BrowserHost");
     await admin.getByRole("dialog").getByRole("button").last().click();
@@ -508,6 +518,7 @@ export async function runningLeave({
       const player = players[1];
       const before = (await snapshot(player, "player", gameId)).body;
       mark("leave-confirm");
+      await openGameOptions(player);
       await click(player, "Leave game");
       await player.getByRole("dialog").getByRole("button").last().click();
       mark("leave-navigation");

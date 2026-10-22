@@ -197,7 +197,9 @@ test("lobby Leave removes all participant authority and answer; old cookie canno
   expect(privateCounts).toEqual({ recovery: 0, grants: 0, views: 0 });
   const remainingHost = await snapshot(f, f.host.session, "account");
   expect(remainingHost.snapshot.connected_player_count).toBe(1);
-  expect((await post(`/api/games/${f.id}/start`, { expected_revision: remainingHost.view_revision }, { session: f.host.session })).status).toBe(409);
+  const availability = await exports.default.fetch(`${origin}/api/games/${f.id}/availability?view=account`, { headers: { Cookie: f.host.session } });
+  expect(availability.status).toBe(200);
+  expect((await availability.json()).can_start).toBe(true);
   expect((await sync(f)).status).toBe(401);
   expect((await recover(f)).status).toBe(401);
   const replay = await leave(f, "awaiting_players", { id: command });

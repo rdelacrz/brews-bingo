@@ -40,6 +40,12 @@ async function openAccountMenu(page) {
   if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
   await page.locator(".account-menu-panel").waitFor();
 }
+async function openGameOptions(page) {
+  const toggle = page.getByRole("button", { name: "Options", exact: true });
+  await toggle.waitFor();
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+  await page.locator("#game-options-panel").waitFor();
+}
 async function step(name, fn) {
   current = name;
   phase = "start";
@@ -598,21 +604,20 @@ try {
     await currentGameLayout(admin, "New", "neutral", undefined, adminAccount.username);
     await admin.getByRole("link", { name: "Resume setup", exact: true }).click();
     await admin.getByRole("heading", { name: "Game setup", exact: true }).waitFor();
-    phase = "unsaved-draft-resume";
+    phase = "unsaved-draft-save";
     await admin.getByLabel("Numeric pool upper bound (1–1,000)").fill("10");
-    await click(admin, "Resume game access");
     await until(
       async () =>
         await admin
           .getByRole("button", { name: "Save changes", exact: true })
           .isEnabled(),
-      "resume-reconciled",
+      "draft-save-enabled",
     );
     assert(
       (await admin
         .getByLabel("Numeric pool upper bound (1–1,000)")
         .inputValue()) === "10",
-      "resume-preserves-draft",
+      "draft-value-preserved",
     );
     await click(admin, "Save changes");
     await until(
@@ -640,6 +645,27 @@ try {
       .waitFor();
     await gameStatusLayout(admin, "Awaiting players", "warning");
     await admin.locator(".designated-host-line .designated-host-alias").getByText(adminAccount.username, { exact: true }).waitFor();
+    await openGameOptions(admin);
+    assert((await admin.locator("#game-options-panel").getByRole("button", { name: "Resume game access", exact: true }).count()) === 0, "host-options-menu-no-resume-action");
+    assert((await admin.locator("#game-options-panel").getByText(/Resume is an explicit action/, { exact: false }).count()) === 0, "host-options-menu-no-resume-copy");
+    assert((await admin.locator("#game-options-panel").getByRole("button", { name: "Transfer host", exact: true }).count()) === 1, "host-options-menu-transfer");
+    for (const width of [320, 390, 768, 1440]) {
+      await admin.setViewportSize({ width, height: 900 });
+      const options = admin.getByRole("button", { name: "Options", exact: true });
+      const buttonBox = await options.boundingBox();
+      const panelBox = await admin.locator("#game-options-panel").boundingBox();
+      assert(buttonBox && panelBox && buttonBox.width >= 44 && buttonBox.height >= 44, `options-touch-target-${width}`);
+      assert(panelBox.x >= 0 && panelBox.x + panelBox.width <= width, `options-panel-fits-${width}`);
+      assert(panelBox.y >= 0 && panelBox.y + panelBox.height <= 900, `options-panel-visible-${width}`);
+      assert(await admin.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `options-no-overflow-${width}`);
+      assert(await admin.locator(".game-options-label").isVisible() === (width > 540), `options-responsive-label-${width}`);
+    }
+    await admin.setViewportSize({ width: 1280, height: 900 });
+    await admin.keyboard.press("Escape");
+    assert((await admin.getByRole("button", { name: "Options", exact: true }).getAttribute("aria-expanded")) === "false", "options-escape-dismiss");
+    await openGameOptions(admin);
+    await admin.locator(".game-options-dismiss").click({ position: { x: 10, y: 10 } });
+    assert((await admin.getByRole("button", { name: "Options", exact: true }).getAttribute("aria-expanded")) === "false", "options-outside-dismiss");
     const view = await snapshot(admin, "account");
     assert(
       view.status === 200 && view.body.game.state === "awaiting_players",
@@ -721,6 +747,8 @@ try {
     await admin
       .getByRole("heading", { name: "Call a value", exact: true })
       .waitFor();
+    assert(await admin.getByRole("heading", { name: "Call history", exact: true }).count() === 1, "active-game-single-call-history-heading");
+    assert(await admin.getByText("Speak new calls on this device", { exact: true }).count() === 0, "active-game-no-device-speech-control");
     for (const p of players.slice(0, 2))
       await p.getByRole("table", { name: "Game board", exact: true }).waitFor();
     assert(

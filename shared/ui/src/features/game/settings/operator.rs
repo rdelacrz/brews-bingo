@@ -31,8 +31,6 @@ pub(in crate::features::game) fn OperatorSettings(
     }
     rsx! {section {class:"card stack",
         h2 {"Game management"}
-        button {class:"button secondary",disabled:!game.operate(),onclick:move |_|async move{if game.operate(){game.send("POST","resume",json!({})).await;}},"Resume game access"}
-        p {class:"muted","Resume is an explicit action. Viewing alone does not renew a pre-start idle deadline; Admin activity does not renew another host’s deadline."}
         button {class:"button secondary",disabled:!game.operate(),onclick:move |_|transfer.set(!transfer()),"Transfer host"}
         if transfer(){TransferTargets {on_select:move |value|target.set(Some(value))}}
         button {class:"button danger",disabled:!game.operate(),onclick:move |_|cancel.set(true),if state==GameState::InProgress{"End without winner"}else{"Cancel game"}}

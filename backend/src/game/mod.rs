@@ -285,7 +285,7 @@ pub const OPERATOR_CANCEL_REASON: &str = "operator_cancelled";
 pub const TERMINAL_ACTOR_ACCOUNT: &str = "account";
 pub const TERMINAL_ACTOR_SYSTEM: &str = "system";
 
-pub const START_CONNECTED_PLAYER_MIN: u8 = 2;
+pub const START_CONNECTED_PLAYER_MIN: u8 = brews_domain::games::START_CONNECTED_PLAYER_MIN;
 
 pub(crate) const SPECTATOR_NOTICE_ATTEMPT_MS: i64 = 30_000;
 pub(crate) const GAME_CURRENT_CONNECTION_LIMIT: usize = 100;

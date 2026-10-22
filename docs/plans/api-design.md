@@ -92,7 +92,7 @@ These stable API-01–API-33 rows remain a high-level coverage checklist, not fi
 | API-12 | Read / update configuration | Reads authorized; changes require designated host/admin and New. | C5, C7 | Proposed Request/Response: C5, C7 in Section 6; final contract **TBD**. |
 | API-13 | Publish Awaiting Players | Authorized operator; validate/fix configuration and durably issue code. | C8, H1 | Proposed Request/Response: C8, H1 in Section 6; final contract **TBD**. |
 | API-14 | Open / resume selected game | Restore existing identity/configuration/code/state; role/lifecycle/exit restrictions apply. | C9 | Proposed Request/Response: C9 in Section 6; final contract **TBD**. |
-| API-15 | Start game | Designated host/admin, Awaiting Players, connected minimum, this game still owns the same global reservation, feasibility checks; persist start-time boards. | E6 | Proposed Request/Response: E6 in Section 6; final contract **TBD**. |
+| API-15 | Start game | Designated host/admin, Awaiting Players, at least one distinct currently connected eligible player, this game still owns the same global reservation, feasibility checks; persist start-time boards. A one-player warning/confirmation is a UI interaction, not a client-supplied API field. | E6 | Proposed Request/Response: E6 in Section 6; final contract **TBD**. |
 | API-16 | Random / manual value call | Designated host/admin, playable In Progress; valid undrawn value → atomic calls/matches/qualification result. | E7, E8 | Proposed Request/Response: E7, E8 in Section 6; final contract **TBD**. |
 | API-17 | Submit one qualified winner | Designated host/admin validates same-game qualification; commit Resolved once. | E9, H9 | Proposed Request/Response: E9, H9 in Section 6; final contract **TBD**. |
 | API-18 | Cancel / manually end game | Designated host/admin with required confirmation; commit Cancelled, apply pre-start versus started retention. | E10, E11, H7, H8 | Proposed Request/Response: E10, E11, H7, H8 in Section 6; final contract **TBD**. |
@@ -1636,13 +1636,13 @@ Path: `POST /api/games/{game_id}/start`
 
 Auth scope: Host
 
-The designated host or an authorized admin validates the connected-player minimum, that this game still owns the single global nonterminal-game reservation, and DO-044's exact distinct-layout feasibility against every retained start-time player membership; it transitions this same game to In Progress and persists boards/initial qualification for the retained start roster.
+The designated host or an authorized admin validates that at least one distinct eligible player is currently connected, that this game still owns the single global nonterminal-game reservation, and DO-044's exact distinct-layout feasibility against every retained start-time player membership; it transitions this same game to In Progress and persists boards/initial qualification for the retained start roster. The UI warns and asks Yes/No when exactly one is connected; the backend does not accept a client-supplied confirmation flag.
 
 ##### Request
 
 **Approved GAME-SLICE-02:** Path `game_id: GameId`; existing account cookie carrying a current enabled Verified Normal designated-host/admin session, exact application Origin and canonical UUID-v7 `Idempotency-Key`. The JSON body requires `expected_revision` for the authorized host projection. The command ID belongs only in the header. No other request-body fields.
 
-No caller-supplied roster, boards, random seed or claimed connection count. The backend chooses the retained start roster and checks currently connected eligible players, this game’s ownership of the same global reservation and board feasibility.
+No caller-supplied roster, boards, random seed, confirmation flag or claimed connection count. The backend chooses the retained start roster and checks that at least one currently connected player is eligible, this game’s ownership of the same global reservation and board feasibility.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -1650,7 +1650,7 @@ No caller-supplied roster, boards, random seed or claimed connection count. The 
 
 ##### Response
 
-**Approved GAME-SLICE-02:** Fresh accepted Start is HTTP 200 with the documented game ID/state/start time/view revision and a secret-free receipt; optional full game view is omitted in this slice because authorized WSS/sync snapshots deliver boards. Exact authorized retries return only the receipt, without board regeneration. Lifecycle/reservation/revision/insufficient-player conflicts are 409 and unavailable dependencies are 503. Reuse the existing no-store JSON/error envelope.
+**Approved GAME-SLICE-02:** Fresh accepted Start is HTTP 200 with the documented game ID/state/start time/view revision and a secret-free receipt; optional full game view is omitted in this slice because authorized WSS/sync snapshots deliver boards. Exact authorized retries return only the receipt, without board regeneration. Lifecycle/reservation/revision/zero-connected-player conflicts are 409 and unavailable dependencies are 503. Reuse the existing no-store JSON/error envelope.
 
 Committed retries return the original start/assignments. No boards before accepted Start, and no automatic winner for free-cell qualification.
 
@@ -2519,7 +2519,7 @@ The user authorized local implementation of Slice 1 in `PENDING.md` with the con
 
 The `CurrentGameSummary` contains exactly `game_id,state,designated_host_id,created_at,started_at,idle_due,game_code,may_operate,view_revision`. Nullable fields are explicit JSON nulls. State, host, timestamps and the host-view revision come from Game; code is disclosed only if both owners confirm publication. `may_operate` is true only for the current designated host or admin. Cross-host read permission creates no live/final grants and confers no mutation permission.
 
-Availability contains `view,state,can_join_player,can_join_spectator`. Only the account variant adds `player_count,connected_player_count,player_capacity,spectator_count,spectator_capacity,can_start`; counts/capacities are bounded unsigned values. Spectator count is zero and spectator admission is always false until Slice 4 exists, even when configured spectator capacity is positive. Player admission is advisory and available only in a published Awaiting Players game below capacity. Start requires current designated-host/admin authority, Awaiting Players, matching global reservation, at least two observed valid connected players, and exact distinct-layout feasibility for all retained players. Reads never generate boards, create memberships or reconcile presence.
+Availability contains `view,state,can_join_player,can_join_spectator`. Only the account variant adds `player_count,connected_player_count,player_capacity,spectator_count,spectator_capacity,can_start`; counts/capacities are bounded unsigned values. Spectator count is zero and spectator admission is always false until Slice 4 exists, even when configured spectator capacity is positive. Player admission is advisory and available only in a published Awaiting Players game below capacity. Start availability requires current designated-host/admin authority, Awaiting Players, matching global reservation, at least one observed valid connected player, and exact distinct-layout feasibility for all retained players. Reads never generate boards, create memberships or reconcile presence.
 
 All four GETs enforce HTTPS, optional exact Origin, no Authorization or Idempotency-Key, no nonempty body, bounded header/path/query bytes and field counts, closed query grammar and known transport headers. Ordinary browser/client hints, Cloudflare metadata and tracing headers are recognized transport fields, not authority. Unknown application headers/selectors are rejected. Success/errors use no-store, no-referrer and nosniff; no read issues cookies.
 

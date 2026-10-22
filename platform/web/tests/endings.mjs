@@ -19,6 +19,12 @@ export async function endings(h) {
     if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
     await admin.locator(".account-menu-panel").waitFor();
   };
+  const openGameOptions = async (page = admin) => {
+    const toggle = page.getByRole("button", { name: "Options", exact: true });
+    await toggle.waitFor();
+    if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+    await page.locator("#game-options-panel").waitFor();
+  };
   const slotFree = () =>
     until(
       async () => (await api(admin, "/api/games/current")).body.slot === "free",
@@ -76,6 +82,7 @@ export async function endings(h) {
   await step("explicit-prestart-cancellation-has-no-history", async () => {
     const before = (await api(admin, "/api/history")).body.games.length;
     const id = await create(9, 2);
+    await openGameOptions();
     await click(admin, "Cancel game");
     await admin.getByRole("dialog").getByRole("button").last().click();
     await resolveOriginalUntil(
@@ -98,6 +105,54 @@ export async function endings(h) {
       (await api(admin, `/api/history/${id}`)).status === 404,
       "prestart-history-unavailable",
     );
+  });
+  await step("single-player-start-requires-explicit-yes-no-confirmation", async () => {
+    const id = await create(9, 2);
+    await click(admin, "Open saved lobby");
+    await admin.getByRole("dialog").getByRole("button", { name: "Publish the saved setup?", exact: true }).click();
+    await admin.getByRole("heading", { name: "Waiting for the host to start" }).waitFor();
+    const code = (await api(admin, `/api/games/${id}/sync?view=account`)).body.snapshot.game_code;
+    const player = await (await context()).newPage();
+    await player.goto(`${origin}/join/${code}`);
+    await player.getByLabel("Your alias", { exact: true }).fill("SoloPlayer");
+    await click(player, "Join as player");
+    await player.getByRole("heading", { name: "Waiting for the host to start" }).waitFor();
+    await until(
+      async () => (await api(admin, `/api/games/${id}/sync?view=account`)).body.snapshot.connected_player_count === 1,
+      "single-player-connected",
+    );
+    const start = admin.getByRole("button", { name: "Start game", exact: true });
+    await until(() => start.isEnabled(), "single-player-start-available");
+    assert(await start.isEnabled(), "one-connected-player-can-attempt-start");
+    await start.click();
+    const confirmation = admin.getByRole("dialog");
+    await confirmation.getByRole("heading", { name: "Start with one connected player?", exact: true }).waitFor();
+    assert(await confirmation.getByText(/Only one player is connected.*additional players cannot join/s, { exact: false }).count() === 1, "single-player-warning-explains-admission-closes");
+    assert(await confirmation.getByRole("button", { name: "Yes", exact: true }).count() === 1, "single-player-confirm-yes");
+    assert(await confirmation.getByRole("button", { name: "No", exact: true }).count() === 1, "single-player-confirm-no");
+    await confirmation.getByRole("button", { name: "No", exact: true }).click();
+    await confirmation.waitFor({ state: "detached" });
+    assert((await api(admin, `/api/games/${id}/sync?view=account`)).body.snapshot.game.state === "awaiting_players", "single-player-no-keeps-lobby");
+    assert(await player.getByRole("table", { name: "Game board", exact: true }).count() === 0, "single-player-no-assigns-no-board");
+    let soloStartRequest;
+    await admin.route(`**/api/games/${id}/start`, async (route) => {
+      soloStartRequest = { method: route.request().method(), body: route.request().postDataJSON() };
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({ error: { code: "conflict", message: "test-only Start denial" } }),
+      });
+    });
+    await admin.getByRole("button", { name: "Start game", exact: true }).click();
+    await admin.getByRole("dialog").getByRole("button", { name: "Yes", exact: true }).click();
+    await until(() => soloStartRequest !== undefined, "single-player-yes-submits-start");
+    assert(soloStartRequest.method === "POST" && Number.isInteger(soloStartRequest.body.expected_revision), "single-player-yes-uses-start-contract");
+    await admin.unroute(`**/api/games/${id}/start`);
+    assert((await api(admin, `/api/games/${id}/sync?view=account`)).body.snapshot.game.state === "awaiting_players", "test-denial-preserves-lobby");
+    await openGameOptions();
+    await click(admin, "Cancel game");
+    await admin.getByRole("dialog").getByRole("button").last().click();
+    await resolveOriginalUntil(admin, async () => (await api(admin, "/api/games/current")).body.slot === "free", "single-player-prestart-cancel-resolved");
   });
   let id;
   await step("large-board-start-and-confirmed-no-winner-end", async () => {
@@ -167,6 +222,7 @@ export async function endings(h) {
     await admin.getByLabel("Manual value", { exact: true }).fill("100");
     await statusBadge(admin, "In progress", "info");
     await issueCall(admin, "Call value", 1, id);
+    await openGameOptions();
     await click(admin, "End without winner");
     await admin.getByRole("dialog").getByRole("button").last().click();
     await resolveOriginalUntil(

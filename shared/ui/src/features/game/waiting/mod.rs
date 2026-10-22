@@ -1,5 +1,5 @@
 use super::{CodeBadge, GameContext, Rules};
-use crate::components::{StatusBadge, StatusTone};
+use crate::components::{Confirm, StatusBadge, StatusTone};
 use brews_contracts::{discovery::GameAvailability, games::GameView};
 use dioxus::prelude::*;
 use serde_json::json;
@@ -7,6 +7,7 @@ use serde_json::json;
 #[component]
 pub(super) fn Lobby() -> Element {
     let game = use_context::<GameContext>();
+    let mut confirm_single_player_start = use_signal(|| false);
     let Some(snapshot) = (game.snapshot)() else {
         return rsx! {};
     };
@@ -47,24 +48,35 @@ pub(super) fn Lobby() -> Element {
                 }
                 Rules {configuration}
                 if (game.may_operate)(){
-                    {let can_start=matches!((game.availability)(),Some(GameAvailability::Account{can_start:true,..}));rsx!{
-                        button {class:"button",disabled:!game.operate() || !can_start,onclick:move |_|async move{if game.operate(){game.send("POST","start",json!({"expected_revision":summary.view_revision})).await;}},"Start game"}
-                        if !can_start{p {class:"muted","Start requires at least two connected eligible players and a feasible saved configuration. The server checks the full retained roster."}}
+                    {let (can_start,connected)=match (game.availability)(){Some(GameAvailability::Account{can_start,connected_player_count,..})=>(can_start,connected_player_count),_=>(false,connected_player_count)};rsx!{
+                        button {class:"button",disabled:!game.operate() || !can_start,onclick:move |_|{
+                            if !game.operate() || !can_start{return;}
+                            if connected < 2 {confirm_single_player_start.set(true);}
+                            else {let expected_revision=summary.view_revision;spawn(async move{if game.operate(){game.send("POST","start",json!({"expected_revision":expected_revision})).await;}});}
+                        },"Start game"}
+                        if connected == 0 {p {class:"muted","At least one connected eligible player is required to start. The server checks the full retained roster."}}
+                        else if !can_start {p {class:"muted","The saved configuration must support distinct boards for the full retained roster before Start."}}
+                        if confirm_single_player_start(){Confirm {
+                            title:"Start with one connected player?".to_string(),
+                            cancel_label:"No".to_string(),
+                            confirm_label:Some("Yes".to_string()),
+                            busy:!game.operate(),
+                            oncancel:move |_|confirm_single_player_start.set(false),
+                            onconfirm:move |_|{confirm_single_player_start.set(false);let expected_revision=summary.view_revision;spawn(async move{if game.operate(){game.send("POST","start",json!({"expected_revision":expected_revision})).await;}});},
+                            p {"Only one player is connected. Once the game starts, additional players cannot join. Start anyway?"}
+                        }}
                     }}
                 }
-                super::settings::OperatorSettings {}
             },
             GameView::Player {alias,game_code,configuration,..}=>rsx!{
                 p {class:"lead","Playing as {alias}"}
                 if let Some(code)=game_code {CodeBadge {code:code.as_str().to_string()}}
                 Rules {configuration}
-                super::settings::ParticipantSettings {}
             },
             GameView::Spectator {game_code,configuration,..}=>rsx!{
                 p {class:"lead","Spectator view"}
                 CodeBadge {code:game_code.as_str().to_string()}
                 Rules {configuration}
-                super::settings::ParticipantSettings {}
             },
             _=>rsx!{},
         }

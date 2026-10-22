@@ -25593,11 +25593,19 @@
       "_origin": "ast"
     },
     {
+      "id": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
+      "label": "start_requires_one_connected_player_and_assigns_a_board_to_that_player()",
+      "file_type": "code",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1393",
+      "_origin": "ast"
+    },
+    {
       "id": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
       "label": "start_counts_observed_valid_players_and_assigns_every_retained_member_atomically()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1393",
+      "source_location": "L1475",
       "_origin": "ast"
     },
     {
@@ -25605,7 +25613,7 @@
       "label": "exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1491",
+      "source_location": "L1573",
       "_origin": "ast"
     },
     {
@@ -25613,7 +25621,7 @@
       "label": "recovery_deadlines_backoff_and_absent_initializer_sealing_survive_clock_rollback()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1546",
+      "source_location": "L1628",
       "_origin": "ast"
     },
     {
@@ -25621,7 +25629,7 @@
       "label": "start_faults_never_leave_boards_receipts_or_in_progress_state()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1588",
+      "source_location": "L1670",
       "_origin": "ast"
     },
     {
@@ -25629,7 +25637,7 @@
       "label": "unpublished_lobby_context_capacity_and_alias_failure_paths_are_real_sqlite()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1668",
+      "source_location": "L1750",
       "_origin": "ast"
     },
     {
@@ -25637,7 +25645,7 @@
       "label": "random_gap_preflight_uses_fresh_time_and_start_deadline_gap_commits_cancellation()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1760",
+      "source_location": "L1842",
       "_origin": "ast"
     },
     {
@@ -25645,7 +25653,7 @@
       "label": "expired_connections_and_sessions_cleanup_changes_host_revision_not_private_boards()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1818",
+      "source_location": "L1900",
       "_origin": "ast"
     },
     {
@@ -25653,7 +25661,7 @@
       "label": "account_socket_grants_require_fresh_accounts_and_do_not_renew_expiry_or_presence()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1931",
+      "source_location": "L2013",
       "_origin": "ast"
     },
     {
@@ -25661,7 +25669,7 @@
       "label": "socket_player_projection_and_sync_reprove_current_session_without_private_gaps()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2035",
+      "source_location": "L2117",
       "_origin": "ast"
     },
     {
@@ -25669,7 +25677,7 @@
       "label": "malformed_existing_player_authority_never_falls_back_to_fresh_admission()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2097",
+      "source_location": "L2179",
       "_origin": "ast"
     },
     {
@@ -25677,7 +25685,7 @@
       "label": "known_start_publication_outlives_receipt_floor_and_late_ack_clears_exact_work()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2119",
+      "source_location": "L2201",
       "_origin": "ast"
     },
     {
@@ -25685,7 +25693,7 @@
       "label": "actual_sqlite_reopen_preserves_lobby_intent_and_lost_publication_ack()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2171",
+      "source_location": "L2253",
       "_origin": "ast"
     },
     {
@@ -25693,7 +25701,7 @@
       "label": "delivery_inventory_is_exact_complete_group_or_none_and_checked_each_transaction()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2243",
+      "source_location": "L2325",
       "_origin": "ast"
     },
     {
@@ -25701,7 +25709,7 @@
       "label": "prestart_delete_fault_rolls_back_terminal_and_keeps_release_reservation()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2267",
+      "source_location": "L2349",
       "_origin": "ast"
     },
     {
@@ -25709,7 +25717,7 @@
       "label": "whole_start_candidate_budget_all_free_feasibility_and_initial_qualification()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2289",
+      "source_location": "L2371",
       "_origin": "ast"
     },
     {
@@ -25717,7 +25725,7 @@
       "label": "normalized_storage_rejects_unsafe_session_epochs_and_deadlines()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2405",
+      "source_location": "L2487",
       "_origin": "ast"
     },
     {
@@ -25725,7 +25733,7 @@
       "label": "command_receipts_use_variant_scoped_account_and_player_actor_namespaces()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2425",
+      "source_location": "L2507",
       "_origin": "ast"
     },
     {
@@ -25733,7 +25741,7 @@
       "label": "answer_kdf_runs_outside_sqlite_write_and_rechecks_real_competing_admission()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2438",
+      "source_location": "L2520",
       "_origin": "ast"
     },
     {
@@ -25741,7 +25749,7 @@
       "label": "creation_configuration_set_order_is_canonical_without_a_blob_authority()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2533",
+      "source_location": "L2615",
       "_origin": "ast"
     },
     {
@@ -25749,7 +25757,7 @@
       "label": "ignored_configuration_insert_rolls_back_creation_and_cannot_leave_partial_identity()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2576",
+      "source_location": "L2658",
       "_origin": "ast"
     },
     {
@@ -25757,7 +25765,7 @@
       "label": "ignored_session_or_answer_insert_rolls_back_join_and_leaves_context_unconsumed()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2621",
+      "source_location": "L2703",
       "_origin": "ast"
     },
     {
@@ -25765,7 +25773,7 @@
       "label": "other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_idle_renewal()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2655",
+      "source_location": "L2737",
       "_origin": "ast"
     },
     {
@@ -25773,7 +25781,7 @@
       "label": "fresh_game_schema_is_normalized_and_rejects_unrelated_owner_tables()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2761",
+      "source_location": "L2843",
       "_origin": "ast"
     },
     {
@@ -25781,7 +25789,7 @@
       "label": "current_schema_migration_preserves_populated_prior_origins_and_actor_roundtrips()",
       "file_type": "code",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2803",
+      "source_location": "L2885",
       "_origin": "ast"
     },
     {
@@ -26881,8 +26889,8 @@
       "_origin": "ast"
     },
     {
-      "id": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected",
-      "label": "lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected()",
+      "id": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_one_accepted_player_can_start",
+      "label": "lobby_leave_excludes_start_roster_and_one_accepted_player_can_start()",
       "file_type": "code",
       "source_file": "backend/tests/games_core/player_lifecycle.rs",
       "source_location": "L492",
@@ -33437,7 +33445,7 @@
       "label": "closed()",
       "file_type": "code",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L233",
+      "source_location": "L236",
       "_origin": "ast"
     },
     {
@@ -33445,7 +33453,7 @@
       "label": "holdConnectionProofs()",
       "file_type": "code",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L296",
+      "source_location": "L299",
       "_origin": "ast"
     },
     {
@@ -33453,7 +33461,7 @@
       "label": "releaseConnectionProofs()",
       "file_type": "code",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L313",
+      "source_location": "L316",
       "_origin": "ast"
     },
     {
@@ -33461,7 +33469,7 @@
       "label": "streamRequest()",
       "file_type": "code",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L320",
+      "source_location": "L323",
       "_origin": "ast"
     },
     {
@@ -33469,7 +33477,7 @@
       "label": "nativeRegistry()",
       "file_type": "code",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L323",
+      "source_location": "L326",
       "_origin": "ast"
     },
     {
@@ -36417,11 +36425,19 @@
       "_origin": "ast"
     },
     {
+      "id": "platform_web_tests_additional_opengameoptions",
+      "label": "openGameOptions()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/additional.mjs",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
       "id": "platform_web_tests_additional_accountmanagement",
       "label": "accountManagement()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L10",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -36429,7 +36445,7 @@
       "label": "membershipManagement()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L151",
+      "source_location": "L157",
       "_origin": "ast"
     },
     {
@@ -36437,7 +36453,7 @@
       "label": "hostTransfer()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L420",
+      "source_location": "L429",
       "_origin": "ast"
     },
     {
@@ -36445,7 +36461,7 @@
       "label": "runningLeave()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L490",
+      "source_location": "L500",
       "_origin": "ast"
     },
     {
@@ -36453,7 +36469,7 @@
       "label": "finalExits()",
       "file_type": "code",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L550",
+      "source_location": "L561",
       "_origin": "ast"
     },
     {
@@ -36561,11 +36577,19 @@
       "_origin": "ast"
     },
     {
+      "id": "platform_web_tests_browser_opengameoptions",
+      "label": "openGameOptions()",
+      "file_type": "code",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L43",
+      "_origin": "ast"
+    },
+    {
       "id": "platform_web_tests_browser_step",
       "label": "step()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L43",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -36573,7 +36597,7 @@
       "label": "context()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L49",
+      "source_location": "L55",
       "_origin": "ast"
     },
     {
@@ -36581,7 +36605,7 @@
       "label": "api()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L209",
+      "source_location": "L215",
       "_origin": "ast"
     },
     {
@@ -36589,7 +36613,7 @@
       "label": "snapshot()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L218",
+      "source_location": "L224",
       "_origin": "ast"
     },
     {
@@ -36597,7 +36621,7 @@
       "label": "until()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L231",
+      "source_location": "L237",
       "_origin": "ast"
     },
     {
@@ -36605,7 +36629,7 @@
       "label": "click()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L239",
+      "source_location": "L245",
       "_origin": "ast"
     },
     {
@@ -36613,7 +36637,7 @@
       "label": "resolveOriginalUntil()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L242",
+      "source_location": "L248",
       "_origin": "ast"
     },
     {
@@ -36621,7 +36645,7 @@
       "label": "issueCall()",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L254",
+      "source_location": "L260",
       "_origin": "ast"
     },
     {
@@ -36629,7 +36653,7 @@
       "label": "password",
       "file_type": "code",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L303",
+      "source_location": "L309",
       "_origin": "ast"
     },
     {
@@ -36653,7 +36677,7 @@
       "label": "deleteAccount()",
       "file_type": "code",
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L296",
+      "source_location": "L352",
       "_origin": "ast"
     },
     {
@@ -41301,7 +41325,7 @@
       "label": "GameConfiguration",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L105",
+      "source_location": "L106",
       "_origin": "ast"
     },
     {
@@ -41325,7 +41349,7 @@
       "label": ".default()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L115",
+      "source_location": "L116",
       "_origin": "ast"
     },
     {
@@ -41333,7 +41357,7 @@
       "label": ".validate()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L128",
+      "source_location": "L129",
       "_origin": "ast"
     },
     {
@@ -41341,7 +41365,7 @@
       "label": ".validate_start_feasibility()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L155",
+      "source_location": "L156",
       "_origin": "ast"
     },
     {
@@ -41349,7 +41373,7 @@
       "label": ".non_free_cell_count()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L176",
+      "source_location": "L177",
       "_origin": "ast"
     },
     {
@@ -41357,7 +41381,7 @@
       "label": "BoardCell",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L184",
+      "source_location": "L185",
       "_origin": "ast"
     },
     {
@@ -41365,7 +41389,7 @@
       "label": "BoardCellKind",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L198",
+      "source_location": "L199",
       "_origin": "ast"
     },
     {
@@ -41373,7 +41397,7 @@
       "label": "CompletedLine",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L209",
+      "source_location": "L210",
       "_origin": "ast"
     },
     {
@@ -41381,7 +41405,7 @@
       "label": "PatternEvaluationError",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L217",
+      "source_location": "L218",
       "_origin": "ast"
     },
     {
@@ -41389,7 +41413,7 @@
       "label": "SingleLinePattern",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L218",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -41397,7 +41421,7 @@
       "label": "SingleLine",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L224",
+      "source_location": "L225",
       "_origin": "ast"
     },
     {
@@ -41405,7 +41429,7 @@
       "label": ".evaluate()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "_origin": "ast"
     },
     {
@@ -41413,7 +41437,7 @@
       "label": "apply_called_value()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "_origin": "ast"
     },
     {
@@ -41421,7 +41445,7 @@
       "label": "RandomSourceError",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L300",
+      "source_location": "L301",
       "_origin": "ast"
     },
     {
@@ -41429,7 +41453,7 @@
       "label": "BoardGenerationError",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L302",
+      "source_location": "L303",
       "_origin": "ast"
     },
     {
@@ -41437,7 +41461,7 @@
       "label": "AssignedBoard",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L315",
+      "source_location": "L316",
       "_origin": "ast"
     },
     {
@@ -41453,7 +41477,7 @@
       "label": "generate_boards()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "_origin": "ast"
     },
     {
@@ -41469,7 +41493,7 @@
       "label": "bounded_index()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "_origin": "ast"
     },
     {
@@ -41477,7 +41501,7 @@
       "label": "generation_budget_covers_whole_start_and_random_errors_return_no_partial_boards()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L430",
+      "source_location": "L431",
       "_origin": "ast"
     },
     {
@@ -41485,7 +41509,7 @@
       "label": "bounded_index_rejects_biased_tail_and_fails_closed_on_rejection_exhaustion()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L477",
+      "source_location": "L478",
       "_origin": "ast"
     },
     {
@@ -41493,7 +41517,7 @@
       "label": "generation_is_deterministic_stable_id_order_unique_and_initially_qualified()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L500",
+      "source_location": "L501",
       "_origin": "ast"
     },
     {
@@ -41501,7 +41525,7 @@
       "label": "single_line_returns_all_lines_in_approved_order_and_rejects_invalid_shape()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L541",
+      "source_location": "L542",
       "_origin": "ast"
     },
     {
@@ -41509,7 +41533,7 @@
       "label": "accepted_value_matches_all_cells_once_and_recomputes_single_line()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L580",
+      "source_location": "L581",
       "_origin": "ast"
     },
     {
@@ -41517,7 +41541,7 @@
       "label": "invalid_board_is_unchanged_when_progression_fails()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L631",
+      "source_location": "L632",
       "_origin": "ast"
     },
     {
@@ -41525,7 +41549,7 @@
       "label": "call_mode_storage_tags_are_stable_snake_case()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L642",
+      "source_location": "L643",
       "_origin": "ast"
     },
     {
@@ -41533,7 +41557,7 @@
       "label": "feasibility_counts_entire_roster_with_capped_falling_factorial()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L650",
+      "source_location": "L651",
       "_origin": "ast"
     },
     {
@@ -41541,7 +41565,7 @@
       "label": "complete_configuration_enforces_approved_ranges_free_positions_and_pool()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L679",
+      "source_location": "L680",
       "_origin": "ast"
     },
     {
@@ -41549,7 +41573,7 @@
       "label": "code_lookup_alone_canonicalizes_ordinary_spaces_and_ascii_case()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L754",
+      "source_location": "L755",
       "_origin": "ast"
     },
     {
@@ -41557,7 +41581,7 @@
       "label": "alias_trims_only_outer_spaces_and_preserves_case_and_internal_spaces()",
       "file_type": "code",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L777",
+      "source_location": "L778",
       "_origin": "ast"
     },
     {
@@ -42793,19 +42817,19 @@
       "_origin": "ast"
     },
     {
-      "id": "shared_ui_src_components_dialog_active_element",
-      "label": "active_element()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L95",
-      "_origin": "ast"
-    },
-    {
       "id": "shared_ui_src_components_dialog_rs_option",
       "label": "Option",
       "file_type": "code",
       "source_file": "",
       "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "shared_ui_src_components_dialog_active_element",
+      "label": "active_element()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/components/dialog.rs",
+      "source_location": "L98",
       "_origin": "ast"
     },
     {
@@ -42821,7 +42845,7 @@
       "label": "open()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L102",
+      "source_location": "L105",
       "_origin": "ast"
     },
     {
@@ -42829,7 +42853,7 @@
       "label": "close()",
       "file_type": "code",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L116",
+      "source_location": "L119",
       "_origin": "ast"
     },
     {
@@ -43861,7 +43885,7 @@
       "label": "Play()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L12",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -43873,59 +43897,19 @@
       "_origin": "ast"
     },
     {
+      "id": "shared_ui_src_features_game_active_mod_toggle_game_fullscreen",
+      "label": "toggle_game_fullscreen()",
+      "file_type": "code",
+      "source_file": "shared/ui/src/features/game/active/mod.rs",
+      "source_location": "L55",
+      "_origin": "ast"
+    },
+    {
       "id": "shared_ui_src_features_game_active_mod_hostcontrols",
       "label": "HostControls()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L59",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_active_speech",
-      "label": "speech.rs",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L1",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_active_speech_speechcontrols",
-      "label": "SpeechControls()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L8",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_active_speech_rs_element",
-      "label": "Element",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_active_speech_speak",
-      "label": "speak()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L68",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_active_speech_cancel",
-      "label": "cancel()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L86",
-      "_origin": "ast"
-    },
-    {
-      "id": "shared_ui_src_features_game_active_speech_fullscreen",
-      "label": "fullscreen()",
-      "file_type": "code",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L96",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -44357,7 +44341,7 @@
       "label": "GameContext",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L32",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -44397,7 +44381,7 @@
       "label": ".can_command()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L51",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -44405,7 +44389,7 @@
       "label": ".fresh()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "_origin": "ast"
     },
     {
@@ -44413,7 +44397,7 @@
       "label": ".operate()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L68",
+      "source_location": "L66",
       "_origin": "ast"
     },
     {
@@ -44421,7 +44405,7 @@
       "label": ".call_view_current()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L71",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -44429,7 +44413,7 @@
       "label": ".path()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L80",
+      "source_location": "L78",
       "_origin": "ast"
     },
     {
@@ -44437,7 +44421,7 @@
       "label": ".refresh()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L83",
+      "source_location": "L81",
       "_origin": "ast"
     },
     {
@@ -44445,7 +44429,7 @@
       "label": ".clear()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L91",
+      "source_location": "L89",
       "_origin": "ast"
     },
     {
@@ -44453,7 +44437,7 @@
       "label": ".restore()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L104",
+      "source_location": "L102",
       "_origin": "ast"
     },
     {
@@ -44461,7 +44445,7 @@
       "label": ".exit()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L108",
+      "source_location": "L106",
       "_origin": "ast"
     },
     {
@@ -44469,7 +44453,7 @@
       "label": ".send()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L123",
+      "source_location": "L121",
       "_origin": "ast"
     },
     {
@@ -44485,7 +44469,7 @@
       "label": "StreamState",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L151",
+      "source_location": "L149",
       "_origin": "ast"
     },
     {
@@ -44493,7 +44477,7 @@
       "label": ".before_command()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L156",
+      "source_location": "L154",
       "_origin": "ast"
     },
     {
@@ -44509,7 +44493,7 @@
       "label": "GamePage()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L169",
+      "source_location": "L167",
       "_origin": "ast"
     },
     {
@@ -44525,7 +44509,7 @@
       "label": "GameScreen()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L192",
+      "source_location": "L190",
       "_origin": "ast"
     },
     {
@@ -44533,7 +44517,7 @@
       "label": "command_destination()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "_origin": "ast"
     },
     {
@@ -44541,7 +44525,7 @@
       "label": "call_snapshot_current()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L374",
+      "source_location": "L451",
       "_origin": "ast"
     },
     {
@@ -44549,7 +44533,7 @@
       "label": "call_revision()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L379",
+      "source_location": "L456",
       "_origin": "ast"
     },
     {
@@ -44557,7 +44541,7 @@
       "label": "cancelled_before_start()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L392",
+      "source_location": "L469",
       "_origin": "ast"
     },
     {
@@ -44565,7 +44549,7 @@
       "label": "CodeBadge()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L413",
+      "source_location": "L490",
       "_origin": "ast"
     },
     {
@@ -44573,7 +44557,7 @@
       "label": "Rules()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L429",
+      "source_location": "L506",
       "_origin": "ast"
     },
     {
@@ -44581,7 +44565,7 @@
       "label": "receipt()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L448",
+      "source_location": "L525",
       "_origin": "ast"
     },
     {
@@ -44597,7 +44581,7 @@
       "label": "delayed_switch_success_routes_without_a_source_snapshot()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L460",
+      "source_location": "L537",
       "_origin": "ast"
     },
     {
@@ -44605,7 +44589,7 @@
       "label": "departure_pauses_streams_without_treating_pending_as_success()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L499",
+      "source_location": "L576",
       "_origin": "ast"
     },
     {
@@ -44613,7 +44597,7 @@
       "label": "exit_receipt_keeps_the_parent_owned_destination()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L540",
+      "source_location": "L617",
       "_origin": "ast"
     },
     {
@@ -44621,7 +44605,7 @@
       "label": "observed_call_receipt_does_not_require_stream_reconnection()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L566",
+      "source_location": "L643",
       "_origin": "ast"
     },
     {
@@ -45109,7 +45093,7 @@
       "label": "TransferTargets()",
       "file_type": "code",
       "source_file": "shared/ui/src/features/game/settings/operator.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "_origin": "ast"
     },
     {
@@ -167052,7 +167036,7 @@
     },
     {
       "source": "backend_tests_games_core",
-      "target": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "target": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
@@ -167062,11 +167046,21 @@
     },
     {
       "source": "backend_tests_games_core",
+      "target": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1475",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core",
       "target": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1491",
+      "source_location": "L1573",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167076,7 +167070,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1546",
+      "source_location": "L1628",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167086,7 +167080,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1588",
+      "source_location": "L1670",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167096,7 +167090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1668",
+      "source_location": "L1750",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167106,7 +167100,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1760",
+      "source_location": "L1842",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167116,7 +167110,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1818",
+      "source_location": "L1900",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167126,7 +167120,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1931",
+      "source_location": "L2013",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167136,7 +167130,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2035",
+      "source_location": "L2117",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167146,7 +167140,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2097",
+      "source_location": "L2179",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167156,7 +167150,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2119",
+      "source_location": "L2201",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167166,7 +167160,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2171",
+      "source_location": "L2253",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167176,7 +167170,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2243",
+      "source_location": "L2325",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167186,7 +167180,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2267",
+      "source_location": "L2349",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167196,7 +167190,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2289",
+      "source_location": "L2371",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167206,7 +167200,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2405",
+      "source_location": "L2487",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167216,7 +167210,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2425",
+      "source_location": "L2507",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167226,7 +167220,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2438",
+      "source_location": "L2520",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167236,7 +167230,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2533",
+      "source_location": "L2615",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167246,7 +167240,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2576",
+      "source_location": "L2658",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167256,7 +167250,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2621",
+      "source_location": "L2703",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167266,7 +167260,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2655",
+      "source_location": "L2737",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167276,7 +167270,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2761",
+      "source_location": "L2843",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -167286,7 +167280,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2803",
+      "source_location": "L2885",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168039,106 +168033,95 @@
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "source": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
       "target": "backend_tests_games_core_fixture_new",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1395",
+      "source_location": "L1396",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "source": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
       "target": "backend_tests_games_core_fixture_player",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1397",
+      "source_location": "L1398",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "source": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
       "target": "backend_tests_games_core_fixture_service",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1400",
+      "source_location": "L1403",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "source": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
       "target": "backend_tests_games_core_fixture_auth",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1414",
+      "source_location": "L1405",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "source": "backend_tests_games_core_start_requires_one_connected_player_and_assigns_a_board_to_that_player",
       "target": "backend_tests_games_core_fixture_directory",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1420",
+      "source_location": "L1407",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
-      "target": "backend_tests_games_core_fixture_command",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1421",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
       "target": "backend_tests_games_core_fixture_new",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1492",
+      "source_location": "L1477",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
       "target": "backend_tests_games_core_fixture_player",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1494",
+      "source_location": "L1479",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
       "target": "backend_tests_games_core_fixture_service",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1495",
+      "source_location": "L1482",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
       "target": "backend_tests_games_core_fixture_auth",
       "relation": "calls",
       "context": "call",
@@ -168149,13 +168132,79 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "target": "backend_tests_games_core_fixture_directory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1502",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_start_counts_observed_valid_players_and_assigns_every_retained_member_atomically",
+      "target": "backend_tests_games_core_fixture_command",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1503",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "target": "backend_tests_games_core_fixture_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1574",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "target": "backend_tests_games_core_fixture_player",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1576",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "target": "backend_tests_games_core_fixture_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1577",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
+      "target": "backend_tests_games_core_fixture_auth",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L1578",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_games_core_exact_idle_deadline_cancels_deletes_prestart_data_and_requires_release_ack",
       "target": "backend_tests_games_core_fixture_directory",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1538",
+      "source_location": "L1620",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168166,7 +168215,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1547",
+      "source_location": "L1629",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168177,7 +168226,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1549",
+      "source_location": "L1631",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168188,7 +168237,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1553",
+      "source_location": "L1635",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168199,7 +168248,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1559",
+      "source_location": "L1641",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168210,7 +168259,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1589",
+      "source_location": "L1671",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168221,7 +168270,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1591",
+      "source_location": "L1673",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168232,7 +168281,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1593",
+      "source_location": "L1675",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168243,7 +168292,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1607",
+      "source_location": "L1689",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168254,7 +168303,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1611",
+      "source_location": "L1693",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168265,7 +168314,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1612",
+      "source_location": "L1694",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168276,7 +168325,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1670",
+      "source_location": "L1752",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168287,7 +168336,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1672",
+      "source_location": "L1754",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168298,7 +168347,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1676",
+      "source_location": "L1758",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168309,7 +168358,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1680",
+      "source_location": "L1762",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168320,7 +168369,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1684",
+      "source_location": "L1766",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168331,7 +168380,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1761",
+      "source_location": "L1843",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168342,7 +168391,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1764",
+      "source_location": "L1846",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168353,7 +168402,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1771",
+      "source_location": "L1853",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168364,7 +168413,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1787",
+      "source_location": "L1869",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168375,7 +168424,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1791",
+      "source_location": "L1873",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168386,7 +168435,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1819",
+      "source_location": "L1901",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168397,7 +168446,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1821",
+      "source_location": "L1903",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168408,7 +168457,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1823",
+      "source_location": "L1905",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168419,7 +168468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1837",
+      "source_location": "L1919",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168430,7 +168479,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1841",
+      "source_location": "L1923",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168441,7 +168490,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1845",
+      "source_location": "L1927",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168452,7 +168501,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1932",
+      "source_location": "L2014",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168463,7 +168512,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1935",
+      "source_location": "L2017",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168474,7 +168523,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1936",
+      "source_location": "L2018",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168485,68 +168534,13 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2036",
+      "source_location": "L2118",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "backend_tests_games_core_socket_player_projection_and_sync_reprove_current_session_without_private_gaps",
       "target": "backend_tests_games_core_fixture_player",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2038",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_socket_player_projection_and_sync_reprove_current_session_without_private_gaps",
-      "target": "backend_tests_games_core_fixture_service",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2040",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_socket_player_projection_and_sync_reprove_current_session_without_private_gaps",
-      "target": "backend_tests_games_core_fixture_auth",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2061",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_malformed_existing_player_authority_never_falls_back_to_fresh_admission",
-      "target": "backend_tests_games_core_fixture_new",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2098",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_malformed_existing_player_authority_never_falls_back_to_fresh_admission",
-      "target": "backend_tests_games_core_fixture_player",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2100",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_known_start_publication_outlives_receipt_floor_and_late_ack_clears_exact_work",
-      "target": "backend_tests_games_core_fixture_new",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -168556,13 +168550,68 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_games_core_socket_player_projection_and_sync_reprove_current_session_without_private_gaps",
+      "target": "backend_tests_games_core_fixture_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_socket_player_projection_and_sync_reprove_current_session_without_private_gaps",
+      "target": "backend_tests_games_core_fixture_auth",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2143",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_malformed_existing_player_authority_never_falls_back_to_fresh_admission",
+      "target": "backend_tests_games_core_fixture_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2180",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_malformed_existing_player_authority_never_falls_back_to_fresh_admission",
+      "target": "backend_tests_games_core_fixture_player",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2182",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_known_start_publication_outlives_receipt_floor_and_late_ack_clears_exact_work",
+      "target": "backend_tests_games_core_fixture_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2202",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_games_core_known_start_publication_outlives_receipt_floor_and_late_ack_clears_exact_work",
       "target": "backend_tests_games_core_fixture_player",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2122",
+      "source_location": "L2204",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168573,7 +168622,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2124",
+      "source_location": "L2206",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168584,7 +168633,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2138",
+      "source_location": "L2220",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168595,7 +168644,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2142",
+      "source_location": "L2224",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168606,7 +168655,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2146",
+      "source_location": "L2228",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168617,7 +168666,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2172",
+      "source_location": "L2254",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168628,7 +168677,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2184",
+      "source_location": "L2266",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168639,7 +168688,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2188",
+      "source_location": "L2270",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168650,7 +168699,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2192",
+      "source_location": "L2274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168661,7 +168710,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2196",
+      "source_location": "L2278",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168672,7 +168721,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2244",
+      "source_location": "L2326",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168683,7 +168732,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2268",
+      "source_location": "L2350",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168694,7 +168743,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2270",
+      "source_location": "L2352",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168705,7 +168754,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2285",
+      "source_location": "L2367",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168716,7 +168765,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2292",
+      "source_location": "L2374",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168727,7 +168776,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2309",
+      "source_location": "L2391",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168738,7 +168787,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2311",
+      "source_location": "L2393",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168749,7 +168798,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2325",
+      "source_location": "L2407",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168760,7 +168809,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2329",
+      "source_location": "L2411",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168771,7 +168820,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2379",
+      "source_location": "L2461",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168782,7 +168831,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2406",
+      "source_location": "L2488",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168793,7 +168842,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2408",
+      "source_location": "L2490",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168804,7 +168853,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2426",
+      "source_location": "L2508",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168815,7 +168864,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2428",
+      "source_location": "L2510",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168826,7 +168875,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2439",
+      "source_location": "L2521",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168837,7 +168886,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2445",
+      "source_location": "L2527",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168848,7 +168897,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2446",
+      "source_location": "L2528",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168859,7 +168908,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2487",
+      "source_location": "L2569",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168870,7 +168919,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2535",
+      "source_location": "L2617",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168881,7 +168930,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2549",
+      "source_location": "L2631",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168892,7 +168941,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2553",
+      "source_location": "L2635",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168903,7 +168952,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2557",
+      "source_location": "L2639",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168914,7 +168963,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2561",
+      "source_location": "L2643",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168925,7 +168974,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2577",
+      "source_location": "L2659",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168936,7 +168985,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2579",
+      "source_location": "L2661",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168947,7 +168996,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2583",
+      "source_location": "L2665",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168958,7 +169007,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2611",
+      "source_location": "L2693",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -168969,46 +169018,13 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2614",
+      "source_location": "L2696",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "backend_tests_games_core_ignored_session_or_answer_insert_rolls_back_join_and_leaves_context_unconsumed",
       "target": "backend_tests_games_core_fixture_new",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2623",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_ignored_session_or_answer_insert_rolls_back_join_and_leaves_context_unconsumed",
-      "target": "backend_tests_games_core_fixture_service",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2625",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_idle_renewal",
-      "target": "backend_tests_games_core_fixture_new",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2702",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "backend_tests_games_core_other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_idle_renewal",
-      "target": "backend_tests_games_core_fixture_directory",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -169018,13 +169034,46 @@
       "_origin": "ast"
     },
     {
+      "source": "backend_tests_games_core_ignored_session_or_answer_insert_rolls_back_join_and_leaves_context_unconsumed",
+      "target": "backend_tests_games_core_fixture_service",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2707",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_idle_renewal",
+      "target": "backend_tests_games_core_fixture_new",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2784",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "backend_tests_games_core_other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_idle_renewal",
+      "target": "backend_tests_games_core_fixture_directory",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/tests/games_core.rs",
+      "source_location": "L2787",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "backend_tests_games_core_other_hosts_can_read_but_only_designated_host_or_admin_mutate_without_admin_idle_renewal",
       "target": "backend_tests_games_core_fixture_command",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2709",
+      "source_location": "L2791",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169035,7 +169084,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2713",
+      "source_location": "L2795",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169046,7 +169095,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2717",
+      "source_location": "L2799",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169057,7 +169106,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2764",
+      "source_location": "L2846",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169068,7 +169117,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2815",
+      "source_location": "L2897",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169079,7 +169128,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2830",
+      "source_location": "L2912",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169090,7 +169139,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2831",
+      "source_location": "L2913",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169101,7 +169150,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2841",
+      "source_location": "L2923",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169112,7 +169161,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2843",
+      "source_location": "L2925",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -169123,7 +169172,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2848",
+      "source_location": "L2930",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -172266,7 +172315,7 @@
     },
     {
       "source": "backend_tests_games_core_player_lifecycle",
-      "target": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected",
+      "target": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_one_accepted_player_can_start",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/tests/games_core/player_lifecycle.rs",
@@ -172458,7 +172507,7 @@
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected",
+      "source": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_one_accepted_player_can_start",
       "target": "backend_tests_games_core_player_lifecycle_lobby",
       "relation": "calls",
       "context": "call",
@@ -172469,7 +172518,7 @@
       "_origin": "ast"
     },
     {
-      "source": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected",
+      "source": "backend_tests_games_core_player_lifecycle_lobby_leave_excludes_start_roster_and_one_accepted_player_can_start",
       "target": "backend_tests_games_core_player_lifecycle_connect",
       "relation": "calls",
       "context": "call",
@@ -194771,7 +194820,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L233",
+      "source_location": "L236",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194781,7 +194830,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L296",
+      "source_location": "L299",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194791,7 +194840,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L313",
+      "source_location": "L316",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194801,7 +194850,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L320",
+      "source_location": "L323",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194811,7 +194860,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L323",
+      "source_location": "L326",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204476,11 +204525,21 @@
     },
     {
       "source": "platform_web_tests_additional",
+      "target": "platform_web_tests_additional_opengameoptions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/additional.mjs",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_additional",
       "target": "platform_web_tests_additional_accountmanagement",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L10",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204490,7 +204549,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L151",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204500,7 +204559,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L420",
+      "source_location": "L429",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204510,7 +204569,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L490",
+      "source_location": "L500",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204520,7 +204579,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L550",
+      "source_location": "L561",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204531,7 +204590,40 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/additional.mjs",
-      "source_location": "L41",
+      "source_location": "L47",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_additional_membershipmanagement",
+      "target": "platform_web_tests_additional_opengameoptions",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/additional.mjs",
+      "source_location": "L199",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_additional_hosttransfer",
+      "target": "platform_web_tests_additional_opengameoptions",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/additional.mjs",
+      "source_location": "L450",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_additional_runningleave",
+      "target": "platform_web_tests_additional_opengameoptions",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/additional.mjs",
+      "source_location": "L521",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204867,7 +204959,7 @@
     },
     {
       "source": "platform_web_tests_browser",
-      "target": "platform_web_tests_browser_step",
+      "target": "platform_web_tests_browser_opengameoptions",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
@@ -204877,7 +204969,7 @@
     },
     {
       "source": "platform_web_tests_browser",
-      "target": "platform_web_tests_browser_context",
+      "target": "platform_web_tests_browser_step",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
@@ -204887,11 +204979,21 @@
     },
     {
       "source": "platform_web_tests_browser",
+      "target": "platform_web_tests_browser_context",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser",
       "target": "platform_web_tests_browser_api",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L209",
+      "source_location": "L215",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204901,7 +205003,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L218",
+      "source_location": "L224",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204911,7 +205013,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L231",
+      "source_location": "L237",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204921,7 +205023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L239",
+      "source_location": "L245",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204931,7 +205033,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L242",
+      "source_location": "L248",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204941,7 +205043,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L254",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204951,7 +205053,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L303",
+      "source_location": "L309",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204967,13 +205069,24 @@
       "_origin": "ast"
     },
     {
+      "source": "platform_web_tests_browser_opengameoptions",
+      "target": "platform_web_tests_browser_click",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "platform_web_tests_browser_snapshot",
       "target": "platform_web_tests_browser_api",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L220",
+      "source_location": "L226",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204984,7 +205097,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L223",
+      "source_location": "L229",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -204995,7 +205108,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L227",
+      "source_location": "L233",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205006,24 +205119,13 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L235",
+      "source_location": "L241",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "platform_web_tests_browser_until",
       "target": "platform_web_tests_browser_assert",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L237",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "platform_web_tests_browser_resolveoriginaluntil",
-      "target": "platform_web_tests_browser_until",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -205034,29 +205136,29 @@
     },
     {
       "source": "platform_web_tests_browser_resolveoriginaluntil",
+      "target": "platform_web_tests_browser_until",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L249",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser_resolveoriginaluntil",
       "target": "platform_web_tests_browser_click",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L247",
+      "source_location": "L253",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "platform_web_tests_browser_issuecall",
       "target": "platform_web_tests_browser_until",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L255",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "platform_web_tests_browser_issuecall",
-      "target": "platform_web_tests_browser_click",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -205067,12 +205169,23 @@
     },
     {
       "source": "platform_web_tests_browser_issuecall",
+      "target": "platform_web_tests_browser_click",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "platform/web/tests/browser.mjs",
+      "source_location": "L267",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "platform_web_tests_browser_issuecall",
       "target": "platform_web_tests_browser_snapshot",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L268",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205083,7 +205196,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L269",
+      "source_location": "L275",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205094,7 +205207,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L280",
+      "source_location": "L286",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205105,7 +205218,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L532",
+      "source_location": "L538",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205116,7 +205229,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L533",
+      "source_location": "L539",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205127,7 +205240,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L534",
+      "source_location": "L540",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205138,7 +205251,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L535",
+      "source_location": "L541",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205149,7 +205262,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L536",
+      "source_location": "L542",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205160,7 +205273,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L537",
+      "source_location": "L543",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205171,7 +205284,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L538",
+      "source_location": "L544",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205182,7 +205295,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L539",
+      "source_location": "L545",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205193,7 +205306,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L540",
+      "source_location": "L546",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205204,7 +205317,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "platform/web/tests/browser.mjs",
-      "source_location": "L541",
+      "source_location": "L547",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -205246,7 +205359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L296",
+      "source_location": "L352",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220178,7 +220291,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220188,7 +220301,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L109",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220199,7 +220312,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L109",
+      "source_location": "L110",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220210,7 +220323,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L112",
+      "source_location": "L113",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220221,7 +220334,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220231,7 +220344,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L115",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220241,7 +220354,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L115",
+      "source_location": "L116",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220252,7 +220365,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L128",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220262,7 +220375,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L128",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220273,7 +220386,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L128",
+      "source_location": "L129",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220284,7 +220397,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220294,7 +220407,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220305,7 +220418,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220316,7 +220429,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L176",
+      "source_location": "L177",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220326,7 +220439,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L176",
+      "source_location": "L177",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220337,7 +220450,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L176",
+      "source_location": "L177",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220348,7 +220461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L184",
+      "source_location": "L185",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220358,7 +220471,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L185",
+      "source_location": "L186",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220369,7 +220482,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L186",
+      "source_location": "L187",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220380,7 +220493,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L198",
+      "source_location": "L199",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220390,7 +220503,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L200",
+      "source_location": "L201",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220401,7 +220514,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L209",
+      "source_location": "L210",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220411,7 +220524,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L217",
+      "source_location": "L218",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220421,7 +220534,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L218",
+      "source_location": "L219",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220431,7 +220544,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L224",
+      "source_location": "L225",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220441,7 +220554,7 @@
       "relation": "implements",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L225",
+      "source_location": "L226",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220451,7 +220564,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220461,7 +220574,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220472,7 +220585,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220483,7 +220596,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220494,7 +220607,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220505,7 +220618,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L226",
+      "source_location": "L227",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220516,7 +220629,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220526,7 +220639,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220537,7 +220650,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220548,7 +220661,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220559,7 +220672,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220570,7 +220683,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220581,7 +220694,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L300",
+      "source_location": "L301",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220591,7 +220704,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L302",
+      "source_location": "L303",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220601,7 +220714,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L315",
+      "source_location": "L316",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220611,7 +220724,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L316",
+      "source_location": "L317",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220622,7 +220735,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L318",
+      "source_location": "L319",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220633,7 +220746,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L318",
+      "source_location": "L319",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220644,7 +220757,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L319",
+      "source_location": "L320",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -220655,7 +220768,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L319",
+      "source_location": "L320",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220666,7 +220779,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220676,7 +220789,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220687,7 +220800,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220698,7 +220811,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220709,7 +220822,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220720,7 +220833,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220731,7 +220844,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220742,7 +220855,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220753,7 +220866,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220764,7 +220877,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220775,7 +220888,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220785,7 +220898,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220796,7 +220909,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -220807,7 +220920,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220818,7 +220931,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -220829,7 +220942,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L406",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -220840,7 +220953,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L428",
+      "source_location": "L429",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -220851,7 +220964,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L430",
+      "source_location": "L431",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220861,7 +220974,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L477",
+      "source_location": "L478",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220871,7 +220984,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L500",
+      "source_location": "L501",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220881,7 +220994,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L541",
+      "source_location": "L542",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220891,7 +221004,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L580",
+      "source_location": "L581",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220901,7 +221014,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L631",
+      "source_location": "L632",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220911,7 +221024,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L642",
+      "source_location": "L643",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220921,7 +221034,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L650",
+      "source_location": "L651",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220931,7 +221044,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L679",
+      "source_location": "L680",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220941,7 +221054,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L754",
+      "source_location": "L755",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -220951,7 +221064,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L777",
+      "source_location": "L778",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221028,7 +221141,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L136",
+      "source_location": "L137",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221039,7 +221152,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L152",
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221050,7 +221163,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L159",
+      "source_location": "L160",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221061,7 +221174,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L161",
+      "source_location": "L162",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221072,7 +221185,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L174",
+      "source_location": "L175",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221083,7 +221196,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L177",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221094,7 +221207,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L178",
+      "source_location": "L179",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221105,7 +221218,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L233",
+      "source_location": "L234",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221116,7 +221229,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L272",
+      "source_location": "L273",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221127,7 +221240,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L281",
+      "source_location": "L282",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221138,7 +221251,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L293",
+      "source_location": "L294",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221149,7 +221262,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L328",
+      "source_location": "L329",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221160,7 +221273,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L334",
+      "source_location": "L335",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221171,7 +221284,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L357",
+      "source_location": "L358",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221182,7 +221295,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L393",
+      "source_location": "L394",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221193,7 +221306,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L404",
+      "source_location": "L405",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221204,7 +221317,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L416",
+      "source_location": "L417",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221215,7 +221328,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L419",
+      "source_location": "L420",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221226,7 +221339,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L443",
+      "source_location": "L444",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221237,7 +221350,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L513",
+      "source_location": "L514",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221248,7 +221361,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L517",
+      "source_location": "L518",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221259,7 +221372,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L520",
+      "source_location": "L521",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221270,7 +221383,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L604",
+      "source_location": "L605",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221281,7 +221394,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L664",
+      "source_location": "L665",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221292,7 +221405,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/domain/src/games.rs",
-      "source_location": "L680",
+      "source_location": "L681",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225372,6 +225485,39 @@
     },
     {
       "source": "shared_ui_src_components_dialog_confirm",
+      "target": "shared_ui_src_components_dialog_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/dialog.rs",
+      "source_location": "L6",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_dialog_confirm",
+      "target": "shared_ui_src_components_dialog_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/dialog.rs",
+      "source_location": "L6",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_dialog_confirm",
+      "target": "shared_ui_src_components_dialog_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/components/dialog.rs",
+      "source_location": "L6",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_components_dialog_confirm",
       "target": "shared_ui_src_components_dialog_rs_element",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -225387,7 +225533,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L93",
+      "source_location": "L96",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -225398,7 +225544,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L94",
+      "source_location": "L97",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -225409,7 +225555,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L95",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225419,7 +225565,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L95",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -225430,7 +225576,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L95",
+      "source_location": "L98",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -225441,7 +225587,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L102",
+      "source_location": "L105",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225451,7 +225597,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L116",
+      "source_location": "L119",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -225462,7 +225608,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/components/dialog.rs",
-      "source_location": "L26",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228268,7 +228414,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L2",
+      "source_location": "L1",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228279,7 +228425,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L3",
+      "source_location": "L2",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228290,7 +228436,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L7",
+      "source_location": "L6",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228301,7 +228447,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L8",
+      "source_location": "L7",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228312,7 +228458,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L9",
+      "source_location": "L8",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228323,7 +228469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L12",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228333,9 +228479,29 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L12",
+      "source_location": "L11",
       "weight": 1.0,
       "context": "return_type",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_active_mod",
+      "target": "shared_ui_src_features_game_active_mod_toggle_game_fullscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/active/mod.rs",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_active_mod",
+      "target": "shared_ui_src_features_game_active_mod_toggle_game_fullscreen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/active/mod.rs",
+      "source_location": "L66",
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -228344,7 +228510,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L59",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228354,123 +228520,9 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L59",
+      "source_location": "L69",
       "weight": 1.0,
       "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "super",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L1",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "prelude",
-      "relation": "imports_from",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L5",
-      "weight": 1.0,
-      "context": "import",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_speechcontrols",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech_speechcontrols",
-      "target": "shared_ui_src_features_game_active_speech_rs_element",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L8",
-      "weight": 1.0,
-      "context": "return_type",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_speak",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L68",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_speak",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L82",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_cancel",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L86",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_cancel",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L94",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_fullscreen",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L96",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech",
-      "target": "shared_ui_src_features_game_active_speech_fullscreen",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L106",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_active_speech_speechcontrols",
-      "target": "shared_ui_src_features_game_active_speech_speak",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/active/speech.rs",
-      "source_location": "L25",
-      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -230073,7 +230125,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L22",
+      "source_location": "L20",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230084,7 +230136,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L26",
+      "source_location": "L24",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230095,7 +230147,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L27",
+      "source_location": "L25",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230106,7 +230158,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L28",
+      "source_location": "L26",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230117,7 +230169,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L29",
+      "source_location": "L27",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230128,7 +230180,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L32",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230138,7 +230190,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L33",
+      "source_location": "L31",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -230149,7 +230201,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L34",
+      "source_location": "L32",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -230160,6 +230212,61 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L32",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L33",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_model_viewcontext",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L33",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L34",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_contracts_src_games_gameview",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
       "source_location": "L34",
       "weight": 1.0,
       "context": "generic_arg",
@@ -230178,7 +230285,18 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_model_viewcontext",
+      "target": "shared_ui_src_features_game_mod_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L35",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_model_terminalnotice",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -230200,28 +230318,6 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L36",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_contracts_src_games_gameview",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L36",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_signal",
       "relation": "references",
       "confidence": "EXTRACTED",
@@ -230233,18 +230329,7 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L37",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_model_terminalnotice",
+      "target": "shared_ui_src_features_game_model_connection",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -230266,22 +230351,11 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "target": "shared_ui_src_features_game_mod_rs_option",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L39",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_model_connection",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L39",
+      "source_location": "L38",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230292,7 +230366,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L40",
+      "source_location": "L39",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -230303,9 +230377,20 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L40",
+      "source_location": "L39",
       "weight": 1.0,
       "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L40",
+      "weight": 1.0,
+      "context": "field",
       "_origin": "ast"
     },
     {
@@ -230322,6 +230407,17 @@
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_option",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L41",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_contracts_src_discovery_gameavailability",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -230343,55 +230439,11 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L43",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_option",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L43",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_contracts_src_discovery_gameavailability",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L43",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L44",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_option",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L44",
+      "source_location": "L42",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230399,6 +230451,39 @@
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_string",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L42",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L43",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_rs_signal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "shared/ui/src/features/game/mod.rs",
+      "source_location": "L44",
+      "weight": 1.0,
+      "context": "field",
+      "_origin": "ast"
+    },
+    {
+      "source": "shared_ui_src_features_game_mod_gamecontext",
+      "target": "shared_ui_src_features_game_mod_streamstate",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
@@ -230420,44 +230505,11 @@
     },
     {
       "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L46",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_streamstate",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L46",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
-      "target": "shared_ui_src_features_game_mod_rs_signal",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L47",
-      "weight": 1.0,
-      "context": "field",
-      "_origin": "ast"
-    },
-    {
-      "source": "shared_ui_src_features_game_mod_gamecontext",
       "target": "shared_ui_src_features_game_mod_rs_option",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L47",
+      "source_location": "L45",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230468,7 +230520,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L47",
+      "source_location": "L45",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230479,7 +230531,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L48",
+      "source_location": "L46",
       "weight": 1.0,
       "context": "field",
       "_origin": "ast"
@@ -230490,7 +230542,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L51",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230500,7 +230552,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230510,7 +230562,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L68",
+      "source_location": "L66",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230520,7 +230572,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L71",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230530,7 +230582,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L80",
+      "source_location": "L78",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230540,7 +230592,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L80",
+      "source_location": "L78",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230551,7 +230603,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L83",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230561,7 +230613,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L91",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230571,7 +230623,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L91",
+      "source_location": "L89",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230582,7 +230634,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L104",
+      "source_location": "L102",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230592,7 +230644,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L108",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230602,7 +230654,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L108",
+      "source_location": "L106",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230613,7 +230665,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L123",
+      "source_location": "L121",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230623,7 +230675,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L123",
+      "source_location": "L121",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230634,7 +230686,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L151",
+      "source_location": "L149",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230644,7 +230696,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L156",
+      "source_location": "L154",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230654,7 +230706,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L156",
+      "source_location": "L154",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230665,7 +230717,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L169",
+      "source_location": "L167",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230675,7 +230727,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L169",
+      "source_location": "L167",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230686,7 +230738,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L169",
+      "source_location": "L167",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230697,7 +230749,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L169",
+      "source_location": "L167",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230708,7 +230760,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L192",
+      "source_location": "L190",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230718,7 +230770,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L192",
+      "source_location": "L190",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230729,7 +230781,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L192",
+      "source_location": "L190",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230740,7 +230792,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L192",
+      "source_location": "L190",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230751,7 +230803,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230761,7 +230813,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230772,7 +230824,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230783,7 +230835,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230794,7 +230846,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230805,7 +230857,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230816,7 +230868,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L330",
+      "source_location": "L407",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -230827,7 +230879,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L374",
+      "source_location": "L451",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230837,7 +230889,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L374",
+      "source_location": "L451",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230848,7 +230900,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L374",
+      "source_location": "L451",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230859,7 +230911,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L379",
+      "source_location": "L456",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230869,7 +230921,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L379",
+      "source_location": "L456",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230880,7 +230932,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L379",
+      "source_location": "L456",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230891,7 +230943,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L392",
+      "source_location": "L469",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230901,7 +230953,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L392",
+      "source_location": "L469",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230912,7 +230964,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L413",
+      "source_location": "L490",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230922,7 +230974,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L413",
+      "source_location": "L490",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230933,7 +230985,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L413",
+      "source_location": "L490",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230944,7 +230996,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L429",
+      "source_location": "L506",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -230954,7 +231006,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L429",
+      "source_location": "L506",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -230965,7 +231017,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L429",
+      "source_location": "L506",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -230976,7 +231028,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L442",
+      "source_location": "L519",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230987,7 +231039,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L443",
+      "source_location": "L520",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -230998,7 +231050,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L448",
+      "source_location": "L525",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231008,7 +231060,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L448",
+      "source_location": "L525",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -231019,7 +231071,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L448",
+      "source_location": "L525",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -231030,7 +231082,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L460",
+      "source_location": "L537",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231040,7 +231092,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L499",
+      "source_location": "L576",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231050,7 +231102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L540",
+      "source_location": "L617",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231060,7 +231112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L566",
+      "source_location": "L643",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231071,7 +231123,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L52",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231082,7 +231134,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L56",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231093,7 +231145,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L69",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231104,7 +231156,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L73",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231115,7 +231167,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L74",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231126,7 +231178,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L106",
+      "source_location": "L104",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231137,7 +231189,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L113",
+      "source_location": "L111",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231148,7 +231200,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L115",
+      "source_location": "L113",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231159,7 +231211,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L124",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231170,7 +231222,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L125",
+      "source_location": "L123",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231181,7 +231233,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L131",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231192,7 +231244,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L137",
+      "source_location": "L135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231203,7 +231255,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L235",
+      "source_location": "L233",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231214,7 +231266,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L241",
+      "source_location": "L239",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231225,7 +231277,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L250",
+      "source_location": "L248",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231236,7 +231288,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L256",
+      "source_location": "L254",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231247,7 +231299,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L258",
+      "source_location": "L256",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231258,7 +231310,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L375",
+      "source_location": "L452",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231269,7 +231321,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L476",
+      "source_location": "L553",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231280,7 +231332,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L509",
+      "source_location": "L586",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231291,7 +231343,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L523",
+      "source_location": "L600",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -231302,7 +231354,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L541",
+      "source_location": "L618",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -232998,7 +233050,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/settings/operator.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -233008,7 +233060,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/settings/operator.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "context": "parameter_type",
       "_origin": "ast"
@@ -233019,7 +233071,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/settings/operator.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -233030,7 +233082,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/settings/operator.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "context": "generic_arg",
       "_origin": "ast"
@@ -233041,7 +233093,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "shared/ui/src/features/game/settings/operator.rs",
-      "source_location": "L54",
+      "source_location": "L52",
       "weight": 1.0,
       "context": "return_type",
       "_origin": "ast"
@@ -238393,7 +238445,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L297",
+      "source_location": "L300",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -238404,7 +238456,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L314",
+      "source_location": "L317",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -238415,7 +238467,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L337",
+      "source_location": "L340",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249256,7 +249308,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1554",
+      "source_location": "L1636",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249268,7 +249320,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L1677",
+      "source_location": "L1759",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249280,7 +249332,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2189",
+      "source_location": "L2271",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249292,7 +249344,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2238",
+      "source_location": "L2320",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249304,7 +249356,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2554",
+      "source_location": "L2636",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249316,7 +249368,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2584",
+      "source_location": "L2666",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249328,7 +249380,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2710",
+      "source_location": "L2792",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249340,7 +249392,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2822",
+      "source_location": "L2904",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -249352,7 +249404,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/tests/games_core.rs",
-      "source_location": "L2916",
+      "source_location": "L2998",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251284,7 +251336,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L236",
+      "source_location": "L239",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251296,7 +251348,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend/worker-tests/game_object.test.js",
-      "source_location": "L327",
+      "source_location": "L330",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251416,7 +251468,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "platform/web/tests/endings.mjs",
-      "source_location": "L168",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251752,7 +251804,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/game/active/mod.rs",
-      "source_location": "L67",
+      "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -251788,7 +251840,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "shared/ui/src/features/game/mod.rs",
-      "source_location": "L210",
+      "source_location": "L208",
       "weight": 1.0,
       "_origin": "ast"
     },

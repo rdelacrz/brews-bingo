@@ -14,9 +14,7 @@ pub(in crate::features) use entry::player_entry_membership;
 pub use preparation::CreateGame;
 
 use crate::{
-    components::{
-        DesignatedHostAlias, Keyed, Notice, PageTitle, StatusBadge, StatusTone, game_state_label,
-    },
+    components::{DesignatedHostAlias, Keyed, Notice, StatusBadge, StatusTone, game_state_label},
     session::AccountSession,
 };
 use brews_contracts::{
@@ -276,16 +274,96 @@ fn GameScreen(id: GameId, context: ViewContext) -> Element {
     let notice = (game.notice)();
     let status = (game.status)();
     let game_state = snapshot.as_ref().map(model::state);
+    let designated_host = snapshot.as_ref().and_then(|snapshot| match snapshot {
+        GameView::Host { game: summary, .. }
+            if context == ViewContext::Account && !model::terminal(snapshot) =>
+        {
+            Some(summary.designated_host_id)
+        }
+        _ => None,
+    });
+    let mut options_open = use_signal(|| false);
+    let lifecycle = use_memo(move || game.snapshot.read().as_ref().map(model::state));
+    use_effect(move || {
+        let _state = lifecycle();
+        options_open.set(false);
+    });
+    let can_show_options = game_state.is_some_and(|state| {
+        !matches!(
+            state,
+            brews_domain::games::GameState::Resolved | brews_domain::games::GameState::Cancelled
+        )
+    }) && (context != ViewContext::Account || (game.may_operate)());
     rsx! {
-        div { class: "stack",
-            PageTitle { eyebrow: format!("{} view",context.as_str()), title: "Your game".to_string(), description: "Single Line · Rockville Brews".to_string() }
-            if let Some(state) = game_state {
-                div { class: "game-live-status-row", role: "status",
-                    StatusBadge { label: status.label(), tone: status.tone() }
-                    StatusBadge { label: game_state_label(state), tone: StatusTone::from(state) }
+        div { class: "stack game-page",
+            header { class: "game-page-header stack",
+                p { class: "eyebrow", "{context.as_str()} view" }
+                div { class: "game-page-title-row",
+                    h1 { "Your game" }
+                    if can_show_options {
+                        div {
+                            class: "game-options-anchor",
+                            onkeydown: move |event| {
+                                if event.key() == Key::Escape && options_open() {
+                                    event.prevent_default();
+                                    options_open.set(false);
+                                }
+                            },
+                            button {
+                                class: "button secondary game-options-trigger",
+                                r#type: "button",
+                                "aria-label": "Options",
+                                "aria-expanded": options_open(),
+                                "aria-controls": "game-options-panel",
+                                title: "Game options",
+                                onclick: move |_| options_open.set(!options_open()),
+                                svg {
+                                    view_box: "0 0 24 24",
+                                    fill: "none",
+                                    stroke: "currentColor",
+                                    stroke_width: "1.8",
+                                    stroke_linecap: "round",
+                                    stroke_linejoin: "round",
+                                    "aria-hidden": "true",
+                                    "focusable": "false",
+                                    path { d: "M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" }
+                                    path { d: "m19.4 15 .1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.3a1.7 1.7 0 1 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 1 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 1 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.3a1.7 1.7 0 1 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" }
+                                }
+                                span { class: "game-options-label", "Options" }
+                            }
+                            if options_open() {
+                                div {
+                                    class: "game-options-dismiss",
+                                    "aria-hidden": "true",
+                                    onclick: move |_| options_open.set(false),
+                                }
+                                section {
+                                    class: "game-options-panel stack",
+                                    id: "game-options-panel",
+                                    "aria-label": "Game options",
+                                    h2 { "Options" }
+                                    settings::OperatorSettings {
+                                        allow_navigation: context == ViewContext::Account
+                                            && game_state != Some(brews_domain::games::GameState::New),
+                                    }
+                                    settings::ParticipantSettings {}
+                                }
+                            }
+                        }
+                    }
                 }
-            } else {
-                div { class: "connection-status", role: "status", StatusBadge { label: status.label(), tone: status.tone() } }
+                p { class: "lead game-page-description", "Single Line · Rockville Brews" }
+                if let Some(state) = game_state {
+                    div { class: "game-live-status-row", role: "status",
+                        StatusBadge { label: status.label(), tone: status.tone() }
+                        StatusBadge { label: game_state_label(state), tone: StatusTone::from(state) }
+                    }
+                } else {
+                    div { class: "connection-status", role: "status", StatusBadge { label: status.label(), tone: status.tone() } }
+                }
+                if let Some(account_id) = designated_host {
+                    p { class: "designated-host-line", span { "Designated host" } DesignatedHostAlias { account_id } }
+                }
             }
             if let Some(error) = (game.error)() { Notice { message: error } }
             Feedback { command: game.command, game_id: id.to_string(), view: context.as_str().to_string(),enabled:game.fresh() }
@@ -296,7 +374,6 @@ fn GameScreen(id: GameId, context: ViewContext) -> Element {
                 finished::AudienceResult {}
             } else if let Some(snapshot) = snapshot {
                 if context==ViewContext::Account && !model::terminal(&snapshot) {
-                    if let GameView::Host{game:summary,..}=&snapshot{p {class:"designated-host-line", span {"Designated host"} DesignatedHostAlias { account_id: summary.designated_host_id }}}
                     if !(game.may_operate)() { p { class: "muted", "Read-only account view. Operator controls require current server permission." } }
                 }
                 match model::state(&snapshot) {

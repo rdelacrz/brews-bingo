@@ -489,7 +489,7 @@ fn output_gate_rechecks_clock_epoch_alias_lifecycle_and_receipt_without_remutati
 }
 
 #[test]
-fn lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected() {
+fn lobby_leave_excludes_start_roster_and_one_accepted_player_can_start() {
     let (f, _, a, b) = lobby();
     let old = connect(&f, &a, 40);
     let prepared = f
@@ -534,7 +534,7 @@ fn lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected() {
     ));
     let game = f.service().directory_projection().unwrap().game_id();
     let reservation = f.directory().confirm_reservation(game).unwrap();
-    assert_eq!(
+    assert!(matches!(
         f.service()
             .start(
                 f.auth().authorize_game_account(&f.token).unwrap(),
@@ -543,10 +543,10 @@ fn lobby_leave_excludes_start_roster_and_prepared_socket_is_not_connected() {
                 &reservation,
                 &[old.connection_id(), prepared.connection_id()]
             )
-            .err(),
-        Some(GameError::Conflict)
-    );
-    assert!(rows(&f, "game_boards").is_empty());
+            .unwrap(),
+        brews_contracts::games::GameResponse::Started { .. }
+    ));
+    assert_eq!(rows(&f, "game_boards").len(), 1);
 }
 
 #[test]

@@ -97,6 +97,7 @@ pub struct CellPosition {
 pub const BOARD_SIDE_MIN: u8 = 2;
 pub const BOARD_SIDE_MAX: u8 = 10;
 pub const BOARD_CELLS_MAX: usize = (BOARD_SIDE_MAX as usize) * (BOARD_SIDE_MAX as usize);
+pub const START_CONNECTED_PLAYER_MIN: u8 = 1;
 pub const PLAYER_CAPACITY_MAX: u8 = 20;
 pub const SPECTATOR_CAPACITY_MAX: u8 = 50;
 pub const NUMERIC_UPPER_BOUND_MAX: u32 = 1_000;
